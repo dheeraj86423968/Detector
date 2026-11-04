@@ -42,6 +42,7 @@ class SandboxSource:
         os.makedirs(self.run_root, exist_ok=True)
         self.manifest = cfg.get("manifest", os.path.join(self.run_root, "suite-manifest.json"))
         self.collector = cfg.get("collector", "strace")     # "strace" (ptrace) or "ebpf" (kernel tracer, one for all sessions)
+        self.cfg_engine = cfg.get("engine")                 # ebpf engine: "core" (default) or "bcc"
         self._tracer = None
 
     # ---- one real traced session, timestamps remapped into `day_ns` at `slot` ----
@@ -57,7 +58,7 @@ class SandboxSource:
         if self.collector == "ebpf":
             from .ebpf import EbpfLive, EbpfTracer
             if self._tracer is None:
-                self._tracer = EbpfTracer()
+                self._tracer = EbpfTracer(engine=self.cfg_engine)
             live = EbpfLive(command=cmd, tracer=self._tracer, batch=100000)
         else:
             live = StraceLive(command=cmd, batch=100000)

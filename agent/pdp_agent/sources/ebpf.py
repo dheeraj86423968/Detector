@@ -1,4 +1,4 @@
-"""Production live collector: eBPF (bcc) -> normalised provenance events.
+"""Production live collector: eBPF -> normalised provenance events.
 
 This is the high-volume Linux endpoint collector. It traces the same syscall set as the strace and auditd
 collectors and maps it through the same code (sources/common.py), so the event stream - node labels, edge types,
@@ -21,19 +21,38 @@ per-CPU perf buffer would reorder a parent's fork and the child's exec). Timesta
 clock converted to wall-clock nanoseconds.
 
 File paths are made absolute (cwd or dirfd) and symlink-free in user space, resolving inside the process's own root,
-which matches the strace collector's `-y` output (tools/crosscheck.py compares the two collectors on the same
+which matches the strace collector's `-y` output (tools/crosscheck.py compares the collectors on the same
 workloads). The agent's own process is excluded in-kernel.
 
-Requirements: kernel >= 5.8 (ring buffer) with BPF; bcc (python3-bpfcc) and the running kernel's headers (bcc
-compiles the program at start: mount /lib/modules and /usr/src read-only into the agent container, or install
-linux-headers-$(uname -r)); CAP_BPF + CAP_PERFMON + CAP_SYS_ADMIN (or a privileged container) and the host pid
-namespace so pids and /proc agree. `decode` is pure Python and unit-tested without a kernel (tests/unit/test_ebpf.py).
+Two engines load the same kernel program (same hooks, filters and record layout), selected by the source config
+`{"kind": "ebpf", "engine": "core" | "bcc"}` (default "core", or $PDP_EBPF_ENGINE):
+
+  core (default)  libbpf CO-RE. The program (agent/bpf/pdp_ebpf.bpf.c) is compiled once at image build time against
+                  vmlinux.h and embedded in a static loader, `pdp-ebpf` ($PDP_EBPF_LOADER, /opt/pdp/bin/pdp-ebpf),
+                  which libbpf relocates against the running kernel's BTF. The agent spawns it and reads raw records
+                  from its stdout; the loader and the agent are both excluded in-kernel. Needs a kernel >= 5.8 with
+                  BTF (/sys/kernel/btf/vmlinux, CONFIG_DEBUG_INFO_BTF - every current distro kernel). No kernel
+                  headers, no compiler, no tracefs (all hooks are raw tracepoints). Starts in tens of milliseconds.
+  bcc (fallback)  the original in-process bcc program (BPF_PROGRAM below), compiled at start against the running
+                  kernel's headers: needs python3-bpfcc, /lib/modules + /usr/src (linux-headers-$(uname -r)) and
+                  tracefs. Not shipped in the agent image; kept for hosts without BTF and for differential checks
+                  (`python -m pdp_agent.tools.crosscheck --compare bcc,core`).
+
+Both need CAP_BPF + CAP_PERFMON (+ CAP_SYS_ADMIN for bcc; or a privileged container) and the host pid namespace so
+pids and /proc agree. `decode` and the record parser are pure Python and unit-tested without a kernel
+(tests/unit/test_ebpf.py).
 """
 from __future__ import annotations
 
+import collections
 import os
+import select
+import shutil
 import socket
+import struct
 import subprocess
+import sys
+import threading
 import time
 import uuid as uuidlib
 from dataclasses import dataclass
@@ -43,13 +62,20 @@ from pdp_engine.schema import Entity, Event
 
 from .common import ProvenanceMapper
 
-# record kinds emitted by the kernel program (keep in sync with BPF_PROGRAM)
+# record kinds emitted by the kernel program (keep in sync with BPF_PROGRAM and agent/bpf/pdp_ebpf.h)
 EXEC, EXEC_ARGV, OPEN, CONNECT, SEND, RECV, ACCEPT, FORK, EXIT, DUP = range(10)
+STATS = 255           # CO-RE loader only: ret = records lost in-kernel (ring buffer full) so far
 EXEC_ARG = EXEC   # old name
 AT_FDCWD = -100
 STRLEN = 512          # bytes per record string (kernel side)
 ARG_CHUNKS = 2        # argv bytes captured = STRLEN * ARG_CHUNKS
 ARG_MAX = 256         # per-argument truncation, as the strace collector's -s 256
+
+# struct event_t (agent/bpf/pdp_ebpf.h, and BPF_PROGRAM below): ts kind pid tid aux ret flags dirfd family port addr str
+REC = struct.Struct("<QIIIIqQiHH16s%ds" % STRLEN)
+assert REC.size == 576
+STREAM_MAGIC, STREAM_VERSION = b"PDPEBPF\0", 1
+STREAM_HEADER = struct.Struct("<8sII")      # magic, version, record size
 
 BPF_PROGRAM = r"""
 #include <uapi/linux/ptrace.h>
@@ -486,19 +512,144 @@ class EbpfNormaliser:
     decode_event = decode   # backwards-compatible name
 
 
-class EbpfTracer:
-    """Loads the kernel program once and hands out decoded records (Rec) in ring-buffer order. Long-lived: the
-    sandbox reuses one tracer for many workload sessions (compiling the program takes a few seconds)."""
+def parse_records(buf, mono_to_wall: int = 0) -> tuple[list[Rec], int, int | None]:
+    """Raw struct event_t records (as the CO-RE loader streams them) -> (Recs, bytes consumed, lost count or None).
+    A trailing partial record is left for the next call; STATS records update the lost count instead of yielding.
+    Field for field what BccTracer._on_event builds from bcc's ctypes view of the same struct."""
+    n = len(buf) // REC.size
+    out: list[Rec] = []
+    lost = None
+    for ts, kind, pid, tid, aux, ret, flags, dirfd, family, port, addr, sb in REC.iter_unpack(memoryview(buf)[:n * REC.size]):
+        if kind == STATS:
+            lost = ret
+            continue
+        nul = sb.find(b"\0")
+        out.append(Rec(kind=kind, pid=pid, ts_ns=ts + mono_to_wall, tid=tid, aux=aux, ret=ret, flags=flags, dirfd=dirfd,
+                       family=family, port=socket.ntohs(port), addr=addr,
+                       s=(sb if nul < 0 else sb[:nul]).decode(errors="replace"),
+                       raw=sb[:max(0, min(ret, STRLEN))] if kind == EXEC_ARGV else b""))
+    return out, n * REC.size, lost
+
+
+def find_loader() -> str:
+    """Path of the CO-RE loader binary: $PDP_EBPF_LOADER, the image's /opt/pdp/bin/pdp-ebpf, `pdp-ebpf` on PATH, or a
+    development build in agent/bpf/."""
+    here = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "bpf", "pdp-ebpf")
+    for c in (os.environ.get("PDP_EBPF_LOADER"), "/opt/pdp/bin/pdp-ebpf", shutil.which("pdp-ebpf"), here):
+        if c and os.path.isfile(c) and os.access(c, os.X_OK):
+            return c
+    raise RuntimeError("eBPF collector (engine core): loader pdp-ebpf not found (set PDP_EBPF_LOADER, or build "
+                       "agent/bpf with make; engine 'bcc' is the header-based fallback)")
+
+
+class CoreTracer:
+    """libbpf CO-RE engine: spawns the static loader (agent/bpf/pdp_ebpf.c), which loads the precompiled program,
+    relocates it against the kernel's BTF, attaches it and streams raw ring-buffer records to a pipe. Same records,
+    same order, same `poll` interface as BccTracer; the loader and `self_pid` (the agent) are excluded in-kernel."""
+    engine = "core"
+
+    def __init__(self, ring_pages: int = 1024, self_pid: int | None = None, loader: str | None = None,
+                 start_timeout: float = 30.0):
+        if ring_pages & (ring_pages - 1):
+            raise ValueError("ring_pages must be a power of two")
+        self.loader = loader or find_loader()
+        self.stats = {"lost": 0}
+        self._err: collections.deque = collections.deque(maxlen=40)
+        t0 = time.monotonic()
+        self.p = subprocess.Popen([self.loader, "--ring-pages", str(ring_pages), "--exclude", str(self_pid or os.getpid())],
+                                  stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+        threading.Thread(target=self._drain_stderr, daemon=True, name="pdp-ebpf-stderr").start()
+        self._fd = self.p.stdout.fileno()
+        self._buf = bytearray()
+        head = self._read_exact(STREAM_HEADER.size, start_timeout)
+        magic, version, size = STREAM_HEADER.unpack(head)
+        if magic != STREAM_MAGIC or version != STREAM_VERSION or size != REC.size:
+            self.close()
+            raise RuntimeError(f"eBPF loader {self.loader}: unexpected stream header {head!r} (version {version}, "
+                               f"record size {size}; expected {STREAM_VERSION} / {REC.size})")
+        self.startup_s = time.monotonic() - t0        # spawn -> every program loaded, relocated and attached
+        self._mono_to_wall = time.time_ns() - time.monotonic_ns()   # bpf_ktime_get_ns is CLOCK_MONOTONIC
+
+    def _drain_stderr(self):
+        for line in iter(self.p.stderr.readline, b""):
+            line = line.decode(errors="replace").rstrip()
+            self._err.append(line)
+            print(line if line.startswith("pdp-ebpf") else f"pdp-ebpf: {line}", file=sys.stderr, flush=True)
+
+    def _dead(self, what: str) -> RuntimeError:
+        try:
+            rc = self.p.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            rc = None
+        time.sleep(0.05)                               # let the stderr thread pick up the last lines
+        return RuntimeError(f"eBPF loader {what} (exit {rc}): " + " | ".join(self._err))
+
+    def _read_exact(self, n: int, timeout: float) -> bytes:
+        end = time.monotonic() + timeout
+        while len(self._buf) < n:
+            left = end - time.monotonic()
+            if left <= 0:
+                self.close()
+                raise RuntimeError(f"eBPF loader did not start within {timeout:.0f}s: " + " | ".join(self._err))
+            r, _, _ = select.select([self._fd], [], [], left)
+            if r:
+                chunk = os.read(self._fd, 1 << 16)
+                if not chunk:
+                    raise self._dead("failed to start")
+                self._buf += chunk
+        out = bytes(self._buf[:n])
+        del self._buf[:n]
+        return out
+
+    def poll(self, timeout_ms: int = 200) -> list[Rec]:
+        r, _, _ = select.select([self._fd], [], [], timeout_ms / 1000)
+        got = 0
+        while r and got < (64 << 20):                  # what is ready now (bounded, like one ring-buffer poll)
+            chunk = os.read(self._fd, 1 << 20)
+            if not chunk:
+                raise self._dead("exited")
+            self._buf += chunk
+            got += len(chunk)
+            r, _, _ = select.select([self._fd], [], [], 0)
+        recs, used, lost = parse_records(self._buf, self._mono_to_wall)
+        del self._buf[:used]
+        if lost is not None and lost != self.stats["lost"]:   # reported by the loader at most every 10 s
+            self.stats["lost"] = lost
+            print(f"pdp-ebpf: {lost} records lost in-kernel so far (ring buffer full: raise source.ring_pages)",
+                  file=sys.stderr, flush=True)
+        return recs
+
+    def close(self):
+        if self.p.poll() is None:
+            self.p.terminate()
+            try:
+                self.p.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.p.kill()
+        for f in (self.p.stdout, self.p.stderr):
+            try:
+                f.close()
+            except OSError:
+                pass
+
+
+class BccTracer:
+    """bcc engine (fallback): compiles BPF_PROGRAM in-process against the running kernel's headers and hands out
+    decoded records (Rec) in ring-buffer order. Compiling takes a few seconds and needs python3-bpfcc + headers."""
+    engine = "bcc"
 
     def __init__(self, ring_pages: int = 1024, self_pid: int | None = None):
         from bcc import BPF   # imported here so the module loads without bcc (unit tests, other collectors)
         if ring_pages & (ring_pages - 1):
             raise ValueError("ring_pages must be a power of two")
+        t0 = time.monotonic()
         text = program(self_pid or os.getpid(), ring_pages)
         self.b = BPF(text=text, cflags=["-w"])   # -w: the host kernel headers emit many harmless clang warnings
+        self.stats = {"lost": 0}                 # not counted by this engine
         self._out: list[Rec] = []
         self._mono_to_wall = time.time_ns() - time.monotonic_ns()   # bpf_ktime_get_ns is CLOCK_MONOTONIC
         self.b["events"].open_ring_buffer(self._on_event)
+        self.startup_s = time.monotonic() - t0
 
     def _on_event(self, ctx, data, size):
         e = self.b["events"].event(data)
@@ -518,6 +669,21 @@ class EbpfTracer:
         out, self._out = self._out, []
         return out
 
+    def close(self):
+        self.b.cleanup()
+
+
+ENGINES = {"core": CoreTracer, "bcc": BccTracer}
+
+
+def EbpfTracer(ring_pages: int = 1024, self_pid: int | None = None, engine: str | None = None):
+    """The kernel tracer for `engine`: "core" (libbpf CO-RE, the default, or $PDP_EBPF_ENGINE) or "bcc" (the
+    header-compiled fallback). Long-lived: the sandbox reuses one tracer for many workload sessions."""
+    engine = engine or os.environ.get("PDP_EBPF_ENGINE") or "core"
+    if engine not in ENGINES:
+        raise ValueError(f"eBPF collector: unknown engine {engine!r} (core, bcc)")
+    return ENGINES[engine](ring_pages, self_pid)
+
 
 class EbpfLive:
     """eBPF source. Two modes:
@@ -527,18 +693,19 @@ class EbpfLive:
     Yields lists of (entities, Event) like the other collectors."""
     chronological = True   # wall-clock timestamps: a calendar day is complete once it has ended
 
-    def __init__(self, batch: int = 2000, command: list[str] | None = None, tracer: EbpfTracer | None = None,
-                 run_id: str | None = None, cwd: str | None = None, ring_pages: int = 1024, proc: str = "/proc"):
-        self.batch, self.command, self.cwd, self.ring_pages = batch, command, cwd, ring_pages
+    def __init__(self, batch: int = 2000, command: list[str] | None = None, tracer: CoreTracer | BccTracer | None = None,
+                 run_id: str | None = None, cwd: str | None = None, ring_pages: int = 1024, proc: str = "/proc",
+                 engine: str | None = None):
+        self.batch, self.command, self.cwd, self.ring_pages, self.engine = batch, command, cwd, ring_pages, engine
         self._tracer = tracer
         self.norm = EbpfNormaliser(run_id, proc=proc)
         self.proc: subprocess.Popen | None = None
         self.stats = {"records": 0, "events": 0}
 
     @property
-    def tracer(self) -> EbpfTracer:
+    def tracer(self) -> CoreTracer | BccTracer:
         if self._tracer is None:
-            self._tracer = EbpfTracer(self.ring_pages)
+            self._tracer = EbpfTracer(self.ring_pages, engine=self.engine)
         return self._tracer
 
     def _decode(self, recs: list[Rec], track: set[int] | None) -> list:

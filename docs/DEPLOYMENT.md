@@ -16,23 +16,42 @@ This is where the agent is completed and verified before it goes near a customer
 
 ## 1. Linux eBPF agent (highest value — most endpoints)
 
-**Where.** Any Linux host with a stock distro kernel >= 5.8 (ring buffer) and its headers:
-`ls /sys/kernel/btf/vmlinux` and `ls /lib/modules/$(uname -r)/build` (install `linux-headers-$(uname -r)`).
-Verified on Ubuntu 26.04 / kernel 7.0 (this L40S host); the WSL2 kernel cannot load it (no headers).
+**Where.** Any Linux host with a stock distro kernel >= 5.8 (ring buffer) with BTF: `ls /sys/kernel/btf/vmlinux`
+(CONFIG_DEBUG_INFO_BTF; on by default in Ubuntu >= 20.10, Debian 11+, RHEL/Rocky 8.2+, Amazon Linux 2023, Fedora).
+No kernel headers, compiler or tracefs are needed on the endpoint. Verified on Ubuntu 26.04 / kernel 7.0 (this L40S
+host). A kernel without BTF can still use the header-based bcc engine (below).
 
-**Deploy.** The agent image (`pdp/agent`, Ubuntu 24.04 + bcc + CPU torch) compiles the kernel program at start
-against the host's headers, so it needs them mounted, the host pid namespace (pids and /proc must agree) and BPF
-privileges. As a service: `deploy/systemd/pdp-agent.service` (instructions inside). By hand:
+**How it is built.** The kernel program (`agent/bpf/pdp_ebpf.bpf.c`) is compiled once, at image build time, as a
+libbpf CO-RE object against a `vmlinux.h` generated from BTF (by default the build machine's
+`/sys/kernel/btf/vmlinux`: the header only supplies type names, libbpf relocates every field access against the
+endpoint's own BTF at load). `bpftool gen skeleton` embeds it in a small statically linked loader,
+`/opt/pdp/bin/pdp-ebpf` (2.2 MB, `agent/bpf/pdp_ebpf.c`), which attaches it and streams the raw ring-buffer records
+to the agent over a pipe; the agent decodes them with the same code as before (`EbpfNormaliser`). Build stage:
+`deploy/docker/agent.Dockerfile` (clang, libbpf-dev, bpftool from linux-tools); outside Docker, `make -C agent/bpf`.
+All hooks are raw tracepoints (`sys_enter`, `sys_exit`, `sched_process_exec/fork/exit`), so nothing reads tracefs.
+The loader and the agent are both excluded in-kernel. To check a host without starting the agent,
+`docker run --rm --privileged --entrypoint /opt/pdp/bin/pdp-ebpf pdp/agent:<version> --check` prints `ok` once the
+program has loaded and attached (~25 ms).
+
+**Engines.** `"source": {"kind": "ebpf", "engine": "core"}` is the default (also `$PDP_EBPF_ENGINE`).
+`"engine": "bcc"` is the previous header-compiled engine, kept as a fallback for kernels without BTF and for
+differential checks; it is no longer in the agent image (it needs python3-bpfcc, `/lib/modules` + `/usr/src` mounted
+and tracefs). Both engines load the same program and produce byte-identical records (see the check below).
+
+**Deploy.** The agent image (`pdp/agent`, Ubuntu 24.04 + CPU torch + `pdp-ebpf`) needs the host pid namespace (pids
+and /proc must agree) and BPF privileges. As a service: `deploy/systemd/pdp-agent.service` (instructions inside). By
+hand:
 ```
 docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host \
-  -v /lib/modules:/lib/modules:ro -v /usr/src:/usr/src:ro -v /sys/kernel/tracing:/sys/kernel/tracing \
   -v /var/lib/pdp:/var/lib/pdp -v /etc/pdp/agent.json:/etc/pdp/agent.json:ro \
   -e PDP_ENROLL_TOKEN=<token> -e PDP_CA_SHA256=<fingerprint from the console> pdp/agent:dev run
 ```
 `/etc/pdp/agent.json`: `{"server_url": "https://<server>:8443", "agent_url": "https://<server>:9443", "data_dir":
 "/var/lib/pdp", "pki_dir": "/var/lib/pdp/pki", "day_tz": "UTC", "source": {"kind": "ebpf"}}` (ports as published by the
-gateway). `--privileged` can be narrowed to `--cap-add BPF --cap-add PERFMON --cap-add SYS_ADMIN --cap-add SYS_PTRACE`
-plus the tracefs mount on hosts that allow it.
+gateway). `--privileged` can be narrowed to `--cap-add BPF --cap-add PERFMON --cap-add SYS_PTRACE --cap-add
+DAC_READ_SEARCH` (verified on kernel 7.0 with Docker's default seccomp profile; SYS_PTRACE / DAC_READ_SEARCH let the
+agent read other processes' /proc cwd, fd and root links). Images built before the CO-RE change (bcc inside) still
+need `-v /lib/modules:/lib/modules:ro -v /usr/src:/usr/src:ro -v /sys/kernel/tracing:/sys/kernel/tracing`.
 
 **Verified on this host (2026-11-03).**
 1. Collector parity: `python -m pdp_agent.tools.crosscheck` runs the eight sandbox workloads under strace and eBPF —
@@ -47,8 +66,26 @@ calls when a BPF program is attached; the collector therefore uses the raw `sys_
 `sched_process_exec`, which fire for every call (measured: `sys_enter_openat` saw 8 of 80 `openat` calls of a test
 workload, `sys_exit_openat` and raw `sys_enter` all 80; `sys_enter_execve` 5 of 50).
 
-**Before GA (recommended).** Compile the kernel program once as a libbpf CO-RE object so endpoints need no kernel
-headers or clang (the decode layer, `EbpfNormaliser.decode`, is independent of the loader and unit-tested).
+**CO-RE vs bcc (verified on this host, 2026-11-04, image `pdp/agent:core-test`).**
+1. Headers-free: in a privileged container with no `/lib/modules`, empty `/usr/src`, no tracefs, no clang and no bcc,
+   the scripted workload `python -m pdp_agent.tools.syscall_workload` (exec incl. a two-chunk argv, read / write /
+   read-write, symlink, fork without exec, openat on a dirfd and on its dup / F_DUPFD_CLOEXEC copies, find, grep -r,
+   TCP connect + accept and UDP sendto / recvfrom / sendmsg / recvmsg on 127.0.0.1, ::1, non-local IPv4 / IPv6 / UDP
+   connects) produces every expected edge; the agent and the loader are absent from a host-wide capture.
+2. Differential: `python -m pdp_agent.tools.crosscheck --compare bcc,core` attaches both programs at once and runs
+   each workload once (the `syscalls` workload + the eight sandbox scenarios, 3 repetitions): the raw kernel records
+   were identical in every run (1519 per repetition, every field but the timestamp), and the provenance edges
+   (op, node types, labels) identical except for one race in the shared user-space decode (below).
+3. Cost, both engines simultaneously host-wide for 45 s (x2): startup 1.17 s (bcc compile) vs 0.025 s; collector RSS
+   ~190 MB (bcc + LLVM) vs ~30 MB agent + 10 MB loader; CPU per 10k records 0.28 vs 0.29-0.30 CPU-s (CO-RE includes
+   the loader, ~1.2 % of a CPU); the image shrinks from 2.16 GB to 1.86 GB.
+
+**Known limitations (both engines, user-space decode).** Paths of fd-relative opens are resolved from
+`/proc/<pid>/fd/<dirfd>` first, at decode time: if the process has already closed and reused that fd, the label is
+wrong (seen once in three runs: `/dev/null/a.txt`). Relative paths of a short-lived process after `chdir` (not traced)
+can stay relative. The ring buffer drops records in bursts when the agent cannot keep up; CO-RE counts them (logged
+as "records lost in-kernel"; ~1.5 % at the default 1024 pages under this host's load: raise `source.ring_pages`),
+bcc did not count them.
 
 ## 2. Windows ETW agent
 
@@ -108,7 +145,7 @@ On the staging fleet, after a baseline week:
 
 ## Recommended order
 
-1. ~~Linux eBPF on a stock kernel, cross-checked against strace~~ (done on the L40S host); next: libbpf CO-RE packaging.
+1. ~~Linux eBPF on a stock kernel, cross-checked against strace~~, ~~libbpf CO-RE packaging~~ (done on the L40S host).
 2. Server hardening: ~~secrets~~, ~~SIEM export~~, ~~healthz~~ (done); real console cert, backups, signing key in KMS.
 3. Windows ETW on a Windows VM (§2); Windows service packaging (§3).
 4. Desktop installers via CI (§5).

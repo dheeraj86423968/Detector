@@ -1,7 +1,8 @@
 # PDP endpoint agent as a systemd service (runs the pdp/agent image with the eBPF collector).
 #
 # Install on the endpoint:
-#   1. docker load / pull the agent image (pdp/agent:<version>) and install linux-headers-$(uname -r)
+#   1. docker load / pull the agent image (pdp/agent:<version>). The kernel needs BTF (ls /sys/kernel/btf/vmlinux;
+#      every current distro kernel has it); no kernel headers, compiler or tracefs mount are needed (libbpf CO-RE).
 #   2. /etc/pdp/agent.json, e.g.
 #        {"server_url": "https://pdp.example.com", "agent_url": "https://pdp.example.com:9443",
 #         "data_dir": "/var/lib/pdp", "pki_dir": "/var/lib/pdp/pki", "day_tz": "UTC",
@@ -13,6 +14,8 @@
 #   4. cp pdp-agent.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now pdp-agent
 #
 # The agent keeps its identity, spool and bundles in /var/lib/pdp; restarts resume the open detection window.
+# Needs an image with the CO-RE collector (/opt/pdp/bin/pdp-ebpf). Older bcc-based images (pdp/agent built before
+# the CO-RE change) additionally need -v /lib/modules:/lib/modules:ro -v /usr/src:/usr/src:ro and tracefs.
 [Unit]
 Description=PDP provenance detection agent
 Documentation=file:///opt/pdp/docs/DEPLOYMENT.md
@@ -28,7 +31,6 @@ ExecStartPre=-/usr/bin/docker rm -f pdp-agent
 ExecStart=/usr/bin/docker run --rm --name pdp-agent --privileged --pid=host --network=host \
   -e PDP_ENROLL_TOKEN -e PDP_CA_SHA256 -e PDP_AGENT_CONFIG=/etc/pdp/agent.json \
   -v /etc/pdp/agent.json:/etc/pdp/agent.json:ro -v /var/lib/pdp:/var/lib/pdp \
-  -v /lib/modules:/lib/modules:ro -v /usr/src:/usr/src:ro -v /sys/kernel/tracing:/sys/kernel/tracing \
   ${PDP_AGENT_IMAGE} run
 ExecStop=/usr/bin/docker stop -t 30 pdp-agent
 Restart=always

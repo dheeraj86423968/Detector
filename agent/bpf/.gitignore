@@ -1,0 +1,4 @@
+vmlinux.h
+*.bpf.o
+*.skel.h
+pdp-ebpf
