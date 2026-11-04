@@ -282,6 +282,34 @@ check(admin.call("POST", f"/api/endpoints/{eid}/config", {"config": {"learned_da
 check(admin.call("POST", f"/api/endpoints/{eid}/config", {"config": {"learned_alerts": "no"}})[0] == 400, "learned_alerts must be boolean")
 check(admin.call("POST", f"/api/endpoints/{eid}/config", {"config": {"learned_alerts": False}})[0] == 200, "learned layer can be set to ranking only")
 
+# ---- allow list
+check(admin.call("POST", "/api/allowlist", {"kind": "address", "value": "10.0.0.0/8"})[0] == 400, "allow list refuses networks larger than /16")
+check(admin.call("POST", "/api/allowlist", {"kind": "address", "value": "not-an-ip"})[0] == 400, "allow list validates addresses")
+st, ae = admin.call("POST", "/api/allowlist", {"kind": "address", "value": "203.0.113.0/24", "endpoints": [eid], "note": "e2e"})
+check(st == 200, "admin adds a network to the allow list")
+check(admin.call("POST", "/api/allowlist", {"kind": "address", "value": "203.0.113.0/24", "endpoints": [eid]})[0] == 409, "duplicate entries are refused")
+st, js = agent_call(cert_dir, "GET", f"/v1/endpoints/{eid}/status")
+check(st == 200 and "203.0.113.0/24" in js["config"]["trusted_addresses"], "the agent receives allow-listed addresses with its configuration")
+st, ap = admin.call("POST", "/api/allowlist", {"kind": "program", "value": "x-e2e-prog", "endpoints": [eid]})
+lay2 = [{"window_start_ns": 10**18 + 5, "node": {"uuid": "u9", "ntype": "subject", "label": "subject /opt/x/x-e2e-prog x-e2e-prog", "display": {}},
+         "fused": 0.1, "r1": 0.1, "r2": 0.1, "context": {"nodes": [], "edges": []}, "layer": "novelty", "rule": "novel_executable",
+         "reason": "runs /opt/x/x-e2e-prog, which never ran during the baseline",
+         "reasons": [{"layer": "novelty", "rule": "novel_executable", "key": "/opt/x/x-e2e-prog", "detail": "..."}]}]
+agent_call(cert_dir, "POST", f"/v1/endpoints/{eid}/alerts", ndjson=lay2)
+st, al = admin.call("GET", f"/api/alerts?endpoint_id={eid}&limit=1000")
+mine = [a for a in al["alerts"] if a["label"].startswith("subject /opt/x/x-e2e-prog")]
+check(mine and mine[0]["allowed_by"] == ap["id"] and mine[0]["status"] == "false_positive",
+      "an alert an older agent still raises for an allowed program (bare name) is marked as allowed at upload")
+st, incs2 = admin.call("GET", f"/api/incidents?endpoint_id={eid}")
+check(all(mine[0]["id"] not in [a["id"] for a in admin.call("GET", f"/api/incidents/{i['id']}")[1]["alerts"]] for i in incs2["incidents"]),
+      "allowed alerts are not part of any incident")
+check(admin.call("GET", f"/api/alerts/{mine[0]['id']}/allow-options")[0] == 200, "allow options for an alert")
+st, lst = admin.call("GET", f"/api/allowlist?endpoint_id={eid}")
+check(st == 200 and {e["id"] for e in lst["entries"]} >= {ae["id"], ap["id"]}, "allow list filtered by endpoint")
+for e in (ae, ap):
+    admin.call("DELETE", f"/api/allowlist/{e['id']}")
+check(ae["id"] not in {e["id"] for e in admin.call("GET", "/api/allowlist")[1]["entries"]}, "allow-list entries can be removed")
+
 # ---- retire
 check(admin.call("POST", f"/api/endpoints/{eid}/retire")[0] == 200, "retire endpoint")
 admin.call("POST", f"/api/endpoints/{other_test_eid}/retire")      # the second test endpoint as well
