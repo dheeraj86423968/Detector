@@ -422,15 +422,48 @@ class EbpfNormaliser:
                 return p
         return None
 
+    DIR_CACHE_TTL = 10.0     # s; a symlink changed in a parent directory is picked up within this time
+
     def _canon(self, pid: int, path: str) -> str:
         """Resolve symlinks component by component as if chrooted at the process's root (absolute link targets are
-        re-rooted there, not at the agent's own root)."""
+        re-rooted there, not at the agent's own root).
+
+        Hot path (every open): the resolved parent directory is cached per filesystem view - keyed by the identity
+        of the process's root directory, so all processes of one container or of the host share entries - and only
+        the last component is checked each time."""
         proot = f"{self.proc}/{pid}/root"
-        if os.path.isdir(proot):
-            out = self._canon_at(proot, path)
-            if os.path.isdir(proot):       # still alive: the walk saw the process's own filesystem view
+        try:
+            st = os.stat(proot)
+        except OSError:
+            st = None
+        if st is not None:
+            out = self._canon_cached(proot, (st.st_dev, st.st_ino), path)
+            if out is not None:
                 return out
         return self._canon_at(self.host_root, path) if self.host_root is not None else path
+
+    def _canon_cached(self, proot: str, rkey: tuple, path: str) -> str | None:
+        d, base = os.path.split(path)
+        now = time.monotonic()
+        cache = self.__dict__.setdefault("_dir_cache", {})
+        hit = cache.get((rkey, d))
+        if hit is not None and now - hit[1] < self.DIR_CACHE_TTL:
+            rd = hit[0]
+        else:
+            rd = self._canon_at(proot, d)
+            if not os.path.isdir(proot):     # the process exited during the walk: its view is gone
+                return None
+            if len(cache) > 50_000:
+                cache.clear()
+            cache[(rkey, d)] = (rd, now)
+        if not base:
+            return rd
+        cur = rd.rstrip("/") + "/" + base
+        try:
+            target = os.readlink(proot + cur)
+        except OSError:                      # not a link (or gone): keep the name
+            return cur
+        return self._canon_at(proot, target if target.startswith("/") else rd.rstrip("/") + "/" + target)
 
     @staticmethod
     def _canon_at(root: str, path: str) -> str:
