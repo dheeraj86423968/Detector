@@ -86,7 +86,11 @@ case "$source" in ebpf|auditd|strace) ;; *) die "--source must be ebpf, auditd o
 # ------------------------------------------------------------------------------------------------ host checks
 say "Checking this host"
 arch=$(uname -m)
-[ "$arch" = x86_64 ] || die "the agent is available for x86_64 only (this host is $arch)"
+case "$arch" in
+  x86_64) iarch=amd64 ;;
+  aarch64|arm64) iarch=arm64 ;;
+  *) die "the agent is available for x86_64 and arm64 (this host is $arch)" ;;
+esac
 ok "architecture $arch"
 kver=$(uname -r)
 kmaj=${kver%%.*}; kmin=${kver#*.}; kmin=${kmin%%.*}
@@ -94,8 +98,13 @@ if [ "$source" = ebpf ]; then
   if [ "$kmaj" -lt 5 ] || { [ "$kmaj" -eq 5 ] && [ "$kmin" -lt 8 ]; }; then
     die "kernel $kver is older than 5.8; re-run with --source auditd"
   fi
-  [ -r /sys/kernel/btf/vmlinux ] || die "kernel $kver has no BTF type information (/sys/kernel/btf/vmlinux); re-run with --source auditd"
-  ok "kernel $kver with BTF (eBPF collector)"
+  if [ -r /sys/kernel/btf/vmlinux ]; then
+    ok "kernel $kver with BTF (eBPF collector)"
+  elif curl -fsS --max-time 15 "$SERVER/api/public/btf/$kver?arch=$arch" 2>/dev/null | grep -q '"available":true'; then
+    ok "kernel $kver has no BTF of its own; the server provides it (eBPF collector)"
+  else
+    die "kernel $kver has no BTF type information (/sys/kernel/btf/vmlinux) and the server has none for it; re-run with --source auditd, or ask the operator to add BTF for $kver"
+  fi
 else
   ok "kernel $kver ($source collector)"
 fi
@@ -156,6 +165,8 @@ if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   fi
   rm -rf "$cfg"
 fi
+got=$(docker image inspect -f '{{.Architecture}}' "$IMAGE" 2>/dev/null || echo unknown)
+[ "$got" = "$iarch" ] || die "this server publishes the agent for $got, not for this $arch host; ask the operator for an $iarch build"
 ok "agent image ready"
 
 # ------------------------------------------------------------------------------------------------ configuration

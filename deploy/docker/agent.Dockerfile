@@ -1,5 +1,8 @@
 # Slim endpoint agent image: CPU-only PyTorch, the engine and agent code, nltk punkt, strace and the libbpf
 # CO-RE eBPF collector. No gensim, no server, no CUDA — a deployable endpoint runtime, not the training image.
+# Builds natively on x86_64 and arm64 (an arm64 build host, or `docker buildx build --platform linux/arm64` with QEMU):
+# vmlinux.h then comes from that machine's BTF and the program is compiled for its architecture; deploy/publish-agent.sh
+# --arm64 IMAGE combines both into one multi-architecture tag.
 #
 # Stage 1 compiles the eBPF collector once: vmlinux.h is generated from BTF (by default the build machine's
 # /sys/kernel/btf/vmlinux; for another blob put it in agent/bpf/ and pass --build-arg BTF=<file name>), the program is
@@ -29,12 +32,13 @@ ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-venv strace gosu ca-certificates tzdata coreutils tar nftables \
     && rm -rf /var/lib/apt/lists/*
-# CPU PyTorch wheel and the few inference deps. No PyG: the one PyG layer the detectors use has a pure-torch copy
+# CPU PyTorch wheel (x86_64: the +cpu build; aarch64: the CPU index's manylinux wheel) and the few inference deps. No PyG: the one PyG layer the detectors use has a pure-torch copy
 # (pdp_engine/tconv.py, checked against PyG by tests/unit/test_tconv.py), which keeps SciPy, scikit-learn, NetworkX
 # and aiohttp out of the image. Torch's compiler/export dependencies (sympy, networkx, jinja2, fsspec), its C++
 # headers, test binaries and pip itself are not needed to run inference.
 RUN python3 -m venv /opt/venv \
-    && pip install torch==2.4.1+cpu --index-url https://download.pytorch.org/whl/cpu \
+    && case "$(uname -m)" in x86_64) t="torch==2.4.1+cpu" ;; *) t="torch==2.4.1" ;; esac \
+    && pip install "$t" --index-url https://download.pytorch.org/whl/cpu \
     && pip install "numpy<2" "nltk==3.8.1" "cryptography==42.0.5" \
     && pip uninstall -y sympy mpmath networkx jinja2 MarkupSafe fsspec \
     && cd /opt/venv/lib/python3.12/site-packages/torch \

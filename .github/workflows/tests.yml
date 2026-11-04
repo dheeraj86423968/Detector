@@ -30,6 +30,24 @@ jobs:
       - name: tests/run_unit.sh
         run: tests/run_unit.sh pdp/server:ci pdp/agent:ci
 
+  agent-arm64:
+    name: agent image on arm64 (native build, agent-side tests, eBPF load on a real arm64 kernel)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build the agent image natively (vmlinux.h from the runner's arm64 BTF)
+        run: docker build -q -f deploy/docker/agent.Dockerfile -t pdp/agent:ci-arm64 .
+      - name: Agent-side unit tests in the arm64 image
+        run: |
+          for t in test_agent test_footprint test_nobtf test_ebpf; do
+            docker run --rm -v "$PWD":/src -w /src -e PYTHONPATH=/src/engine:/src/agent --entrypoint python pdp/agent:ci-arm64 tests/unit/$t.py
+          done
+      - name: The CO-RE collector loads and attaches on the arm64 kernel (kernel BTF, then the same BTF as a file)
+        run: |
+          docker run --rm --privileged --pid=host --entrypoint /opt/pdp/bin/pdp-ebpf pdp/agent:ci-arm64 --check
+          docker run --rm --privileged --pid=host -v /sys/kernel/btf/vmlinux:/b/k.btf:ro --entrypoint /opt/pdp/bin/pdp-ebpf pdp/agent:ci-arm64 --btf /b/k.btf --check
+
   desktop-pin:
     name: desktop CA-pin self-test
     runs-on: ubuntu-latest

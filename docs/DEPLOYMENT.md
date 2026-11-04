@@ -19,7 +19,31 @@ This is where the agent is completed and verified before it goes near a customer
 **Where.** Any Linux host with a stock distro kernel >= 5.8 (ring buffer) with BTF: `ls /sys/kernel/btf/vmlinux`
 (CONFIG_DEBUG_INFO_BTF; on by default in Ubuntu >= 20.10, Debian 11+, RHEL/Rocky 8.2+, Amazon Linux 2023, Fedora).
 No kernel headers, compiler or tracefs are needed on the endpoint. Verified on Ubuntu 26.04 / kernel 7.0 (this L40S
-host). A kernel without BTF can still use the header-based bcc engine (below).
+host). A kernel without BTF can still use the header-based bcc engine (below), or the CO-RE engine with a BTF file
+(next paragraph).
+
+**Kernels without BTF (agent 0.3.18).** The loader takes `--btf FILE` (libbpf `btf_custom_path`). When
+`/sys/kernel/btf/vmlinux` is missing the agent uses `$PDP_BTF`, else `/var/lib/pdp/btf/<uname -r>.btf`, else downloads
+one from the server (`GET /v1/endpoints/{id}/btf/<release>`). The operator stocks the server's `deploy/btf/` directory
+(mounted read-only into the API as `/btf`): plain `<release>.btf` files, or the parts of BTFHub
+(https://github.com/aquasecurity/btfhub-archive) that clients need, in its own layout
+`<distro>/<version>/<arch>/<release>.btf.tar.xz` (the agent unpacks those; files under the other architecture's
+directory are never served). The installer asks `GET /api/public/btf/<release>?arch=` before installing on such a
+kernel and stops with a clear message (use `--source auditd`) when the server has none. If the collector cannot
+start at all, the agent no longer restart-loops: it keeps reporting (heartbeat `collector_error`, shown with the
+endpoint), takes commands and updates, and retries every 10 minutes. Verified: the loader with the host's BTF given
+as a file (and the kernel's own path treated as missing) loaded in 26 ms and streamed records; unit test
+`tests/unit/test_nobtf.py`; the BTF route in `tests/e2e/k8s_e2e.py`.
+
+**ARM64.** The kernel program has the arm64 syscall table and register access (`__TARGET_ARCH_arm64`); the agent
+decodes arm64 records (`ebpf.py` syscall map). The agent image builds natively on an arm64 machine (vmlinux.h from its
+BTF; the Dockerfile picks the aarch64 CPU wheel of torch 2.4.1). `deploy/publish-agent.sh VERSION --arm64 IMAGE`
+publishes one multi-architecture tag (OCI index; checked against the local registry), so x86_64 and arm64 hosts
+pull their own build; the installer accepts aarch64 and refuses with a clear message when the server only has an
+amd64 image. CI job `agent-arm64` (GitHub `ubuntu-24.04-arm`) builds the image, runs the agent-side unit tests and
+loads the collector on the arm64 kernel. Not yet verified on arm64 hardware: this host has no arm64 emulation, so
+only the arm64 BPF object compile (cross, in the build stage) and the aarch64 torch wheel's availability were
+checked here.
 
 **How it is built.** The kernel program (`agent/bpf/pdp_ebpf.bpf.c`) is compiled once, at image build time, as a
 libbpf CO-RE object against a `vmlinux.h` generated from BTF (by default the build machine's
@@ -86,6 +110,21 @@ wrong (seen once in three runs: `/dev/null/a.txt`). Relative paths of a short-li
 can stay relative. The ring buffer drops records in bursts when the agent cannot keep up; CO-RE counts them (logged
 as "records lost in-kernel"; ~1.5 % at the default 1024 pages under this host's load: raise `source.ring_pages`),
 bcc did not count them.
+
+## 1b. Kubernetes (DaemonSet)
+Endpoints > Add endpoint > Kubernetes cluster: name, how many nodes may enrol, how long new nodes may join (1-365
+days). The console hands out one manifest (`kubectl apply -f`): namespace `pdp-system` (pod security `privileged`),
+the enrolment token in a Secret, a registry pull Secret when the server publishes the agent, and a DaemonSet that runs
+one agent per node, control plane included (tolerates every taint), privileged, host pid and network namespaces,
+`system-node-critical`, state in the node's `/var/lib/pdp`, node name as the endpoint name (`PDP_HOSTNAME` from
+`spec.nodeName`). The token is a fleet token (`enroll_tokens.max_uses`): every node enrols with it until `max_uses`
+or the expiry; it reserves no endpoint slots, the organisation's endpoint limit is checked at each enrolment.
+Endpoints > Kubernetes clusters lists them (enrolments used, endpoints) with "Manifest" (a fresh copy with the
+currently published agent version: apply it again to update the agents; there is no host updater in a cluster) and
+"Close to new nodes" (enrolled nodes keep working). Network isolation on a cluster node also cuts the node off from
+the cluster (kubelet loses the API server). Verified on staging (`tests/e2e/k8s_e2e.py`, 17 checks: node cap, node
+names, single-use tokens unchanged, closing, organisation isolation, the manifest parses); not yet applied to a live
+cluster (no cluster tooling on this host).
 
 ## 2. Windows ETW agent
 

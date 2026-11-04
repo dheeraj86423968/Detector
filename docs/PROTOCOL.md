@@ -60,6 +60,9 @@ Commands are delivered in the `status` response: `"commands": [{"id": "...", "co
 command is not delivered again. The alert threshold mode (`fp_budget`) travels in `config`, not as a command.
 The bundle manifest carries `window_ns`; the agent builds detection windows of that length.
 
+Kernels without BTF (0.3.18+): `GET /v1/endpoints/{id}/btf/{release}` → the kernel's BTF (raw, or BTFHub `.btf.tar.xz`),
+404 when the server has none; heartbeat `collector_error` while the collector cannot start. Enrolment: a Kubernetes
+fleet token accepts several enrolments; `hostname` is `$PDP_HOSTNAME` when set (the node name in a DaemonSet).
 Response commands (0.3.15+): `kill_process {pid, uuid, label}`, `isolate`, `release`; results start with `ok:` on success.
 Hunting (0.3.17+): `hunt {hunt_id, q, kind, limit}` - the agent searches its activity index (programs run with their
 command line, `ip:port` contacted in either direction, files written outside /proc, /sys, /dev; first / last seen and

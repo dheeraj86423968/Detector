@@ -13,7 +13,7 @@ import uuid as uuidlib
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
-from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 import psycopg2.extras
@@ -39,6 +39,7 @@ def _include_console_routes():
     from .sso import router as sso_router
     from .respond import router as respond_router
     from .hunt import router as hunt_router, agent_router as hunt_agent_router
+    from .k8s import router as k8s_router
     app.include_router(dist_router)
     app.include_router(router)
     app.include_router(allow_router)
@@ -52,6 +53,7 @@ def _include_console_routes():
     app.include_router(sso_router)
     app.include_router(respond_router)
     app.include_router(hunt_router)
+    app.include_router(k8s_router)
     hunt_agent_router(app, agent_endpoint, ndjson_rows)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
@@ -159,22 +161,32 @@ class EnrollReq(BaseModel):
 @app.post("/v1/enroll")
 def enroll(req: EnrollReq):
     with db.conn() as c:
-        tok = db.q(c, "SELECT * FROM enroll_tokens WHERE token=%s AND used_by IS NULL AND expires_at > now()", (req.token,), one=True)
+        tok = db.q(c, "SELECT * FROM enroll_tokens WHERE token=%s AND (used_by IS NULL OR max_uses IS NOT NULL) AND expires_at > now()",
+                   (req.token,), one=True)
         if not tok:
             raise HTTPException(403, "invalid or expired token")
+        fleet = tok.get("max_uses") is not None      # Kubernetes: one token for many nodes
+        if fleet:
+            from .orgs import check_endpoint_limit
+            check_endpoint_limit(c, tok["org_id"])
+            if not db.q(c, "UPDATE enroll_tokens SET uses = uses + 1 WHERE token=%s AND uses < max_uses RETURNING uses", (req.token,), one=True):
+                raise HTTPException(403, f"this cluster token has enrolled all {tok['max_uses']} nodes it allows; create a new one in the console")
         eid = pki.new_id()
         cert, serial = pki.sign_csr(req.csr_pem, eid)
         kind = tok.get("kind") or "live"
         cfg = {"baseline_days": 7, "window_minutes": 15, "kind": kind, "tz": req.tz}
         if tok.get("dataset"):
             cfg["dataset"], cfg["dataset_host"] = tok["dataset"], "postgres"
+        if fleet:
+            cfg["cluster"] = tok["name"]
         cfg.update(tok.get("config") or {})
         if not tok.get("org_id") or db.q(c, "SELECT 1 FROM orgs WHERE id=%s AND disabled", (tok["org_id"],), one=True):
             raise HTTPException(403, "invalid or expired token")
         db.q(c, "INSERT INTO endpoints (id, name, hostname, os, arch, agent_version, phase, kind, config, cert_serial, enrolled_at, org_id) "
                 "VALUES (%s,%s,%s,%s,%s,%s,'baseline',%s,%s,%s,now(),%s)",
-             (eid, tok["name"], req.hostname, req.os, req.arch, req.agent_version, kind, json.dumps(cfg), serial, tok["org_id"]))
-        db.q(c, "UPDATE enroll_tokens SET used_by=%s WHERE token=%s", (eid, req.token))
+             (eid, req.hostname[:128] if fleet else tok["name"], req.hostname, req.os, req.arch, req.agent_version, kind, json.dumps(cfg), serial, tok["org_id"]))
+        if not fleet:
+            db.q(c, "UPDATE enroll_tokens SET used_by=%s WHERE token=%s", (eid, req.token))
     db.init_telemetry(eid)
     return {"ok": True, "endpoint_id": eid, "cert_pem": cert, "ca_pem": pki.ca_pem(), "bundle_signing_pub": pki.signing_public_pem(), "config": cfg}
 
@@ -262,6 +274,18 @@ def agent_pull_token(endpoint_id: str, ep=Depends(agent_endpoint)):
 
 class CommandAck(BaseModel):
     result: str = "ok"
+
+
+@app.get("/v1/endpoints/{endpoint_id}/btf/{release}")
+def kernel_btf(endpoint_id: str, release: str, ep=Depends(agent_endpoint)):
+    """BTF for an endpoint whose kernel has none (/sys/kernel/btf/vmlinux missing); see distrib.find_btf."""
+    from .distrib import RELEASE_RE, find_btf
+    if not RELEASE_RE.match(release):
+        raise HTTPException(400, "bad kernel release")
+    f = find_btf(release, ep.get("arch") or "x86_64")
+    if not f:
+        raise HTTPException(404, f"no BTF for kernel {release} on this server")
+    return FileResponse(f, media_type="application/octet-stream")
 
 
 @app.post("/v1/endpoints/{endpoint_id}/commands/{command_id}/ack")

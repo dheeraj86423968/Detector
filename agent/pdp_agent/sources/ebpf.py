@@ -584,14 +584,19 @@ class CoreTracer:
     engine = "core"
 
     def __init__(self, ring_pages: int = 1024, self_pid: int | None = None, loader: str | None = None,
-                 start_timeout: float = 30.0):
+                 start_timeout: float = 30.0, btf: str | None = None):
         if ring_pages & (ring_pages - 1):
             raise ValueError("ring_pages must be a power of two")
+        if btf is None and not os.path.exists(KERNEL_BTF):
+            raise RuntimeError(f"this kernel ({os.uname().release}) has no BTF ({KERNEL_BTF}) and no BTF file for it was found; "
+                               "the server can provide one (BTF directory, see docs/DEPLOYMENT.md) or set PDP_BTF")
         self.loader = loader or find_loader()
         self.stats = {"lost": 0}
         self._err: collections.deque = collections.deque(maxlen=40)
         t0 = time.monotonic()
-        self.p = subprocess.Popen([self.loader, "--ring-pages", str(ring_pages), "--exclude", str(self_pid or os.getpid())],
+        self.btf = btf
+        self.p = subprocess.Popen([self.loader, "--ring-pages", str(ring_pages), "--exclude", str(self_pid or os.getpid())]
+                                  + (["--btf", btf] if btf else []),
                                   stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
         threading.Thread(target=self._drain_stderr, daemon=True, name="pdp-ebpf-stderr").start()
         self._fd = self.p.stdout.fileno()
@@ -711,12 +716,32 @@ class BccTracer:
 ENGINES = {"core": CoreTracer, "bcc": BccTracer}
 
 
-def EbpfTracer(ring_pages: int = 1024, self_pid: int | None = None, engine: str | None = None):
+KERNEL_BTF = "/sys/kernel/btf/vmlinux"
+
+
+def find_btf(data_dir: str | None = None) -> str | None:
+    """None when the kernel has its own BTF; otherwise a BTF file for the running kernel: $PDP_BTF, or
+    <data_dir>/btf/<release>.btf (downloaded from the server, which the operator stocks e.g. from BTFHub)."""
+    if os.path.exists(KERNEL_BTF):
+        return None
+    env = os.environ.get("PDP_BTF")
+    if env and os.path.isfile(env):
+        return env
+    if data_dir:
+        f = os.path.join(data_dir, "btf", os.uname().release + ".btf")
+        if os.path.isfile(f):
+            return f
+    return None
+
+
+def EbpfTracer(ring_pages: int = 1024, self_pid: int | None = None, engine: str | None = None, btf: str | None = None):
     """The kernel tracer for `engine`: "core" (libbpf CO-RE, the default, or $PDP_EBPF_ENGINE) or "bcc" (the
     header-compiled fallback). Long-lived: the sandbox reuses one tracer for many workload sessions."""
     engine = engine or os.environ.get("PDP_EBPF_ENGINE") or "core"
     if engine not in ENGINES:
         raise ValueError(f"eBPF collector: unknown engine {engine!r} (core, bcc)")
+    if engine == "core":
+        return CoreTracer(ring_pages, self_pid, btf=btf)
     return ENGINES[engine](ring_pages, self_pid)
 
 
@@ -730,9 +755,11 @@ class EbpfLive:
 
     def __init__(self, batch: int = 2000, command: list[str] | None = None, tracer: CoreTracer | BccTracer | None = None,
                  run_id: str | None = None, cwd: str | None = None, ring_pages: int = 1024, proc: str = "/proc",
-                 engine: str | None = None):
+                 engine: str | None = None, btf: Callable[[], str | None] | None = None, retry_s: float = 600):
         self.batch, self.command, self.cwd, self.ring_pages, self.engine = batch, command, cwd, ring_pages, engine
         self._tracer = tracer
+        self.btf, self.retry_s = btf, retry_s       # btf: called before each start attempt (may download one)
+        self.error: str | None = None               # why the collector is not running (reported in health)
         self.norm = EbpfNormaliser(run_id, proc=proc)
         self.proc: subprocess.Popen | None = None
         self.stats = {"records": 0, "events": 0}
@@ -740,8 +767,29 @@ class EbpfLive:
     @property
     def tracer(self) -> CoreTracer | BccTracer:
         if self._tracer is None:
-            self._tracer = EbpfTracer(self.ring_pages, engine=self.engine)
+            self._tracer = EbpfTracer(self.ring_pages, engine=self.engine, btf=self.btf() if self.btf else None)
         return self._tracer
+
+    def _start(self, stop: Callable[[], bool]) -> Iterator[list]:
+        """System-wide mode: a collector that cannot start (no BTF, missing privileges) must not crash-loop the agent;
+        idle ticks keep it reporting (heartbeats carry the reason, commands and updates still arrive) and the
+        collector is retried every `retry_s`."""
+        while not stop():
+            try:
+                self.tracer
+                if self.error:
+                    print(f"eBPF collector started after: {self.error}", file=sys.stderr, flush=True)
+                self.error = None
+                return
+            except Exception as e:  # noqa
+                if self.command:
+                    raise
+                self.error = str(e)[:600]
+                print(f"eBPF collector unavailable (retry in {self.retry_s:.0f}s): {self.error}", file=sys.stderr, flush=True)
+            until = time.time() + self.retry_s
+            while time.time() < until and not stop():
+                yield []
+                time.sleep(1)
 
     def _decode(self, recs: list[Rec], track: set[int] | None) -> list:
         out = []
@@ -759,6 +807,9 @@ class EbpfLive:
         return out
 
     def batches(self, stop: Callable[[], bool]) -> Iterator[list]:
+        yield from self._start(stop)
+        if stop():
+            return
         tr = self.tracer
         track: set[int] | None = None
         if self.command:

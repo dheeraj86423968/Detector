@@ -70,7 +70,8 @@ services:
       PDP_PUBLIC_HOSTNAME: ${PDP_PUBLIC_HOSTNAME:-}
       HTTPS_PROXY: ${PDP_HTTPS_PROXY:-}
       NO_PROXY: ${PDP_NO_PROXY:-kms,localhost,127.0.0.1}
-    volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
+    volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro",
+               "./btf:/btf:ro" ]          # BTF files for endpoint kernels without their own (operator-stocked; may be empty)
     networks: [ backend ]
     restart: unless-stopped
     depends_on:

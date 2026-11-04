@@ -61,9 +61,10 @@ def migrate(c) -> None:
 
 # ---------------------------------------------------------------------------------------------- helpers
 def endpoint_usage(c, org_id: str) -> int:
-    """Active endpoints plus unused, unexpired enrolment tokens: what counts against the endpoint limit."""
+    """Active endpoints plus unused, unexpired single-endpoint enrolment tokens: what counts against the endpoint limit
+    (a Kubernetes fleet token reserves nothing; the limit is checked at each node's enrolment)."""
     return db.q(c, "SELECT (SELECT count(*) FROM endpoints WHERE org_id=%s AND phase<>'retired') + "
-                   "(SELECT count(*) FROM enroll_tokens WHERE org_id=%s AND used_by IS NULL AND expires_at > now()) AS n",
+                   "(SELECT count(*) FROM enroll_tokens WHERE org_id=%s AND used_by IS NULL AND max_uses IS NULL AND expires_at > now()) AS n",
                 (org_id, org_id), one=True)["n"]
 
 

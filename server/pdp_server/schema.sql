@@ -178,3 +178,7 @@ CREATE TABLE IF NOT EXISTS hunts (
 CREATE TABLE IF NOT EXISTS hunt_results (
   hunt_id UUID NOT NULL REFERENCES hunts(id) ON DELETE CASCADE, endpoint_id UUID NOT NULL REFERENCES endpoints(id) ON DELETE CASCADE,
   rows JSONB NOT NULL, at TIMESTAMPTZ DEFAULT now(), PRIMARY KEY (hunt_id, endpoint_id));
+
+-- Kubernetes (0.6): a fleet enrolment token serves up to max_uses nodes (one endpoint per node, named after it)
+ALTER TABLE enroll_tokens ADD COLUMN IF NOT EXISTS max_uses INT;
+ALTER TABLE enroll_tokens ADD COLUMN IF NOT EXISTS uses INT NOT NULL DEFAULT 0;

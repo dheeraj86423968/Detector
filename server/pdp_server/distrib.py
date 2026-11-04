@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import os
+import re
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import PlainTextResponse, Response
@@ -29,6 +30,27 @@ def public_host(request: Request) -> str:
 def agent_image(host: str) -> str | None:
     ver = os.environ.get("PDP_AGENT_VERSION", "").strip()
     return f"{host}/pdp/agent:{ver}" if ver else None
+
+
+BTF_DIR = os.environ.get("PDP_BTF_DIR", "/btf")
+RELEASE_RE = re.compile(r"^[A-Za-z0-9._+~-]{1,120}$")
+
+
+def find_btf(release: str, arch: str) -> str | None:
+    """A BTF file for kernels without their own (/sys/kernel/btf/vmlinux): the operator puts them in PDP_BTF_DIR
+    (deploy/btf) as <release>.btf, or as BTFHub's tree (<distro>/<version>/<arch>/<release>.btf.tar.xz)."""
+    arch = {"aarch64": "arm64", "amd64": "x86_64"}.get(arch, arch)
+    other = {"x86_64": "/arm64/", "arm64": "/x86_64/"}.get(arch, "/-/")
+    hits = [os.path.join(root, f) for root, _d, files in os.walk(BTF_DIR) for f in files
+            if f in (release + ".btf", release + ".btf.tar.xz") and other not in os.path.join(root, "")]
+    hits.sort(key=lambda p: (f"/{arch}/" not in p, p.endswith(".tar.xz")))   # this architecture first, raw files first
+    return hits[0] if hits else None
+
+
+@router.get("/api/public/btf/{release}")
+def btf_available(release: str, arch: str = "x86_64"):
+    """For the installer on a kernel without BTF: can this server provide it? (availability only, no content)"""
+    return {"ok": True, "available": bool(RELEASE_RE.match(release) and find_btf(release, arch))}
 
 
 @router.get("/install.sh")

@@ -24,7 +24,7 @@ for t in tests/unit/test_*.py; do
   run "$SERVER" "$t"
 done
 if docker image inspect "$AGENT" >/dev/null 2>&1; then
-  for t in test_agent test_footprint test_agent_realtime; do
+  for t in test_agent test_footprint test_nobtf test_ebpf test_agent_realtime; do
     case " ${PDP_SKIP_TESTS:-} " in *" $t "*) continue ;; esac
     [ "$t" = test_agent_realtime ] && continue      # trains a model: needs gensim (server image only)
     run "$AGENT" "tests/unit/$t.py"

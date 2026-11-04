@@ -137,19 +137,20 @@ static void emit_stats(__u64 lost) {
 }
 
 static void usage(const char *p) {
-    fprintf(stderr, "usage: %s [--ring-pages N] [--spool-mb M] [--exclude PID]... [--stats-interval S] [--check]\n", p);
+    fprintf(stderr, "usage: %s [--ring-pages N] [--spool-mb M] [--exclude PID]... [--stats-interval S] [--btf FILE] [--check]\n", p);
 }
 
 int main(int argc, char **argv) {
     unsigned ring_pages = 1024, stats_interval = 10;
     __u32 excl[MAX_EXCL] = {0};
     int nexcl = 0, check = 0, err;
+    const char *btf = NULL;      /* kernels without /sys/kernel/btf/vmlinux: the kernel's BTF from a file (e.g. BTFHub) */
     static const struct option opts[] = {
         {"ring-pages", required_argument, 0, 'r'}, {"exclude", required_argument, 0, 'x'}, {"spool-mb", required_argument, 0, 'm'},
-        {"stats-interval", required_argument, 0, 's'}, {"check", no_argument, 0, 'c'},
+        {"stats-interval", required_argument, 0, 's'}, {"check", no_argument, 0, 'c'}, {"btf", required_argument, 0, 'b'},
         {"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
     excl[nexcl++] = (__u32)getpid();
-    for (int c; (c = getopt_long(argc, argv, "r:x:s:m:ch", opts, NULL)) != -1;) {
+    for (int c; (c = getopt_long(argc, argv, "r:x:s:m:b:ch", opts, NULL)) != -1;) {
         switch (c) {
         case 'r': ring_pages = (unsigned)strtoul(optarg, NULL, 10); break;
         case 'm': qmax = (size_t)strtoull(optarg, NULL, 10) << 20; if (qmax < 2 * CHUNK) qmax = 2 * CHUNK; break;
@@ -159,6 +160,7 @@ int main(int argc, char **argv) {
             break;
         case 's': stats_interval = (unsigned)strtoul(optarg, NULL, 10); break;
         case 'c': check = 1; break;
+        case 'b': btf = optarg; break;
         default: usage(argv[0]); return c == 'h' ? 0 : 2;
         }
     }
@@ -176,12 +178,13 @@ int main(int argc, char **argv) {
     struct rlimit rl = {RLIM_INFINITY, RLIM_INFINITY};
     setrlimit(RLIMIT_MEMLOCK, &rl);
 
-    struct pdp_ebpf_bpf *skel = pdp_ebpf_bpf__open();
+    LIBBPF_OPTS(bpf_object_open_opts, oopts, .btf_custom_path = btf);
+    struct pdp_ebpf_bpf *skel = pdp_ebpf_bpf__open_opts(&oopts);
     if (!skel) { fprintf(stderr, "pdp-ebpf: open failed: %s\n", strerror(errno)); return 1; }
     for (int i = 0; i < MAX_EXCL; i++) skel->rodata->excl[i] = excl[i];
     bpf_map__set_max_entries(skel->maps.events, ring_pages * (unsigned)getpagesize());
     if ((err = pdp_ebpf_bpf__load(skel))) {
-        fprintf(stderr, "pdp-ebpf: load failed (%d: %s); the kernel needs BPF, BTF (/sys/kernel/btf/vmlinux) and "
+        fprintf(stderr, "pdp-ebpf: load failed (%d: %s); the kernel needs BPF, BTF (/sys/kernel/btf/vmlinux or --btf FILE) and "
                 "the ring buffer (>= 5.8), and the process CAP_BPF+CAP_PERFMON (or CAP_SYS_ADMIN)\n", err, strerror(-err));
         pdp_ebpf_bpf__destroy(skel); return 1;
     }

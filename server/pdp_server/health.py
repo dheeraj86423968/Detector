@@ -10,6 +10,9 @@ def problems(row: dict, target_version: str | None = None) -> list[dict]:
     """[{key, level: warning|error, text}] for an endpoint row (health, phase, kind, current_bundle, agent_version)."""
     h = row.get("health") or {}
     out = []
+    if h.get("collector_error"):
+        out.append({"key": "collector_error", "level": "error",
+                    "text": f"The collector is not running, so nothing is recorded or detected: {str(h['collector_error'])[:300]}"})
     if (h.get("collector_lost") or 0) > 0:
         out.append({"key": "collector_lost", "level": "warning", "text": f"The collector dropped {h['collector_lost']} events since the agent started (ring buffer full)"})
     dropped = int(h.get("spool_dropped_unuploaded") or 0) + int(h.get("spool_dropped_unscored") or 0)
@@ -29,6 +32,8 @@ def problems(row: dict, target_version: str | None = None) -> list[dict]:
         if v == target_version:
             out.append({"key": f"update_failed:{v}", "level": "warning", "text": f"Agent {v} did not start on this endpoint and was rolled back; it stays on {row.get('agent_version')}"})
     if target_version and row.get("agent_version") and row.get("agent_version") != target_version and u and not u.get("updater"):
-        out.append({"key": "no_updater", "level": "warning",
-                    "text": f"Agent {target_version} is available; this host's service predates automatic updates (run the installer with --upgrade once)"})
+        cfg = row.get("config") or {}
+        how = ("apply the cluster's manifest again: Endpoints > Kubernetes clusters > Manifest" if isinstance(cfg, dict) and cfg.get("cluster")
+               else "this host's service predates automatic updates (run the installer with --upgrade once)")
+        out.append({"key": "no_updater", "level": "warning", "text": f"Agent {target_version} is available; {how}"})
     return out

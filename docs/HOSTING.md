@@ -8,7 +8,8 @@ agent versions and watches usage.
    code while sign-up is code-only). They become the organisation's admin.
 2. Endpoints > Add endpoint > name > copies one command and runs it as root on a Linux server:
    `curl -fsSL https://<server>/install.sh | sudo bash -s -- --token <token>`
-   The installer checks the host (x86_64, kernel 5.8+ with BTF for eBPF, memory, disk, reachability of ports 443
+   The installer checks the host (x86_64 or arm64 when published, kernel 5.8+ with BTF for eBPF or a BTF file the
+   server provides, memory, disk, reachability of ports 443
    and the agent port), installs docker if missing (apt / dnf / yum), downloads the agent from this server
    (enrolment token = download credential), writes `/etc/pdp`, installs and starts `pdp-agent.service`, waits for
    enrolment and removes the used token from disk. Re-running is safe; `--uninstall [--purge]` removes it.

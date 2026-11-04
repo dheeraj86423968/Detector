@@ -174,5 +174,15 @@ proxy (profile "sso"), whose allow list must list the providers' hosts.
   and protected endpoints upload none, so the endpoints are the store. Verified on client-vm-02: a marker file write, curl's connection to 172.66.147.243:443
   and the command lines were found within seconds; 183 index entries after 5 minutes. Staging e2e (hunt_e2e) 16/16:
   version gate, isolation between organisations, answers only from asked endpoints, viewers read-only.
-- Kubernetes DaemonSet install, ARM64, kernels without BTF. (Windows parked.)
+- Kubernetes DaemonSet install, ARM64, kernels without BTF. (Windows parked.) — built 2026-11-04 (server 0.6, agent
+  0.3.18), partly verified (details in docs/DEPLOYMENT.md 1 and 1b):
+  - Kubernetes: Endpoints > Add endpoint > Kubernetes cluster gives a DaemonSet manifest with a fleet token (N nodes,
+    expiry; each node its own endpoint named after the node; closable; re-download to update). Staging e2e 17/17.
+    Not yet applied to a live cluster: downloading kind/kubectl was not allowed on this host.
+  - Kernels without BTF: the loader takes a BTF file; the agent finds or downloads it (operator stocks deploy/btf,
+    BTFHub layout works); the installer checks availability; a collector that cannot start no longer crash-loops
+    the agent (heartbeat collector_error, retried every 10 min). Verified on the real kernel with BTF as a file.
+  - ARM64: native image build, multi-architecture publishing, installer accepts aarch64, CI job on GitHub arm64
+    runners. Verified here only: the arm64 BPF object compiles, the aarch64 torch wheel exists. Needs one run on
+    arm64 hardware (CI job or an arm64 VM).
 - Measured detection coverage against the harmless attack suite, tracked per release.

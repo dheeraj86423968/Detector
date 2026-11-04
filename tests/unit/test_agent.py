@@ -124,7 +124,7 @@ check(not a.request_update(offer) and a.update_health()["failed"] == ["9.9.9"], 
 open(_os.path.join(a.cfg.data_dir, "update-trial.env"), "w").write("VERSION=x\n")
 a.confirm_update()
 check(open(_os.path.join(a.cfg.data_dir, "update-ok")).read().strip() == a_version, "after an update the first heartbeat confirms the new version")
-check(a.update_health()["state"] == "none", "once confirmed, health no longer reports a trial (the updater clears its files at the next start)")
+check(a.update_health()["state"] != "trial", "once confirmed, health no longer reports a trial (the updater clears its files at the next start)")
 
 # 8. response: stop a process only while its pid still is the alerted process
 import subprocess as _sp

@@ -1,0 +1,3 @@
+# BTF files for endpoint kernels without /sys/kernel/btf/vmlinux (served to agents by /v1/endpoints/{id}/btf/<release>).
+# Put <release>.btf files here, or unpack the parts of https://github.com/aquasecurity/btfhub-archive you need
+# (<distro>/<version>/<arch>/<release>.btf.tar.xz). See docs/DEPLOYMENT.md.

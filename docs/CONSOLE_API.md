@@ -224,6 +224,14 @@ node_uuid (kill_process: a process an alert of this endpoint was raised on)}` �
 `GET /api/endpoints/{id}/commands/{id}` → `{state, result}` (the agent acts within its next status poll). Health
 adds `isolated`. Agents 0.3.15+.
 
+## Kubernetes clusters (0.6, admins)
+`POST /api/clusters {cluster, max_nodes (1-5000, 50), days (1-365, 30)}` → `{key, expires_at, max_nodes, manifest}`
+(YAML: namespace, Secrets, DaemonSet). `GET /api/clusters` → `[{key, cluster, uses, max_nodes, expires_at, active,
+endpoints}]`; `GET /api/clusters/{key}/manifest` (YAML with the current agent version; 410 once closed);
+`POST /api/clusters/{key}/revoke` closes it to new nodes. Each node enrols as its own endpoint named after the node
+(`config.cluster` = the cluster name). Public, for the installer: `GET /api/public/btf/{release}?arch=` →
+`{available}`.
+
 ## Threat hunting (0.6)
 `POST /api/hunts {q (2-200 characters), kind: exec|net|write|null}` (admins, analysts) → `{id, endpoints, skipped}`:
 sent as a `hunt` command to every endpoint of the organisation that reported within a day and runs agent 0.3.17+

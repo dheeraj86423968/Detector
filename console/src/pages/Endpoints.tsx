@@ -3,7 +3,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, Plus, Search, Server } from "lucide-react";
 import { ApiError, Endpoint, EnrollToken, post, useApi, useCan } from "../api";
 import { fmtDateTime, fmtRel, plural } from "../format";
-import { Card, CopyField, Dialog, Empty, EndpointStateBadge, ErrorState, Field, Loading, PageHeader, Toggle } from "../ui";
+import { Card, CopyField, Dialog, Empty, EndpointStateBadge, ErrorState, Field, Loading, PageHeader, Segmented, Toggle } from "../ui";
+import { ClusterForm, ClusterResult, ClustersCard, NewCluster } from "../clusters";
 import { AgentUpdates } from "../updates";
 
 export default function Endpoints() {
@@ -60,12 +61,14 @@ export default function Endpoints() {
             </div>
           )}
       </Card>
+      {can.manage_endpoints && <ClustersCard key={String(adding)} />}
       {adding && <AddEndpointDialog onClose={() => setAdding(false)} onCreated={reload} />}
     </div>
   );
 }
 
 function AddEndpointDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [mode, setMode] = useState<"server" | "k8s">("server"); const [cl, setCl] = useState<{ c: NewCluster; name: string } | null>(null);
   const [name, setName] = useState(""); const [tok, setTok] = useState<EnrollToken | null>(null);
   const [err, setErr] = useState<{ text: string; limit: boolean } | null>(null); const [busy, setBusy] = useState(false);
   const create = async (e: React.FormEvent) => {
@@ -79,6 +82,15 @@ function AddEndpointDialog({ onClose, onCreated }: { onClose: () => void; onCrea
     setBusy(false);
   };
   const primary = tok?.install_command || tok?.enroll_command || "";
+  if (mode === "k8s") return (
+    <Dialog title={cl ? `Install the agent on cluster ${cl.name}` : "Add endpoint"} width={680} onClose={onClose}
+      subtitle={cl ? "One agent per node, as a DaemonSet." : "A Kubernetes cluster: one manifest installs the agent on every node."}
+      footer={cl ? <button className="btn primary" onClick={onClose}>Done</button> : <>
+        <button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" form="add-k8s">Continue</button></>}>
+      {!cl && <div style={{ marginBottom: 16 }}><Segmented value={mode} onChange={setMode} options={[{ id: "server", label: "One server" }, { id: "k8s", label: "Kubernetes cluster" }]} /></div>}
+      {cl ? <ClusterResult c={cl.c} name={cl.name} /> : <ClusterForm id="add-k8s" onCreated={(c, n) => { setCl({ c, name: n }); onCreated(); }} />}
+    </Dialog>
+  );
   return (
     <Dialog title={tok ? `Install the agent on ${name.trim()}` : "Add endpoint"} width={680} onClose={onClose}
       subtitle={tok ? `The command contains a one-time token, valid for ${plural(tok.expires_in_hours, "hour")}.` : "Name the server, then run one command on it to install the agent."}
@@ -87,6 +99,7 @@ function AddEndpointDialog({ onClose, onCreated }: { onClose: () => void; onCrea
         <button className="btn primary" form="add-ep" disabled={!name.trim() || busy}>{busy && <Loader2 size={14} className="spin" />}Continue</button></>}>
       {!tok ? (
         <form id="add-ep" onSubmit={create}>
+          <div style={{ marginBottom: 16 }}><Segmented value={mode} onChange={setMode} options={[{ id: "server", label: "One server" }, { id: "k8s", label: "Kubernetes cluster" }]} /></div>
           <Field label="Endpoint name" hint="Shown in the console, e.g. web-01 or build-server.">
             <input value={name} onChange={e => setName(e.target.value)} autoFocus maxLength={128} placeholder="web-01" />
           </Field>

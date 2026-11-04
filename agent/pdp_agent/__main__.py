@@ -40,7 +40,8 @@ def main():
     elif src["kind"] == "ebpf":
         from .sources.ebpf import EbpfLive
         source = EbpfLive(batch=int(src.get("batch", 2000)), ring_pages=int(src.get("ring_pages", 4096)), proc=src.get("proc", "/proc"),
-                          engine=src.get("engine"))   # "core" (libbpf CO-RE, default) or "bcc" (header-compiled fallback)
+                          engine=src.get("engine"),    # "core" (libbpf CO-RE, default) or "bcc" (header-compiled fallback)
+                          btf=a.kernel_btf)            # kernels without their own BTF: a file from the server
     elif src["kind"] == "etw":
         from .sources.windows_etw import EtwLive
         source = EtwLive(batch=int(src.get("batch", 2000)))

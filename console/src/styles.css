@@ -720,3 +720,7 @@ td.reason { margin: 0; }
 .progress > div { height: 100%; background: var(--accent, #2563eb); border-radius: 6px; }
 .codes { background: var(--warn-bg); border: 1px solid var(--warn-line); padding: 10px 14px; border-radius: 8px; font-size: 15px; line-height: 1.7; }
 .row-gap { display: flex; gap: 8px; align-items: center; }
+
+/* side-by-side form fields and button rows (Kubernetes dialog) */
+.hrow { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 12px; }
+.hrow > .field { flex: 1 1 200px; }

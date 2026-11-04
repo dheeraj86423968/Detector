@@ -178,7 +178,7 @@ class Agent:
                 csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "pending")])).sign(key, hashes.SHA256())
                 t = Transport(self.cfg.server_url, self.cfg.server_ca)
                 import platform as pf
-                r = t.request("POST", "/v1/enroll", {"token": token, "hostname": pf.node(), "os": pf.system().lower(), "arch": pf.machine(),
+                r = t.request("POST", "/v1/enroll", {"token": token, "hostname": os.environ.get("PDP_HOSTNAME") or pf.node(), "os": pf.system().lower(), "arch": pf.machine(),
                                                      "agent_version": VERSION, "tz": self.cfg.day_tz, "csr_pem": csr.public_bytes(serialization.Encoding.PEM).decode()})
                 break
             except TransportError:
@@ -766,6 +766,43 @@ class Agent:
         self.stop = True
         return True
 
+    def kernel_btf(self) -> str | None:
+        """BTF for the eBPF collector on kernels without /sys/kernel/btf/vmlinux: a local file, else one the server
+        has for this kernel release (GET /v1/btf/<release>; raw .btf, or BTFHub's .btf.tar.xz unpacked here)."""
+        from .sources.ebpf import find_btf, KERNEL_BTF
+        if os.path.exists(KERNEL_BTF):
+            return None
+        f = find_btf(self.cfg.data_dir)
+        if f or self.tr is None or not self.eid:
+            return f
+        rel = os.uname().release
+        dst = os.path.join(self.cfg.data_dir, "btf", rel + ".btf")
+        try:
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            tmp = dst + ".part"
+            self.tr.download(f"/v1/endpoints/{self.eid}/btf/{rel}", tmp)
+            with open(tmp, "rb") as fh:
+                head = fh.read(6)
+            if head.startswith(b"\xfd7zXZ"):           # BTFHub archive: <release>.btf.tar.xz with one .btf member
+                import tarfile
+                with tarfile.open(tmp, "r:xz") as t:
+                    m = next(m for m in t.getmembers() if m.isfile() and m.name.endswith(".btf"))
+                    with t.extractfile(m) as src, open(dst + ".x", "wb") as out:
+                        shutil.copyfileobj(src, out)
+                os.replace(dst + ".x", dst); os.remove(tmp)
+            else:
+                os.replace(tmp, dst)
+            log(f"collector: BTF for kernel {rel} downloaded from the server")
+            return dst
+        except Exception as e:  # noqa - reported through the collector error
+            for x in (dst + ".part", dst + ".x"):
+                try:
+                    os.remove(x)
+                except OSError:
+                    pass
+            log(f"collector: no BTF for kernel {rel} from the server ({e})")
+            return None
+
     def _confirmed(self) -> bool:
         try:
             with open(self._upd("update-ok")) as f:
@@ -928,6 +965,9 @@ class Agent:
             h["disk_free_pct"] = round(100.0 * st.f_bavail / max(st.f_blocks, 1), 1)
         except OSError:
             pass
+        err = getattr(getattr(self, "source", None), "error", None)
+        if err:
+            h["collector_error"] = err
         try:   # collector health: records the kernel dropped because the ring buffer was full (CO-RE eBPF)
             tr = getattr(getattr(self, "source", None), "_tracer", None)
             if tr is not None and getattr(tr, "stats", None) is not None and type(tr).__name__ == "CoreTracer":

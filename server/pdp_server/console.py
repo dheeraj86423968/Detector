@@ -399,9 +399,10 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
     issues += [p["text"] for p in probs]
     if learning and days and not any(d["events"] for d in days) and ep["online"]:
         issues.append("No events have been received yet")
-    status = "error" if not ep["online"] and row["kind"] == "live" and row["phase"] != "retired" else "warning" if issues else "ok"
+    status = ("error" if (not ep["online"] and row["kind"] == "live" and row["phase"] != "retired") or any(p["level"] == "error" for p in probs)
+              else "warning" if issues else "ok")
     health = {"online": ep["online"], "last_seen": row["last_seen"], "agent_version": h.get("agent_version") or row["agent_version"],
-              "collector": "eBPF (CO-RE)" if h.get("collector_lost") is not None else "Dataset replay" if row["kind"] == "benchmark"
+              "collector": "Not running" if h.get("collector_error") else "eBPF (CO-RE)" if h.get("collector_lost") is not None else "Dataset replay" if row["kind"] == "benchmark"
                            else f"{(row['os'] or 'endpoint').capitalize()} agent {h.get('agent_version') or row['agent_version'] or ''}".strip(),
               "events_dropped": h.get("collector_lost"), "queue_depth": h.get("queue_depth"), "cpu_pct": h.get("cpu_pct"), "rss_mb": h.get("rss_mb"),
               "events_24h": int(ev24) + int(w24), "status": status, "issues": issues,
