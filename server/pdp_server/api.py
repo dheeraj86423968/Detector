@@ -786,7 +786,7 @@ def list_alerts(s=Depends(session), endpoint_id: str | None = None, status: str 
         eps = sorted({str(r["endpoint_id"]) for r in rows})
         inc_of = {}
         if eps:
-            for g in _inc.group(_inc.load_alerts(c, eps, with_context=True)):
+            for g in _inc.grouped(c, eps):
                 for a in g:
                     inc_of[a["id"]] = g[0]["id"]
     out = []

@@ -222,17 +222,46 @@ def summarise(alerts: list[dict]) -> dict:
             "alerts": len(alerts), "processes": len(procs), "status": incident_status(alerts)}
 
 
+_GROUP_CACHE: dict[str, tuple[tuple, list[list[int]]]] = {}
+
+
+def grouped(c, scope, endpoint_id=None) -> list[list[dict]]:
+    """Incidents as lists of (context-free) alert rows. Grouping needs the alerts' provenance context, so it is
+    computed per endpoint once and cached until that endpoint's alert set changes (new alerts, allow-list marks)."""
+    ids = scope if endpoint_id is None else ([endpoint_id] if scope is None or endpoint_id in scope else [])
+    where = "allowed_by IS NULL" + (" AND endpoint_id = ANY(%s::uuid[])" if ids is not None else "")
+    keys = {str(r["endpoint_id"]): (r["mx"], r["n"]) for r in db.q(
+        c, f"SELECT endpoint_id, max(id) AS mx, count(*) AS n FROM alerts WHERE {where} GROUP BY endpoint_id", (ids,) if ids is not None else ())}
+    rows = load_alerts(c, scope, endpoint_id)
+    by_id = {r["id"]: r for r in rows}
+    out = []
+    for eid, key in keys.items():
+        hit = _GROUP_CACHE.get(eid)
+        if hit is None or hit[0] != key:
+            groups = group(load_alerts(c, None, eid, with_context=True))
+            hit = (key, [[a["id"] for a in g] for g in groups])
+            _GROUP_CACHE[eid] = hit
+        for g in hit[1]:
+            got = [by_id[i] for i in g if i in by_id]
+            if got:
+                out.append(got)
+    return out
+
+
 def list_incidents(c, scope, endpoint_id=None) -> list[dict]:
-    return [summarise(g) for g in group(load_alerts(c, scope, endpoint_id, with_context=True))]
+    return [summarise(g) for g in grouped(c, scope, endpoint_id)]
 
 
 def find(c, scope, incident_id: int, with_context: bool = False) -> list[dict] | None:
     a = db.q(c, "SELECT endpoint_id FROM alerts WHERE id=%s", (incident_id,), one=True)
     if not a or (scope is not None and str(a["endpoint_id"]) not in scope):
         return None
-    for g in group(load_alerts(c, None, str(a["endpoint_id"]), with_context=True)):
+    for g in grouped(c, None, str(a["endpoint_id"])):
         if g[0]["id"] == incident_id:
-            return g
+            if not with_context:
+                return g
+            full = {r["id"]: r for r in db.q(c, "SELECT id, context FROM alerts WHERE id = ANY(%s)", ([x["id"] for x in g],))}
+            return [dict(x, context=full[x["id"]]["context"]) for x in g]
     return None
 
 
