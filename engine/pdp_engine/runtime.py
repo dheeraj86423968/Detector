@@ -308,8 +308,26 @@ class Runtime:
             self.state.grow(n)
             self.last_seen = np.concatenate([self.last_seen, np.full(n - len(self.last_seen), NOT_YET, dtype=np.int64)])
 
+    def rules(self, w: Window) -> list[Hit]:
+        """Layers 1-2 on a slice of the stream (real-time path): call with consecutive slices of the open window in
+        time order, then pass all their hits to score() for that window, which then does not run the layers again.
+        Gives the same hits as running the layers on the whole window."""
+        if self.layers is None:
+            return []
+        self.grow()
+        return self.layers.process(w, self.reg, w.nodes())
+
+    def immediate_alerts(self, hits: list[Hit]) -> dict[int, list[dict]]:
+        """Alerts the deterministic layers raise on their own (no learned score needed), node -> reasons; what
+        score() will report for these nodes in layers 1-2 anyway, available as soon as the events are seen."""
+        if self.policy is None:
+            return {}
+        reasons, _ = self.policy.split(hits)
+        return self.policy.allowed(reasons)
+
     @torch.no_grad()
-    def score(self, w: Window, keep_edge_losses: bool = False) -> WindowResult:
+    def score(self, w: Window, keep_edge_losses: bool = False, hits: list[Hit] | None = None) -> WindowResult:
+        """hits: the layers' hits for this window from rules() (real-time path); None runs the layers here."""
         self.grow()
         n = self.x.shape[0]
         src, dst, et = (torch.from_numpy(a).to(self.dev) for a in (w.src, w.dst, w.etype))
@@ -342,7 +360,7 @@ class Runtime:
         if self.layers is None:
             alerts, reasons, hits = ids[above(fused)], {}, []
         else:
-            alerts, reasons, hits = self._alert_policy(w, ids, fused)
+            alerts, reasons, hits = self._alert_policy(w, ids, fused, hits)
         res = WindowResult(w.start_ns, w.end_ns, w.num_edges, ids, fused, r1, r2, alerts, reasons=reasons, hits=hits)
         if keep_edge_losses:
             res.edge_loss = {"detector-1": np.mean(l1s, axis=0), "detector-2": np.mean([np.concatenate(l) for l in l2], axis=0)}
@@ -388,8 +406,8 @@ class Runtime:
         self.N0 = len(self.reg)
         return old2new
 
-    def _alert_policy(self, w: Window, ids: np.ndarray, fused: np.ndarray):
-        return self.policy.apply(w, self.reg, ids, fused)
+    def _alert_policy(self, w: Window, ids: np.ndarray, fused: np.ndarray, hits=None):
+        return self.policy.apply(w, self.reg, ids, fused, hits)
 
 
 class AlertPolicy:
@@ -409,9 +427,8 @@ class AlertPolicy:
     def reset(self):
         self._day, self._day_learned = None, 0
 
-    def apply(self, w: Window, reg: Registry, ids: np.ndarray, fused: np.ndarray):
-        hits: list[Hit] = self.layers.process(w, reg, ids)
-        pos = {int(n): i for i, n in enumerate(ids.tolist())}
+    def split(self, hits: list[Hit]) -> tuple[dict, dict]:
+        """Hits -> (reasons of alerting rules, evidence of corroboration-only rules), per node."""
         reasons: dict[int, list[dict]] = {}
         evidence: dict[int, list[dict]] = {}
         for h in hits:
@@ -419,8 +436,19 @@ class AlertPolicy:
             for k, n in enumerate(h.nodes):
                 dest.setdefault(int(n), []).append({"layer": h.layer, "rule": h.rule, "detail": h.detail, "key": h.key,
                                                     "value": h.value, "ts_ns": h.ts, "role": "actor" if k == 0 else "object"})
+        return reasons, evidence
+
+    def allowed(self, reasons: dict) -> dict:
         if self.alert_layers is not None:
             reasons = {n: rs for n, rs in reasons.items() if any(x["layer"] in self.alert_layers for x in rs)}
+        return reasons
+
+    def apply(self, w: Window, reg: Registry, ids: np.ndarray, fused: np.ndarray, hits: list[Hit] | None = None):
+        if hits is None:
+            hits = self.layers.process(w, reg, ids)
+        pos = {int(n): i for i, n in enumerate(ids.tolist())}
+        reasons, evidence = self.split(hits)
+        reasons = self.allowed(reasons)
         det = [n for n in reasons if n in pos]
         if not self.learned_alerts or (self.alert_layers is not None and not ({"corroborated", "learned"} & self.alert_layers)):
             return np.array(sorted(reasons), dtype=np.int64), reasons, hits

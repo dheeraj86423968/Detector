@@ -43,6 +43,12 @@ The agent verifies the Ed25519 signature against the server's bundle-signing pub
 ```
 Only flagged nodes and their window-local neighbourhood leave the host; benign telemetry does not.
 
+Real time (agent 0.3.7+): layers 1-2 (new program, rules) run on each batch of events as it is scored, and the alerts
+they raise on their own are posted at once, seconds after the events, with `window_start_ns` of the still-open
+window, `fused`/`r1`/`r2` = 0 (no learned score yet) and the batch's events as `context`. When the window closes its
+summary is posted as before; those alerts are not posted again, and the learned/corroborated alerts follow with it.
+An alert already sent is remembered for two hours, so a restart that replays the open window does not repeat it.
+
 ## Control
 `POST /v1/endpoints/{id}/heartbeat`  `{ "agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb", "collector_lost",
                                       "spool_mb", "spool_dropped_unscored", "spool_dropped_unuploaded" }` — stored as the

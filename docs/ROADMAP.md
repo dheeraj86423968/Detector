@@ -31,11 +31,19 @@ Still open (not blocking): the model bundle still scales with the baseline's ent
 the server could drop rows of entities that ended before the baseline did); 300-500 MB image would need an
 inference runtime other than PyTorch (libtorch_cpu alone is 467 MB).
 
-### 2. Real-time rules — status: todo
+### 2. Real-time rules — status: done (agent 0.3.7, 2026-11-04)
 Scoring runs on 15-minute windows, so an alert can come 15+ minutes late; ransomware finishes in that time.
 Done when the deterministic rules (downloaded program executed, mass rename/encrypt, persistence write, etc.) are
 evaluated per event as it arrives and reported within seconds; learned layers stay window-based; console shows the
 alert immediately and the window result later enriches the same incident.
+
+Result: the agent runs layers 1-2 on every batch of spooled events (Runtime.rules) and posts the alerts they raise
+on their own immediately; the window is scored with those hits (no second pass), so window results are unchanged:
+CADETS test days give identical alerts with rules run on 5000-event slices vs whole windows; synthetic stream
+(tests/unit/test_realtime.py) identical per window, the download-and-execute alert available 17 events after the
+execution instead of at window close. Real-time alerts are not re-sent with their window or after a restart
+(tests/unit/test_agent_realtime.py). They join the window's incident (incidents group by time). Learned and
+corroborated alerts still come with the window.
 
 ### 3. Notifications and export — status: todo
 Alerts are only visible in the console. Done when: per-org notification settings; e-mail (SMTP) and Slack/Teams

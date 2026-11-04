@@ -30,7 +30,7 @@ from .config import Config
 from .state import State
 from .transport import Transport, TransportError
 
-VERSION = "0.3.6"
+VERSION = "0.3.7"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -101,6 +101,11 @@ class Agent:
         self._max_id = 0                     # highest spool id handed out
         self._open_ids: list[int] = []       # spool ids in the open window: marked scored once their window is
         self._last_compact = time.time()     # scored (on restart they are replayed into a fresh builder)
+        self._slice: list[tuple] = []        # events pushed since the rules last ran (real-time rules)
+        self._win_hits: list = []            # rule hits of the open window, handed to score() when it closes
+        # (uuid, rule) -> ts of alerts already sent in real time: not sent again with their window, nor after a
+        # restart replays the open window
+        self._early = {tuple(k[:2]): k[2] for k in (self.state.get("early_alerts") or [])}
 
     # ------------------------------------------------------------------ enrolment
     def enroll(self, token: str, ca_sha256: str | None = None, attempts: int = 30):
@@ -428,19 +433,68 @@ class Agent:
                     self.runtime.grow()
                     s, d = loc(r[2]), loc(r[4])
                 self._open_ids.append(r[0])
-                closed = list(self.builder.push(s, d, r[1], EDGE_TYPE_ID[r[3]], r[5]))
+                ev = (s, d, r[1], EDGE_TYPE_ID[r[3]], r[5])
+                self._slice.append(ev)
+                closed = list(self.builder.push(*ev))
                 if closed:
-                    results += [(w, self.runtime.score(w, keep_edge_losses=True)) for w in closed]
+                    self.run_rules(closed[0].start_ns)            # the rest of the closed window
+                    for w in closed:
+                        results.append((w, self.runtime.score(w, keep_edge_losses=True, hits=self._win_hits)))
+                        self._win_hits = []
                     self.state.mark_scored(self._open_ids)    # everything pushed so far was in the closed window(s)
                     self._open_ids = []
             last = rows[-1]
             self._cursor = (last[1], last[0])
             self._max_id = max(self._max_id, max(r[0] for r in rows))
+            self.run_rules(self.builder._start if self.builder._start is not None else (self._slice[0][2] if self._slice else 0))
             self.report(results)
             rows = self.state.unscored_events(after=self._cursor, max_id=self._max_id)
 
+    def run_rules(self, window_start_ns: int) -> None:
+        """Layers 1-2 on the events pushed since the last call (real-time path). Alerts they raise on their own are
+        sent at once, seconds after the events instead of when the 15-minute window closes; the hits go to
+        score() with the window, which then gives the same result as before (tests/unit/test_realtime.py)."""
+        if not self._slice or self.runtime is None:
+            return
+        sl, self._slice = self._slice, []
+        a = list(zip(*sl))
+        mini = Window(start_ns=int(sl[0][2]), end_ns=int(sl[-1][2]), src=np.array(a[0], dtype=np.int64), dst=np.array(a[1], dtype=np.int64),
+                      t=np.array(a[2], dtype=np.int64), etype=np.array(a[3], dtype=np.int64), event_uuid=list(a[4]))
+        hits = self.runtime.rules(mini)
+        self._win_hits += hits
+        if not hits:
+            return
+        out = []
+        now = time.time_ns()
+        for n, rs in self.runtime.immediate_alerts(hits).items():
+            e = self.reg[int(n)]
+            layer = min((x["layer"] for x in rs), key=lambda x: {"novelty": 0, "rules": 1}.get(x, 9))
+            main = next(x for x in rs if x["layer"] == layer)
+            key = (e.uuid, main.get("rule"))
+            if key in self._early:
+                continue
+            self._early[key] = now
+            out.append((n, e, layer, main, rs))
+        if not out:
+            return
+        disp = self.state.displays([e.uuid for _, e, _, _, _ in out])
+        alerts = [{"window_start_ns": int(window_start_ns), "node": {"uuid": e.uuid, "ntype": e.ntype, "label": e.label, "display": disp.get(e.uuid) or e.display},
+                   "fused": 0.0, "r1": 0.0, "r2": 0.0, "context": self.context(mini, None, int(n)), "layer": layer, "rule": main.get("rule"),
+                   "reason": main.get("detail"), "reasons": rs} for n, e, layer, main, rs in out]
+        self._save_early()
+        self._unreported = getattr(self, "_unreported", [])
+        self._unreported.append(([], alerts))
+        log(f"real-time: {len(alerts)} rule alerts ({', '.join(sorted({a['rule'] for a in alerts}))})")
+
+    def _save_early(self):
+        cut = time.time_ns() - 2 * 3600 * 10**9          # longer than a window plus a restart
+        self._early = {k: t for k, t in self._early.items() if t >= cut}
+        self.state.set("early_alerts", [[k[0], k[1], t] for k, t in self._early.items()])
+
     def flush_window(self):
-        results = [(w, self.runtime.score(w, keep_edge_losses=True)) for w in self.builder.finish()]
+        self.run_rules(self.builder._start or 0)
+        results = [(w, self.runtime.score(w, keep_edge_losses=True, hits=self._win_hits)) for w in self.builder.finish()]
+        self._win_hits = []
         if results:
             self.state.mark_scored(self._open_ids)
             self._open_ids = []
@@ -458,7 +512,7 @@ class Agent:
                 break
         m = np.isin(src, list(keep)) & np.isin(dst, list(keep))
         idx = np.where(m)[0][:cap * 4]
-        l1 = r.edge_loss.get("detector-1")
+        l1 = r.edge_loss.get("detector-1") if r is not None else None
         nodes = [{"uuid": self.reg[i].uuid, "ntype": self.reg[i].ntype, "label": self.reg[i].label} for i in sorted(keep)[:cap]]
         edges = [{"src": self.reg[int(src[i])].uuid, "dst": self.reg[int(dst[i])].uuid, "op": EDGE_TYPES[int(w.etype[i])], "ts_ns": int(w.t[i]),
                   "loss": float(l1[i]) if l1 is not None else None} for i in idx]
@@ -475,20 +529,25 @@ class Agent:
             self._last_window_end = max(self._last_window_end, int(w.end_ns))
             pos = {int(n): i for i, n in enumerate(r.node_ids)}
             for n in r.alerts:
-                i = pos[int(n)]
+                i = pos.get(int(n))
+                if i is None:
+                    continue
                 e = self.reg[int(n)]
                 rs = r.reasons.get(int(n)) or [{"layer": "learned", "rule": "learned_score", "detail": f"learned score {float(r.fused[i]):.2f}x the benign maximum"}]
                 layer = r.layer_of(int(n))
                 main = next(x for x in rs if x["layer"] == layer)
+                if layer in ("rules", "novelty") and (e.uuid, main.get("rule")) in self._early:
+                    continue                      # already sent in real time
                 alerts.append({"window_start_ns": w.start_ns, "node": {"uuid": e.uuid, "ntype": e.ntype, "label": e.label, "display": disp.get(e.uuid) or e.display},
                                "fused": float(r.fused[i]), "r1": float(r.r1[i]), "r2": float(r.r2[i]), "context": self.context(w, r, int(n)),
                                "layer": layer, "rule": main.get("rule"), "reason": main.get("detail"), "reasons": rs})
-        if wins:
+        if wins or alerts:
             self._unreported.append((wins, alerts))
         try:
             while self._unreported:
                 w0, a0 = self._unreported[0]
-                self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/windows", w0)
+                if w0:
+                    self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/windows", w0)
                 if a0:
                     self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/alerts", a0)
                     log(f"reported {len(a0)} alerts in {len(w0)} windows")
