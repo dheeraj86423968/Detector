@@ -113,6 +113,8 @@ class Runtime:
         self.corroboration = float(cal["fusion"]["percentiles"].get(cp, self.fcal.threshold)) / self.fcal.threshold
         ev = (self.layers.spec.get("config", {}).get("evidence_rules", EVIDENCE_RULES) if self.layers is not None else ())
         self.policy = AlertPolicy(self.layers, self.daily_budget, self.corroboration, cp, ev) if self.layers is not None else None
+        if self.policy is not None and pol.get("alert_layers") is not None:
+            self.policy.alert_layers = set(pol["alert_layers"])
         # node features for the baseline registry + TGN state continuing from the end of the validation day
         self.N = self.m["num_nodes"]
         feat_dim = d1["in_dim"] - (DEG_DIM if self.deg1 else 0)   # node features; detector-1 adds the window degrees
@@ -241,6 +243,9 @@ class AlertPolicy:
                  evidence_rules=EVIDENCE_RULES):
         self.layers, self.daily_budget, self.corroboration = layers, int(daily_budget), float(corroboration)
         self.learned_alerts = True        # False: the learned layer only ranks (no corroborated / learned alerts)
+        # layers allowed to raise alerts (None = all). Early models, trained on hours or days of activity instead of the
+        # full baseline, alert only from the layers that stay precise on so little data (manifest learned_policy)
+        self.alert_layers: set | None = None
         self.label = corroboration_label
         self.evidence_rules = set(evidence_rules or ())
         self.reset()
@@ -258,8 +263,10 @@ class AlertPolicy:
             for k, n in enumerate(h.nodes):
                 dest.setdefault(int(n), []).append({"layer": h.layer, "rule": h.rule, "detail": h.detail, "key": h.key,
                                                     "value": h.value, "ts_ns": h.ts, "role": "actor" if k == 0 else "object"})
+        if self.alert_layers is not None:
+            reasons = {n: rs for n, rs in reasons.items() if any(x["layer"] in self.alert_layers for x in rs)}
         det = [n for n in reasons if n in pos]
-        if not self.learned_alerts:
+        if not self.learned_alerts or (self.alert_layers is not None and not ({"corroborated", "learned"} & self.alert_layers)):
             return np.array(sorted(reasons), dtype=np.int64), reasons, hits
         # evidence rules: alert when the learned score corroborates them
         for n, ev in evidence.items():

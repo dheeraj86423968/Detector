@@ -190,6 +190,16 @@ class TagEngine:
                  n_preexisting: int, fit: bool = False):
         self.p = params
         self.trusted = set(trusted_ips)
+        # private addresses are re-assigned (docker networks, DHCP): a private address in the /24 of a trusted private
+        # address is trusted too. Public addresses must have been seen themselves.
+        self.trusted_private24 = set()
+        for ip in self.trusted:
+            try:
+                a = ipaddress.ip_address(ip)
+            except ValueError:
+                continue
+            if a.version == 4 and a.is_private and not a.is_loopback:
+                self.trusted_private24.add(ipaddress.ip_network(f"{ip}/24", strict=False))
         self.allowed_nets: list = []        # console allow list: addresses / networks treated as trusted
         self.thr = thresholds or {}
         self.n_pre = int(n_preexisting)
@@ -221,7 +231,7 @@ class TagEngine:
             e = reg.entities[n]
             if e.ntype == "netflow":
                 ip = remote_ip(e.label)
-                t = _Tag(1.0 if (is_local(ip) or ip in self.trusted or self._allowed(ip)) else 0.0, 0.0, n)
+                t = _Tag(1.0 if (is_local(ip) or ip in self.trusted or self._allowed(ip) or self._private_trusted(ip)) else 0.0, 0.0, n)
                 self.__dict__.setdefault("_net_nodes", set()).add(n)
             elif e.ntype == "file":
                 t = _Tag(1.0, 1.0 if SENSITIVE.search(file_path(e.label)) else 0.0, n)
@@ -253,6 +263,15 @@ class TagEngine:
             self.allowed_nets = nets
             for n in getattr(self, "_net_nodes", ()):        # re-evaluate network endpoints seen so far
                 self.tags.pop(n, None)
+
+    def _private_trusted(self, ip: str) -> bool:
+        if not self.trusted_private24 or not ip:
+            return False
+        try:
+            a = ipaddress.ip_address(ip)
+        except ValueError:
+            return False
+        return a.version == 4 and a.is_private and any(a in n for n in self.trusted_private24)
 
     def _allowed(self, ip: str) -> bool:
         if not self.allowed_nets or not ip:

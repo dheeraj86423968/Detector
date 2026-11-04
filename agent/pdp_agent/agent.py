@@ -12,6 +12,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import shutil
 import tarfile
 import time
 import uuid as uuidlib
@@ -28,7 +29,7 @@ from .config import Config
 from .state import State
 from .transport import Transport, TransportError
 
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -233,11 +234,27 @@ class Agent:
             self.builder.window_ns = wns
         first = self.state.get("bundle_id") is None
         self.state.set("bundle_id", bundle_id)
-        if first:   # detection starts after the baseline; the days the bundle was built on are not re-scored
+        self._prune_bundles(bundle_id)
+        mat = self.runtime.m.get("maturity") or {}
+        what = (f"early model, {mat.get('baseline_hours')} h of activity" if mat.get("early") else "final model")
+        if mat.get("trained_until_ns"):    # the activity the model was built on is not scored again
+            skipped = self.state.mark_scored_before(int(mat["trained_until_ns"]))
+            log(f"bundle {bundle_id} verified and loaded ({what}); {skipped} already learned events skipped for scoring")
+        elif first:   # older bundles: detection starts after the baseline; the days the bundle was built on are not re-scored
             skipped = self.state.mark_days_scored(list(self.runtime.m.get("train_days", [])) + [self.runtime.m.get("val_day")])
             log(f"bundle {bundle_id} verified and loaded; {skipped} baseline events skipped for scoring")
         else:
             log(f"bundle {bundle_id} verified and loaded")
+
+    def _prune_bundles(self, keep: str):
+        """Superseded models (early models are replaced as the endpoint learns) are removed from disk."""
+        root = os.path.join(self.cfg.data_dir, "bundles")
+        try:
+            for d in os.listdir(root):
+                if d != keep:
+                    shutil.rmtree(os.path.join(root, d), ignore_errors=True)
+        except OSError:
+            pass
 
     def _apply_layer_config(self, cfg: dict):
         """Console-side layer settings that need no new bundle: approved programs (layer 1) and the learned layer's
@@ -386,9 +403,9 @@ class Agent:
                         self._apply_fp_budget(st["config"].get("fp_budget"))
                         self._apply_layer_config(st["config"])
                     if phase == "baseline":
-                        self.upload_baseline()
-                    elif phase == "protected":
-                        b = st.get("bundle")
+                        self.upload_baseline()     # keeps learning, also while an early model already detects
+                    if phase in ("baseline", "protected"):
+                        b = st.get("bundle")       # while learning: an early model (server 0.5), replaced as it improves
                         if b and b["id"] != self.state.get("bundle_id"):
                             self.fetch_bundle(b["id"])
                     for cmd in st.get("commands", []):

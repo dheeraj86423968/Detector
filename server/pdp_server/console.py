@@ -42,7 +42,8 @@ def endpoint_state(r: dict) -> dict:
         text = {"learning": f"{what}: building the baseline", "training": "Training the detection model"}.get(
             state, f"{what} ({'benchmark' if kind == 'benchmark' else 'running' if online else 'finished'})")
     elif phase in ("baseline", "pending"):
-        state, text = ("learning", f"Learning normal behaviour (day {min(done + 1, need)} of {need})") if online else ("offline", "Offline while learning")
+        early = " · early detection on" if r.get("current_bundle") else ""
+        state, text = ("learning", f"Learning normal behaviour (day {min(done + 1, need)} of {need}){early}") if online else ("offline", "Offline while learning")
     elif phase == "training":
         state, text = "training", "Training the detection model"
     else:
@@ -266,19 +267,26 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
             pass
         details["trained_on_days"] = len((bundle["manifest"] or {}).get("train_days") or []) + (1 if (bundle["manifest"] or {}).get("val_day") else 0)
     learning = row["phase"] in ("pending", "baseline")
+    mat = ((bundle or {}).get("manifest") or {}).get("maturity") or {}
+    early = bool(has_model and learning and mat.get("early"))
+    early_h = mat.get("baseline_hours")
+    early_txt = (f"{early_h:g} hours" if early_h is not None and early_h < 48 else f"{early_h / 24:.0f} days") if early_h is not None else "the activity so far"
     lifecycle = [
         {"step": "enrolled", "status": "done", "at": row["enrolled_at"], "text": "Agent installed and enrolled"},
         {"step": "baseline", "status": "active" if learning else "done",
          "text": f"Learning normal behaviour: {need - 1} days of activity plus 1 day to validate the model",
          "done": min(done, need), "needed": need,
          "days": [{"date": str(d["date"]), "events": int(d["events"]), "complete": d["complete"]} for d in days]},
-        {"step": "model", "status": "done" if has_model else "active" if row["phase"] == "training" else "pending",
+        {"step": "model", "status": "active" if early else "done" if has_model else "active" if row["phase"] == "training" else "pending",
          "at": bundle["created_at"] if bundle else None,
-         "text": (f"Detection model trained on {details.get('trained_on_days')} days" if has_model else
+         "text": (f"Early model trained on {early_txt} of activity; retrained as the endpoint learns, final model after day {need}" if early else
+                  f"Detection model trained on {details.get('trained_on_days')} days" if has_model else
                   "Training the detection model" if row["phase"] == "training" else "Detection model is trained after the baseline"),
          "details": details},
-        {"step": "protecting", "status": "active" if has_model and row["phase"] in ("protected", "degraded") else "done" if row["phase"] == "retired" else "pending",
-         "at": first_bundle, "text": (f"Protecting since {first_bundle.strftime('%d %b %Y')}" if has_model and first_bundle else "Protection starts once the model is trained")},
+        {"step": "protecting", "status": "active" if has_model and (row["phase"] in ("protected", "degraded") or early) else "done" if row["phase"] == "retired" else "pending",
+         "at": first_bundle, "text": (f"Detecting with an early model since {first_bundle.strftime('%d %b %Y %H:%M')} UTC; expect more alerts on new but normal activity until the baseline is complete"
+                                      if early and first_bundle else f"Protecting since {first_bundle.strftime('%d %b %Y')}" if has_model and first_bundle
+                                      else "Detection starts after the first hour of activity (early model), and is final after the baseline")},
     ]
     # ---- health
     h = row["health"] or {}

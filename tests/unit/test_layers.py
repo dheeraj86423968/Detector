@@ -135,6 +135,13 @@ got = {(x.layer, x.rule) for x in L.process(wa, reg, wa.nodes())}
 check(("novelty", "novel_executable") in got and ("rules", "untrusted_exec") in got and ("rules", "tainted_spawn") not in got,
       f"layers object runs both layers with the fitted thresholds ({sorted(got)})")
 
+# ---------------------------------------------------------------- re-assigned private addresses (docker, DHCP)
+from pdp_engine.layers import TagEngine, TagParams
+te = TagEngine(TagParams(), {"172.18.0.4", "8.8.8.8", "10.0.5.1"}, {}, N_PRE)
+check(te._private_trusted("172.18.0.10") and te._private_trusted("10.0.5.77"), "a private address in a trusted private /24 is trusted (new container IP)")
+check(not te._private_trusted("172.18.1.10") and not te._private_trusted("8.8.8.9") and not te._private_trusted("192.168.1.1"),
+      "other private /24s and neighbours of public addresses are not")
+
 # ---------------------------------------------------------------- runtime alert policy (budget, corroboration)
 try:
     from pdp_engine.runtime import AlertPolicy  # noqa: F401
@@ -171,6 +178,15 @@ else:
     pol_off = AlertPolicy(DeterministicLayers(bare, N_PRE), 5, 0.5); pol_off.learned_alerts = False
     _, r_off, _ = pol_off.apply(wl, reg, il, hi * 10)
     check(all(x[0]["layer"] in ("novelty", "rules") for x in r_off.values()), "learned_alerts off: only layer-1/2 alerts")
+    # early models: only the allowed layers alert (rules only on hours of baseline)
+    pe = AlertPolicy(DeterministicLayers(spec, N_PRE), daily_budget=5, corroboration=0.5); pe.alert_layers = {"rules"}
+    _, r_e, h_e = pe.apply(w, reg, ids_, fused)
+    check(r_e and all(any(x["layer"] == "rules" for x in rs_) for rs_ in r_e.values())
+          and not any(x["layer"] in ("corroborated", "learned") for rs_ in r_e.values() for x in rs_)
+          and any(h.layer == "novelty" for h in h_e), f"alert_layers={{'rules'}}: novelty and learned hits are kept as hits but do not alert ({sorted(r_e)})")
+    pe2 = AlertPolicy(DeterministicLayers(spec, N_PRE), daily_budget=5, corroboration=0.5); pe2.alert_layers = {"rules", "novelty", "corroborated", "learned"}
+    check(sorted(pe2.apply(w, reg, ids_, fused)[1]) == sorted(AlertPolicy(DeterministicLayers(spec, N_PRE), 5, 0.5).apply(w, reg, ids_, fused)[1]),
+          "alert_layers with every layer = the full policy")
     _, r_pre, _ = AlertPolicy(DeterministicLayers(bare, N_PRE), 0, 0.5, evidence_rules=()).apply(wl, reg, il, lo)
     check(r_pre.get(I["shproc"], [{}])[0].get("layer") == "rules", "pre-registered policy (no evidence rules): the rule alerts on its own")
 

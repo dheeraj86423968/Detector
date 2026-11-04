@@ -96,8 +96,8 @@ function AddEndpointDialog({ onClose, onCreated }: { onClose: () => void; onCrea
           <CopyField multiline value={primary} />
           <div className="install-req">Needs Linux kernel 5.8 or newer, internet access to this console, and Docker (installed automatically if missing).</div>
           <div className="install-note">
-            The endpoint appears here as soon as the agent enrols. It then learns the server's normal activity for 8 days
-            (7 days of learning and 1 day to check the result); detection starts automatically after that.
+            The endpoint appears here as soon as the agent enrols. Detection starts after one hour with an early model that
+            reports high-confidence findings; it is retrained as the agent learns and is complete after 8 days.
           </div>
           <details className="install-more">
             <summary>Other ways to install</summary>

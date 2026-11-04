@@ -79,6 +79,12 @@ class State:
         self.c.commit()
         return n
 
+    def mark_scored_before(self, ts_ns: int) -> int:
+        """Activity a model was trained/calibrated on (up to ts_ns) is not scored again."""
+        n = self.c.execute("UPDATE spool SET scored=1 WHERE ts_ns <= ? AND scored=0", (int(ts_ns),)).rowcount
+        self.c.commit()
+        return n
+
     def purge_scored(self, keep_days: int = 2, baseline_days: list[str] = ()) -> int:
         """Drop scored rows older than the retention window that no longer need uploading: baseline-day rows once
         uploaded, rows of any later day right away (only the baseline leaves the host). Returns rows removed."""

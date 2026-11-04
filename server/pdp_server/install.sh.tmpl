@@ -219,7 +219,8 @@ ok "enrolled with $SERVER"
 cat <<EOF
 
   The PDP agent is running on $(hostname).
-  It now learns this server's normal activity for 8 days (7 days plus 1 day to check the model), then protects it.
+  Detection starts after one hour with an early model (high-confidence findings only); it is retrained as the
+  agent learns this server's normal activity and is complete after 8 days.
   Follow its progress in the console: $SERVER/#/endpoints
   Service log: journalctl -u $UNIT -f      Remove: curl -fsSL $SERVER/install.sh | sudo bash -s -- --uninstall
 EOF

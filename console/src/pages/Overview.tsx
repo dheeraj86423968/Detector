@@ -127,8 +127,8 @@ function GetStarted({ fleet }: { fleet: Overview["endpoints"] }) {
             ? <Link to="/endpoints?add=1" className={cx("btn sm", !installed && "primary")}><Plus size={14} />{installed ? "Add another" : "Add endpoint"}</Link>
             : !installed && <span className="muted sm">Ask an admin of your organisation to add an endpoint.</span>}
         </Step>
-        <Step n={2} state={s2} title={`The agent learns normal activity for ${BASELINE_DAYS} days`}
-          text="7 days of learning, then 1 day to check the result. Detection starts automatically; you do not need to do anything.">
+        <Step n={2} state={s2} title="Detection starts after the first hour"
+          text={`An early model reports high-confidence findings after one hour and is retrained as the agent learns; detection is complete after ${BASELINE_DAYS} days. Nothing to do on your side.`}>
           {best && best.baseline && (
             <div className="step-progress">
               <div className="bar"><span style={{ width: `${Math.min(100, (100 * best.baseline.done) / best.baseline.needed)}%` }} /></div>

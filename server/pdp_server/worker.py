@@ -132,7 +132,161 @@ def job_ingest(job: dict):
     log(f"ingest {eid} {date}: {n} windows ({done}/{need} days)")
 
 
+# ---------------------------------------------------------------------------------------------- early models
+# Detection does not wait for the full baseline: while an endpoint learns, a model is trained on whatever activity it
+# has recorded so far - after 1 hour, after 6 hours, then once a day - and replaced by the final model when the
+# baseline (7 days + 1 validation day) is complete. Agents from 0.3.3 detect with these early models while they keep
+# uploading their baseline; older agents ignore them and start detecting with the final model, as before.
+EARLY_MILESTONES_H = [1, 6] + [24 * d for d in range(1, 60)]
+EARLY_MIN_WINDOWS = 4          # one hour of 15-minute windows: 3 to train on, 1 to calibrate on
+# Which layers may alert from an early model (tools/maturity_eval.py, DARPA CADETS E3, all 3 attacks detected at
+# every level): with 1 hour of baseline the data-flow rules gave 30 alerts (29 on the attack) while new-program and
+# learned alerts were 10,742 and 170,389 - so models trained on less than a day alert from the rules only. From one
+# day on all layers alert: 140 false alerts at 1 day, 66 at 3 days, 66 with the full week.
+EARLY_RULES_ONLY_BELOW_H = 24
+_last_milestone_check = 0.0
+
+
+def baseline_hours(eid: str) -> float:
+    """Recorded activity so far, in hours: ingested baseline days (their windows) plus the open day's raw events."""
+    store = store_for(eid)
+    n = sum(len(os.listdir(os.path.join(store.root, "windows", d))) for d in store.days())
+    with db.conn(db.TELEMETRY_DSN) as c:
+        t = db.q(c, f"SELECT min(ts_ns) AS lo, max(ts_ns) AS hi FROM {db.tschema(eid)}.events", one=True)
+    open_h = (int(t["hi"]) - int(t["lo"])) / 3.6e12 if t and t["lo"] is not None else 0.0
+    return n / 4.0 + open_h
+
+
+def schedule_early_models():
+    """Queue an early training job for each learning endpoint that has passed its next milestone."""
+    global _last_milestone_check
+    if time.time() - _last_milestone_check < 60:
+        return
+    _last_milestone_check = time.time()
+    with db.conn() as c:
+        eps = db.q(c, "SELECT e.id, e.config, b.manifest FROM endpoints e LEFT JOIN bundles b ON b.id=e.current_bundle "
+                      "WHERE e.phase='baseline' AND e.kind='live' AND NOT EXISTS (SELECT 1 FROM jobs j WHERE j.endpoint_id=e.id "
+                      "AND j.kind='train' AND j.state IN ('queued','running'))")
+    for ep in eps:
+        if (ep["config"] or {}).get("early_models") is False:
+            continue
+        eid = str(ep["id"])
+        try:
+            have = float(((ep["manifest"] or {}).get("maturity") or {}).get("baseline_hours") or 0)
+            hours = baseline_hours(eid)
+        except Exception as e:  # noqa - a missing telemetry schema etc. must not stop the worker
+            log(f"early model check {eid}: {e}")
+            continue
+        due = [m for m in EARLY_MILESTONES_H if have < m <= hours]
+        if due:
+            with db.conn() as c:
+                db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, params) VALUES (%s,%s,'train',%s)",
+                     (pki.new_id(), eid, json.dumps({"early": True, "milestone_h": due[-1]})))
+            log(f"early model for {eid}: {hours:.1f} h recorded, milestone {due[-1]} h queued")
+
+
+def prune_early_bundles(eid: str):
+    """Model files of superseded early models are deleted (a few hundred MB each); their database rows stay as the
+    record of what was trained when. Final models are kept."""
+    import shutil
+    with db.conn() as c:
+        rows = db.q(c, "SELECT b.id, b.path FROM bundles b JOIN endpoints e ON e.id=b.endpoint_id WHERE b.endpoint_id=%s "
+                       "AND b.id <> coalesce(e.current_bundle, '00000000-0000-0000-0000-000000000000'::uuid) "
+                       "AND (b.manifest->'maturity'->>'early')::boolean IS TRUE", (eid,))
+    for r in rows:
+        if os.path.isdir(r["path"]):
+            shutil.rmtree(r["path"], ignore_errors=True)
+            log(f"removed superseded early model {r['id']}")
+
+
+def job_train_early(job: dict, device: str):
+    """An early model from the activity recorded so far. Raw events are kept (the final model still needs them);
+    the endpoint stays in its baseline phase."""
+    import shutil
+    from pdp_engine.data import WindowStore, ingest_day
+    eid = str(job["endpoint_id"])
+    base = store_for(eid)
+    reg = load_registry(eid, base)
+    extend_registry(eid, reg)
+    bid = pki.new_id()
+    work = os.path.join(DATA_DIR, "endpoints", eid, "early", bid)
+    tmp = WindowStore(os.path.join(work, "open"))
+    cfg = ep_config(eid)
+    tz = cfg.get("tz", "UTC")
+    done_days = sorted(base.days())        # ingested days are read as windows; raw events only after the last of them
+    since = day_bounds(done_days[-1], tz)[1] if done_days else 0
+    with db.conn(db.TELEMETRY_DSN) as c:
+        t = db.q(c, f"SELECT min(ts_ns) AS lo, max(ts_ns) AS hi FROM {db.tschema(eid)}.events WHERE ts_ns >= %s", (since,), one=True)
+    def open_events():   # the not yet ingested day(s), in time order
+        if not t or t["lo"] is None:
+            return
+        cc = db.pool(db.TELEMETRY_DSN).getconn()
+        try:
+            cur = cc.cursor(name=f"early_{bid[:8]}")
+            cur.itersize = 200_000
+            cur.execute(f"SELECT ts_ns, src, op, dst, event_uuid FROM {db.tschema(eid)}.events WHERE ts_ns >= %s ORDER BY ts_ns, event_uuid", (since,))
+            for ts, src, op, dst, eu in cur:
+                yield Event(int(ts), src, op, dst, eu)
+            cur.close()
+        finally:
+            db.pool(db.TELEMETRY_DSN).putconn(cc)
+    stats = {}
+    tmp.add_day("open", ingest_day(reg, open_events(), None, window_ns=window_ns(cfg), stats=stats))
+    paths = [os.path.join(base.root, "windows", d, f) for d in done_days for f in sorted(os.listdir(os.path.join(base.root, "windows", d)))]
+    paths += [os.path.join(tmp.root, "windows", "open", f) for f in sorted(os.listdir(os.path.join(tmp.root, "windows", "open")))]
+    if len(paths) < EARLY_MIN_WINDOWS:
+        shutil.rmtree(work, ignore_errors=True)
+        log(f"early model {eid}: only {len(paths)} windows recorded; waiting for more activity")
+        return
+    n_val = max(1, int(round(len(paths) * 0.25)))         # the last quarter calibrates, the rest trains
+    store = WindowStore(os.path.join(work, "store"))
+    store.save_registry(reg)
+    for label, ps in (("train", paths[:-n_val]), ("val", paths[-n_val:])):
+        os.makedirs(os.path.join(store.root, "windows", label), exist_ok=True)
+        for k, p in enumerate(ps):
+            os.symlink(p, os.path.join(store.root, "windows", label, f"{k:05d}.npz"))
+    last = list(store.windows("val"))[-1]
+    hours = round(len(paths) / (3.6e12 / window_ns(cfg)), 1)
+    overrides = dict(cfg.get("train", {}))
+    overrides.pop("fusion_calibration", None)
+    for k in ("orthrus_seeds", "fusion_weights"):
+        if k in overrides:
+            overrides[k] = tuple(overrides[k])
+    out = os.path.join(DATA_DIR, "bundles", eid, bid)
+    t0 = time.time()
+    log(f"train {eid}: early model on {len(paths)} windows ({hours} h), {n_val} for calibration")
+    if hours < EARLY_RULES_ONLY_BELOW_H:
+        # rules-only model: the learned detectors only rank here, so they are trained minimally (minutes, not an hour,
+        # on a busy host) - detection starts soon after the first hour
+        overrides["alert_layers"] = ("rules",)
+        overrides.setdefault("orthrus_seeds", (0,))
+        overrides.setdefault("velox_runs", 1)
+        overrides.setdefault("orthrus_epochs", 3)
+        overrides.setdefault("velox_epochs", 3)
+        overrides.setdefault("w2v_epochs", 10)
+    Trainer(store, ["train"], "val", TrainConfig(device=device, **overrides), out).run(
+        {"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(cfg), "trained_on": device,
+         "maturity": {"early": True, "baseline_hours": hours, "windows": len(paths), "trained_until_ns": int(last.end_ns),
+                      "alert_layers": list(overrides.get("alert_layers") or ["novelty", "rules", "corroborated", "learned"]),
+                      "milestone_h": (job.get("params") or {}).get("milestone_h")}})
+    pki.sign_bundle(out)
+    digest = sha256(os.path.join(out, "manifest.json"))
+    manifest = json.load(open(os.path.join(out, "manifest.json")))
+    with db.conn() as c:
+        db.q(c, "UPDATE jobs SET progress=%s WHERE id=%s", (json.dumps({"early": True, "windows": len(paths), "hours": hours,
+                                                                         "seconds": round(time.time() - t0, 1)}), str(job["id"])))
+        db.q(c, "INSERT INTO bundles (id, endpoint_id, job_id, path, sha256, manifest) VALUES (%s,%s,%s,%s,%s,%s)",
+             (bid, eid, str(job["id"]), out, digest, json.dumps(manifest)))
+        # a final model published meanwhile wins; otherwise the early model becomes current (phase unchanged)
+        db.q(c, "UPDATE endpoints SET current_bundle=%s WHERE id=%s AND phase='baseline'", (bid, eid))
+    shutil.rmtree(work, ignore_errors=True)
+    prune_early_bundles(eid)
+    log(f"train {eid}: early bundle {bid} published ({hours} h of activity)")
+
+
 def job_train(job: dict, device: str):
+    if (job.get("params") or {}).get("early"):
+        return job_train_early(job, device)
     eid = str(job["endpoint_id"])
     store = store_for(eid)
     with db.conn() as c:
@@ -155,8 +309,12 @@ def job_train(job: dict, device: str):
     bid = pki.new_id()
     out = os.path.join(DATA_DIR, "bundles", eid, bid)
     t0 = time.time()
+    tz = ep["config"].get("tz", "UTC")
     Trainer(store, train_days, val_day, cfg, out).run({"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(ep["config"]),
-                                                      "trained_on": device})
+                                                      "trained_on": device,
+                                                      "maturity": {"early": False, "baseline_days": len(train_days) + 1,
+                                                                   "baseline_hours": 24.0 * (len(train_days) + 1),
+                                                                   "trained_until_ns": day_bounds(val_day, tz)[1]}})
     with db.conn() as c:
         db.q(c, "UPDATE jobs SET progress=%s WHERE id=%s", (json.dumps({"train_days": train_days, "val_day": val_day, "seconds": round(time.time() - t0, 1)}), str(job["id"])))
     if fusion_mode == "simulation":
@@ -173,6 +331,7 @@ def job_train(job: dict, device: str):
         db.q(c, "INSERT INTO bundles (id, endpoint_id, job_id, path, sha256, manifest) VALUES (%s,%s,%s,%s,%s,%s)", (bid, eid, str(job["id"]), out, digest, json.dumps(manifest)))
         db.q(c, "UPDATE endpoints SET current_bundle=%s, phase='protected' WHERE id=%s", (bid, eid))
     log(f"train {eid}: bundle {bid} published")
+    prune_early_bundles(eid)
     if ep["config"].get("retain_baseline_events", False):
         return
     with db.conn(db.TELEMETRY_DSN) as c:   # retention: raw baseline events are not needed once the bundle exists
@@ -314,6 +473,8 @@ def main():
                           "(SELECT id FROM jobs WHERE state='queued' AND kind = ANY(%s) ORDER BY created_at LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING *",
                        (list(kinds),), one=True)
         if not job:
+            if "train" in kinds:
+                schedule_early_models()
             time.sleep(5)
             continue
         hb.start(job["id"])

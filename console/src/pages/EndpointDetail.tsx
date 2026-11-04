@@ -152,7 +152,7 @@ function DetectionCard({ d }: { d: EndpointOverview }) {
         <div><div className="big-num sm">{x.incidents_total}</div><div className="muted sm">incidents in total</div></div>
         <div><div className="big-num sm">{x.alerts_7d}</div><div className="muted sm">alerts, last 7 days</div></div>
       </div>
-      {learning && x.incidents_total === 0 ? <div className="note">Detection starts once the baseline is complete and the model is trained.</div> : <>
+      {learning && x.incidents_total === 0 ? <div className="note">Detection starts after the first hour of activity with an early model, which is retrained as the endpoint learns; the final model follows the baseline.</div> : <>
         <div className="sub-title">Alerts in the last 7 days, by kind</div>
         <ul className="type-list">{types.map(([t, n]) => (
           <li key={t} className={cx(n === 0 && "zero")}><DetectionTag type={t} /><span className="type-desc">{DETECTION[t].describe}</span><b>{n}</b></li>

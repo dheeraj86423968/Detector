@@ -60,6 +60,7 @@ class TrainConfig:
     layer_rules: bool = True
     learned_daily_budget: int = 20    # at most this many learned-only alerts per day (highest scores first)
     corroboration_percentile: str = "99.9"   # learned score (validation percentile) that alerts next to a layer 1/2 alert
+    alert_layers: tuple | None = None        # layers allowed to alert (None = all); early models restrict this
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
 
 
@@ -243,6 +244,8 @@ class Trainer:
         spec = fit_layers(self.store, self.train_days + [self.val_day], self.reg, self.N, lcfg, log=log)
         json.dump(spec, open(os.path.join(self.out_dir, "layers.json"), "w"))
         policy = {"daily_budget": int(self.cfg.learned_daily_budget), "corroboration_percentile": self.cfg.corroboration_percentile}
+        if self.cfg.alert_layers is not None:
+            policy["alert_layers"] = sorted(self.cfg.alert_layers)
         write_manifest(self.out_dir, {
             **(meta or {}),
             "num_nodes": self.N, "train_days": self.train_days, "val_day": self.val_day,
