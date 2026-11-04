@@ -356,6 +356,7 @@ class Agent:
 
     # ------------------------------------------------------------------ main loop
     def run(self, source):
+        self.source = source
         self.chronological = bool(getattr(source, "chronological", self.chronological))
         self.connect()
         if self.load_local_bundle():
@@ -440,5 +441,12 @@ class Agent:
         # work not yet done: events awaiting upload while building the baseline, awaiting scoring once protected
         col = "scored" if self.runtime is not None else "uploaded"
         q = self.state.c.execute(f"SELECT count(*) FROM spool WHERE {col}=0").fetchone()[0] + self.builder.pending
-        return {"agent_version": VERSION, "queue_depth": int(q), "last_window_end_ns": int(self._last_window_end),
-                "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1)}
+        h = {"agent_version": VERSION, "queue_depth": int(q), "last_window_end_ns": int(self._last_window_end),
+             "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1)}
+        try:   # collector health: records the kernel dropped because the ring buffer was full (CO-RE eBPF)
+            tr = getattr(getattr(self, "source", None), "_tracer", None)
+            if tr is not None and getattr(tr, "stats", None) is not None and type(tr).__name__ == "CoreTracer":
+                h["collector_lost"] = int(tr.stats.get("lost", 0))
+        except Exception:  # noqa - health must never fail
+            pass
+        return h

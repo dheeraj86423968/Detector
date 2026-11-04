@@ -248,6 +248,7 @@ class Heartbeat(BaseModel):
     last_window_end_ns: int = 0
     cpu_pct: float = 0
     rss_mb: float = 0
+    collector_lost: int | None = None     # events the kernel dropped (ring buffer full) since the agent started
 
 
 @app.post("/v1/endpoints/{endpoint_id}/heartbeat")

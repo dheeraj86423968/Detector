@@ -37,6 +37,7 @@ export default function EndpointDetail() {
         <div className="kpi"><div className="v">{h ? h.queue_depth : "–"}</div><div className="l">upload queue depth</div></div>
         <div className="kpi"><div className="v">{h?.cpu_pct != null ? `${h.cpu_pct.toFixed(1)}%` : "–"}</div><div className="l">agent CPU</div></div>
         <div className="kpi"><div className="v">{h?.rss_mb != null ? `${h.rss_mb.toFixed(0)} MB` : "–"}</div><div className="l">agent RSS</div></div>
+        {h?.collector_lost != null && <div className={`kpi ${h.collector_lost > 0 ? "warn" : ""}`} title="events the kernel dropped because the collector's ring buffer was full (since the agent started); raise source.ring_pages if this grows"><div className="v">{h.collector_lost}</div><div className="l">events dropped in-kernel</div></div>}
         <div className={`kpi ${isStale(h) && !retired ? "bad" : ""}`}><div className="v">{h ? ago(h.at) : "never"}</div><div className="l">since last heartbeat{isStale(h) && !retired ? " (stale)" : ""}</div></div>
         <div className="kpi"><div className="v mono" style={{ fontSize: 14 }}>{h?.last_window_end_ns ? fmtTs(h.last_window_end_ns) : "–"}</div><div className="l">last window shipped</div></div>
       </div>

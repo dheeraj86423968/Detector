@@ -17,7 +17,7 @@ export const ago = (at: number) => { const s = Math.max(0, Math.round(Date.now()
 // heartbeat older than 5 minutes
 export const isStale = (h: Health | null | undefined) => !!h && Date.now() / 1000 - h.at > 300;
 
-export type Health = { agent_version: string; queue_depth: number; last_window_end_ns: number | null; cpu_pct: number | null; rss_mb: number | null; at: number };
+export type Health = { agent_version: string; queue_depth: number; last_window_end_ns: number | null; cpu_pct: number | null; rss_mb: number | null; collector_lost?: number | null; at: number };
 export type Endpoint = { id: string; name: string; hostname: string; phase: string; kind: string; baseline_days_done: number; last_seen: string | null; open_alerts: number; current_bundle: string | null; health: Health | null; config?: Record<string, any> };
 export type User = { id: number; username: string; role: "admin" | "analyst"; created_at: string; auth?: "local" | "oidc"; email?: string | null; last_login?: string | null };
 export type Me = { role: "admin" | "analyst"; username: string; user_id: number; auth?: "local" | "oidc"; email?: string | null };
