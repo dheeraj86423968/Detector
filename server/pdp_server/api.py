@@ -236,11 +236,11 @@ def get_bundle(endpoint_id: str, ep=Depends(agent_endpoint)):
         raise HTTPException(404, "no bundle")
     with db.conn() as c:
         b = db.q(c, "SELECT path FROM bundles WHERE id=%s", (ep["current_bundle"],), one=True)
-    buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
-        tar.add(b["path"], arcname="bundle")
-    buf.seek(0)
-    return StreamingResponse(buf, media_type="application/gzip", headers={"X-Bundle-Id": str(ep["current_bundle"])})
+    from fastapi.responses import FileResponse
+    from .bundles import archive
+    # the archive is built once (normally by the worker when the model is published) and streamed from disk: a model
+    # of a busy host is over 1 GB and compressing it per request outlasted the agent's read timeout
+    return FileResponse(archive(b["path"]), media_type="application/gzip", headers={"X-Bundle-Id": str(ep["current_bundle"])})
 
 
 @app.post("/v1/endpoints/{endpoint_id}/windows")
