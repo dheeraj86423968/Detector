@@ -37,6 +37,9 @@ services:
       <<: [*db-env, *kms-env]
       PDP_HOSTNAMES: ${PDP_HOSTNAMES:-localhost,gateway}
       PDP_API_WORKERS: ${PDP_API_WORKERS:-4}
+      PDP_CONSOLE_PORT: ${PDP_CONSOLE_PORT:-443}         # for the install commands shown in the console
+      PDP_AGENT_PORT: ${PDP_AGENT_PORT:-8443}
+      PDP_AGENT_IMAGE: ${PDP_AGENT_IMAGE:-pdp/agent:latest}
       # single sign-on (docs/DEPLOYMENT.md "Single sign-on"); the IdP is reached through the egress service
       PDP_OIDC_ISSUER: ${PDP_OIDC_ISSUER:-}
       PDP_OIDC_CLIENT_ID: ${PDP_OIDC_CLIENT_ID:-}

@@ -94,7 +94,8 @@ export type EndpointOverview = { ok: true; endpoint: Endpoint; lifecycle: Lifecy
     triaged: { true_positive: number; false_positive: number; open: number }; per_day: { date: string; alerts: number; incidents: number }[] };
   check: Check | null; can_run_check: boolean; check_blocked_reason: string | null };
 export type EndpointConfigResp = { ok: true; endpoint: { id: string; name: string; config?: Record<string, any> } };
-export type EnrollToken = { ok: true; token: string; expires_in_hours: number; ca_sha256: string; enroll_command: string };
+export type EnrollToken = { ok: true; token: string; expires_in_hours: number; ca_sha256: string; enroll_command: string;
+  install_command?: string; docker_command?: string; server_url?: string; agent_url?: string };
 
 // ---------------------------------------------------------------- incidents & alerts
 
@@ -113,7 +114,7 @@ export type IncidentAlert = { id: number; ts_ns: number; node: string; label: st
 export type IncidentDetail = { ok: true; incident: IncidentSummary; story: StoryEntry[]; graph: { nodes: GNode[]; edges: GEdge[]; truncated?: boolean }; alerts: IncidentAlert[] };
 
 export type RawAlert = { id: number; endpoint_id: string; endpoint: string; window_start_ns: number; node_uuid: string; ntype: string; label: string;
-  layer?: DetectionType | null; rule?: string | null; reason?: string | null; status: string; created_at: string };
+  layer?: DetectionType | null; rule?: string | null; reason?: string | null; status: string; created_at: string; incident_id?: number | null };
 
 export type Overview = { ok: true; endpoints: { total: number; protected: number; learning: number; offline: number };
   incidents: { open: number; last_7d: number; by_severity: Record<Severity, number> };

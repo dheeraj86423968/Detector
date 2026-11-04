@@ -578,7 +578,7 @@ class NewEndpoint(BaseModel):
 
 
 @app.post("/api/endpoints")
-def create_endpoint(req: NewEndpoint, s=Depends(admin)):
+def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
     if req.kind not in ("live", "benchmark", "simulation"):
         raise HTTPException(400, "kind must be live, benchmark or simulation")
     bad = set(req.config) - CONFIG_KEYS
@@ -590,7 +590,16 @@ def create_endpoint(req: NewEndpoint, s=Depends(admin)):
         db.q(c, "INSERT INTO enroll_tokens (token, name, created_by, expires_at, kind, dataset, config) VALUES (%s,%s,%s,%s,%s,%s,%s)",
              (token, req.name, s["u"], datetime.now(timezone.utc) + timedelta(hours=24), req.kind, req.dataset, json.dumps(req.config)))
     fp = pki.ca_sha256()
-    return {"ok": True, "token": token, "expires_in_hours": 24, "ca_sha256": fp,
+    host = (request.headers.get("host") or "localhost").split(":")[0]
+    server = f"https://{host}" + ("" if os.environ.get("PDP_CONSOLE_PORT", "443") == "443" else f":{os.environ['PDP_CONSOLE_PORT']}")
+    agent = f"https://{host}:{os.environ.get('PDP_AGENT_PORT', '8443')}"
+    image = os.environ.get("PDP_AGENT_IMAGE", "pdp/agent:latest")
+    docker = (f"docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host \\\n"
+              f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN={token} -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
+              f"  -e PDP_SERVER_URL={server} -e PDP_AGENT_URL={agent} {image} run")
+    return {"ok": True, "token": token, "expires_in_hours": 24, "ca_sha256": fp, "server_url": server, "agent_url": agent,
+            "install_command": f"sudo pdp-agent-install --server {server} --agent-url {agent} --token {token} --ca-sha256 {fp}",
+            "docker_command": docker,
             "enroll_command": f"python -m pdp_agent enroll {token} --ca-sha256 {fp}"}
 
 
@@ -753,7 +762,20 @@ def list_alerts(s=Depends(session), endpoint_id: str | None = None, status: str 
                        "FROM alerts a JOIN endpoints e ON e.id=a.endpoint_id WHERE (%s::uuid IS NULL OR a.endpoint_id=%s) AND (%s::text IS NULL OR a.status=%s) "
                        f"AND (%s::text IS NULL OR coalesce(a.layer, 'learned')=%s) AND {sc} "
                        "ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, layer, layer, *sp, limit))
-    return {"ok": True, "alerts": [dict(r, endpoint_id=str(r["endpoint_id"])) for r in rows]}
+        from . import incidents as _inc
+        eps = sorted({str(r["endpoint_id"]) for r in rows})
+        inc_of = {}
+        if eps:
+            for g in _inc.group(_inc.load_alerts(c, eps)):
+                for a in g:
+                    inc_of[a["id"]] = g[0]["id"]
+    out = []
+    for r in rows:
+        r = dict(r, endpoint_id=str(r["endpoint_id"]), reason=_inc.clean_reason(r["layer"], r["reason"]), incident_id=inc_of.get(r["id"]))
+        for k in ("fused", "r1", "r2"):
+            r.pop(k, None)
+        out.append(r)
+    return {"ok": True, "alerts": out}
 
 
 class AlertUpdate(BaseModel):
@@ -784,16 +806,18 @@ def export_alerts(s=Depends(session), format: str = "csv", endpoint_id: str | No
         rows = db.q(c, "SELECT a.id, a.endpoint_id, e.name AS endpoint, e.hostname, a.window_start_ns, a.node_uuid, a.ntype, a.label, a.fused, a.r1, a.r2, a.status, a.created_at, "
                        "coalesce(a.layer, 'learned') AS layer, a.rule, a.reason FROM alerts a JOIN endpoints e ON e.id=a.endpoint_id WHERE (%s::uuid IS NULL OR a.endpoint_id=%s) AND (%s::text IS NULL OR a.status=%s) "
                        f"AND {sc} ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, *sp, max(1, min(limit, 1_000_000))))
+    from .incidents import clean_reason
     for r in rows:
+        r["reason"] = clean_reason(r["layer"], r["reason"])
         r["endpoint_id"] = str(r["endpoint_id"]); r["created_at"] = r["created_at"].isoformat() if r["created_at"] else None
         r["window_start"] = datetime.fromtimestamp(r["window_start_ns"] / 1e9, tz=timezone.utc).isoformat()
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     if format == "ndjson":
-        body = "".join(json.dumps(r, default=str) + "\n" for r in rows)
+        body = "".join(json.dumps({k: v for k, v in r.items() if k not in ("fused", "r1", "r2")}, default=str) + "\n" for r in rows)
         return PlainTextResponse(body, media_type="application/x-ndjson", headers={"Content-Disposition": f'attachment; filename="pdp-alerts-{stamp}.ndjson"'})
     out = io.StringIO()
     cols = ["id", "endpoint", "hostname", "endpoint_id", "window_start", "window_start_ns", "layer", "rule", "reason", "ntype", "label", "node_uuid",
-            "fused", "r1", "r2", "status", "created_at"]
+            "status", "created_at"]
     w = csv.DictWriter(out, fieldnames=cols, extrasaction="ignore")
     w.writeheader(); w.writerows(rows)
     return PlainTextResponse(out.getvalue(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="pdp-alerts-{stamp}.csv"'})

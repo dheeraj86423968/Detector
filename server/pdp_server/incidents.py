@@ -19,6 +19,7 @@ import re
 from . import db
 
 GAP_NS = 30 * 60 * 1_000_000_000
+WINDOW_NS = 15 * 60 * 1_000_000_000      # an alert covers its detection window
 MAX_NODES = 150
 MAX_STORY = 80
 
@@ -159,7 +160,7 @@ def summarise(alerts: list[dict]) -> dict:
     tactics.discard(None)
     procs = {a["node_uuid"] for a in alerts if a["ntype"] == "subject"}
     return {"id": alerts[0]["id"], "endpoint_id": str(alerts[0]["endpoint_id"]), "endpoint_name": alerts[0]["endpoint_name"],
-            "first_ns": int(alerts[0]["window_start_ns"]), "last_ns": int(alerts[-1]["window_start_ns"]),
+            "first_ns": int(alerts[0]["window_start_ns"]), "last_ns": int(alerts[-1]["window_start_ns"]) + WINDOW_NS,
             "severity": severity, "title": title, "tactics": [t for t in TACTIC_ORDER if t in tactics],
             "alerts": len(alerts), "processes": len(procs), "status": incident_status(alerts)}
 
@@ -297,14 +298,21 @@ def build_graph(alerts: list[dict]) -> tuple[dict, list[dict]]:
     return {"nodes": nodes_out, "edges": edges_out, "truncated": truncated}, edges
 
 
+def clean_reason(layer: str | None, reason: str | None) -> str:
+    """The analyst-facing reason: no detector scores, no internal layer names."""
+    layer = layer or "learned"
+    if not reason or layer in ("corroborated", "learned") or "score" in reason or "percentile" in reason:
+        return _default_reason({"layer": layer})
+    return reason.replace("runs None,", "runs a program the collector could not name,").replace("runs null,", "runs a program the collector could not name,")
+
+
 def _reason(a: dict) -> str:
-    r = a.get("reason") or _default_reason(a)
-    return r.replace("runs None,", "runs a program the collector could not name,").replace("runs null,", "runs a program the collector could not name,")
+    return clean_reason(a.get("layer"), a.get("reason"))
 
 
 def _default_reason(a: dict) -> str:
-    return {"learned": "behaviour unlike anything this endpoint did during its baseline",
-            "corroborated": "closely connected to another detection and unusual for this endpoint",
+    return {"learned": "Behaviour unlike anything this endpoint did while its baseline was recorded",
+            "corroborated": "Closely connected to another detection and unusual for this endpoint",
             "evidence": "received untrusted data and acted on it"}.get(a["layer"], a["layer"])
 
 
@@ -399,4 +407,8 @@ def detail(alerts: list[dict]) -> dict:
         d = nodes.get(a["node_uuid"]) or {**parse_label(a["ntype"], a["label"], a["node_uuid"], a.get("display"))}
         alist.append({"id": a["id"], "ts_ns": int(a["window_start_ns"]), "node": a["node_uuid"], "label": d["label"], "title": d["title"],
                       "type": a["layer"], "rule": a["rule"], "reason": _reason(a), "status": a["status"]})
-    return {"incident": summarise(alerts), "story": story(graph, alerts), "graph": graph, "alerts": alist}
+    inc = summarise(alerts)
+    ts = [e["first_ns"] for e in graph["edges"] if e.get("first_ns")]
+    if ts:
+        inc["first_ns"], inc["last_ns"] = min(ts), max(ts)
+    return {"incident": inc, "story": story(graph, alerts), "graph": graph, "alerts": alist}

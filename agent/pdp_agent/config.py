@@ -40,5 +40,7 @@ class Config:
         for k in ("server_url", "agent_url", "data_dir", "pki_dir"):
             if os.environ.get("PDP_" + k.upper()):
                 setattr(cfg, k, os.environ["PDP_" + k.upper()])
+        if os.environ.get("PDP_SOURCE_KIND"):        # e.g. docker run -e PDP_SOURCE_KIND=ebpf, without a config file
+            cfg.source = {**(cfg.source if cfg.source.get("kind") == os.environ["PDP_SOURCE_KIND"] else {}), "kind": os.environ["PDP_SOURCE_KIND"]}
         cfg.pki_dir = cfg.pki_dir or os.path.join(cfg.data_dir, "pki")
         return cfg

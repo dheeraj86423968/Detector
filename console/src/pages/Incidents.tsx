@@ -83,7 +83,10 @@ function AlertList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, v: 
   const incidentOf = useMemo(() => {
     const by: Record<string, IncidentSummary[]> = {};
     for (const i of incs.data?.incidents || []) (by[i.endpoint_id] ||= []).push(i);
-    return (a: RawAlert) => (by[a.endpoint_id] || []).find(i => a.window_start_ns >= i.first_ns && a.window_start_ns <= i.last_ns);
+    const byId: Record<number, IncidentSummary> = {};
+    for (const i of incs.data?.incidents || []) byId[i.id] = i;
+    return (a: RawAlert) => (a.incident_id != null ? byId[a.incident_id] : undefined)
+      || (by[a.endpoint_id] || []).find(i => a.window_start_ns >= i.first_ns && a.window_start_ns <= i.last_ns);
   }, [incs.data]);
   const exportQs = new URLSearchParams(); if (ep) exportQs.set("endpoint_id", ep); if (status) exportQs.set("status", status);
   const setStatus = async (a: RawAlert, s: string) => {

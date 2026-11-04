@@ -65,7 +65,7 @@ function AddEndpointDialog({ onClose, onCreated }: { onClose: () => void; onCrea
     setBusy(false);
   };
   const server = `https://${window.location.host}`;
-  const isDocker = !!tok?.enroll_command.trim().startsWith("docker");
+  const isDocker = !!tok?.docker_command;
   return (
     <Dialog title={tok ? `Install the agent on ${name}` : "Add endpoint"} width={680} onClose={onClose}
       subtitle={tok ? `The enrolment token is valid for ${tok.expires_in_hours} hours and can be used once.` : "Create a one-time enrolment token, then run the install command on the host."}
@@ -87,10 +87,10 @@ function AddEndpointDialog({ onClose, onCreated }: { onClose: () => void; onCrea
               <li>Install the <b>pdp-agent</b> package (.deb or .rpm) on the host.</li>
               <li>Run this command as root:</li>
             </ol>
-            <CopyField multiline value={`sudo pdp-agent-install --server ${server} --token ${tok.token} --ca-sha256 ${tok.ca_sha256}`} />
+            <CopyField multiline value={tok.install_command || `sudo pdp-agent-install --server ${server} --token ${tok.token} --ca-sha256 ${tok.ca_sha256}`} />
           </> : <>
             <p className="muted">{isDocker ? "Run the agent as a container on the host:" : "On a host where the agent is already installed, enrol it with:"}</p>
-            <CopyField multiline value={tok.enroll_command} />
+            <CopyField multiline value={tok.docker_command || tok.enroll_command} />
           </>}
           <div className="install-note">
             The endpoint appears here once the agent enrols. It first learns the host's normal behaviour for a few days; detection starts automatically after that.

@@ -144,6 +144,7 @@ st, js = agent_call(cert_dir, "GET", f"/v1/endpoints/{eid}/status")
 check(st == 200 and js["phase"] == "baseline" and js["commands"] == [], "agent status over mTLS")
 st, tok2 = admin.call("POST", "/api/endpoints", {"name": "e2e-other"})
 _, js2, cert2 = enroll(tok2["token"])
+other_test_eid = js2.get("endpoint_id")
 check(agent_call(cert2, "GET", f"/v1/endpoints/{eid}/status")[0] == 403, "another endpoint's certificate is refused for this endpoint")
 ents = [{"uuid": f"u{i}", "ntype": "file", "label": f"file /x{i}", "display": {}, "dense_id": i} for i in range(5)]
 check(agent_call(cert_dir, "POST", f"/v1/endpoints/{eid}/entities", ndjson=ents)[0] == 200, "entities upload with dense ids")
@@ -283,6 +284,10 @@ check(admin.call("POST", f"/api/endpoints/{eid}/config", {"config": {"learned_al
 
 # ---- retire
 check(admin.call("POST", f"/api/endpoints/{eid}/retire")[0] == 200, "retire endpoint")
+admin.call("POST", f"/api/endpoints/{other_test_eid}/retire")      # the second test endpoint as well
+for u in admin.call("GET", "/api/users")[1]["users"]:                 # and the test users
+    if u["username"] in (uname2, victim):
+        admin.call("DELETE", f"/api/users/{u['id']}")
 check(agent_call(cert_dir, "GET", f"/v1/endpoints/{eid}/status")[0] == 404, "retired endpoint's agent is refused")
 admin.call("POST", f"/api/endpoints/{js2 and js2.get('endpoint_id') or ''}/retire")
 

@@ -107,8 +107,9 @@ Detection checks (synthetic attacks replayed into this endpoint's own data, scor
   "verdict": "pass|warn|fail", "verdict_text": "22 of 24 simulated attacks detected; no false alarms on clean data"}
 ```
 
-Endpoint actions (admin): existing `POST /api/endpoints` (enrol token: `{"name"}` →
-`{"token", "ca_sha256", "enroll_command", "expires_in_hours"}`), `POST /api/endpoints/{id}/config`,
+Endpoint actions (admin): `POST /api/endpoints` (enrol token: `{"name"}` →
+`{"token", "ca_sha256", "expires_in_hours", "server_url", "agent_url", "install_command"` (Linux package),
+`"docker_command"` (container), `"enroll_command"` (already-installed agent)`}`), `POST /api/endpoints/{id}/config`,
 `POST /api/endpoints/{id}/approved-executables {"executables": [...], "approve": true|false}`,
 `POST /api/endpoints/{id}/retire`. `GET /api/endpoints/{id}` (existing, includes `config.approved_executables`).
 
@@ -155,8 +156,9 @@ so the UI can number the attack steps. Library/system file reads of a process ar
 `POST /api/incidents/{id}/status` (`can.triage`) `{"status": "investigating|true_positive|false_positive|resolved|open", "note"?}`
 → `{"ok": true}` (applies to every alert of the incident).
 
-Alerts (secondary view): `GET /api/alerts?endpoint_id=&status=&layer=&limit=` → existing list (fields `id, endpoint_id,
-endpoint, window_start_ns, node_uuid, ntype, label, layer, rule, reason, status, created_at`; ignore score fields),
+Alerts (secondary view): `GET /api/alerts?endpoint_id=&status=&layer=&limit=` → fields `id, endpoint_id, endpoint,
+window_start_ns, node_uuid, ntype, label, layer, rule, reason, status, created_at, incident_id` (no scores; reasons are
+score-free sentences),
 `POST /api/alerts/{id} {"status"}` (`can.triage`), `GET /api/alerts/export?format=csv|ndjson`.
 
 Detection type names for the UI: `novelty` "New program", `rules` "Suspicious data flow", `corroborated`
