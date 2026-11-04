@@ -126,6 +126,9 @@ class NoveltyLayer:
     def reset(self):
         self._checked = set()
 
+    def remap(self, old2new) -> None:
+        self._checked = {old2new[n] for n in self._checked if old2new[n] >= 0}
+
     def process(self, w: Window, reg: Registry, ids: np.ndarray) -> list[Hit]:
         out = []
         ents = reg.entities
@@ -301,6 +304,34 @@ class TagEngine:
         e = reg.entities[o]
         return f"{e.ntype} {self._label(reg, o)}"
 
+    # ---- registry compaction
+    def keep_nodes(self, now: int) -> set[int]:
+        """Nodes whose state still matters: lowered integrity (until it has decayed back) and where it came from."""
+        out = set()
+        for n, t in self.tags.items():
+            if t.code < 1.0 or self._data(t, now) < 0.999:
+                out.add(n)
+                if t.origin is not None and t.origin >= 0:
+                    out.add(t.origin)
+        return out
+
+    def remap(self, old2new) -> None:
+        """Renumber per-node state after a registry compaction (old2new[i] = new id or -1)."""
+        m = old2new
+        tags = {}
+        for n, t in self.tags.items():
+            k = m[n]
+            if k >= 0:
+                if t.origin is not None and t.origin >= 0:
+                    t.origin = m[t.origin] if m[t.origin] >= 0 else k
+                tags[k] = t
+        self.tags = tags
+        self.parent_exe = {m[n]: v for n, v in self.parent_exe.items() if m[n] >= 0}
+        self._lbl = {m[n]: v for n, v in self._lbl.items() if m[n] >= 0}
+        self._fired = {(r, m[n]) for r, n in self._fired if m[n] >= 0}
+        if "_net_nodes" in self.__dict__:
+            self._net_nodes = {m[n] for n in self._net_nodes if m[n] >= 0}
+
     # ---- stream
     def process(self, w: Window, reg: Registry) -> list[Hit]:
         out: list[Hit] = []
@@ -354,7 +385,7 @@ class TagEngine:
                 q, f = self._tag(reg, s), self._tag(reg, d)
                 v = min(q.code, self._data(q, now))
                 path = self._label(reg, d)
-                if v < U and path.startswith("/") and (d < self.n_pre if self.first_day is None else self.first_day.get(d, self.cur_day) < self.cur_day):
+                if v < U and path.startswith("/") and (reg.gid(d) < self.n_pre if self.first_day is None else self.first_day.get(d, self.cur_day) < self.cur_day):
                     self._check(out, "tainted_modify", f"{self._label(reg, s)} @ {dir_key(path)}", v, (s, d), now,
                                 f"{self._label(reg, s)} with untrusted input from {self._why(reg, q)} modifies {path}")
                 if v < f.data:
@@ -431,6 +462,15 @@ class DeterministicLayers:
             self.novelty.reset()
         if self.tags is not None:
             self.tags.reset()
+
+    def keep_nodes(self, now: int) -> set[int]:
+        return self.tags.keep_nodes(now) if self.tags is not None else set()
+
+    def remap(self, old2new) -> None:
+        if self.novelty is not None:
+            self.novelty.remap(old2new)
+        if self.tags is not None:
+            self.tags.remap(old2new)
 
     def process(self, w: Window, reg: Registry, ids: np.ndarray) -> list[Hit]:
         hits = []

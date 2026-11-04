@@ -277,6 +277,10 @@ class Heartbeat(BaseModel):
     cpu_pct: float = 0
     rss_mb: float = 0
     collector_lost: int | None = None     # events the kernel dropped (ring buffer full) since the agent started
+    spool_mb: float | None = None         # local event spool on disk (0.3.4+)
+    spool_dropped_unscored: int | None = None     # events dropped by the spool size cap before local scoring
+    spool_dropped_unuploaded: int | None = None   # ... before upload (lost for the baseline)
+    entities: int | None = None           # entities held in the agent's registry (0.3.5+, after compaction)
 
 
 @app.post("/v1/endpoints/{endpoint_id}/heartbeat")

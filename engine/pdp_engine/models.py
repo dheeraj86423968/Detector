@@ -209,6 +209,21 @@ class TGNState:
         self.loader.load_state(st)
         self.n = int(st.get("n", 0))
 
+    def compact(self, keep: torch.Tensor, old2new: torch.Tensor):
+        """Keep rows `keep` (old ids, ascending) renumbered by `old2new` (old id -> new id, -1 dropped). Slots that
+        point to a dropped node are emptied (the caller keeps every node a kept node still points to)."""
+        L = self.loader
+        keep = keep.to(L.neighbors.device)
+        o2n = old2new.to(L.neighbors.device)
+        nb, ei, et = L.neighbors[keep], L.e_id[keep].clone(), L.etype[keep]
+        valid = ei >= 0
+        mapped = torch.where(valid, o2n[nb.clamp(min=0, max=o2n.numel() - 1)], torch.zeros_like(nb))
+        lost = valid & (mapped < 0)
+        ei[lost] = -1
+        L.neighbors, L.e_id, L.etype = mapped.clamp(min=0), ei, et
+        L._assoc = torch.empty(keep.numel(), dtype=torch.long, device=L.device)
+        return int(lost.sum())
+
     def grow(self, num_nodes: int):
         """Enlarge the node space (new entities seen at runtime)."""
         L = self.loader

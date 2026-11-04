@@ -65,17 +65,83 @@ class State:
             self.set(k, int(self.get(k, 0)) + int(n))
 
     # registry
-    def load_registry(self, display: bool = True) -> Registry:
+    def load_registry(self, display: bool = True, gids=None, after_gid: int | None = None) -> Registry:
         """display=False: entity display data (pid, argv, hashes ...) stays on disk and is read per alert with
         `displays()`; on a busy host the registry holds millions of entities and the dicts would dominate memory.
-        Labels are interned: process instances of one program share one label string."""
+        Labels are interned: process instances of one program share one label string.
+
+        Global id = dense_id - 1 (the append-only order the server's registry follows). gids / after_gid load only
+        those entities (a compacted agent's live set and everything registered after it), in global-id order."""
         reg = Registry()
         intern = sys.intern
-        q = "SELECT uuid, ntype, label, display FROM entities ORDER BY dense_id" if display else "SELECT uuid, ntype, label FROM entities ORDER BY dense_id"
-        for row in self.c.execute(q):
-            disp = (json.loads(row[3]) if row[3] else {}) if display else NO_DISPLAY
-            reg.add(Entity(row[0], intern(row[1]), intern(row[2]), disp))
+        cols = "dense_id - 1, uuid, ntype, label" + (", display" if display else "")
+
+        def add(row):
+            disp = (json.loads(row[4]) if row[4] else {}) if display else NO_DISPLAY
+            reg.add(Entity(row[1], intern(row[2]), intern(row[3]), disp), gid=row[0])
+        if gids is None:
+            for row in self.c.execute(f"SELECT {cols} FROM entities ORDER BY dense_id"):
+                add(row)
+            return reg
+        want = sorted({int(g) for g in gids})
+        rows = []
+        for i in range(0, len(want), 900):
+            part = [g + 1 for g in want[i:i + 900]]
+            rows += self.c.execute(f"SELECT {cols} FROM entities WHERE dense_id IN ({','.join('?' * len(part))})", part).fetchall()
+        if after_gid is not None:
+            rows += self.c.execute(f"SELECT {cols} FROM entities WHERE dense_id - 1 > ? ORDER BY dense_id", (int(after_gid),)).fetchall()
+        seen = set()
+        for row in sorted(rows, key=lambda r: r[0]):
+            if row[0] not in seen:
+                seen.add(row[0]); add(row)
+        if reg.gids is None and len(reg):      # a subset is never an identity mapping, even if it happens to start at 0
+            reg._split_gids()
         return reg
+
+    def next_gid(self) -> int:
+        """Next global id. Also kept in kv: pruning may delete the highest rows, and a global id is never reused."""
+        n = int(self.c.execute("SELECT coalesce(max(dense_id), 0) FROM entities").fetchone()[0])
+        return max(n, int(self.get("next_gid", 0) or 0))
+
+    def prune_entities(self, keep_gids, min_gid: int, next_gid: int) -> int:
+        """Delete entity rows with global id >= min_gid (registered after the model's baseline) that are uploaded
+        and not in keep_gids (the live set): the table would otherwise grow by every entity ever seen. Baseline
+        entities stay (the rules tell pre-existing files by their global id)."""
+        self.set("next_gid", int(next_gid))
+        self.c.execute("CREATE TEMP TABLE IF NOT EXISTS keep_g (g INTEGER PRIMARY KEY)")
+        self.c.execute("DELETE FROM keep_g")
+        ks = [(int(g),) for g in keep_gids if int(g) >= min_gid]
+        self._tx(lambda: self.c.executemany("INSERT OR IGNORE INTO keep_g VALUES (?)", ks))
+        hi = self.next_gid()
+        n = 0
+        for a in range(int(min_gid), hi, 100_000):       # in slices: a bounded WAL
+            n += self._tx(lambda: self.c.execute(
+                "DELETE FROM entities WHERE dense_id - 1 >= ? AND dense_id - 1 < ? AND uploaded = 1 "
+                "AND NOT EXISTS (SELECT 1 FROM keep_g WHERE g = dense_id - 1)", (a, a + 100_000)).rowcount)
+            self.c.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        self.c.execute("DELETE FROM keep_g")
+        self.compact()
+        return n
+
+    def gid_for(self, uuid: str) -> int | None:
+        r = self.c.execute("SELECT dense_id - 1 FROM entities WHERE uuid=?", (uuid,)).fetchone()
+        return None if r is None else int(r[0])
+
+    def entities_by_gid(self, gids) -> list[tuple]:
+        """(gid, Entity without display) for the given global ids."""
+        out, want = [], [int(g) + 1 for g in gids]
+        for i in range(0, len(want), 900):
+            part = want[i:i + 900]
+            for g, u, t, l in self.c.execute(f"SELECT dense_id - 1, uuid, ntype, label FROM entities WHERE dense_id IN ({','.join('?' * len(part))})", part):
+                out.append((int(g), Entity(u, sys.intern(t), sys.intern(l), NO_DISPLAY)))
+        return out
+
+    def spool_gids(self) -> set[int]:
+        """Global ids of entities referenced by spooled events that still need uploading or scoring."""
+        out = set()
+        for (a,) in self.c.execute("SELECT DISTINCT src FROM events UNION SELECT DISTINCT dst FROM events"):
+            out.add(int(a))
+        return out
 
     def displays(self, uuids: list[str]) -> dict[str, dict]:
         out = {}
@@ -85,13 +151,17 @@ class State:
                 out[u] = json.loads(d) if d else {}
         return out
 
-    def add_entities(self, ents: list[Entity]) -> None:
-        self.c.executemany("INSERT OR IGNORE INTO entities (uuid, ntype, label, display) VALUES (?,?,?,?)",
-                           [(e.uuid, e.ntype, e.label, json.dumps(e.display)) for e in ents])
+    def add_entities(self, ents: list) -> None:
+        """ents: Entity (row id assigned by sqlite) or (Entity, global id): the row is written at dense_id = gid + 1,
+        so it matches the agent's registry even after pruning deleted the highest rows."""
+        rows = [(None if isinstance(x, Entity) else int(x[1]) + 1,) + ((x.uuid, x.ntype, x.label, json.dumps(x.display)) if isinstance(x, Entity)
+                else (x[0].uuid, x[0].ntype, x[0].label, json.dumps(x[0].display))) for x in ents]
+        self._tx(lambda: self.c.executemany("INSERT OR IGNORE INTO entities (dense_id, uuid, ntype, label, display) VALUES (?,?,?,?,?)", rows))
 
     def pending_entities(self, limit: int = 5000) -> list[dict]:
-        rows = self.c.execute("SELECT uuid, ntype, label, display FROM entities WHERE uploaded=0 ORDER BY dense_id LIMIT ?", (limit,)).fetchall()
-        return [{"uuid": u, "ntype": t, "label": l, "display": json.loads(d) if d else {}} for u, t, l, d in rows]
+        """Entities not yet uploaded, with their global id as `dense_id` (the server's registry position)."""
+        rows = self.c.execute("SELECT dense_id - 1, uuid, ntype, label, display FROM entities WHERE uploaded=0 ORDER BY dense_id LIMIT ?", (limit,)).fetchall()
+        return [{"uuid": u, "ntype": t, "label": l, "display": json.loads(d) if d else {}, "dense_id": int(g)} for g, u, t, l, d in rows]
 
     def mark_entities_uploaded(self, uuids: list[str]) -> None:
         self._tx(lambda: self.c.executemany("UPDATE entities SET uploaded=1 WHERE uuid=?", [(u,) for u in uuids]))
@@ -132,8 +202,14 @@ class State:
     def mark_events_uploaded(self, ids: list[int]) -> None:
         self._tx(lambda: self.c.executemany("UPDATE events SET uploaded=1 WHERE id=?", [(i,) for i in ids]))
 
-    def unscored_events(self, limit: int = 200000) -> list[tuple]:
-        return self._rows(self.c.execute("SELECT id, ts_ns, src, op, dst, eid FROM events WHERE scored=0 ORDER BY ts_ns, id LIMIT ?", (limit,)))
+    def unscored_events(self, limit: int = 200000, after: tuple | None = None, max_id: int = 0) -> list[tuple]:
+        """Unscored rows in time order. after=(ts_ns, id), max_id: only rows not handed out yet - later in time than
+        `after`, or inserted after `max_id` (a late event with an older timestamp)."""
+        if after is None:
+            return self._rows(self.c.execute("SELECT id, ts_ns, src, op, dst, eid FROM events WHERE scored=0 ORDER BY ts_ns, id LIMIT ?", (limit,)))
+        ts, i = after
+        return self._rows(self.c.execute("SELECT id, ts_ns, src, op, dst, eid FROM events WHERE scored=0 AND (ts_ns > ? OR (ts_ns = ? AND id > ?) OR id > ?) "
+                                         "ORDER BY ts_ns, id LIMIT ?", (ts, ts, i, max_id, limit)))
 
     def unscored_count(self) -> int:
         return self.c.execute("SELECT count(*) FROM events WHERE scored=0").fetchone()[0]
@@ -146,7 +222,7 @@ class State:
 
     def mark_days_scored(self, days: list[str]) -> int:
         """Baseline days the bundle was trained/calibrated on are not scored again."""
-        ids = [self.day_id(d) for d in days if d]
+        ids = [r[0] for d in days if d for r in self.c.execute("SELECT rowid FROM days WHERE day=?", (d,))]   # never creates days
         return self._tx(lambda: sum(self.c.execute("UPDATE events SET scored=1 WHERE day=? AND scored=0", (i,)).rowcount for i in ids))
 
     def mark_scored_before(self, ts_ns: int) -> int:

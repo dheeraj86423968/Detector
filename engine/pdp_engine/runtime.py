@@ -62,6 +62,47 @@ class WindowResult:
                 "alerts_by_layer": by}
 
 
+NOT_YET = np.iinfo(np.int64).max
+
+
+def localize_snapshot(st: dict, reg: Registry, ensure_entities=None) -> dict:
+    """A bundle's neighbour-state snapshot (rows indexed by global id) mapped to the positions of a compacted
+    registry. Global ids the held rows point to but the registry lacks are passed to `ensure_entities` first;
+    pointers that still cannot be resolved become empty slots."""
+    nb_all, ei_all = st["neighbors"], st["e_id"]
+    Nb = nb_all.shape[0]
+    if st.get("slot_etype") is not None:
+        se_all = st["slot_etype"].to(torch.int8)
+    else:
+        hist = st["etype"].to(torch.int8)
+        se_all = hist[ei_all.clamp(min=0)] if hist.numel() else torch.zeros_like(ei_all, dtype=torch.int8)
+        se_all[ei_all < 0] = 0
+    g = torch.as_tensor(reg.gid_array())
+    held = g < Nb
+    gg = g[held]
+    ref = torch.unique(nb_all[gg][ei_all[gg] >= 0])
+    if ensure_entities is not None and ref.numel():
+        missing = [int(x) for x in ref.tolist() if reg.local(int(x)) is None]
+        if missing:
+            ensure_entities(missing)
+            g = torch.as_tensor(reg.gid_array())
+            held = g < Nb
+            gg = g[held]
+    n, size = len(reg), nb_all.shape[1]
+    g2l = torch.full((Nb,), -1, dtype=torch.long)
+    pos = torch.nonzero(held).flatten()
+    g2l[gg] = pos
+    nbv, eiv, sev = nb_all[gg], ei_all[gg].clone(), se_all[gg]
+    mapped = g2l[nbv.clamp(min=0, max=Nb - 1)]
+    eiv[(eiv >= 0) & (mapped < 0)] = -1
+    out = {"neighbors": torch.zeros((n, size), dtype=torch.long), "e_id": torch.full((n, size), -1, dtype=torch.long),
+           "slot_etype": torch.zeros((n, size), dtype=torch.int8), "cur_e_id": st["cur_e_id"], "n": st.get("n", 0)}
+    out["neighbors"][pos] = mapped.clamp(min=0)
+    out["e_id"][pos] = eiv
+    out["slot_etype"][pos] = sev
+    return out
+
+
 class NodeFeatures:
     """Static node features, stored once per distinct (label, type): every instance of a program is its own process
     node but shares its label (on a busy host ~500 k process nodes have ~45 k labels). Indexing returns the dense
@@ -88,6 +129,19 @@ class NodeFeatures:
             self.index = torch.cat([self.index, torch.zeros(n - cur, dtype=torch.long, device=self.device)])
         elif n < cur:
             self.index = self.index[:n].clone()
+
+    def compact(self, keep: torch.Tensor) -> None:
+        """Keep node rows `keep` (old ids, ascending) and only the label rows they still use."""
+        idx = self.index[keep.to(self.device)]
+        used, inv = torch.unique(idx, return_inverse=True)
+        if used.numel() == 0 or int(used[0]) != 0:
+            used = torch.cat([torch.zeros(1, dtype=torch.long, device=self.device), used])
+            inv = inv + 1
+        self.table = self.table[used].clone()
+        self.rows = int(used.numel())
+        self.index = inv
+        keep_rows = {int(r): k for k, r in enumerate(used.tolist())}
+        self.key_row = {key: keep_rows[r] for key, r in self.key_row.items() if r in keep_rows}
 
     def assign(self, items, featurizer) -> None:
         """items: (node id, label, ntype); featurises each distinct new (label, ntype) once."""
@@ -128,9 +182,14 @@ class Runtime:
 
     def __init__(self, bundle_dir: str, registry: Registry, device: str = "cpu", fp_budget: str | None = None,
                  feat_device: str | None = None, approved_executables=None, daily_budget: int | None = None,
-                 layers: bool = True, keep_reset_state: bool = True):
+                 layers: bool = True, keep_reset_state: bool = True, ensure_entities=None, seen_at_load_ns: int = 0):
         """keep_reset_state=False (endpoint agents): only the live state is kept; reset() / replaying the validation
-        day (the server's simulator) are not available, which spares two copies of the neighbour state."""
+        day (the server's simulator) are not available, which spares two copies of the neighbour state.
+
+        A compacted registry (registry.gids set: positions are not global ids) gets the bundle's neighbour state
+        mapped to its positions; `ensure_entities(gids)` is called first with the global ids the held entities'
+        neighbour lists point to but the registry no longer holds, so the caller can add them back.
+        seen_at_load_ns: "last seen" time given to the entities held at load (compaction measures age from it)."""
         verify_digests(bundle_dir)
         self.m = json.load(open(os.path.join(bundle_dir, "manifest.json")))
         self.dev = torch.device(device)
@@ -173,17 +232,24 @@ class Runtime:
         # node features for the baseline registry + TGN state continuing from the end of the validation day
         self.N = self.m["num_nodes"]
         feat_dim = d1["in_dim"] - (DEG_DIM if self.deg1 else 0)   # node features; detector-1 adds the window degrees
-        self.x = NodeFeatures(feat_dim, self.featdev)
-        self.x.resize(max(self.N, len(registry)))
-        self._featurize(range(len(registry)))
         self._tgn_init = load_tgn_state(os.path.join(bundle_dir, "tgn_state.npz"))
+        compacted = registry.gids is not None
+        if compacted:
+            self._tgn_init = localize_snapshot(self._tgn_init, registry, ensure_entities)
+        n0 = len(registry) if compacted else max(self.N, len(registry))
+        self.x = NodeFeatures(feat_dim, self.featdev)
+        self.x.resize(n0)
+        self._featurize(range(len(registry)))
         self._neighbor_size = d2["neighbor_size"]
         self._tgn_init_val = None
-        self.keep_reset_state = keep_reset_state
+        self.keep_reset_state = keep_reset_state and not compacted
         pv = os.path.join(bundle_dir, "tgn_state_val_start.npz")
-        if keep_reset_state and os.path.exists(pv):   # state at the start of the validation day (for simulations on that day)
+        if self.keep_reset_state and os.path.exists(pv):   # state at the start of the validation day (for simulations on that day)
             self._tgn_init_val = load_tgn_state(pv)
-        self._load_tgn(max(self.N, len(registry)))
+        self._load_tgn(n0)
+        # end of the last window each node appeared in (compaction); NOT_YET for entities registered after loading
+        # whose events have not been scored yet (never stale)
+        self.last_seen = np.full(n0, int(seen_at_load_ns), dtype=np.int64)
         if not keep_reset_state:
             self._tgn_init = None
         self.N0 = self.x.shape[0]   # base feature rows (bundle registry) kept across reset()
@@ -240,6 +306,7 @@ class Runtime:
             self.x.resize(n)
             self._featurize(range(old, n))
             self.state.grow(n)
+            self.last_seen = np.concatenate([self.last_seen, np.full(n - len(self.last_seen), NOT_YET, dtype=np.int64)])
 
     @torch.no_grad()
     def score(self, w: Window, keep_edge_losses: bool = False) -> WindowResult:
@@ -267,6 +334,7 @@ class Runtime:
                 l2[k].append(m.losses(tb, et[a:b]).cpu().numpy())
             self.state.insert(src[a:b], dst[a:b], et[a:b])
         ids = w.nodes()
+        self.last_seen[ids] = int(w.end_ns or w.start_ns)
         r1 = np.mean([fill_missing(c.ratio(node_scores(n, w.src, w.dst, l)[ids])) for c, l in zip(self.cal1, l1s)], axis=0)
         s2 = [node_scores(n, w.src, w.dst, np.concatenate(l)) for l in l2]
         r2 = np.average([fill_missing(c.ratio(s[ids])) for c, s in zip(self.cal2, s2)], axis=0, weights=self.agg2)
@@ -279,6 +347,46 @@ class Runtime:
         if keep_edge_losses:
             res.edge_loss = {"detector-1": np.mean(l1s, axis=0), "detector-2": np.mean([np.concatenate(l) for l in l2], axis=0)}
         return res
+
+    # ---- registry compaction (long-running endpoints) -----------------------------------------------------
+    def compaction_keep(self, now_ns: int, max_age_ns: int, extra=()) -> np.ndarray:
+        """Which registry positions to keep: seen within `max_age_ns`, in `extra` (the caller's pending work),
+        holding rule state (lowered integrity and its origin), and every node a kept node's neighbour list
+        points to (detector-2 reads those neighbours' features)."""
+        self.grow()
+        n = len(self.reg)
+        keep = self.last_seen[:n] >= now_ns - max_age_ns
+        ex = np.fromiter((int(i) for i in extra), dtype=np.int64)
+        if ex.size:
+            keep[ex[(ex >= 0) & (ex < n)]] = True
+        if self.layers is not None:
+            st = np.fromiter(self.layers.keep_nodes(now_ns), dtype=np.int64)
+            if st.size:
+                keep[st[(st >= 0) & (st < n)]] = True
+        L = self.state.loader
+        rows = torch.as_tensor(np.nonzero(keep)[0], device=L.neighbors.device)
+        nb, ei = L.neighbors[rows], L.e_id[rows]
+        ref = torch.unique(nb[ei >= 0]).cpu().numpy()
+        keep[ref[ref < n]] = True
+        return keep
+
+    def compact(self, keep: np.ndarray) -> list[int]:
+        """Drop registry positions where keep is false and renumber everything that refers to positions
+        (registry, node features, neighbour state, rule state). Returns old -> new position (-1 dropped); the
+        caller renumbers its own references (window buffer). Not available with a reset state (simulator)."""
+        if self.keep_reset_state:
+            raise RuntimeError("compaction needs a runtime without reset state (keep_reset_state=False)")
+        self.grow()
+        old2new = self.reg.compact(keep)
+        kidx = torch.as_tensor(np.nonzero(keep)[0], dtype=torch.long)
+        o2n = torch.as_tensor(old2new, dtype=torch.long)
+        self.x.compact(kidx)
+        self.state.compact(kidx, o2n)
+        if self.layers is not None:
+            self.layers.remap(old2new)
+        self.last_seen = self.last_seen[keep]
+        self.N0 = len(self.reg)
+        return old2new
 
     def _alert_policy(self, w: Window, ids: np.ndarray, fused: np.ndarray):
         return self.policy.apply(w, self.reg, ids, fused)

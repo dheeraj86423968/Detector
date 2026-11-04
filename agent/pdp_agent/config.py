@@ -21,6 +21,9 @@ class Config:
                                                      # OOM for large registries), else same as device
     spool_max_mb: int = 1024                         # hard cap on the local event spool (the server config may override)
     spool_unscored_max_age_h: float = 6.0            # without a model, uploaded baseline events wait this long at most
+    entity_max_age_h: float = 6.0                    # registry compaction: entities unseen this long may be dropped
+    compact_min_entities: int = 200_000              # ... once the registry holds at least this many
+    compact_interval_s: float = 3600.0               # ... checked this often
 
     @property
     def key_path(self): return os.path.join(self.pki_dir, "agent.key")

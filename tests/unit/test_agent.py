@@ -98,7 +98,7 @@ check(acks == [("c1", "ok"), ("c2", "unsupported")] and a.state.get("bundle_id")
 # 6. heartbeat carries the protocol's health fields
 h = a.health()
 check(set(h) == {"agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb", "spool_mb", "spool_dropped_unscored",
-                 "spool_dropped_unuploaded"} and h["rss_mb"] > 0, f"health {h}")
+                 "spool_dropped_unuploaded", "entities"} and h["rss_mb"] > 0, f"health {h}")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

@@ -29,6 +29,8 @@ carry an initial endpoint configuration (`POST /api/endpoints {"name", "config":
 
 ## Bundles (phase `protected`)
 `GET /v1/endpoints/{id}/bundle`      tar.gz of the bundle directory (manifest.json, signature.json, featurizer/, *.npz).
+                                      `?slim=1` (agents 0.3.4+): without the server-only files (tgn_state_val_start.npz);
+                                      their digests stay in the signed manifest and are checked only if the file is present.
 The agent verifies the Ed25519 signature against the server's bundle-signing public key received at enrolment
 (`ca_pem` bundle), then the file digests, before loading anything.
 
@@ -42,8 +44,10 @@ The agent verifies the Ed25519 signature against the server's bundle-signing pub
 Only flagged nodes and their window-local neighbourhood leave the host; benign telemetry does not.
 
 ## Control
-`POST /v1/endpoints/{id}/heartbeat`  `{ "agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb" }` — stored as the
-                                      endpoint's `health` (with `at`); `queue_depth` = events awaiting upload (baseline) or scoring.
+`POST /v1/endpoints/{id}/heartbeat`  `{ "agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb", "collector_lost",
+                                      "spool_mb", "spool_dropped_unscored", "spool_dropped_unuploaded" }` — stored as the
+                                      endpoint's `health` (with `at`); `queue_depth` = events awaiting upload (baseline) or scoring;
+                                      `spool_*` (0.3.4+): local spool size and events its size cap dropped.
 Commands are delivered in the `status` response: `"commands": [{"id": "...", "command": "refetch_bundle"}, ...]`
 (queued from the console, `POST /api/endpoints/{id}/commands`). The agent executes each and acknowledges it:
 `POST /v1/endpoints/{id}/commands/{cmd_id}/ack` `{"result": "ok" | "unsupported" | "error: ..."}`; an acknowledged

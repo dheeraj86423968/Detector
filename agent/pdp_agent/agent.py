@@ -30,7 +30,7 @@ from .config import Config
 from .state import State
 from .transport import Transport, TransportError
 
-VERSION = "0.3.4"
+VERSION = "0.3.6"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -75,8 +75,16 @@ class Agent:
     def __init__(self, cfg: Config):
         self.cfg = cfg
         self.state = State(os.path.join(cfg.data_dir, "state.sqlite"))
-        # entity display data stays on disk (read per alert): the registry holds every entity ever seen
-        self.reg = self.state.load_registry(display=False)
+        # entity display data stays on disk (read per alert). After a compaction only the live entities are loaded
+        # (the saved live set, everything registered since, and what spooled events refer to); otherwise all.
+        live = self._load_live_set()
+        if live is not None:
+            gids, after = live
+            self.reg = self.state.load_registry(display=False, gids=set(gids.tolist()) | self.state.spool_gids(), after_gid=after)
+            log(f"registry: {len(self.reg)} live entities loaded (of {self.state.next_gid()} registered)")
+        else:
+            self.reg = self.state.load_registry(display=False)
+        self.next_gid = self.state.next_gid()
         if self.state.has_old_spool():
             log("migrating the local event spool to the compact format")
             n = self.state.migrate_spool(self.reg, self.baseline_days())
@@ -89,6 +97,10 @@ class Agent:
         self.chronological = cfg.source.get("kind") in ("auditd", "ebpf", "strace", "etw")
         self._cpu0 = (time.time(), os.times())
         self._last_window_end = 0
+        self._cursor: tuple | None = None    # (ts_ns, id) of the last spooled event handed to the window builder
+        self._max_id = 0                     # highest spool id handed out
+        self._open_ids: list[int] = []       # spool ids in the open window: marked scored once their window is
+        self._last_compact = time.time()     # scored (on restart they are replayed into a fresh builder)
 
     # ------------------------------------------------------------------ enrolment
     def enroll(self, token: str, ca_sha256: str | None = None, attempts: int = 30):
@@ -157,13 +169,78 @@ class Agent:
         for entities, ev in items:
             for e in entities:
                 if self.reg.get(e.uuid) is None:   # in memory without display data (that goes to disk with `ents`)
-                    self.reg.add(Entity(e.uuid, e.ntype, sys.intern(e.label), NO_DISPLAY)); ents.append(e)
-            evs.append((ev.ts_ns, self.reg.get(ev.src), ev.op, self.reg.get(ev.dst), ev.event_uuid, day_of(ev.ts_ns, tz)))
+                    ents.append((e, self.reg.gid(self._register(e))))
+            reg = self.reg
+            evs.append((ev.ts_ns, reg.gid(reg.get(ev.src)), ev.op, reg.gid(reg.get(ev.dst)), ev.event_uuid, day_of(ev.ts_ns, tz)))
             n += 1
             if len(evs) >= 5000:
                 self._commit(ents, evs); ents, evs = [], []
         self._commit(ents, evs)
         return n
+
+    def _register(self, e: Entity) -> int:
+        """Add an entity to the in-memory registry with its global id: a new one gets the next id (its sqlite row
+        is written in the same order by _commit); one dropped by a compaction that shows up again gets its old id."""
+        g = self.state.gid_for(e.uuid) if self.reg.gids is not None else None
+        if g is None:
+            g = self.next_gid
+            self.next_gid += 1
+        return self.reg.add(Entity(e.uuid, e.ntype, sys.intern(e.label), NO_DISPLAY), gid=g)
+
+    def _ensure_gids(self, gids) -> None:
+        """Runtime callback: entities a loaded model's neighbour state points to, added back from disk."""
+        for g, e in self.state.entities_by_gid(gids):
+            if self.reg.get(e.uuid) is None:
+                self.reg.add(e, gid=g)
+
+    def _live_path(self) -> str:
+        return os.path.join(self.cfg.data_dir, "live_entities.npy")
+
+    def _load_live_set(self):
+        """(live global ids, highest global id at that time) saved by the last compaction, or None."""
+        try:
+            a = np.load(self._live_path())
+            return a[:-1], int(a[-1])
+        except (OSError, ValueError):
+            return None
+
+    def _save_live_set(self) -> None:
+        g = self.reg.gid_array()
+        tmp = self._live_path() + ".tmp.npy"
+        np.save(tmp, np.concatenate([g, np.array([self.next_gid - 1], dtype=np.int64)]))
+        os.replace(tmp, self._live_path())
+
+    def maybe_compact(self, now: float) -> None:
+        """Drop entities nobody needs any more (not seen for entity_max_age_h, no pending work, no rule state, not
+        a neighbour of a kept entity): a busy host registers ~1 M short-lived processes and files a day."""
+        if self.runtime is None or now - self._last_compact < float(self.cfg.compact_interval_s):
+            return
+        self._last_compact = now
+        n = len(self.reg)
+        if n < int(self.cfg.compact_min_entities):
+            return
+        t0 = time.time()
+        extra = set(self.builder.node_ids())
+        for g in self.state.spool_gids():
+            i = self.reg.local(g)
+            if i is not None:
+                extra.add(i)
+        keep = self.runtime.compaction_keep(time.time_ns(), int(float(self.cfg.entity_max_age_h) * 3600e9), extra)
+        if keep.sum() > n * 0.8:
+            return
+        old2new = self.runtime.compact(keep)
+        self.builder.remap(old2new)
+        self._save_live_set()
+        import gc
+        gc.collect()
+        pruned = 0
+        mat = self.runtime.m.get("maturity") or {}
+        if (self.state.get("phase") == "protected" and not mat.get("early")) or getattr(self.cfg, "prune_entities_always", False):
+            # final model: entities registered after its baseline and no longer held are deleted from disk too
+            live = set(self.reg.gid_array().tolist()) | self.state.spool_gids()
+            pruned = self.state.prune_entities(live, int(self.runtime.N), self.next_gid)
+        log(f"registry compacted: {n} -> {len(self.reg)} entities in {time.time() - t0:.1f}s"
+            + (f"; {pruned} entity records deleted from disk" if pruned else ""))
 
     def baseline_days(self) -> list[str]:
         """The first N+1 days seen (N baseline days plus the validation day): the only days uploaded to the server."""
@@ -189,8 +266,6 @@ class Agent:
         while pend:
             # the agent's dense id travels with each entity: the server builds its registry in exactly this order, so
             # node ids (and the detector-2 neighbour state keyed by them) are identical on both sides
-            for p in pend:
-                p["dense_id"] = self.reg.get(p["uuid"])
             self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/entities", pend)
             self.state.mark_entities_uploaded([p["uuid"] for p in pend])
             pend = self.state.pending_entities()
@@ -200,8 +275,8 @@ class Agent:
             rows = self.state.pending_events(day)
             while rows:
                 bid = f"{day}-{rows[0][0]}-{rows[-1][0]}"
-                ent = self.reg.entities
-                self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/events", [{"ts_ns": r[1], "src": ent[r[2]].uuid, "op": r[3], "dst": ent[r[4]].uuid, "event_uuid": r[5]} for r in rows], batch_id=bid)
+                uid = self._uuids({r[2] for r in rows} | {r[4] for r in rows})
+                self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/events", [{"ts_ns": r[1], "src": uid[r[2]], "op": r[3], "dst": uid[r[4]], "event_uuid": r[5]} for r in rows], batch_id=bid)
                 self.state.mark_events_uploaded([r[0] for r in rows])
                 rows = self.state.pending_events(day)
             # the source declares days complete; for a chronological live source a day is also complete once a later
@@ -211,6 +286,19 @@ class Agent:
                 self.tr.request("POST", f"/v1/endpoints/{self.eid}/day-complete", {"date": day})
                 self.state.mark_day_reported(day)
                 log(f"baseline day {day} uploaded and completed")
+
+    def _uuids(self, gids) -> dict[int, str]:
+        """Global id -> uuid (registry, else disk)."""
+        out, missing = {}, []
+        for g in gids:
+            i = self.reg.local(g)
+            if i is None:
+                missing.append(g)
+            else:
+                out[g] = self.reg.entities[i].uuid
+        for g, e in self.state.entities_by_gid(missing):
+            out[g] = e.uuid
+        return out
 
     def _day_over(self, day: str, i: int, n: int) -> bool:
         if not self.chronological:
@@ -246,7 +334,7 @@ class Agent:
         self.runtime = None    # the previous model's memory is released before the next one is loaded
         self.runtime = Runtime(bdir, self.reg, device=device, fp_budget=self.state.get("fp_budget"), feat_device=feat_device,
                                approved_executables=cfg.get("approved_executables"), daily_budget=cfg.get("learned_daily_budget"),
-                               keep_reset_state=False)
+                               keep_reset_state=False, ensure_entities=self._ensure_gids, seen_at_load_ns=time.time_ns())
         self.runtime.set_learned_alerts(bool(cfg.get("learned_alerts", True)))
         wns = int(self.runtime.m.get("window_ns") or 0)
         if wns and wns != self.builder.window_ns and not self.builder.pending:   # windows as long as the bundle was trained on
@@ -327,21 +415,35 @@ class Agent:
 
     # ------------------------------------------------------------------ detection
     def score_backlog(self):
-        rows = self.state.unscored_events()
+        """Feed spooled events to the window builder and score each window it closes. A row is marked scored only
+        once its window has been scored: after a restart the open window's rows are simply replayed."""
+        rows = self.state.unscored_events(after=self._cursor, max_id=self._max_id)
         while rows:
             results = []
+            loc = self.reg.local
             for r in rows:
-                for w in self.builder.push(r[2], r[4], r[1], EDGE_TYPE_ID[r[3]], r[5]):
-                    results.append((w, self.runtime.score(w, keep_edge_losses=True)))
+                s, d = loc(r[2]), loc(r[4])
+                if s is None or d is None:      # not expected (spooled entities are never compacted away)
+                    self._ensure_gids([g for g, x in ((r[2], s), (r[4], d)) if x is None])
+                    self.runtime.grow()
+                    s, d = loc(r[2]), loc(r[4])
+                self._open_ids.append(r[0])
+                closed = list(self.builder.push(s, d, r[1], EDGE_TYPE_ID[r[3]], r[5]))
+                if closed:
+                    results += [(w, self.runtime.score(w, keep_edge_losses=True)) for w in closed]
+                    self.state.mark_scored(self._open_ids)    # everything pushed so far was in the closed window(s)
+                    self._open_ids = []
+            last = rows[-1]
+            self._cursor = (last[1], last[0])
+            self._max_id = max(self._max_id, max(r[0] for r in rows))
             self.report(results)
-            # Events still buffered in the open window are persisted (not re-read from the spool on restart),
-            # so marking the whole batch scored here does not lose them; the builder state is saved alongside.
-            self.state.mark_scored([r[0] for r in rows])
-            self.state.set("window_builder", self.builder.state())
-            rows = self.state.unscored_events()
+            rows = self.state.unscored_events(after=self._cursor, max_id=self._max_id)
 
     def flush_window(self):
         results = [(w, self.runtime.score(w, keep_edge_losses=True)) for w in self.builder.finish()]
+        if results:
+            self.state.mark_scored(self._open_ids)
+            self._open_ids = []
         self.report(results)
 
     def context(self, w: Window, r: WindowResult, node: int, hops: int = 1, cap: int = 300) -> dict:
@@ -400,9 +502,12 @@ class Agent:
         self.chronological = bool(getattr(source, "chronological", self.chronological))
         self.connect()
         if self.load_local_bundle():
-            self.builder.load_state(self.state.get("window_builder"))   # resume the open detection window
-            if self.builder.pending:
-                log(f"resumed open window with {self.builder.pending} buffered events")
+            old = self.state.get("window_builder")    # agents up to 0.3.4 saved the open window (ids = global ids then)
+            if old and self.reg.gids is None:
+                self.builder.load_state(old)
+                if self.builder.pending:
+                    log(f"resumed open window with {self.builder.pending} buffered events")
+            self.state.set("window_builder", None)
         last_hb, last_status, last_purge = 0, 0, time.time()
         self._offline_since = 0
         for batch in source.batches(lambda: self.stop):   # source yields lists of (entities, Event); empty list = idle tick
@@ -440,6 +545,7 @@ class Agent:
             if now - last_purge > 60:   # spool hygiene: finished rows go, the size cap is enforced
                 self.purge_spool()
                 last_purge = now
+            self.maybe_compact(now)
             if now - last_hb > self.cfg.heartbeat_interval:
                 try:
                     self.tr.request("POST", f"/v1/endpoints/{self.eid}/heartbeat", self.health())
@@ -500,9 +606,10 @@ class Agent:
         except (OSError, ValueError, IndexError):
             rss = 0.0
         # work not yet done: events awaiting upload while building the baseline, awaiting scoring once protected
-        q = (self.state.unscored_count() if self.runtime is not None else self.state.unuploaded_count()) + self.builder.pending
+        # (rows of the open window stay unscored until it closes, so they are in unscored_count already)
+        q = self.state.unscored_count() if self.runtime is not None else self.state.unuploaded_count()
         h = {"agent_version": VERSION, "queue_depth": int(q), "last_window_end_ns": int(self._last_window_end),
-             "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1), "spool_mb": round(self.state.size_bytes() / 2**20, 1),
+             "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1), "spool_mb": round(self.state.size_bytes() / 2**20, 1), "entities": len(self.reg),
              "spool_dropped_unscored": int(self.state.get("dropped_unscored", 0)),
              "spool_dropped_unuploaded": int(self.state.get("dropped_unuploaded", 0))}
         try:   # collector health: records the kernel dropped because the ring buffer was full (CO-RE eBPF)

@@ -98,6 +98,15 @@ class WindowBuilder:
             yield w
         self._start = None
 
+    def remap(self, old2new) -> None:
+        """Renumber the buffered events' node ids (registry compaction); old2new: old id -> new id."""
+        m = old2new
+        self._buf = [(m[e[0]], m[e[1]]) + tuple(e[2:]) for e in self._buf]
+        self._chunk = [(m[e[0]], m[e[1]]) + tuple(e[2:]) for e in self._chunk]
+
+    def node_ids(self) -> set:
+        return {e[0] for e in self._buf} | {e[1] for e in self._buf} | {e[0] for e in self._chunk} | {e[1] for e in self._chunk}
+
     def state(self) -> dict:
         """Serialisable builder state: the events buffered in the still-open window and current chunk, plus the
         window start timestamp. Persisted by the agent so a restart does not lose up to one window of events."""
