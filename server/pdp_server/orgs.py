@@ -324,6 +324,23 @@ def patch_org(req: OrgPatch, s=Depends(admin)):
 
 
 # ---------------------------------------------------------------------------------------------- operator
+@router.get("/api/operator/coverage")
+def operator_coverage(s=Depends(operator)):
+    """Detection coverage per release (tools/coverage.py), newest first, with regressions against the previous
+    release measured with the same suite on the same reference endpoint."""
+    from .tools.coverage import previous, regressions
+    with db.conn() as c:
+        rows = db.q(c, "SELECT h.*, e.name AS endpoint FROM coverage_history h LEFT JOIN endpoints e ON e.id=h.endpoint_id ORDER BY h.created_at")
+    out = []
+    for r in rows:
+        p = previous(rows, r)
+        out.append({"release": r["release"], "endpoint": r["endpoint"], "created_at": r["created_at"], "detection_rate": r["detection_rate"],
+                    "ci": r["ci"], "fp_per_day": r["fp_per_day"], "agent_version": r["agent_version"], "suite": (r["spec_hash"] or "")[:8],
+                    "by_family": [{"family": f["family"], "rate": (f.get("fused") or {}).get("rate")} for f in r["by_family"] or []],
+                    "previous": p["release"] if p else None, "regressions": regressions(p, r) if p else []})
+    return {"ok": True, "coverage": out[::-1]}
+
+
 @router.get("/api/operator/orgs")
 def operator_orgs(s=Depends(operator)):
     with db.conn() as c:

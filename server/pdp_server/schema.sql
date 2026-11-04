@@ -182,3 +182,10 @@ CREATE TABLE IF NOT EXISTS hunt_results (
 -- Kubernetes (0.6): a fleet enrolment token serves up to max_uses nodes (one endpoint per node, named after it)
 ALTER TABLE enroll_tokens ADD COLUMN IF NOT EXISTS max_uses INT;
 ALTER TABLE enroll_tokens ADD COLUMN IF NOT EXISTS uses INT NOT NULL DEFAULT 0;
+
+-- detection coverage per release (0.6): the same offline simulation campaign (fixed suite and seed) against the same
+-- reference endpoint model at every release (tools/coverage.py); no attack is run on any host
+CREATE TABLE IF NOT EXISTS coverage_history (
+  release TEXT NOT NULL, campaign_id UUID REFERENCES sim_campaigns(id) ON DELETE SET NULL, endpoint_id UUID, bundle_id UUID,
+  spec_hash TEXT, detection_rate DOUBLE PRECISION, ci JSONB, fp_per_day DOUBLE PRECISION, by_family JSONB, by_evasion JSONB,
+  agent_version TEXT, created_at TIMESTAMPTZ DEFAULT now(), PRIMARY KEY (release, endpoint_id));

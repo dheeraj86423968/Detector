@@ -185,4 +185,8 @@ proxy (profile "sso"), whose allow list must list the providers' hosts.
   - ARM64: native image build, multi-architecture publishing, installer accepts aarch64, CI job on GitHub arm64
     runners. Verified here only: the arm64 BPF object compiles, the aarch64 torch wheel exists. Needs one run on
     arm64 hardware (CI job or an arm64 VM).
-- Measured detection coverage against the harmless attack suite, tracked per release.
+- Measured detection coverage against the harmless attack suite, tracked per release. — tooling built 2026-11-04,
+  not run: `pdp_server.tools.coverage record|compare|list` runs the offline simulation suite (fixed seed) against a
+  reference endpoint's model per release, stores it (coverage_history) and flags regressions; operator console card.
+  Unit test (comparison rules) and a staging check with fixture rows pass. The first measurement was left to the
+  user (no attack simulation of any kind without the go-ahead); docs/OPERATIONS.md has the release step.

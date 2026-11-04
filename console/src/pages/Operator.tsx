@@ -93,6 +93,7 @@ export default function Operator() {
           text={<><p>Its {plural(toggling.users, "user")} can no longer sign in to the console.</p><p>Its agents keep running and its data is kept. You can enable it again at any time.</p></>}
           onConfirm={async () => { await patch(`/api/operator/orgs/${toggling.id}`, { disabled: true }); toast(`${toggling.name} disabled`); reload(); }} />)}
       {limiting && <LimitDialog org={limiting} onClose={() => setLimiting(null)} onDone={reload} />}
+      <CoverageCard />
     </div>
   );
 }
@@ -120,5 +121,32 @@ function LimitDialog({ org, onClose, onDone }: { org: OperatorOrg; onClose: () =
         {err && <div className="err">{err}</div>}
       </form>
     </Dialog>
+  );
+}
+
+type Coverage = { release: string; endpoint: string | null; created_at: string; detection_rate: number | null; ci: [number, number] | null;
+  fp_per_day: number | null; agent_version: string | null; suite: string; by_family: { family: string; rate: number | null }[];
+  previous: string | null; regressions: string[] };
+
+/** Detection coverage per release (tools/coverage.py: the same offline simulation suite against the same reference model). */
+function CoverageCard() {
+  const { data } = useApi<{ coverage: Coverage[] }>("/api/operator/coverage");
+  const pct = (x: number | null | undefined) => (x == null ? "—" : `${Math.round(x * 100)} %`);
+  return (
+    <Card title="Detection coverage by release" pad={false}
+      subtitle="The same offline attack simulation (fixed suite and seed) against the same reference model at every release: python -m pdp_server.tools.coverage record --release X --endpoint ID">
+      {!data?.coverage.length ? <p className="pad muted">No release measured yet.</p> : (
+        <table className="table middle"><thead><tr><th>Release</th><th>Detection</th><th>False positives / day</th><th>By attack family</th><th>Compared with previous</th></tr></thead>
+          <tbody>{data.coverage.map(c => (
+            <tr key={c.release + c.created_at}>
+              <td><b>{c.release}</b><div className="muted sm">{fmtDate(c.created_at)} · {c.endpoint || "endpoint removed"} · suite {c.suite}</div></td>
+              <td>{pct(c.detection_rate)}{c.ci && <div className="muted sm">{pct(c.ci[0])} to {pct(c.ci[1])}</div>}</td>
+              <td>{c.fp_per_day == null ? "—" : c.fp_per_day.toFixed(1)}</td>
+              <td className="sm">{c.by_family.map(f => `${f.family.replace(/^transplant:/, "")} ${pct(f.rate)}`).join(" · ")}</td>
+              <td className="sm">{!c.previous ? <span className="muted">first measurement</span> : c.regressions.length
+                ? <span className="warn-text">{c.regressions.join("; ")} (vs {c.previous})</span> : <span>no regression vs {c.previous}</span>}</td>
+            </tr>))}</tbody></table>
+      )}
+    </Card>
   );
 }

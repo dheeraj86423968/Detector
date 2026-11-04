@@ -19,6 +19,20 @@ destroy it afterwards).
   isolation), `notify_e2e` (notifications, including the internal-address guard of the deployed notifier).
 - `tests/load/loadtest.py`: N simulated agents (below).
 
+## Detection coverage per release
+Before rolling a release, measure detection the same way as for every earlier release and compare:
+`docker compose exec api python -m pdp_server.tools.coverage record --release <version> --endpoint <reference id>`
+then `... coverage compare --release <version>` (exit 1 on a regression). The reference is one endpoint with a
+trained model kept for this purpose (a dataset-replay benchmark endpoint, or a long-running internal one); the suite
+is `sim/suites/client_acceptance.json` (7 synthetic families x 6 evasion levels, 210 runs) with a fixed seed. It is
+the offline simulation (sim/): attack graphs injected into the reference endpoint's recorded benign windows and
+scored by the real detector, as a worker job; nothing is executed on any host. Regressions: overall detection down
+by more than max(5 points, the CI half-width), a family down 20 points or more, false positives per day up by more
+than 50%. Results: Console > Organisations (operators) > Detection coverage by release, `coverage list`, table
+`coverage_history`. Comparisons only between runs with the same suite on the same endpoint (a re-trained reference
+model starts a new series in practice: note it in the release notes). Not measured yet: the first run is the
+operator's call (it is an attack simulation, even if offline).
+
 ## Backups and restore
 The `backup` service (always on) writes an encrypted archive every `PDP_BACKUP_INTERVAL_H` hours (24) to
 `deploy/backups/` and keeps `PDP_BACKUP_KEEP` (7): the platform database, CA / key files, the bundled KMS (OpenBao
