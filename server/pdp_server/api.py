@@ -30,10 +30,12 @@ def _include_console_routes():
     from .console import router
     from .orgs import router as org_router
     from .distrib import router as dist_router
+    from .notify import router as notify_router
     app.include_router(dist_router)
     app.include_router(router)
     app.include_router(allow_router)
     app.include_router(org_router)
+    app.include_router(notify_router)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")

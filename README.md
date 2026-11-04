@@ -75,8 +75,10 @@ Console → Simulation → New campaign (runs on the GPU worker). See `docs/SIMU
 
 ## Alert export
 
-`docker compose ... --profile export up -d exporter` with `PDP_EXPORT_SYSLOG=udp|tcp|tls://host:port` (CEF) and/or
-`PDP_EXPORT_WEBHOOK=https://...` in `deploy/.env`. Ad-hoc: Alerts → Export CSV / NDJSON.
+Console → Notifications: each organisation adds e-mail, Slack, Teams, webhook or syslog (CEF) channels for incidents,
+agent problems and, for webhook/syslog, every alert (SIEM feed); delivered by the `notifier` service. Server-wide
+`PDP_EXPORT_SYSLOG` / `PDP_EXPORT_WEBHOOK` in `deploy/.env` still work (feed of the internal organisation). Ad-hoc:
+Alerts → Export CSV / NDJSON.
 
 ## Tests
 

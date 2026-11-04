@@ -41,6 +41,23 @@ endpoint-keyed route across organisations). The operator sees organisations and 
 - E-mail (verification, invite mails, password reset); per-organisation SSO; data retention settings per client.
 - Windows agent; the agent image is 1.9 GB (CPU PyTorch) and should be slimmed.
 
+## Notifications
+Each organisation's admins add channels under Console → Notifications; the `notifier` service (the only backend
+service with internet access) delivers them within ~10 seconds:
+- **What:** new incidents at or above the channel's severity (and again when one escalates), agents that stop
+  reporting for `PDP_NOTIFY_OFFLINE_MIN` minutes (default 10) and when they are back, collector/spool event loss;
+  webhook and syslog channels can also take every single alert (SIEM feed, in order, once).
+- **Where:** e-mail (needs `PDP_SMTP_URL=smtp://user:pass@relay:587` (STARTTLS) or `smtps://...:465`, and
+  `PDP_SMTP_FROM`), Slack and Teams incoming webhooks, any HTTPS webhook (JSON; with a secret, `X-PDP-Signature:
+  sha256=HMAC(secret, X-PDP-Timestamp + "." + body)`), syslog CEF over tls/tcp/udp.
+- **No flooding:** at most `PDP_NOTIFY_MAX_PER_HOUR` (20) messages per channel and hour; the rest are listed in one
+  summary per hour. Each message is sent once per channel (notify_log).
+- **Safety (hosted):** destinations are resolved before every send and refused if they point to a private, loopback,
+  link-local or otherwise internal address, so a customer cannot make our server call into its own network; the API
+  refuses literal internal addresses up front. `PDP_NOTIFY_ALLOW_PRIVATE=1` lifts this for on-premises installs.
+- Test: `tests/e2e/notify_e2e.sh` (27 checks: isolation between organisations, the internal-address guard of the
+  deployed notifier, signatures, escalation, hourly limit and digest, SIEM feed, agent offline/back).
+
 ## Updating without downtime
 The API runs as two replicas (`PDP_API_REPLICAS`, default 2) behind nginx, which spreads requests over them and
 retries a refused connection on the other replica. Update with

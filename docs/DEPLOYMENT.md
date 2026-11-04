@@ -151,10 +151,12 @@ the runtime), pushes them to `<REGISTRY>/pdp/{agent,server}:<v>` (+ `latest` for
 
 Done in 0.2:
 * **Secrets.** `bringup.sh` generates `PDP_DB_PASSWORD` into `deploy/.env` (mode 600); no default passwords.
-* **SIEM / response integration.** `exporter` service (compose profile `export`): every alert once, in order, as
-  syslog CEF over UDP/TCP/TLS (`PDP_EXPORT_SYSLOG`) and/or an HTTPS JSON webhook (`PDP_EXPORT_WEBHOOK`,
-  `PDP_EXPORT_WEBHOOK_TOKEN`); its cursor lives in the database, so restarts neither lose nor duplicate alerts. It
-  is the only backend service on the egress network. Ad-hoc export: `/api/alerts/export?format=csv|ndjson`.
+* **SIEM / response integration.** The `notifier` service (always on since server 0.6; it replaced the `exporter`)
+  delivers each organisation's notification channels: e-mail, Slack, Teams, signed webhooks and syslog CEF, and
+  per channel optionally every alert once, in order (SIEM feed; cursor in the database, so restarts neither lose nor
+  duplicate alerts). The old server-wide `PDP_EXPORT_SYSLOG` / `PDP_EXPORT_WEBHOOK` settings still work: they become
+  feed channels of the internal organisation. It is the only backend service on the egress network. Ad-hoc export:
+  `/api/alerts/export?format=csv|ndjson`. See docs/HOSTING.md "Notifications".
 * **Observability.** `/healthz` (DB reachability, queue depth) on the gateway and as the API container healthcheck;
   per-endpoint health (agent version, queue depth, CPU, RSS, last window) from heartbeats in the console; job
   heartbeats, and jobs of a crashed worker are re-queued.

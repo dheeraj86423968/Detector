@@ -198,6 +198,15 @@ exfiltration, tainted_modify, tainted_spawn`, or `learned` with a program as val
 and creates/removes `program` entries for that endpoint; `GET /api/endpoints/{id}` returns the effective
 `config.approved_executables`, `trusted_addresses`, `suppressed_detections`.
 
+## Notifications (0.6, admins)
+`GET /api/notifications/channels` → `{channels: [{id, name, kind, target, has_secret, min_severity, events, every_alert,
+enabled, last_ok_at, last_error, last_error_at, ...}], email_available, notifier_running}` (secrets are never returned).
+`POST /api/notifications/channels` `{name, kind: email|slack|teams|webhook|syslog, target, secret?, min_severity:
+low|medium|high|critical, events: [incident, agent_offline, agent_health], every_alert (webhook/syslog), enabled}`;
+`PATCH` / `DELETE /api/notifications/channels/{id}`; `POST /api/notifications/channels/{id}/test` queues a test
+message; `GET /api/notifications/log?channel_id=` recent deliveries (sent, failed, suppressed, digest, queued).
+All org-scoped: another organisation's channel ids answer 404.
+
 ## Organisations (multi-tenant, 0.5)
 
 PDP is hosted for many client organisations on one server. Every user and endpoint belongs to exactly one

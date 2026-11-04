@@ -116,3 +116,18 @@ CREATE TABLE IF NOT EXISTS invites (
   email TEXT, role TEXT NOT NULL CHECK (role IN ('admin','analyst','viewer')), endpoints JSONB,
   created_by INT REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL,
   used_at TIMESTAMPTZ, used_by INT REFERENCES users(id) ON DELETE SET NULL, revoked BOOLEAN NOT NULL DEFAULT false);
+
+-- notifications (org-scoped channels: e-mail, Slack, Teams, webhook, syslog CEF) and what was sent
+CREATE TABLE IF NOT EXISTS notify_channels (
+  id SERIAL PRIMARY KEY, org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE, name TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('email','slack','teams','webhook','syslog')), target TEXT NOT NULL, secret TEXT,
+  min_severity TEXT NOT NULL DEFAULT 'high' CHECK (min_severity IN ('low','medium','high','critical')),
+  events JSONB NOT NULL DEFAULT '["incident","agent_offline","agent_health"]', every_alert BOOLEAN NOT NULL DEFAULT false,
+  enabled BOOLEAN NOT NULL DEFAULT true, since_alert_id BIGINT NOT NULL DEFAULT 0, alert_cursor BIGINT NOT NULL DEFAULT 0,
+  created_by TEXT, created_at TIMESTAMPTZ DEFAULT now(), last_ok_at TIMESTAMPTZ, last_error TEXT, last_error_at TIMESTAMPTZ);
+CREATE INDEX IF NOT EXISTS notify_channels_org ON notify_channels (org_id);
+CREATE TABLE IF NOT EXISTS notify_log (
+  id BIGSERIAL PRIMARY KEY, channel_id INT NOT NULL REFERENCES notify_channels(id) ON DELETE CASCADE, key TEXT NOT NULL,
+  subject TEXT, state TEXT NOT NULL DEFAULT 'sent' CHECK (state IN ('sent','failed','suppressed','digest','queued')),
+  detail TEXT, at TIMESTAMPTZ DEFAULT now(), UNIQUE (channel_id, key));
+CREATE INDEX IF NOT EXISTS notify_log_recent ON notify_log (channel_id, at);

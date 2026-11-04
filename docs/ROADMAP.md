@@ -45,10 +45,19 @@ execution instead of at window close. Real-time alerts are not re-sent with thei
 (tests/unit/test_agent_realtime.py). They join the window's incident (incidents group by time). Learned and
 corroborated alerts still come with the window.
 
-### 3. Notifications and export — status: todo
+### 3. Notifications and export — status: done (server 0.6, 2026-11-04)
 Alerts are only visible in the console. Done when: per-org notification settings; e-mail (SMTP) and Slack/Teams
 webhooks for incidents above a severity and for agent offline / collector lost; generic webhook + syslog (CEF) export
 for SIEMs; test-send button; rate limiting/digest so a noisy host does not spam.
+
+Result: org-scoped channels (notify_channels) for e-mail, Slack, Teams, signed webhooks and syslog CEF, managed in
+Console → Notifications (test button, delivery history, last error); events: incidents at/above a severity (and
+escalations), agent offline/back, collector or spool event loss; webhook/syslog can also take every alert (SIEM
+feed, replaces the server-wide exporter, whose env settings become an internal-org feed). The `notifier` service is
+the only backend service with egress; it refuses destinations resolving to internal addresses (SSRF guard for the
+hosted service). At most 20 messages per channel and hour plus one hourly digest. Tests: tests/unit/test_notify.py
+(19), tests/e2e/notify_e2e.sh (27, against the live stack). Open: e-mail needs an SMTP relay configured on this
+server (PDP_SMTP_URL) - not set yet, so the console offers Slack/Teams/webhook/syslog only.
 
 ### 4. Agent updates and health — status: todo
 No upgrade command (re-running the installer leaves a stray token). Done when: agents auto-update from our registry

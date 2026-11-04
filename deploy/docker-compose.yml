@@ -59,6 +59,7 @@ services:
       PDP_OIDC_LABEL: ${PDP_OIDC_LABEL:-Sign in with SSO}
       PDP_PASSWORD_LOGIN: ${PDP_PASSWORD_LOGIN:-enabled}
       # hosted multi-tenant: client self sign-up (off | code | open), endpoint limit per new organisation
+      PDP_NOTIFY_ALLOW_PRIVATE: ${PDP_NOTIFY_ALLOW_PRIVATE:-0}
       PDP_SIGNUP: ${PDP_SIGNUP:-off}
       PDP_SIGNUP_CODE: ${PDP_SIGNUP_CODE:-}
       PDP_ORG_MAX_ENDPOINTS: ${PDP_ORG_MAX_ENDPOINTS:-25}
@@ -126,20 +127,24 @@ services:
     networks: [ backend, edge ]          # edge only so the loopback push port can be published (backend is internal)
     restart: unless-stopped
 
-  exporter:                  # alert export to the SOC (syslog CEF / webhook); the only backend service with egress
-    image: pdp/server:${PDP_VERSION:-dev}
-    command: ["exporter"]
+  notifier:                  # notifications (e-mail, Slack, Teams, webhook, syslog CEF) and SIEM alert feeds per
+    image: pdp/server:${PDP_VERSION:-dev}   # organisation; the only backend service with internet access
+    command: ["notifier"]
     environment:
       <<: *db-env
-      PDP_EXPORT_SYSLOG: ${PDP_EXPORT_SYSLOG:-}
+      PDP_SMTP_URL: ${PDP_SMTP_URL:-}                     # smtp://user:pass@relay:587 (STARTTLS) | smtps://...:465
+      PDP_SMTP_FROM: ${PDP_SMTP_FROM:-}
+      PDP_PUBLIC_HOSTNAME: ${PDP_PUBLIC_HOSTNAME:-}
+      PDP_CONSOLE_URL: ${PDP_CONSOLE_URL:-}
+      PDP_NOTIFY_MAX_PER_HOUR: ${PDP_NOTIFY_MAX_PER_HOUR:-20}
+      PDP_NOTIFY_OFFLINE_MIN: ${PDP_NOTIFY_OFFLINE_MIN:-10}
+      PDP_NOTIFY_ALLOW_PRIVATE: ${PDP_NOTIFY_ALLOW_PRIVATE:-0}   # 1 only on-premises / tests: allow internal targets
+      PDP_EXPORT_SYSLOG: ${PDP_EXPORT_SYSLOG:-}           # legacy server-wide SIEM feed -> internal org channel
       PDP_EXPORT_WEBHOOK: ${PDP_EXPORT_WEBHOOK:-}
       PDP_EXPORT_WEBHOOK_TOKEN: ${PDP_EXPORT_WEBHOOK_TOKEN:-}
-      PDP_EXPORT_FROM: ${PDP_EXPORT_FROM:-now}
-      PDP_CONSOLE_URL: ${PDP_CONSOLE_URL:-https://localhost}
     networks: [ backend, edge ]
     restart: unless-stopped
     depends_on: { api: { condition: service_healthy } }
-    profiles: [ export ]
 
   egress:                    # allow-listed CONNECT proxy: the api's only route to the identity provider
     image: pdp/server:${PDP_VERSION:-dev}

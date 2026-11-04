@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Building2, LayoutDashboard, ListChecks, LogOut, Server, ShieldAlert, UserCog, Users } from "lucide-react";
+import { Bell, Building2, LayoutDashboard, ListChecks, LogOut, Server, ShieldAlert, UserCog, Users } from "lucide-react";
 import "@fontsource-variable/inter";
 import "./styles.css";
 import { api, Me, MeContext, MeReloadContext, Overview, post, useApi } from "./api";
@@ -17,6 +17,7 @@ import EndpointDetail from "./pages/EndpointDetail";
 import Team from "./pages/Team";
 import AllowList from "./pages/AllowList";
 import Account from "./pages/Account";
+import Notifications from "./pages/Notifications";
 import { Logo } from "./pages/Login";
 
 // the incident page carries the graph libraries; load it on demand
@@ -56,6 +57,7 @@ function Shell() {
               <NavLink to="/endpoints"><Server size={18} />Endpoints</NavLink>
               <NavLink to="/allowlist"><ListChecks size={18} />Allow list</NavLink>
               {team && <NavLink to="/team"><Users size={18} />Team</NavLink>}
+              {me?.can?.manage_org && <NavLink to="/settings/notifications"><Bell size={18} />Notifications</NavLink>}
               {me.operator && <>
                 <div className="nav-section">Platform</div>
                 <NavLink to="/operator"><Building2 size={18} />Organisations</NavLink>
@@ -97,6 +99,8 @@ function App() {
             <Route path="/team" element={<Team />} />
             <Route path="/operator" element={<Operator />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/settings/notifications" element={<Notifications />} />
+            <Route path="/notifications" element={<Navigate to="/settings/notifications" replace />} />
             {/* links from older consoles / notifications */}
             <Route path="/access" element={<Navigate to="/team" replace />} />
             <Route path="/alerts" element={<Navigate to="/incidents?tab=alerts" replace />} />
