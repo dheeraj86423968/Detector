@@ -19,7 +19,7 @@ from .bundle import save_state_dict, write_manifest
 from .data import WindowStore, nodes_in_days
 from .featurizer import Word2VecFeaturizer
 from .layers import LayerConfig, TagParams, fit_layers
-from .models import DEG_DIM, OrthrusModel, TGNState, VeloxModel, make_tgn_batch, seed_everything, window_degrees
+from .models import DEG_DIM, OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, save_tgn_state, seed_everything, window_degrees
 from .schema import NUM_NODE_TYPES
 from .scoring import Calibration, FusionCalibration, aggregate_weights, fill_missing, node_scores
 from .windows import batches
@@ -223,10 +223,8 @@ class Trainer:
         agg = aggregate_weights(self.cfg.orthrus_aggregate, val_losses)
         log(f"detector-2 aggregate '{self.cfg.orthrus_aggregate}' weights {[round(w, 3) for w in agg]}")
         st = state.state()
-        np.savez(os.path.join(self.out_dir, "tgn_state.npz"), neighbors=st["neighbors"].numpy(), e_id=st["e_id"].numpy(),
-                 cur_e_id=np.int64(st["cur_e_id"]), etype=st["etype"].numpy(), n=np.int64(st["n"]))
-        np.savez(os.path.join(self.out_dir, "tgn_state_val_start.npz"), neighbors=val_start["neighbors"].numpy(), e_id=val_start["e_id"].numpy(),
-                 cur_e_id=np.int64(val_start["cur_e_id"]), etype=val_start["etype"].numpy(), n=np.int64(val_start["n"]))
+        save_tgn_state(os.path.join(self.out_dir, "tgn_state.npz"), st)
+        save_tgn_state(os.path.join(self.out_dir, "tgn_state_val_start.npz"), val_start)
         r1 = np.mean(ratios1, axis=0)       # the runtime averages the detector-1 seed ratios the same way
         r2 = np.average(ratios2, axis=0, weights=agg)   # the aggregation the runtime will apply, so the fusion is calibrated on it
         fcal = FusionCalibration.from_validation(r1, r2, self.cfg.fusion_weights)

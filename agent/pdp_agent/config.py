@@ -19,7 +19,8 @@ class Config:
     device: str = "cpu"                              # detection device; "cuda" only for benchmark agents on a GPU host
     feat_device: str | None = None                   # feature-matrix device; None -> CPU when detecting on GPU (avoids
                                                      # OOM for large registries), else same as device
-    spool_keep_days: int = 2
+    spool_max_mb: int = 1024                         # hard cap on the local event spool (the server config may override)
+    spool_unscored_max_age_h: float = 6.0            # without a model, uploaded baseline events wait this long at most
 
     @property
     def key_path(self): return os.path.join(self.pki_dir, "agent.key")

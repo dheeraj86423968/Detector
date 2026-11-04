@@ -67,6 +67,36 @@ class Transport:
         finally:
             c.close()
 
+    def download(self, path: str, dest: str, attempts: int = 6) -> dict:
+        """GET `path` streamed into the file `dest` (models are hundreds of MB: never held in memory). Returns the
+        response headers. Retried like request()."""
+        delay = 2.0
+        for i in range(attempts):
+            c = self._conn()
+            try:
+                c.request("GET", self.prefix + path, headers={"Accept": "*/*"})
+                r = c.getresponse()
+                if r.status != 200:
+                    body = r.read(500).decode(errors="replace")
+                    raise TransportError(r.status, body or "download failed")
+                with open(dest, "wb") as f:
+                    while True:
+                        chunk = r.read(1 << 20)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                return dict(r.getheaders())
+            except TransportError as e:
+                if e.status not in (502, 503, 504) or i == attempts - 1:
+                    raise
+            except RETRYABLE:
+                if i == attempts - 1:
+                    raise
+            finally:
+                c.close()
+            time.sleep(delay)
+            delay = min(delay * 2, 60)
+
     def post_ndjson(self, path: str, rows: list[dict], batch_id: str | None = None):
         body = gzip.compress("\n".join(json.dumps(r) for r in rows).encode())
         h = {"Content-Type": "application/x-ndjson", "Content-Encoding": "gzip"}

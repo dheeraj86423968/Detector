@@ -185,6 +185,7 @@ ExecStart=/usr/bin/docker run --rm --name $CONTAINER --privileged --pid=host --n
   \${PDP_AGENT_IMAGE} run
 ExecStop=/usr/bin/docker stop -t 30 $CONTAINER
 Restart=always
+SuccessExitStatus=143
 RestartSec=10
 
 [Install]

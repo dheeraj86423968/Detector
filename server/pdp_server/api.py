@@ -231,7 +231,7 @@ def ack_command(endpoint_id: str, command_id: str, req: CommandAck, ep=Depends(a
 
 
 @app.get("/v1/endpoints/{endpoint_id}/bundle")
-def get_bundle(endpoint_id: str, ep=Depends(agent_endpoint)):
+def get_bundle(endpoint_id: str, slim: bool = False, ep=Depends(agent_endpoint)):
     if not ep["current_bundle"]:
         raise HTTPException(404, "no bundle")
     with db.conn() as c:
@@ -240,7 +240,7 @@ def get_bundle(endpoint_id: str, ep=Depends(agent_endpoint)):
     from .bundles import archive
     # the archive is built once (normally by the worker when the model is published) and streamed from disk: a model
     # of a busy host is over 1 GB and compressing it per request outlasted the agent's read timeout
-    return FileResponse(archive(b["path"]), media_type="application/gzip", headers={"X-Bundle-Id": str(ep["current_bundle"])})
+    return FileResponse(archive(b["path"], slim=slim), media_type="application/gzip", headers={"X-Bundle-Id": str(ep["current_bundle"])})
 
 
 @app.post("/v1/endpoints/{endpoint_id}/windows")

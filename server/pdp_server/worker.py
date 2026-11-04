@@ -194,8 +194,9 @@ def prune_early_bundles(eid: str):
                        "AND b.id <> coalesce(e.current_bundle, '00000000-0000-0000-0000-000000000000'::uuid) "
                        "AND (b.manifest->'maturity'->>'early')::boolean IS TRUE", (eid,))
     for r in rows:
-        if os.path.exists(r["path"].rstrip("/") + ".tar.gz"):
-            os.unlink(r["path"].rstrip("/") + ".tar.gz")
+        for ext in (".tar.gz", ".agent.tar.gz"):
+            if os.path.exists(r["path"].rstrip("/") + ext):
+                os.unlink(r["path"].rstrip("/") + ext)
         if os.path.isdir(r["path"]):
             shutil.rmtree(r["path"], ignore_errors=True)
             log(f"removed superseded early model {r['id']}")
@@ -273,7 +274,7 @@ def job_train_early(job: dict, device: str):
                       "milestone_h": (job.get("params") or {}).get("milestone_h")}})
     pki.sign_bundle(out)
     from .bundles import archive
-    archive(out)
+    archive(out); archive(out, slim=True)
     digest = sha256(os.path.join(out, "manifest.json"))
     manifest = json.load(open(os.path.join(out, "manifest.json")))
     with db.conn() as c:
@@ -330,7 +331,7 @@ def job_train(job: dict, device: str):
         log(f"train {eid}: fusion calibrated by simulation -> weights {res['chosen']['weights']} (synthetic detection {res['chosen']['detection_rate']:.2f})")
     pki.sign_bundle(out)
     from .bundles import archive
-    archive(out)
+    archive(out); archive(out, slim=True)
     digest = sha256(os.path.join(out, "manifest.json"))
     manifest = json.load(open(os.path.join(out, "manifest.json")))
     with db.conn() as c:

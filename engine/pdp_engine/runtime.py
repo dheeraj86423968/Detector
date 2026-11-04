@@ -25,7 +25,7 @@ import torch
 from .bundle import load_state_dict, verify_digests
 from .featurizer import Word2VecFeaturizer
 from .layers import EVIDENCE_RULES, DeterministicLayers, Hit
-from .models import DEG_DIM, OrthrusModel, TGNState, VeloxModel, make_tgn_batch, window_degrees
+from .models import DEG_DIM, OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, window_degrees
 from .schema import EDGE_TYPES, Registry
 from .scoring import Calibration, FusionCalibration, above, aggregate_weights, fill_missing, node_scores
 from .windows import Window, batches
@@ -62,6 +62,59 @@ class WindowResult:
                 "alerts_by_layer": by}
 
 
+class NodeFeatures:
+    """Static node features, stored once per distinct (label, type): every instance of a program is its own process
+    node but shares its label (on a busy host ~500 k process nodes have ~45 k labels). Indexing returns the dense
+    (len(idx), dim) float32 rows, like the plain matrix it replaces."""
+
+    def __init__(self, dim: int, device):
+        self.dim, self.device = int(dim), torch.device(device) if not isinstance(device, torch.device) else device
+        self.table = torch.zeros((1, self.dim), dtype=torch.float32, device=self.device)   # row 0: zeros (unset)
+        self.rows = 1
+        self.index = torch.zeros(0, dtype=torch.long, device=self.device)
+        self.key_row: dict[tuple[str, str], int] = {}
+
+    @property
+    def shape(self):
+        return (int(self.index.shape[0]), self.dim)
+
+    def __getitem__(self, idx):
+        return self.table[self.index[idx]]
+
+    def resize(self, n: int) -> None:
+        """Grow with zero rows, or truncate (reset to the bundle's nodes)."""
+        cur = int(self.index.shape[0])
+        if n > cur:
+            self.index = torch.cat([self.index, torch.zeros(n - cur, dtype=torch.long, device=self.device)])
+        elif n < cur:
+            self.index = self.index[:n].clone()
+
+    def assign(self, items, featurizer) -> None:
+        """items: (node id, label, ntype); featurises each distinct new (label, ntype) once."""
+        new_keys, ids, rows = [], [], []
+        for i, lab, nt in items:
+            k = (lab, nt)
+            r = self.key_row.get(k)
+            if r is None:
+                r = self.rows + len(new_keys)
+                self.key_row[k] = r
+                new_keys.append(k)
+            ids.append(i); rows.append(r)
+        if new_keys:
+            need = self.rows + len(new_keys)
+            if need > self.table.shape[0]:
+                t = torch.zeros((max(need, int(self.table.shape[0] * 1.25) + 1024), self.dim), dtype=torch.float32, device=self.device)
+                t[: self.rows] = self.table[: self.rows]
+                self.table = t
+            for a in range(0, len(new_keys), 50_000):
+                part = new_keys[a:a + 50_000]
+                f = featurizer.features([k[0] for k in part], [k[1] for k in part])
+                self.table[self.rows + a: self.rows + a + len(part)] = torch.from_numpy(f).to(self.device)
+            self.rows = need
+        if ids:
+            self.index[torch.as_tensor(ids, dtype=torch.long, device=self.device)] = torch.as_tensor(rows, dtype=torch.long, device=self.device)
+
+
 class Runtime:
     @property
     def daily_budget(self) -> int:
@@ -75,7 +128,9 @@ class Runtime:
 
     def __init__(self, bundle_dir: str, registry: Registry, device: str = "cpu", fp_budget: str | None = None,
                  feat_device: str | None = None, approved_executables=None, daily_budget: int | None = None,
-                 layers: bool = True):
+                 layers: bool = True, keep_reset_state: bool = True):
+        """keep_reset_state=False (endpoint agents): only the live state is kept; reset() / replaying the validation
+        day (the server's simulator) are not available, which spares two copies of the neighbour state."""
         verify_digests(bundle_dir)
         self.m = json.load(open(os.path.join(bundle_dir, "manifest.json")))
         self.dev = torch.device(device)
@@ -118,25 +173,25 @@ class Runtime:
         # node features for the baseline registry + TGN state continuing from the end of the validation day
         self.N = self.m["num_nodes"]
         feat_dim = d1["in_dim"] - (DEG_DIM if self.deg1 else 0)   # node features; detector-1 adds the window degrees
-        self.x = torch.zeros((max(self.N, len(registry)), feat_dim), dtype=torch.float32, device=self.featdev)
+        self.x = NodeFeatures(feat_dim, self.featdev)
+        self.x.resize(max(self.N, len(registry)))
         self._featurize(range(len(registry)))
-        z = np.load(os.path.join(bundle_dir, "tgn_state.npz"), allow_pickle=False)
-        self._tgn_init = {"neighbors": torch.from_numpy(z["neighbors"]), "e_id": torch.from_numpy(z["e_id"]),
-                          "cur_e_id": int(z["cur_e_id"]), "etype": torch.from_numpy(z["etype"]), "n": int(z["n"])}
+        self._tgn_init = load_tgn_state(os.path.join(bundle_dir, "tgn_state.npz"))
         self._neighbor_size = d2["neighbor_size"]
         self._tgn_init_val = None
+        self.keep_reset_state = keep_reset_state
         pv = os.path.join(bundle_dir, "tgn_state_val_start.npz")
-        if os.path.exists(pv):   # state at the start of the validation day (for simulations on that day)
-            zv = np.load(pv, allow_pickle=False)
-            self._tgn_init_val = {"neighbors": torch.from_numpy(zv["neighbors"]), "e_id": torch.from_numpy(zv["e_id"]),
-                                  "cur_e_id": int(zv["cur_e_id"]), "etype": torch.from_numpy(zv["etype"]), "n": int(zv["n"])}
+        if keep_reset_state and os.path.exists(pv):   # state at the start of the validation day (for simulations on that day)
+            self._tgn_init_val = load_tgn_state(pv)
         self._load_tgn(max(self.N, len(registry)))
+        if not keep_reset_state:
+            self._tgn_init = None
         self.N0 = self.x.shape[0]   # base feature rows (bundle registry) kept across reset()
 
     def _load_tgn(self, n: int, at: str = "end"):
         init = self._tgn_init_val if (at == "validation" and self._tgn_init_val is not None) else self._tgn_init
         self.state = TGNState(n, self._neighbor_size, self.dev)
-        self.state.load_state({k: (v.clone() if torch.is_tensor(v) else v) for k, v in init.items()})
+        self.state.load_state(init)       # copies into the loader's own tensors
 
     @property
     def has_validation_state(self) -> bool:
@@ -146,9 +201,11 @@ class Runtime:
         """Return to a bundle state ("end": neighbours at the end of the validation day, as deployed; "validation":
         at its start, to replay the validation day itself) and drop features of entities registered since loading;
         used by the simulator to score independent passes."""
+        if not self.keep_reset_state:
+            raise RuntimeError("this runtime was loaded without its reset state (keep_reset_state=False)")
         if registry is not None:
             self.reg = registry
-        self.x = self.x[: self.N0].clone()
+        self.x.resize(self.N0)
         self._load_tgn(self.N0, at)
         if self.layers is not None:
             self.layers.reset()
@@ -172,24 +229,15 @@ class Runtime:
 
     def _featurize(self, ids):
         """Features for registry rows `ids` (label cache inside the featuriser: many entities share a label)."""
-        ids = list(ids)
-        if not ids:
-            return
-        labels, types = self.reg.labels(), self.reg.types()
-        chunk = 50_000
-        for a in range(0, len(ids), chunk):
-            part = ids[a: a + chunk]
-            f = self.feat.features([labels[i] for i in part], [types[i] for i in part])
-            self.x[torch.as_tensor(part, device=self.featdev)] = torch.from_numpy(f).to(self.featdev)
+        ents = self.reg.entities
+        self.x.assign([(i, ents[i].label, ents[i].ntype) for i in ids], self.feat)
 
     def grow(self):
         """Call after new entities were added to the registry."""
         n = len(self.reg)
         if n > self.x.shape[0]:
-            new = torch.zeros((n, self.x.shape[1]), dtype=torch.float32, device=self.featdev)
-            new[: self.x.shape[0]] = self.x
             old = self.x.shape[0]
-            self.x = new
+            self.x.resize(n)
             self._featurize(range(old, n))
             self.state.grow(n)
 

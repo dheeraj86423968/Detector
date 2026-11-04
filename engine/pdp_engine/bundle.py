@@ -49,10 +49,18 @@ def write_manifest(bundle_dir: str, meta: dict) -> dict:
     return manifest
 
 
+# Files only the server needs (the simulator replays the validation day from this state); agents get bundles without
+# them. Their digests are still in the signed manifest, so a present file must match.
+OPTIONAL_FILES = {"tgn_state_val_start.npz"}
+
+
 def verify_digests(bundle_dir: str) -> None:
     manifest = json.load(open(os.path.join(bundle_dir, "manifest.json")))
     for rel, digest in manifest["sha256"].items():
-        if sha256(os.path.join(bundle_dir, rel)) != digest:
+        p = os.path.join(bundle_dir, rel)
+        if rel in OPTIONAL_FILES and not os.path.exists(p):
+            continue
+        if sha256(p) != digest:
             raise ValueError(f"bundle file {rel} does not match its manifest digest")
 
 

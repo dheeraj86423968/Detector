@@ -17,7 +17,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import TransformerConv
+try:                                    # the server trains with PyG; the slim agent image has the pure-torch copy
+    from torch_geometric.nn import TransformerConv
+except ImportError:
+    from .tconv import TransformerConv
 
 from .schema import NUM_EDGE_TYPES
 
@@ -86,13 +89,18 @@ class VeloxModel(nn.Module):
 
 # --------------------------------------------------------------------------- detector-2
 class LastNeighborLoader:
-    """Port of PIDSMaker's LastNeighborLoader (undirected, keeps the `size` most recent edges per node)."""
+    """Port of PIDSMaker's LastNeighborLoader (undirected, keeps the `size` most recent edges per node).
+
+    Each neighbour slot also stores the type of its edge. PIDSMaker keeps a global edge-id -> type history instead,
+    which grows by one entry per event forever (on a busy host ~60 M a day); only the edges still held in a slot are
+    ever looked up, so the per-slot copy gives identical results in bounded memory."""
 
     def __init__(self, num_nodes: int, size: int = 20, device=None):
         self.size = size
         self.device = device
         self.neighbors = torch.empty((num_nodes, size), dtype=torch.long, device=device)
         self.e_id = torch.empty((num_nodes, size), dtype=torch.long, device=device)
+        self.etype = torch.zeros((num_nodes, size), dtype=torch.int8, device=device)
         self._assoc = torch.empty(num_nodes, dtype=torch.long, device=device)
         self.reset_state()
 
@@ -100,24 +108,30 @@ class LastNeighborLoader:
         self.cur_e_id = 0
         self.e_id.fill_(-1)
 
-    def __call__(self, n_id: torch.Tensor):
+    def __call__(self, n_id: torch.Tensor, with_etype: bool = False):
+        """with_etype: also return the type of each returned past edge (aligned with e_id)."""
         neighbors = self.neighbors[n_id]
         nodes = n_id.view(-1, 1).repeat(1, self.size)
         e_id = self.e_id[n_id]
+        et = self.etype[n_id] if with_etype else None
         mask = e_id >= 0
         neighbors, nodes, e_id = neighbors[mask], nodes[mask], e_id[mask]
         n_id = torch.cat([n_id, neighbors]).unique()
         self._assoc[n_id] = torch.arange(n_id.size(0), device=n_id.device)
         neighbors, nodes = self._assoc[neighbors], self._assoc[nodes]
+        if with_etype:
+            return n_id, torch.stack([neighbors, nodes]), e_id, et[mask]
         return n_id, torch.stack([neighbors, nodes]), e_id
 
-    def insert(self, src: torch.Tensor, dst: torch.Tensor):
+    def insert(self, src: torch.Tensor, dst: torch.Tensor, etype: torch.Tensor | None = None):
         neighbors = torch.cat([src, dst], dim=0)
         nodes = torch.cat([dst, src], dim=0)
         e_id = torch.arange(self.cur_e_id, self.cur_e_id + src.size(0), device=src.device).repeat(2)
+        et = (etype.to(device=src.device, dtype=torch.int8) if etype is not None
+              else torch.zeros(src.size(0), dtype=torch.int8, device=src.device)).repeat(2)
         self.cur_e_id += src.numel()
         nodes, perm = nodes.sort()
-        neighbors, e_id = neighbors[perm], e_id[perm]
+        neighbors, e_id, et = neighbors[perm], e_id[perm], et[perm]
         n_id = nodes.unique()
         self._assoc[n_id] = torch.arange(n_id.numel(), device=n_id.device)
         edge_counts = torch.bincount(self._assoc[nodes], minlength=n_id.numel())
@@ -131,81 +145,102 @@ class LastNeighborLoader:
         dense_neighbors = e_id.new_full((n_id.numel() * temp_size,), -1)
         dense_neighbors[dense_id] = neighbors
         dense_neighbors = dense_neighbors.view(-1, temp_size)
+        dense_et = et.new_zeros((n_id.numel() * temp_size,))
+        dense_et[dense_id] = et
+        dense_et = dense_et.view(-1, temp_size)
         e_id = torch.cat([self.e_id[n_id, : self.size], dense_e_id], dim=-1)
         neighbors = torch.cat([self.neighbors[n_id, : self.size], dense_neighbors], dim=-1)
+        et = torch.cat([self.etype[n_id, : self.size], dense_et], dim=-1)
         e_id, perm = e_id.topk(self.size, dim=-1)
         self.e_id[n_id] = e_id
         self.neighbors[n_id] = torch.gather(neighbors, 1, perm)
+        self.etype[n_id] = torch.gather(et, 1, perm)
 
     # ---- persistence (bundle) ----
     def state(self) -> dict:
-        return {"neighbors": self.neighbors.cpu(), "e_id": self.e_id.cpu(), "cur_e_id": self.cur_e_id}
+        return {"neighbors": self.neighbors.cpu(), "e_id": self.e_id.cpu(), "cur_e_id": self.cur_e_id, "slot_etype": self.etype.cpu()}
 
     def load_state(self, st: dict):
         """Restore a snapshot; the loader may be larger than the snapshot (entities registered after the bundle
-        was built), in which case the extra rows stay empty."""
+        was built), in which case the extra rows stay empty. Snapshots from before per-slot edge types carry the
+        global history (`etype`, indexed by edge id) instead; the slot types are derived from it."""
         nb, ei = st["neighbors"].to(self.device), st["e_id"].to(self.device)
         n = nb.shape[0]
         if n > self.neighbors.shape[0]:
             raise ValueError(f"snapshot has {n} nodes but loader only {self.neighbors.shape[0]}")
+        if st.get("slot_etype") is not None:
+            se = st["slot_etype"].to(device=self.device, dtype=torch.int8)
+        else:
+            hist = st["etype"].to(torch.int8)
+            se = hist[ei.cpu().clamp(min=0)].to(self.device) if hist.numel() else torch.zeros_like(ei, dtype=torch.int8)
+            se[ei < 0] = 0
         self.neighbors[:n].copy_(nb)
         self.e_id[:n].copy_(ei)
+        self.etype[:n].copy_(se)
         self.neighbors[n:] = 0
         self.e_id[n:] = -1
+        self.etype[n:] = 0
         self.cur_e_id = int(st["cur_e_id"])
 
 
 class TGNState:
-    """Neighbour loader plus the edge-type history needed to featurise past edges (the equivalent of
-    PIDSMaker's full_data.edge_type[e_id]); grows with the stream. Snapshot/restore for bundles."""
+    """Neighbour loader (with the type of each held edge, the equivalent of PIDSMaker's full_data.edge_type[e_id]);
+    grows with the node space. Snapshot/restore for bundles."""
 
-    def __init__(self, num_nodes: int, size: int = 20, device=None, capacity: int = 1_000_000):
+    def __init__(self, num_nodes: int, size: int = 20, device=None, capacity: int = 0):
         self.loader = LastNeighborLoader(num_nodes, size, device)
         self.device = device
-        self.etype = torch.empty(capacity, dtype=torch.int8)  # host memory, global edge id -> type
-        self.n = 0
-
-    def _ensure(self, n):
-        if n > len(self.etype):
-            new = torch.empty(max(n, int(len(self.etype) * 1.5)), dtype=torch.int8)
-            new[: self.n] = self.etype[: self.n]
-            self.etype = new
+        self.n = 0                      # edges inserted so far (informational)
 
     def insert(self, src: torch.Tensor, dst: torch.Tensor, etype: torch.Tensor):
-        k = src.numel()
-        self._ensure(self.n + k)
-        self.etype[self.n : self.n + k] = etype.to(torch.int8).cpu()
-        self.n += k
-        self.loader.insert(src, dst)
+        self.n += src.numel()
+        self.loader.insert(src, dst, etype)
 
-    def past_edge_types(self, e_id: torch.Tensor) -> torch.Tensor:
-        return F.one_hot(self.etype[e_id.cpu()].long(), NUM_EDGE_TYPES).float().to(self.device)
+    @staticmethod
+    def edge_feats(etype: torch.Tensor) -> torch.Tensor:
+        return F.one_hot(etype.long(), NUM_EDGE_TYPES).float()
 
     def state(self) -> dict:
         st = self.loader.state()
-        st["etype"] = self.etype[: self.n].clone()
         st["n"] = self.n
         return st
 
     def load_state(self, st: dict):
         self.loader.load_state(st)
-        n = int(st["n"])
-        self.n = 0
-        self._ensure(n)
-        self.etype[:n] = st["etype"].to(torch.int8)
-        self.n = n
+        self.n = int(st.get("n", 0))
 
     def grow(self, num_nodes: int):
         """Enlarge the node space (new entities seen at runtime)."""
         L = self.loader
         if num_nodes <= L.neighbors.shape[0]:
             return
+        old = L.neighbors.shape[0]
         nb = torch.empty((num_nodes, L.size), dtype=torch.long, device=L.device)
         ei = torch.full((num_nodes, L.size), -1, dtype=torch.long, device=L.device)
-        nb[: L.neighbors.shape[0]] = L.neighbors
-        ei[: L.e_id.shape[0]] = L.e_id
-        L.neighbors, L.e_id = nb, ei
+        et = torch.zeros((num_nodes, L.size), dtype=torch.int8, device=L.device)
+        nb[:old] = L.neighbors
+        ei[:old] = L.e_id
+        et[:old] = L.etype
+        L.neighbors, L.e_id, L.etype = nb, ei, et
         L._assoc = torch.empty(num_nodes, dtype=torch.long, device=L.device)
+
+
+def save_tgn_state(path: str, st: dict) -> None:
+    """Bundle file of a TGN snapshot (neighbour ids, edge ids, per-slot edge types)."""
+    np.savez(path, neighbors=st["neighbors"].cpu().numpy(), e_id=st["e_id"].cpu().numpy(), cur_e_id=np.int64(st["cur_e_id"]),
+             slot_etype=st["slot_etype"].cpu().numpy(), n=np.int64(st.get("n", 0)))
+
+
+def load_tgn_state(path: str) -> dict:
+    """Read a snapshot written by save_tgn_state, or an older one with the global edge-type history."""
+    z = np.load(path, allow_pickle=False)
+    st = {"neighbors": torch.from_numpy(z["neighbors"]), "e_id": torch.from_numpy(z["e_id"]), "cur_e_id": int(z["cur_e_id"]),
+          "n": int(z["n"]) if "n" in z.files else 0}
+    if "slot_etype" in z.files:
+        st["slot_etype"] = torch.from_numpy(z["slot_etype"])
+    else:
+        st["etype"] = torch.from_numpy(z["etype"])
+    return st
 
 
 @dataclass
@@ -225,7 +260,7 @@ def make_tgn_batch(src: torch.Tensor, dst: torch.Tensor, x: torch.Tensor, state:
     L = state.loader
     dev = L.neighbors.device                 # compute device (may differ from the feature matrix's device)
     batch_nodes = torch.cat([src, dst]).unique()
-    n_id, edge_index, e_id = L(batch_nodes)
+    n_id, edge_index, e_id, past_et = L(batch_nodes, with_etype=True)
     assoc = L._assoc  # n_id -> local, set by the loader call
     num = n_id.size(0)
     # x_is_tuple reindexing: mean of x over edges where the node is src (resp. dst); static features -> x itself.
@@ -237,7 +272,7 @@ def make_tgn_batch(src: torch.Tensor, dst: torch.Tensor, x: torch.Tensor, state:
     s_loc, d_loc = assoc[src], assoc[dst]
     x_from[s_loc] = xf
     x_to[d_loc] = xt
-    return TGNBatch(n_id, edge_index, state.past_edge_types(e_id), x_from, x_to, s_loc, d_loc)
+    return TGNBatch(n_id, edge_index, TGNState.edge_feats(past_et).to(dev), x_from, x_to, s_loc, d_loc)
 
 
 class OrthrusModel(nn.Module):

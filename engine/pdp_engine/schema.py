@@ -41,7 +41,11 @@ def normalise_op(op: str, strict: bool = False) -> str | None:
     return o if o in EDGE_TYPE_ID else None
 
 
-@dataclass(frozen=True)
+# Shared empty display for entities whose display data lives elsewhere (the agent keeps it on disk); never mutated.
+NO_DISPLAY: dict = {}
+
+
+@dataclass(frozen=True, slots=True)   # slots: registries hold millions of entities
 class Entity:
     uuid: str
     ntype: str           # subject | file | netflow
@@ -61,7 +65,7 @@ class Entity:
         return Entity(uuid, "netflow", f"netflow {remote_ip or 'None'} {remote_port if remote_port is not None else 'None'}", display)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Event:
     ts_ns: int
     src: str             # entity uuid (data-flow source)

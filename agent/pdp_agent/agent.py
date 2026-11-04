@@ -13,6 +13,7 @@ import io
 import json
 import os
 import shutil
+import sys
 import tarfile
 import time
 import uuid as uuidlib
@@ -22,14 +23,14 @@ import numpy as np
 
 from pdp_engine.bundle import verify_signature
 from pdp_engine.runtime import Runtime, WindowResult
-from pdp_engine.schema import EDGE_TYPE_ID, EDGE_TYPES, Entity, Event, Registry
+from pdp_engine.schema import EDGE_TYPE_ID, EDGE_TYPES, NO_DISPLAY, Entity, Event, Registry
 from pdp_engine.windows import Window, WindowBuilder
 
 from .config import Config
 from .state import State
 from .transport import Transport, TransportError
 
-VERSION = "0.3.3"
+VERSION = "0.3.4"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -74,7 +75,12 @@ class Agent:
     def __init__(self, cfg: Config):
         self.cfg = cfg
         self.state = State(os.path.join(cfg.data_dir, "state.sqlite"))
-        self.reg = self.state.load_registry()
+        # entity display data stays on disk (read per alert): the registry holds every entity ever seen
+        self.reg = self.state.load_registry(display=False)
+        if self.state.has_old_spool():
+            log("migrating the local event spool to the compact format")
+            n = self.state.migrate_spool(self.reg, self.baseline_days())
+            log(f"spool migrated: {n} events still to upload or score, {self.state.size_bytes() / 2**20:.0f} MB on disk")
         self.runtime: Runtime | None = None
         self.builder = WindowBuilder()
         self.tr: Transport | None = None
@@ -150,14 +156,19 @@ class Agent:
         tz = self.tz
         for entities, ev in items:
             for e in entities:
-                if self.reg.get(e.uuid) is None:
-                    self.reg.add(e); ents.append(e)
-            evs.append((ev.ts_ns, ev.src, ev.op, ev.dst, ev.event_uuid, day_of(ev.ts_ns, tz)))
+                if self.reg.get(e.uuid) is None:   # in memory without display data (that goes to disk with `ents`)
+                    self.reg.add(Entity(e.uuid, e.ntype, sys.intern(e.label), NO_DISPLAY)); ents.append(e)
+            evs.append((ev.ts_ns, self.reg.get(ev.src), ev.op, self.reg.get(ev.dst), ev.event_uuid, day_of(ev.ts_ns, tz)))
             n += 1
             if len(evs) >= 5000:
                 self._commit(ents, evs); ents, evs = [], []
         self._commit(ents, evs)
         return n
+
+    def baseline_days(self) -> list[str]:
+        """The first N+1 days seen (N baseline days plus the validation day): the only days uploaded to the server."""
+        need = int((self.state.get("config") or {}).get("baseline_days", 7)) + 1
+        return [d for d, _, _ in self.state.days()[:need]]
 
     @property
     def tz(self) -> str:
@@ -189,7 +200,8 @@ class Agent:
             rows = self.state.pending_events(day)
             while rows:
                 bid = f"{day}-{rows[0][0]}-{rows[-1][0]}"
-                self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/events", [{"ts_ns": r[1], "src": r[2], "op": r[3], "dst": r[4], "event_uuid": r[5]} for r in rows], batch_id=bid)
+                ent = self.reg.entities
+                self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/events", [{"ts_ns": r[1], "src": ent[r[2]].uuid, "op": r[3], "dst": ent[r[4]].uuid, "event_uuid": r[5]} for r in rows], batch_id=bid)
                 self.state.mark_events_uploaded([r[0] for r in rows])
                 rows = self.state.pending_events(day)
             # the source declares days complete; for a chronological live source a day is also complete once a later
@@ -209,16 +221,21 @@ class Agent:
 
     # ------------------------------------------------------------------ bundles
     def fetch_bundle(self, bundle_id: str):
-        status, headers, payload = self.tr.request("GET", f"/v1/endpoints/{self.eid}/bundle", raw=True)
-        if status != 200:
-            raise TransportError(status, "bundle download failed")
-        dest = os.path.join(self.cfg.data_dir, "bundles", bundle_id)
+        """Download (streamed to disk; `slim`: without the server-only replay state), unpack, verify, load."""
+        root = os.path.join(self.cfg.data_dir, "bundles")
+        dest = os.path.join(root, bundle_id)
         os.makedirs(dest, exist_ok=True)
-        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as tar:
-            for m in tar.getmembers():
-                if m.name.startswith("/") or ".." in m.name:
-                    raise ValueError("unsafe bundle path")
-            tar.extractall(dest)
+        tmp = os.path.join(root, f".{bundle_id}.tar.gz")
+        try:
+            self.tr.download(f"/v1/endpoints/{self.eid}/bundle?slim=1", tmp)
+            with tarfile.open(tmp, mode="r:gz") as tar:
+                for m in tar.getmembers():
+                    if m.name.startswith("/") or ".." in m.name or not (m.isfile() or m.isdir()):
+                        raise ValueError("unsafe bundle path")
+                tar.extractall(dest)
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
         self._load_bundle(bundle_id, os.path.join(dest, "bundle"))
 
     def _load_bundle(self, bundle_id: str, bdir: str):
@@ -226,8 +243,10 @@ class Agent:
         device = getattr(self.cfg, "device", "cpu")
         feat_device = getattr(self.cfg, "feat_device", None) or ("cpu" if device == "cuda" else device)
         cfg = self.state.get("config") or {}
+        self.runtime = None    # the previous model's memory is released before the next one is loaded
         self.runtime = Runtime(bdir, self.reg, device=device, fp_budget=self.state.get("fp_budget"), feat_device=feat_device,
-                               approved_executables=cfg.get("approved_executables"), daily_budget=cfg.get("learned_daily_budget"))
+                               approved_executables=cfg.get("approved_executables"), daily_budget=cfg.get("learned_daily_budget"),
+                               keep_reset_state=False)
         self.runtime.set_learned_alerts(bool(cfg.get("learned_alerts", True)))
         wns = int(self.runtime.m.get("window_ns") or 0)
         if wns and wns != self.builder.window_ns and not self.builder.pending:   # windows as long as the bundle was trained on
@@ -312,10 +331,7 @@ class Agent:
         while rows:
             results = []
             for r in rows:
-                s, d = self.reg.get(r[2]), self.reg.get(r[4])
-                if s is None or d is None:
-                    continue
-                for w in self.builder.push(s, d, r[1], EDGE_TYPE_ID[r[3]], r[5]):
+                for w in self.builder.push(r[2], r[4], r[1], EDGE_TYPE_ID[r[3]], r[5]):
                     results.append((w, self.runtime.score(w, keep_edge_losses=True)))
             self.report(results)
             # Events still buffered in the open window are persisted (not re-read from the spool on restart),
@@ -351,6 +367,7 @@ class Agent:
         if not results and not self._unreported:
             return
         wins, alerts = [], []
+        disp = self.state.displays(list({self.reg[int(n)].uuid for _, r in results for n in r.alerts}))
         for w, r in results:
             wins.append(r.summary())
             self._last_window_end = max(self._last_window_end, int(w.end_ns))
@@ -361,7 +378,7 @@ class Agent:
                 rs = r.reasons.get(int(n)) or [{"layer": "learned", "rule": "learned_score", "detail": f"learned score {float(r.fused[i]):.2f}x the benign maximum"}]
                 layer = r.layer_of(int(n))
                 main = next(x for x in rs if x["layer"] == layer)
-                alerts.append({"window_start_ns": w.start_ns, "node": {"uuid": e.uuid, "ntype": e.ntype, "label": e.label, "display": e.display},
+                alerts.append({"window_start_ns": w.start_ns, "node": {"uuid": e.uuid, "ntype": e.ntype, "label": e.label, "display": disp.get(e.uuid) or e.display},
                                "fused": float(r.fused[i]), "r1": float(r.r1[i]), "r2": float(r.r2[i]), "context": self.context(w, r, int(n)),
                                "layer": layer, "rule": main.get("rule"), "reason": main.get("detail"), "reasons": rs})
         if wins:
@@ -420,9 +437,8 @@ class Agent:
                 last_status = now
             if self.runtime is not None:
                 self.score_backlog()
-            if now - last_purge > 120:   # spool hygiene: scored + uploaded rows older than the retention window are dropped
-                need = int((self.state.get("config") or {}).get("baseline_days", 7)) + 1
-                self.state.purge_scored(keep_days=getattr(self.cfg, "spool_keep_days", 2), baseline_days=[d for d, _, _ in self.state.days()[:need]])
+            if now - last_purge > 60:   # spool hygiene: finished rows go, the size cap is enforced
+                self.purge_spool()
                 last_purge = now
             if now - last_hb > self.cfg.heartbeat_interval:
                 try:
@@ -430,6 +446,28 @@ class Agent:
                 except (TransportError, OSError) as e:
                     log(f"heartbeat failed: {e}")
                 last_hb = now
+
+    def spool_max_bytes(self) -> int:
+        """Configured cap (server config, else agent config), never more than 10% of the data file system."""
+        mb = (self.state.get("config") or {}).get("spool_max_mb") or self.cfg.spool_max_mb
+        try:
+            st = os.statvfs(self.cfg.data_dir)
+            fs = st.f_blocks * st.f_frsize
+        except OSError:
+            fs = 0
+        cap = int(mb) << 20
+        return min(cap, fs // 10) if fs else cap
+
+    def purge_spool(self):
+        try:
+            r = self.state.purge(self.baseline_days(), scoring=self.runtime is not None,
+                                 unscored_max_age_s=float(self.cfg.spool_unscored_max_age_h) * 3600, max_bytes=self.spool_max_bytes())
+        except Exception as e:  # noqa - hygiene must never stop collection
+            log(f"spool purge failed: {e}")
+            return
+        if r["dropped_unscored"] or r["dropped_unuploaded"]:
+            log(f"spool over its size cap: dropped {r['dropped_unscored']} events before local scoring and "
+                f"{r['dropped_unuploaded']} before upload")
 
     # ------------------------------------------------------------------ control
     def handle_command(self, cmd: dict):
@@ -462,10 +500,11 @@ class Agent:
         except (OSError, ValueError, IndexError):
             rss = 0.0
         # work not yet done: events awaiting upload while building the baseline, awaiting scoring once protected
-        col = "scored" if self.runtime is not None else "uploaded"
-        q = self.state.c.execute(f"SELECT count(*) FROM spool WHERE {col}=0").fetchone()[0] + self.builder.pending
+        q = (self.state.unscored_count() if self.runtime is not None else self.state.unuploaded_count()) + self.builder.pending
         h = {"agent_version": VERSION, "queue_depth": int(q), "last_window_end_ns": int(self._last_window_end),
-             "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1)}
+             "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1), "spool_mb": round(self.state.size_bytes() / 2**20, 1),
+             "spool_dropped_unscored": int(self.state.get("dropped_unscored", 0)),
+             "spool_dropped_unuploaded": int(self.state.get("dropped_unuploaded", 0))}
         try:   # collector health: records the kernel dropped because the ring buffer was full (CO-RE eBPF)
             tr = getattr(getattr(self, "source", None), "_tracer", None)
             if tr is not None and getattr(tr, "stats", None) is not None and type(tr).__name__ == "CoreTracer":
