@@ -20,7 +20,7 @@ from . import db
 
 GAP_NS = 30 * 60 * 1_000_000_000
 WINDOW_NS = 15 * 60 * 1_000_000_000      # an alert covers its detection window
-MAX_NODES = 150
+MAX_NODES = 300
 MAX_STORY = 80
 
 TYPE_RANK = {"rules": 0, "novelty": 1, "corroborated": 2, "evidence": 3, "learned": 4}
@@ -75,7 +75,7 @@ def parse_label(ntype: str, label: str | None, uuid: str, display: dict | None =
                 "details": {"Address": addr, "Port": port or "-", "Scope": "local network" if local else "external"}}
     path = body
     if path in UNKNOWN or path == uuid:
-        return {"type": "file", "label": "unnamed file", "title": "File (path not recorded by the collector)",
+        return {"type": "file", "label": "unnamed file", "title": "unnamed file (path not recorded)",
                 "details": {"Path": "(not recorded by the collector)"}}
     return {"type": "file", "label": os.path.basename(path.rstrip("/")) or path, "title": path, "details": {"Path": path}}
 
@@ -98,6 +98,9 @@ def load_alerts(c, scope: list[str] | None, endpoint_id: str | None = None, with
 
 
 def group(rows: list[dict]) -> list[list[dict]]:
+    """Alerts close in time (gap <= GAP_NS) on one endpoint, then split by provenance connectivity so that unrelated
+    activity at the same time (a user browsing while an attack runs) is not one incident. Unconnected parts with the
+    same main program and no data-flow rule hit are kept together (18 'links' processes = one incident)."""
     out, cur = [], []
     for r in rows:
         if cur and (r["endpoint_id"] != cur[-1]["endpoint_id"] or r["window_start_ns"] - cur[-1]["window_start_ns"] > GAP_NS):
@@ -105,7 +108,58 @@ def group(rows: list[dict]) -> list[list[dict]]:
         cur.append(r)
     if cur:
         out.append(cur)
-    return out
+    final = []
+    for g in out:
+        final.extend(_split_connected(g) if any("context" in a for a in g) else [g])
+    final.sort(key=lambda g: (str(g[0]["endpoint_id"]), g[0]["window_start_ns"], g[0]["id"]))
+    return final
+
+
+HUB_DEGREE = 8
+
+
+def _split_connected(g: list[dict]) -> list[list[dict]]:
+    ids = {a["node_uuid"] for a in g}
+    adj: dict[str, set] = {}
+    lab: dict[str, str] = {}
+    for a in g:
+        ctx = a.get("context") or {}
+        for n in ctx.get("nodes", []):
+            lab[n["uuid"]] = n.get("label") or ""
+        for e in ctx.get("edges", []):
+            adj.setdefault(e["src"], set()).add(e["dst"]); adj.setdefault(e["dst"], set()).add(e["src"])
+
+    def hub(u):   # shared infrastructure links everything: DNS, path-less files, busy nodes
+        l = lab.get(u, "")
+        return len(adj.get(u, ())) > HUB_DEGREE or l.split(" ", 1)[-1] in UNKNOWN or l == "file" or l.endswith(" 53")
+
+    parent = {u: u for u in ids}
+
+    def find(u):
+        while parent[u] != u:
+            parent[u] = parent[parent[u]]; u = parent[u]
+        return u
+
+    for u in ids:   # alerted - alerted, or alerted - (non-hub context) - alerted
+        for v in adj.get(u, ()):
+            if v in ids:
+                parent[find(u)] = find(v)
+            elif not hub(v):
+                for w in adj.get(v, ()):
+                    if w in ids:
+                        parent[find(u)] = find(w)
+    comps: dict[str, list] = {}
+    for a in g:
+        comps.setdefault(find(a["node_uuid"]), []).append(a)
+    merged: dict[tuple, list] = {}
+    for c in comps.values():
+        if any(a["layer"] == "rules" for a in c):
+            key = ("chain", find(c[0]["node_uuid"]))
+        else:
+            top = min(c, key=_det_key)
+            key = ("program", _actor_in(top["reason"]) or parse_label(top["ntype"], top["label"], top["node_uuid"], top.get("display"))["label"])
+        merged.setdefault(key, []).extend(c)
+    return [sorted(c, key=lambda a: (a["window_start_ns"], a["id"])) for c in merged.values()]
 
 
 def incident_status(alerts: list[dict]) -> str:
@@ -169,14 +223,14 @@ def summarise(alerts: list[dict]) -> dict:
 
 
 def list_incidents(c, scope, endpoint_id=None) -> list[dict]:
-    return [summarise(g) for g in group(load_alerts(c, scope, endpoint_id))]
+    return [summarise(g) for g in group(load_alerts(c, scope, endpoint_id, with_context=True))]
 
 
 def find(c, scope, incident_id: int, with_context: bool = False) -> list[dict] | None:
     a = db.q(c, "SELECT endpoint_id FROM alerts WHERE id=%s", (incident_id,), one=True)
     if not a or (scope is not None and str(a["endpoint_id"]) not in scope):
         return None
-    for g in group(load_alerts(c, None, str(a["endpoint_id"]), with_context=with_context)):
+    for g in group(load_alerts(c, None, str(a["endpoint_id"]), with_context=True)):
         if g[0]["id"] == incident_id:
             return g
     return None
@@ -296,7 +350,13 @@ def build_graph(alerts: list[dict]) -> tuple[dict, list[dict]]:
                           "detection": {"type": f["layer"], "rule": f["rule"], "reason": _reason(f),
                                         "alert_id": f["id"]} if f else None,
                           "first_ns": first_seen.get(u), "count": 1})
-    edges_out = [{"id": f"e{i}", "source": e["src"], "target": e["dst"], "op": e["op"], "label": OP_LABEL.get(e["op"], e["op"].lower()),
+    def elabel(e):
+        if e["op"] == "WRITE" and ntype(e["dst"]) == "netflow":
+            return "sent"
+        if e["op"] in ("READ", "OPEN") and ntype(e["src"]) == "netflow":
+            return "received"
+        return OP_LABEL.get(e["op"], e["op"].lower())
+    edges_out = [{"id": f"e{i}", "source": e["src"], "target": e["dst"], "op": e["op"], "label": elabel(e),
                   "first_ns": e["first_ns"], "count": e["count"], "order": rank[i]} for i, e in enumerate(edges)]
     return {"nodes": nodes_out, "edges": edges_out, "truncated": truncated}, edges
 
@@ -335,6 +395,10 @@ def story(graph: dict, alerts: list[dict]) -> list[dict]:
             kind, actor, verb, obj, node = "process", sn["label"], "started", dn["title"], d
         elif op == "EXECUTE":
             kind, actor, verb, obj, node = "exec", dn["label"], "executed", sn["title"], d
+        elif op == "WRITE" and dn["type"] == "network":       # CADETS records socket writes as file writes
+            kind, actor, verb, obj, node = "network", sn["label"], "sent data to", dn["label"], s
+        elif op in ("READ", "OPEN") and sn["type"] == "network":
+            kind, actor, verb, obj, node = "network", dn["label"], "received data from", sn["label"], d
         elif op == "WRITE":
             kind, actor, verb, obj, node = "write", sn["label"], "wrote", dn["title"], s
         elif op in NET_OPS:
