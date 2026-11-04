@@ -105,3 +105,94 @@ export const entityOf = (ntype: string, label: string) => {
 export const baseName = (p: string) => (p || "").split("/").filter(Boolean).pop() || p;
 export const initials = (s: string) => s.split(/[\s._@-]+/).filter(Boolean).slice(0, 2).map(x => x[0]!.toUpperCase()).join("") || "?";
 export const plural = (n: number, one: string, many = one + "s") => `${n.toLocaleString()} ${n === 1 ? one : many}`;
+
+// ---------------------------------------------------------------- long paths, hashes and names
+
+/** 64-hex container layer ids, hashes etc.: keep the first 8 characters ("3f2a9c1e…"). */
+export const shortHex = (s: string) => (s || "").replace(/[0-9a-f]{24,}/gi, m => m.slice(0, 8) + "…");
+
+/**
+ * Character-budget middle truncation that keeps the end of a path (the file name and its nearest folders):
+ * "/var/lib/docker/overlay2/3f2a…/merged/usr/bin/x" -> "/var/lib/docker/…/usr/bin/x".
+ */
+export function midTrunc(input: string, max: number): string {
+  const s = shortHex(input);
+  if (s.length <= max) return s;
+  if (s.includes("/") && !/\s/.test(s)) {
+    const segs = s.split("/");
+    let tail = "/" + segs[segs.length - 1];
+    for (let i = segs.length - 2; i > 0; i--) {
+      const next = "/" + segs[i] + tail;
+      if (next.length > max * 0.62) break;
+      tail = next;
+    }
+    if (tail.length <= max - 4) {
+      let head = s.slice(0, max - tail.length - 1);
+      const cut = head.lastIndexOf("/");
+      if (cut >= head.length / 2) head = head.slice(0, cut + 1);
+      return head + "…" + tail;
+    }
+    if (tail.length > max) return "…" + tail.slice(tail.length - max + 1);
+  }
+  const h = Math.ceil((max - 1) * 0.6), t = max - 1 - h;
+  return s.slice(0, h) + "…" + s.slice(s.length - t);
+}
+
+/** How many trailing characters a middle-truncated text must keep visible: a path's file name, a name's last part. */
+export function tailLength(s: string): number {
+  const slash = s.lastIndexOf("/");
+  if (slash >= 0 && slash < s.length - 1) return Math.min(s.length - slash, 40);
+  const m = /[-_.:][^-_.:]{1,8}$/.exec(s);
+  if (m && m[0].length < s.length) return m[0].length;
+  return Math.min(6, Math.floor(s.length / 3));
+}
+
+// ---------------------------------------------------------------- allow list vocabulary
+
+export const ALLOW_KINDS: Record<string, { label: string; text: string }> = {
+  program: { label: "Program", text: "A program path or name that may run without a 'new program' alert" },
+  address: { label: "Network address", text: "An IP address or network (CIDR) that data-flow rules treat as trusted" },
+  detection: { label: "Specific detection", text: "One detection (rule and subject) that should not alert again" },
+};
+/** Rules a "specific detection" entry can name, with what their subject (the entry's value) is. */
+export const ALLOW_RULES: { id: string; label: string; subject: string; placeholder: string }[] = [
+  { id: "untrusted_exec", label: "Executes a downloaded file", subject: "Downloaded file that was executed", placeholder: "/tmp/installer.sh" },
+  { id: "untrusted_code_network", label: "Downloaded program contacts an untrusted address", subject: "Downloaded program", placeholder: "/opt/agent/bin/updater" },
+  { id: "exfiltration", label: "Sensitive data sent to an untrusted address", subject: "Program that sent the data", placeholder: "/usr/local/bin/backup" },
+  { id: "tainted_modify", label: "Untrusted modification of a file", subject: "File that was modified", placeholder: "/etc/app/config.yml" },
+  { id: "tainted_spawn", label: "Untrusted data starts a program", subject: "Program that was started", placeholder: "/usr/bin/deploy" },
+  { id: "novel_executable", label: "New program", subject: "Program", placeholder: "/usr/bin/links" },
+  { id: "learned", label: "Unusual behaviour (or related activity) of a program", subject: "Program", placeholder: "/usr/sbin/nginx or nginx" },
+];
+export const ruleLabel = (r: string | null | undefined) => ALLOW_RULES.find(x => x.id === r)?.label || r || "";
+
+const ipv4 = (s: string) => {
+  const p = s.split(".");
+  return p.length === 4 && p.every(x => /^\d{1,3}$/.test(x) && +x <= 255);
+};
+const ipv6 = (s: string) => {
+  if (!s.includes(":") || !/^[0-9a-fA-F:.]+$/.test(s)) return false;
+  try { new URL(`http://[${s}]/`); return true; } catch { return false; }
+};
+
+/** Client-side check of an allow-list value; null when it looks valid (the server has the final word). */
+export function allowValueError(kind: string, value: string, rule?: string | null): string | null {
+  const v = value.trim();
+  if (!v) return null;
+  if (kind === "address") {
+    const [ip, pfx, extra] = v.split("/");
+    if (extra !== undefined) return "Enter one address or network, e.g. 203.0.113.7 or 203.0.113.0/24.";
+    const v4 = ipv4(ip), v6 = !v4 && ipv6(ip);
+    if (!v4 && !v6) return "Not an IP address. Enter e.g. 203.0.113.7, 203.0.113.0/24 or 2001:db8::/48.";
+    if (pfx !== undefined) {
+      if (!/^\d{1,3}$/.test(pfx) || +pfx > (v4 ? 32 : 128)) return `The network size must be /0 to /${v4 ? 32 : 128}.`;
+      if (+pfx < (v4 ? 16 : 48)) return `This network is too large to trust. Use at most a /${v4 ? 16 : 48}.`;
+    }
+    return null;
+  }
+  const programLike = kind === "program" || rule === "learned" || rule === "novel_executable";
+  if (/\s/.test(v) && !v.startsWith("/")) return "A program name cannot contain spaces. Use its full path instead.";
+  if (v.includes("/") && !v.startsWith("/")) return programLike ? "Use a full path starting with / (e.g. /usr/bin/links) or a bare name (links)." : "Use the full path, starting with /.";
+  if (v.length > 1 && v.endsWith("/")) return "This looks like a folder. Enter the path of a file or program.";
+  return null;
+}

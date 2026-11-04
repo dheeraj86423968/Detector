@@ -1,8 +1,8 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertCircle, Check, CheckCircle2, Copy, Globe, Info, Layers, Loader2, MoreHorizontal, SquareTerminal, FileText, X } from "lucide-react";
-import type { EndpointState, IncidentStatus, Severity } from "./api";
-import { detection, fmtDateTime, fmtRel, INCIDENT_STATUS, ALERT_STATUS, SEVERITY_LABEL } from "./format";
+import { AlertCircle, BellOff, Check, CheckCircle2, Copy, Globe, Info, Layers, Loader2, MoreHorizontal, Search, SquareTerminal, FileText, X } from "lucide-react";
+import type { Endpoint, EndpointState, IncidentStatus, Severity } from "./api";
+import { detection, fmtDateTime, fmtRel, INCIDENT_STATUS, ALERT_STATUS, midTrunc, plural, SEVERITY_LABEL, shortHex, tailLength } from "./format";
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -238,4 +238,81 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       </div>
     </ToastCtx.Provider>
   );
+}
+
+// ---------------------------------------------------------------- long text
+
+/**
+ * Middle ellipsis that keeps the end visible (a path's file name, the "-v03b" of an endpoint name) and fits its
+ * container: the head shrinks with an ellipsis, the tail stays. The full text is in the tooltip.
+ */
+export function Mid({ text, className, title, tail }: { text: string; className?: string; title?: string | null; tail?: number }) {
+  const s = shortHex(text || "");
+  const k = Math.min(s.length, tail ?? tailLength(s));
+  const cut = s.length - k;
+  return (
+    <span className={cx("mid", className)} title={title === null ? undefined : title ?? text}>
+      {cut > 0 && <span className="mid-head">{s.slice(0, cut)}</span>}<span className="mid-tail">{s.slice(cut)}</span>
+    </span>
+  );
+}
+
+const LONG_TOKEN = /(\/[^\s,;'"()]{36,})|([0-9a-f]{24,})/gi;
+/** A sentence (reason, story step, title) with its long paths and hashes shortened; full text on hover of each. */
+export function PathText({ text, max = 42 }: { text: string | null | undefined; max?: number }) {
+  const t = text || "";
+  if (!LONG_TOKEN.test(t)) return <>{t}</>;
+  LONG_TOKEN.lastIndex = 0;
+  const out: ReactNode[] = []; let last = 0; let m: RegExpExecArray | null;
+  while ((m = LONG_TOKEN.exec(t))) {
+    if (m.index > last) out.push(t.slice(last, m.index));
+    const tok = m[0];
+    out.push(<span key={m.index} className="path-tok" title={tok}>{m[1] ? midTrunc(tok, max) : shortHex(tok)}</span>);
+    last = m.index + tok.length;
+  }
+  if (last < t.length) out.push(t.slice(last));
+  return <>{out}</>;
+}
+
+// ---------------------------------------------------------------- long lists
+
+/** Render the first `step` rows, then more on request. */
+export function useShowMore<T>(rows: T[], step = 50, resetKey?: unknown) {
+  const [n, setN] = useState(step);
+  useEffect(() => { setN(step); }, [resetKey, step]);
+  return { visible: rows.length > n ? rows.slice(0, n) : rows, shown: Math.min(n, rows.length), total: rows.length, more: () => setN(x => x + step), all: () => setN(rows.length), step };
+}
+export function ShowMore({ s, noun }: { s: { shown: number; total: number; more: () => void; all: () => void; step: number }; noun: [string, string] }) {
+  if (s.shown >= s.total) return null;
+  const rest = s.total - s.shown;
+  return (
+    <div className="show-more">
+      <span className="muted">Showing {s.shown.toLocaleString()} of {plural(s.total, noun[0], noun[1])}</span>
+      <button className="btn sm" onClick={s.more}>Show {Math.min(s.step, rest).toLocaleString()} more</button>
+      {rest > s.step && <button className="btn sm ghost" onClick={s.all}>Show all</button>}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- endpoint picker (Access, allow list)
+
+export function EndpointPicker({ eps, picked, setPicked }: { eps: Endpoint[]; picked: Set<string>; setPicked: (s: Set<string>) => void }) {
+  const [q, setQ] = useState("");
+  const visible = eps.filter(e => (e.state !== "retired" || picked.has(e.id)) && (e.name.toLowerCase().includes(q.trim().toLowerCase()) || (e.hostname || "").toLowerCase().includes(q.trim().toLowerCase())));
+  return (
+    <div className="ep-pick">
+      <div className="search sm"><Search size={14} /><input placeholder="Filter endpoints" value={q} onChange={e => setQ(e.target.value)} /></div>
+      <div className="ep-list">{visible.length === 0 ? <div className="muted sm pad">No endpoints</div> : visible.map(e => (
+        <label key={e.id} className="ep-item"><input type="checkbox" checked={picked.has(e.id)} onChange={ev => { const n = new Set(picked); ev.target.checked ? n.add(e.id) : n.delete(e.id); setPicked(n); }} />
+          <Mid text={e.name} className="ep-name" /><span className="muted sm ellipsis">{e.hostname}</span></label>
+      ))}</div>
+      <div className="muted sm">{plural(picked.size, "endpoint")} selected</div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- allow list
+
+export function AllowKindIcon({ kind, size = 15 }: { kind: string; size?: number }) {
+  return <span className={cx("ak-icon", `ak-${kind}`)}>{kind === "program" ? <SquareTerminal size={size} /> : kind === "address" ? <Globe size={size} /> : <BellOff size={size} />}</span>;
 }

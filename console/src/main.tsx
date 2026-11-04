@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, LogOut, Server, ShieldAlert, UserCog, Users } from "lucide-react";
+import { LayoutDashboard, ListChecks, LogOut, Server, ShieldAlert, UserCog, Users } from "lucide-react";
 import "@fontsource-variable/inter";
 import "./styles.css";
 import { api, Me, MeContext, Overview, post, useApi } from "./api";
@@ -13,6 +13,7 @@ import Incidents from "./pages/Incidents";
 import Endpoints from "./pages/Endpoints";
 import EndpointDetail from "./pages/EndpointDetail";
 import Access from "./pages/Access";
+import AllowList from "./pages/AllowList";
 import Account from "./pages/Account";
 import { Logo } from "./pages/Login";
 
@@ -45,6 +46,7 @@ function Shell() {
             <NavLink to="/overview"><LayoutDashboard size={18} />Overview</NavLink>
             <NavLink to="/incidents"><ShieldAlert size={18} />Incidents{open ? <span className="nav-count">{open > 999 ? "999+" : open}</span> : null}</NavLink>
             <NavLink to="/endpoints"><Server size={18} />Endpoints</NavLink>
+            <NavLink to="/allowlist"><ListChecks size={18} />Allow list</NavLink>
             {me.can?.manage_users && <NavLink to="/access"><Users size={18} />Access</NavLink>}
           </nav>
           <div className="sidebar-foot">
@@ -76,6 +78,7 @@ function App() {
             <Route path="/incidents/:id" element={<IncidentDetail />} />
             <Route path="/endpoints" element={<Endpoints />} />
             <Route path="/endpoints/:id" element={<EndpointDetail />} />
+            <Route path="/allowlist" element={<AllowList />} />
             <Route path="/access" element={<Access />} />
             <Route path="/account" element={<Account />} />
             {/* links from older consoles / notifications */}

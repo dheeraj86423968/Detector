@@ -38,7 +38,9 @@ def endpoint_state(r: dict) -> dict:
         state, text = "retired", "Retired"
     elif kind != "live":
         state = {"baseline": "learning", "training": "training"}.get(phase, "protected")
-        text = {"learning": "Dataset replay: building the baseline", "training": "Training the detection model"}.get(state, "Dataset replay (benchmark)")
+        what = "Dataset replay" if kind == "benchmark" else "Attack-suite test run"
+        text = {"learning": f"{what}: building the baseline", "training": "Training the detection model"}.get(
+            state, f"{what} ({'benchmark' if kind == 'benchmark' else 'running' if online else 'finished'})")
     elif phase in ("baseline", "pending"):
         state, text = ("learning", f"Learning normal behaviour (day {min(done + 1, need)} of {need})") if online else ("offline", "Offline while learning")
     elif phase == "training":

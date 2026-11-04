@@ -735,6 +735,8 @@ def retire_endpoint(endpoint_id: str, s=Depends(admin)):
         if not row:
             raise HTTPException(404)
         db.q(c, "UPDATE jobs SET state='cancelled', finished_at=now() WHERE endpoint_id=%s AND state='queued'", (endpoint_id,))
+        from .allowlist import forget_endpoint
+        forget_endpoint(c, endpoint_id)
     db.drop_telemetry(endpoint_id)
     return {"ok": True}
 

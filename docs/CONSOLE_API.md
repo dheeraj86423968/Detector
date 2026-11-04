@@ -184,7 +184,7 @@ selected endpoints. Agents receive the merged list with their configuration; the
 → `{"ok": true, "id": 3, "alerts_allowed": 18}` (how many open alerts it covered and removed from incidents).
 `value`: program = path (`/usr/bin/links`) or bare name (`links`, matches any path); address = IP or CIDR (at most /16,
 IPv6 /48); detection = the detection's key with `rule` one of `novel_executable, untrusted_exec, untrusted_code_network,
-exfiltration, tainted_modify, tainted_spawn`. 409 if the same entry exists; 400 with a message on invalid input.
+exfiltration, tainted_modify, tainted_spawn`, or `learned` with a program as value (unusual-behaviour / related-activity alerts of that program). 409 if the same entry exists; 400 with a message on invalid input.
 `DELETE /api/allowlist/{id}` (`can.manage_endpoints`) → `{"ok": true}` (alerts it covered stay marked as false alarms).
 
 `GET /api/alerts/{id}/allow-options` → ready-made entries for an "Allow..." dialog on an alert / graph node:

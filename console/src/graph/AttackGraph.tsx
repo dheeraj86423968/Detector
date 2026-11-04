@@ -6,7 +6,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { Maximize2, Minimize2, Route, Waypoints } from "lucide-react";
 import type { GEdge, GNode } from "../api";
-import { detection, DETECTION, reasonText } from "../format";
+import { detection, DETECTION, midTrunc, reasonText, shortHex } from "../format";
 import { cx, NodeIcon, Segmented } from "../ui";
 import { attackPath, clusterLeaves, layout, stackSiblings, VNode } from "./model";
 
@@ -16,13 +16,33 @@ const PANEL_W = 360;   // width of the details panel that overlays the canvas (s
 type NodeData = { n: VNode; dim: boolean; hl: boolean; sel: boolean; hover: boolean };
 type EdgeData = { e: GEdge & { step: number }; showLabel: boolean; hl: boolean; dim: boolean; offset: number; path: boolean };
 
+// node boxes are fixed-size: ~16 characters of name and ~22 of detail line fit; long names keep their end
+const LABEL_MAX = 17, SUB_MAX = 24;
+const known = (v?: string | null) => (v && !/^\(?not recorded/i.test(v) ? v : "");
+const nodeLabel = (n: VNode) => {
+  if (n.type === "network" && n.details?.Address) return n.details.Address;
+  if (n.type === "group" && !n.cluster) {
+    const m = /^(\d[\d,]*) (?:system )?files?\b/.exec(n.label);
+    if (m) return `${m[1]} ${m[1] === "1" ? "file" : "files"}`;
+  }
+  return n.label;
+};
 const sublabel = (n: VNode) => {
-  if (n.type === "process") return n.details?.["Command line"] || n.title || "";
-  if (n.type === "file") { const p = n.details?.Path || n.title || ""; const i = p.lastIndexOf("/"); return i > 0 ? p.slice(0, i) : p; }
-  if (n.type === "network") return "Network peer";
-  if (n.cluster) return n.title || "";
   if (n.stack) return n.title || "";
-  return "Libraries and system files read";
+  if (n.type === "process") {
+    const cmd = (n.details?.["Command line"] || n.title || "").split("\n")[0];
+    const prog = known(n.details?.Program);
+    // a bare command line that only repeats the name says nothing: show where the program lives instead
+    return cmd && cmd !== n.label ? shortHex(cmd) : prog ? midTrunc(prog, SUB_MAX) : cmd;
+  }
+  if (n.type === "file") { const p = n.details?.Path || n.title || ""; const i = p.lastIndexOf("/"); return midTrunc(i > 0 ? p.slice(0, i) : p, SUB_MAX); }
+  if (n.type === "network") {
+    const port = n.details?.Port, scope = n.details?.Scope;
+    return [port ? `port ${port}` : "", scope ? scope : ""].filter(Boolean).join(" · ") || "Network peer";
+  }
+  if (n.cluster) return n.title || "";
+  if (n.details?.Paths) return "paths not recorded";
+  return /system file/.test(n.label) ? "libraries and system files" : "grouped files";
 };
 const TYPE_NAME: Record<string, string> = { process: "Process", file: "File", network: "Network", group: "File group" };
 
@@ -34,7 +54,7 @@ const GraphNode = memo(function GraphNode({ data }: NodeProps<Node<NodeData>>) {
       <Handle type="target" position={Position.Left} isConnectable={false} />
       <span className="gicon"><NodeIcon type={n.type} size={15} /></span>
       <span className="gtext">
-        <span className="glabel">{n.label}</span>
+        <span className="glabel">{midTrunc(nodeLabel(n), LABEL_MAX)}</span>
         <span className="gsub">{sublabel(n)}</span>
       </span>
       {d && <span className="gbadge">{d.short}</span>}

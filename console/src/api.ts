@@ -114,9 +114,21 @@ export type IncidentAlert = { id: number; ts_ns: number; node: string; label: st
 export type IncidentDetail = { ok: true; incident: IncidentSummary; story: StoryEntry[]; graph: { nodes: GNode[]; edges: GEdge[]; truncated?: boolean }; alerts: IncidentAlert[] };
 
 export type RawAlert = { id: number; endpoint_id: string; endpoint: string; window_start_ns: number; node_uuid: string; ntype: string; label: string;
-  layer?: DetectionType | null; rule?: string | null; reason?: string | null; status: string; created_at: string; incident_id?: number | null };
+  layer?: DetectionType | null; rule?: string | null; reason?: string | null; status: string; created_at: string; incident_id?: number | null;
+  allowed_by?: number | null };
 
 export type Overview = { ok: true; endpoints: { total: number; protected: number; learning: number; offline: number };
   incidents: { open: number; last_7d: number; by_severity: Record<Severity, number> };
   per_day: { date: string; incidents: number }[]; recent_incidents: IncidentSummary[];
   attention: { kind: string; endpoint_id: string; endpoint_name: string; text: string }[] };
+
+// ---------------------------------------------------------------- allow list
+
+export type AllowKind = "program" | "address" | "detection";
+export type AllowKindInfo = { id: AllowKind; label: string; text: string };
+export type AllowEntry = { id: number; kind: AllowKind; value: string; rule: string | null; rule_text?: string | null;
+  endpoints: { id: string; name: string }[] | null; note?: string | null; created_by?: string | null; created_at: string; alerts_allowed: number };
+export type AllowListResp = { ok: true; kinds: AllowKindInfo[]; entries: AllowEntry[] };
+export type AllowOption = { kind: AllowKind; value: string; rule: string | null; title: string; text: string };
+export type AllowOptionsResp = { ok: true; alert_id: number; endpoint_id: string; allowed_by: number | null; options: AllowOption[] };
+export type NewAllowEntry = { kind: AllowKind; value: string; rule?: string | null; endpoints: string[] | null; note?: string; resolve_open: boolean };

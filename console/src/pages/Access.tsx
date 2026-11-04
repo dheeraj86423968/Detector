@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { KeyRound, Loader2, Lock, Search, ShieldCheck, UserPlus } from "lucide-react";
 import { del, Endpoint, patch, post, Role, UserRow, UsersResp, useApi, useCan, useMe } from "../api";
 import { fmtDateTime, fmtRel, initials, plural, ROLE_INFO } from "../format";
-import { Card, Confirm, cx, Dialog, Empty, ErrorState, Field, Loading, Menu, PageHeader, useToast } from "../ui";
+import { Card, Confirm, cx, Dialog, Empty, EndpointPicker, ErrorState, Field, Loading, Menu, PageHeader, useToast } from "../ui";
 
 type UsersWithRoles = UsersResp & { roles?: { id: Role; text: string }[] };
 const ROLES: Role[] = ["admin", "analyst", "viewer"];
@@ -103,8 +103,7 @@ function UserDialog({ user, self, roleText, eps, sso, onClose, onDone }: { user?
   const [f, setF] = useState({ username: user?.username || "", display_name: user?.display_name || "", email: user?.email || "", role: (user?.role || "analyst") as Role, password: "" });
   const [scope, setScope] = useState<"all" | "some">(user?.endpoints ? "some" : "all");
   const [picked, setPicked] = useState<Set<string>>(new Set((user?.endpoints || []).map(e => e.id)));
-  const [epq, setEpq] = useState(""); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
-  const visibleEps = eps.filter(e => (e.state !== "retired" || picked.has(e.id)) && e.name.toLowerCase().includes(epq.trim().toLowerCase()));
+  const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
   const valid = (edit || (/^[A-Za-z0-9_.@-]{2,64}$/.test(f.username) && f.password.length >= 10)) && (f.role === "admin" || scope === "all" || picked.size > 0);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(""); setBusy(true);
@@ -153,14 +152,7 @@ function UserDialog({ user, self, roleText, eps, sso, onClose, onDone }: { user?
             <label className={cx("role-opt", scope === "all" && "on")}><input type="radio" checked={scope === "all"} onChange={() => setScope("all")} /><span><b>All endpoints</b><span className="muted sm">Including endpoints added later</span></span></label>
             <label className={cx("role-opt", scope === "some" && "on")}><input type="radio" checked={scope === "some"} onChange={() => setScope("some")} /><span><b>Selected endpoints</b><span className="muted sm">Only these; others stay invisible</span></span></label>
           </div>
-          {scope === "some" && <div className="ep-pick">
-            <div className="search sm"><Search size={14} /><input placeholder="Filter endpoints" value={epq} onChange={e => setEpq(e.target.value)} /></div>
-            <div className="ep-list">{visibleEps.length === 0 ? <div className="muted sm pad">No endpoints</div> : visibleEps.map(e => (
-              <label key={e.id} className="ep-item"><input type="checkbox" checked={picked.has(e.id)} onChange={ev => { const n = new Set(picked); ev.target.checked ? n.add(e.id) : n.delete(e.id); setPicked(n); }} />
-                <span className="ellipsis">{e.name}</span><span className="muted sm">{e.hostname}</span></label>
-            ))}</div>
-            <div className="muted sm">{plural(picked.size, "endpoint")} selected</div>
-          </div>}
+          {scope === "some" && <EndpointPicker eps={eps} picked={picked} setPicked={setPicked} />}
         </div>}
         {f.role === "admin" && <div className="note">Admins always see all endpoints.</div>}
         {err && <div className="err">{err}</div>}

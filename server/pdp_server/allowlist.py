@@ -29,7 +29,8 @@ KINDS = ("program", "address", "detection")
 RULE_TEXT = {"novel_executable": "New program", "untrusted_exec": "Executes a downloaded file",
              "untrusted_code_network": "Downloaded program contacts an untrusted address",
              "exfiltration": "Sensitive data sent to an untrusted address", "tainted_modify": "Untrusted modification of a file",
-             "tainted_spawn": "Untrusted data starts a program"}
+             "tainted_spawn": "Untrusted data starts a program",
+             "learned": "Unusual behaviour (or related activity) of a program"}
 
 
 def _net(value: str):
@@ -81,6 +82,9 @@ def matches(entry: dict, alert: dict) -> bool:
             except ValueError:
                 continue
         return False
+    if kind == "detection" and entry.get("rule") == "learned":    # learned / related-activity alerts of a program
+        exe = _exe(alert.get("label"))
+        return alert.get("layer") in ("learned", "corroborated") and bool(exe) and (exe == value or ("/" not in value and os.path.basename(exe) == value))
     if kind == "detection":
         return any(r.get("rule") == entry.get("rule") and r.get("key") == value for r in reasons)
     return False
@@ -128,6 +132,17 @@ def mark_new_alerts(c, endpoint_id: str, ids: list[int]) -> None:
                 break
 
 
+def forget_endpoint(c, endpoint_id: str) -> None:
+    """A retired endpoint: entries only for it are removed, multi-endpoint entries lose it."""
+    for e in db.q(c, "SELECT id, endpoint_ids FROM allowlist WHERE endpoint_ids ? %s", (endpoint_id,)):
+        rest = [x for x in e["endpoint_ids"] if x != endpoint_id]
+        if rest:
+            db.q(c, "UPDATE allowlist SET endpoint_ids=%s WHERE id=%s", (json.dumps(rest), e["id"]))
+        else:
+            db.q(c, "DELETE FROM allowlist WHERE id=%s", (e["id"],))
+            db.q(c, "UPDATE alerts SET allowed_by=NULL WHERE allowed_by=%s", (e["id"],))
+
+
 def migrate(c) -> None:
     """0.4: per-endpoint approved_executables in the endpoint configuration become allow-list entries."""
     for ep in db.q(c, "SELECT id, config FROM endpoints WHERE config ? 'approved_executables' AND jsonb_array_length(config->'approved_executables') > 0"):
@@ -136,6 +151,8 @@ def migrate(c) -> None:
                 db.q(c, "INSERT INTO allowlist (kind, value, endpoint_ids, note) VALUES ('program', %s, %s, 'approved before 0.4')",
                      (prog, json.dumps([str(ep["id"])])))
         db.q(c, "UPDATE endpoints SET config = config - 'approved_executables' WHERE id=%s", (ep["id"],))
+    for ep in db.q(c, "SELECT id FROM endpoints WHERE phase='retired'"):
+        forget_endpoint(c, str(ep["id"]))
 
 
 # ---------------------------------------------------------------------------------------------- API
@@ -241,6 +258,11 @@ def allow_options(alert_id: int, s=Depends(session)):
             opts.append({"kind": "detection", "value": r["key"], "rule": r["rule"],
                          "title": f"Don't alert on this again: {RULE_TEXT[r['rule']].lower()} ({r['key']})",
                          "text": "Only this exact detection is allowed; the same rule still alerts for anything else."})
+    if a["layer"] in ("learned", "corroborated") and _exe(a["label"]):
+        exe = _exe(a["label"])
+        opts.append({"kind": "detection", "value": exe, "rule": "learned",
+                     "title": f"Don't raise unusual-behaviour alerts for {exe}",
+                     "text": "Its other detections (new program, data-flow rules) still alert."})
     for ip in sorted(_ips_of(a)):
         opts.append({"kind": "address", "value": ip, "rule": None, "title": f"Trust the address {ip}",
                      "text": "Data-flow rules will treat this address as trusted (consider its whole network, e.g. a /24)."})

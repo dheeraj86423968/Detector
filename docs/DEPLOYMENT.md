@@ -214,6 +214,20 @@ remove the admin token afterwards. Add the KMS host to `PDP_NO_PROXY`.
 
 Rollback: restore the `pdp_pki` volume from a backup taken before the migration and set `PDP_KMS=file`.
 
+## Allow list
+
+Console -> Allow list (or "Allow..." on an incident's alert / graph node): programs, network addresses (IP or CIDR) and
+specific detections, for all endpoints or selected ones. Agents get the merged list with their configuration and stop
+raising those detections without a new model; the server marks alerts the list covers (kept for the record, not part
+of incidents). Adding an entry can resolve the matching open alerts at once. API: docs/CONSOLE_API.md.
+
+## Collector capacity (agent 0.3.2)
+
+The loader drains the kernel ring buffer (`source.ring_pages`, default 4096 pages = 16 MB) at full speed into a
+user-space spool (`--spool-mb`, default 512 MB, allocated only while the agent catches up), so bursts such as a build
+opening 100k+ files are not dropped: on the L40S host 0.3.1 lost ~5 % of events in such bursts, 0.3.2 lost none in a
+200k-opens burst test. Dropped events, if any, are reported in the heartbeat and on the endpoint page.
+
 ## Console HTTPS
 
 The console is served only over HTTPS (port 80 redirects; HSTS, CSP, nosniff). Two ways to a browser-trusted lock:

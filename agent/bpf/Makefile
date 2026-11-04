@@ -11,7 +11,7 @@ BTF     ?= /sys/kernel/btf/vmlinux
 STATIC  ?= -static
 ARCH    := $(shell uname -m | sed -e 's/x86_64/x86/' -e 's/aarch64/arm64/')
 CFLAGS  ?= -O2 -g -Wall
-LIBS    := -lbpf -lelf -lz -lzstd
+LIBS    := -lbpf -lelf -lz -lzstd -lpthread
 
 pdp-ebpf: pdp_ebpf.c pdp_ebpf.skel.h pdp_ebpf.h
 	$(CC) $(CFLAGS) -I. pdp_ebpf.c -o $@ $(STATIC) $(LIBS)

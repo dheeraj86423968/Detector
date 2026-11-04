@@ -87,6 +87,19 @@ check([x.rule for x in h] == ["tainted_modify"] and h[0].nodes == (I["cat"], I["
 h = engine().process(win([(I["shadow"], "READ", I["cat"]), (I["cat"], "CONNECT", I["attacker"])]), reg)
 check([x.rule for x in h] == ["exfiltration"], "credential store read then sent to an untrusted address")
 check(engine().process(win([(I["shadow"], "READ", I["cat"]), (I["cat"], "CONNECT", I["client"])]), reg) == [], "... but not to a baseline address")
+# ---------------------------------------------------------------- console allow list
+e_allow = engine(); e_allow.set_allowed_addresses(["81.49.200.0/24"])
+check(e_allow.process(win([(I["shadow"], "READ", I["cat"]), (I["cat"], "CONNECT", I["attacker"])]), reg) == [],
+      "an allow-listed network is trusted: no exfiltration alarm to it")
+check([x.rule for x in engine().process(win([(I["shadow"], "READ", I["cat"]), (I["cat"], "CONNECT", I["attacker"])]), reg)] == ["exfiltration"],
+      "... and the same flow still alarms without the entry")
+from pdp_engine.layers import DeterministicLayers
+spec = {"known_executables": ["/usr/sbin/nginx", "/bin/sh", "/bin/cat"], "trusted_ips": ["10.0.0.5"], "thresholds": {}, "config": {}}
+dl = DeterministicLayers(spec, N_PRE)
+dl.set_allowlist(suppressed=[("untrusted_exec", "/tmp/.x"), ("novel_executable", "/tmp/.x")])
+rs = {x.rule for x in dl.process(win(attack), reg, win(attack).nodes())}
+check("untrusted_exec" not in rs and "novel_executable" not in rs and "untrusted_code_network" in rs,
+      f"suppressed (rule, key) detections are dropped, other detections remain ({sorted(rs)})")
 H = 3600 * 10**9
 late = [(I["attacker"], "RECVFROM", I["nginx"], 0), (I["nginx"], "CLONE", I["worker"], 5 * H), (I["sh_file"], "EXECUTE", I["worker"], 5 * H + 1)]
 check(engine().process(win(late), reg) == [], "untrusted data integrity recovers after 5 half-lives (no spawn alarm)")
