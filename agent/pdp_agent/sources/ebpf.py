@@ -383,9 +383,9 @@ class EbpfNormaliser:
     def resolve(self, pid: int, path: str, dirfd: int, fd: int | None = None) -> str:
         """Absolute, symlink-free path of an opened file - what the kernel's d_path (and the strace collector's
         `-y`) reports - so both collectors give the file the same label.
-        Relative names are joined to the cwd (AT_FDCWD) or to the directory the dirfd refers to (from /proc, or from
-        this normaliser's record of what the process opened, so fd-relative opens of short-lived processes such as
-        `grep -r` and `tar` still resolve); symlinks are then resolved inside the process's root (/proc/<pid>/root, falling
+        Relative names are joined to the cwd (AT_FDCWD) or to the directory the dirfd refers to (from this
+        normaliser's record of what the process opened - correct at the time of the open, and it also covers
+        short-lived processes such as `grep -r` and `tar` - else from /proc for fds opened before the agent started); symlinks are then resolved inside the process's root (/proc/<pid>/root, falling
         back to `host_root` once the process is gone)."""
         if not path.startswith("/"):
             if dirfd == AT_FDCWD:
@@ -395,7 +395,9 @@ class EbpfNormaliser:
                 else:
                     base = self._cwd.get(pid)
             else:
-                base = self._link(pid, f"fd/{dirfd}") or self._dirs.get((pid, dirfd)) or self._recent_dir(pid)
+                # the stream's own record of what this fd was opened as comes first: /proc/<pid>/fd is read at decode
+                # time, when a busy or short-lived process may already have closed and reused the fd (wrong label)
+                base = self._dirs.get((pid, dirfd)) or self._link(pid, f"fd/{dirfd}") or self._recent_dir(pid)
             if not (base and base.startswith("/")):
                 return path
             path = os.path.join(base, path)
