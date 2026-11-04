@@ -40,3 +40,12 @@ endpoint-keyed route across organisations). The operator sees organisations and 
 - Agent upgrades after install (today: re-run the installer with a new token); a per-endpoint pull credential.
 - E-mail (verification, invite mails, password reset); per-organisation SSO; data retention settings per client.
 - Windows agent; the agent image is 1.9 GB (CPU PyTorch) and should be slimmed.
+
+## Updating without downtime
+The API runs as two replicas (`PDP_API_REPLICAS`, default 2) behind nginx, which spreads requests over them and
+retries a refused connection on the other replica. Update with
+`docker compose build api && deploy/rollout.sh` - new replicas start next to the old ones, take traffic once healthy,
+then the old ones stop gracefully. Never `docker compose up` the api service directly (that replaces all replicas at
+once). Schema DDL runs only when schema.sql changes (hash in kv), with a 15 s lock timeout: if it cannot get its locks
+the new replica fails its health check and the rollout keeps the old replicas. Measured: 0 failed requests out of
+13,158 during two rollouts under 4 concurrent clients. nginx config changes: `docker exec pdp-gateway-1 nginx -s reload`.

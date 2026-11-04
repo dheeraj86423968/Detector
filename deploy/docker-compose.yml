@@ -33,6 +33,10 @@ services:
   api:
     image: pdp/server:${PDP_VERSION:-dev}
     build: { context: .., dockerfile: deploy/docker/server.Dockerfile }
+    # two replicas so that updates roll one at a time without downtime (deploy/rollout.sh); nginx spreads requests
+    # over both through Docker DNS and retries a request on the other replica when one is going away
+    scale: ${PDP_API_REPLICAS:-2}
+    stop_grace_period: 30s
     environment:
       <<: [*db-env, *kms-env]
       PDP_HOSTNAMES: ${PDP_HOSTNAMES:-localhost,gateway}

@@ -66,16 +66,17 @@ def initialize():
 
 def _initialize():
     pki.ensure_pki(SERVER_HOSTNAMES)
-    db.init_platform(os.path.join(os.path.dirname(__file__), "schema.sql"))
+    schema_changed = db.init_platform(os.path.join(os.path.dirname(__file__), "schema.sql"))
     from . import orgs
     with db.conn() as c:
         orgs.migrate(c)
     from .allowlist import migrate
     with db.conn() as c:
         migrate(c)
-    with db.conn() as c:   # telemetry DDL is idempotent: re-apply it so schema changes reach existing endpoints
-        for ep in db.q(c, "SELECT id FROM endpoints"):
-            db.init_telemetry(str(ep["id"]))
+    if schema_changed:     # telemetry DDL is idempotent: re-apply it so schema changes reach existing endpoints
+        with db.conn() as c:
+            for ep in db.q(c, "SELECT id FROM endpoints"):
+                db.init_telemetry(str(ep["id"]))
     with db.conn() as c:
         if not db.q(c, "SELECT 1 FROM users LIMIT 1"):
             pw = secrets.token_urlsafe(12)

@@ -17,5 +17,5 @@ docker tag "pdp/agent:$ver" "127.0.0.1:$port/pdp/agent:$ver"
 docker push -q "127.0.0.1:$port/pdp/agent:$ver"
 docker rmi "127.0.0.1:$port/pdp/agent:$ver" >/dev/null
 if grep -q '^PDP_AGENT_VERSION=' .env; then sed -i "s/^PDP_AGENT_VERSION=.*/PDP_AGENT_VERSION=$ver/" .env; else echo "PDP_AGENT_VERSION=$ver" >> .env; fi
-docker compose up -d --no-deps api >/dev/null
+./rollout.sh api >/dev/null
 echo "published pdp/agent:$ver; new installs pull $(grep -E '^PDP_PUBLIC_HOSTNAME=' .env | cut -d= -f2)/pdp/agent:$ver"

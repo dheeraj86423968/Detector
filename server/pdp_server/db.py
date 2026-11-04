@@ -51,10 +51,26 @@ def q(c, sql: str, args=(), one=False):
         return cur.fetchone() if one else cur.fetchall()
 
 
-def init_platform(schema_path: str) -> None:
+def init_platform(schema_path: str) -> bool:
+    """Apply schema.sql (and, via the caller, the telemetry DDL) once per schema version. Even an
+    `ALTER TABLE ... IF NOT EXISTS` takes an exclusive table lock, so re-running DDL on every start would block - or
+    deadlock with - the replicas still serving during a rolling update. Returns True when the DDL was applied."""
+    import hashlib
+    ddl = open(schema_path).read()
+    digest = hashlib.sha256((ddl + TELEMETRY_DDL).encode()).hexdigest()
     with conn() as c:
         with c.cursor() as cur:
-            cur.execute(open(schema_path).read())
+            cur.execute("SELECT to_regclass('public.kv') IS NOT NULL")
+            if cur.fetchone()[0]:
+                cur.execute("SELECT v FROM kv WHERE k='schema_sha256'")
+                row = cur.fetchone()
+                if row and row[0] == digest:
+                    return False
+            cur.execute("SET LOCAL lock_timeout = '15s'")   # fail this start (the old replicas keep serving) rather than queue behind traffic
+            cur.execute(ddl)
+            cur.execute("INSERT INTO kv (k, v, updated_at) VALUES ('schema_sha256', to_jsonb(%s::text), now()) "
+                        "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()", (digest,))
+    return True
 
 
 # ---- telemetry: one schema per endpoint -------------------------------------------------
