@@ -1,0 +1,224 @@
+#!/bin/bash
+# PDP agent installer for Linux servers, served by __SERVER__/install.sh
+#
+#   curl -fsSL __SERVER__/install.sh | sudo bash -s -- --token <enrolment token>
+#
+# Checks the host, installs docker if it is missing (apt or dnf/yum), pulls the agent image from this server,
+# writes /etc/pdp/agent.json and /etc/pdp/agent.env, installs and starts pdp-agent.service and waits until the
+# endpoint has enrolled. Re-running it is safe. Remove the agent with:  ... | sudo bash -s -- --uninstall
+set -euo pipefail
+
+SERVER="__SERVER__"
+AGENT_URL="__AGENT_URL__"
+IMAGE="__IMAGE__"
+REGISTRY="__REGISTRY__"
+ETC=${PDP_ETC_DIR:-/etc/pdp}
+DATA=${PDP_DATA_DIR:-/var/lib/pdp}
+UNIT=${PDP_UNIT:-pdp-agent}
+CONTAINER=${PDP_CONTAINER:-pdp-agent}
+
+token="" source="ebpf" tz="UTC" install_docker=1 start=1 uninstall=0 purge=0 assume_yes=0
+
+say()  { printf '\033[1m==>\033[0m %s\n' "$*"; }
+ok()   { printf '    \033[32mok\033[0m  %s\n' "$*"; }
+warn() { printf '    \033[33m!!\033[0m  %s\n' "$*" >&2; }
+die()  { printf '\n\033[31merror:\033[0m %s\n' "$*" >&2; exit 1; }
+
+usage() {
+  cat <<EOF
+PDP agent installer for $SERVER
+
+  curl -fsSL $SERVER/install.sh | sudo bash -s -- --token TOKEN [options]
+
+  --token TOKEN        enrolment token from the console (Endpoints > Add endpoint); valid 24 hours, single use
+  --source KIND        collector: ebpf (default; kernel 5.8+ with BTF), auditd or strace
+  --tz TZ              time zone for the agent's day boundaries (default UTC)
+  --no-install-docker  fail instead of installing docker when it is missing
+  --no-start           write the configuration and the service but do not start it
+  --uninstall          stop and remove the agent (keeps $DATA unless --purge)
+  --purge              with --uninstall: also delete $DATA (the endpoint must be enrolled again)
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --token) token=${2:?--token needs a value}; shift ;;
+    --source) source=${2:?}; shift ;;
+    --tz) tz=${2:?}; shift ;;
+    --no-install-docker) install_docker=0 ;;
+    --no-start) start=0 ;;
+    --uninstall) uninstall=1 ;;
+    --purge) purge=1 ;;
+    -y|--yes) assume_yes=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage >&2; die "unknown option: $1" ;;
+  esac
+  shift
+done
+
+[ "$(id -u)" -eq 0 ] || die "run as root (pipe into 'sudo bash')"
+[ -d /run/systemd/system ] || die "this host does not run systemd; use the docker command shown in the console instead"
+
+# ------------------------------------------------------------------------------------------------ uninstall
+if [ "$uninstall" -eq 1 ]; then
+  say "Removing the PDP agent"
+  systemctl disable --now "$UNIT.service" >/dev/null 2>&1 || true
+  docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  rm -f "/etc/systemd/system/$UNIT.service"
+  systemctl daemon-reload
+  rm -rf "$ETC"
+  ok "service and configuration removed"
+  if [ "$purge" -eq 1 ]; then rm -rf "$DATA"; ok "agent data removed ($DATA)"; else ok "agent data kept in $DATA (--purge removes it)"; fi
+  echo "    Retire the endpoint in the console to remove it from your organisation."
+  exit 0
+fi
+
+[ -n "$token" ] || { [ -s "$DATA/pki/agent.pem" ] || { usage >&2; die "--token is required (Endpoints > Add endpoint in the console)"; }; }
+case "$source" in ebpf|auditd|strace) ;; *) die "--source must be ebpf, auditd or strace" ;; esac
+
+# ------------------------------------------------------------------------------------------------ host checks
+say "Checking this host"
+arch=$(uname -m)
+[ "$arch" = x86_64 ] || die "the agent is available for x86_64 only (this host is $arch)"
+ok "architecture $arch"
+kver=$(uname -r)
+kmaj=${kver%%.*}; kmin=${kver#*.}; kmin=${kmin%%.*}
+if [ "$source" = ebpf ]; then
+  if [ "$kmaj" -lt 5 ] || { [ "$kmaj" -eq 5 ] && [ "$kmin" -lt 8 ]; }; then
+    die "kernel $kver is older than 5.8; re-run with --source auditd"
+  fi
+  [ -r /sys/kernel/btf/vmlinux ] || die "kernel $kver has no BTF type information (/sys/kernel/btf/vmlinux); re-run with --source auditd"
+  ok "kernel $kver with BTF (eBPF collector)"
+else
+  ok "kernel $kver ($source collector)"
+fi
+mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+[ "$mem_kb" -ge 1500000 ] || warn "less than 1.5 GB of memory; the agent needs about 1 GB"
+free_kb=$(df -Pk "$(dirname "$DATA")" | awk 'NR==2 {print $4}')
+[ "$free_kb" -ge 6000000 ] || warn "less than 6 GB free on $(dirname "$DATA"); the agent image and its spool need about 5 GB"
+command -v curl >/dev/null || die "curl is required"
+curl -fsS --max-time 15 -o /dev/null "$SERVER/healthz" || die "cannot reach $SERVER (outbound HTTPS to port 443 is needed)"
+ok "server $SERVER reachable"
+agent_host=${AGENT_URL#https://}; agent_port=${agent_host##*:}; agent_host=${agent_host%:*}
+if (exec 3<>"/dev/tcp/$agent_host/$agent_port") 2>/dev/null; then ok "agent port $agent_port reachable"; else
+  die "cannot reach $agent_host:$agent_port (the agent sends its data there; allow outbound TCP $agent_port)"; fi
+
+# ------------------------------------------------------------------------------------------------ docker
+if ! command -v docker >/dev/null 2>&1; then
+  [ "$install_docker" -eq 1 ] || die "docker is not installed (re-run without --no-install-docker to install it)"
+  say "Installing docker"
+  if command -v apt-get >/dev/null; then
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq && apt-get install -y -qq docker.io >/dev/null
+  elif command -v dnf >/dev/null; then
+    dnf install -y -q docker >/dev/null 2>&1 || dnf install -y -q moby-engine >/dev/null 2>&1 || dnf install -y -q podman-docker >/dev/null
+  elif command -v yum >/dev/null; then
+    yum install -y -q docker >/dev/null
+  else
+    die "no supported package manager found; install docker and re-run"
+  fi
+  command -v docker >/dev/null || die "docker installation failed"
+  ok "docker installed"
+fi
+systemctl enable --now docker >/dev/null 2>&1 || true
+docker info >/dev/null 2>&1 || die "the docker daemon is not running (systemctl start docker)"
+ok "docker $(docker version --format '{{.Server.Version}}' 2>/dev/null || echo ready)"
+
+# ------------------------------------------------------------------------------------------------ server trust
+say "Fetching the server certificate authority"
+umask 077
+install -d -m 0750 "$ETC"; install -d -m 0700 "$DATA"
+curl -fsS --max-time 30 "$SERVER/dl/ca.pem" -o "$ETC/ca.pem" || die "could not download $SERVER/dl/ca.pem"
+ca_sha=$( (openssl x509 -in "$ETC/ca.pem" -outform der 2>/dev/null || python3 -c 'import ssl,sys;sys.stdout.buffer.write(ssl.PEM_cert_to_DER_cert(open(sys.argv[1]).read()))' "$ETC/ca.pem") | sha256sum | cut -d' ' -f1)
+printf '%s' "$ca_sha" | grep -Eq '^[0-9a-f]{64}$' || die "could not read the server CA (install openssl)"
+ok "CA fingerprint $ca_sha (downloaded over verified HTTPS)"
+
+# ------------------------------------------------------------------------------------------------ image
+say "Downloading the agent ($IMAGE, about 2 GB the first time)"
+if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+  [ -n "$token" ] || die "the agent image is missing and no --token was given to download it"
+  cfg=$(mktemp -d)
+  printf '{"auths":{"%s":{"auth":"%s"}}}' "$REGISTRY" "$(printf 'pdp:%s' "$token" | base64 -w0)" > "$cfg/config.json"
+  if ! DOCKER_CONFIG="$cfg" docker pull -q "$IMAGE" >/dev/null; then
+    rm -rf "$cfg"; die "could not download $IMAGE (is the enrolment token still valid? tokens expire after 24 hours)"
+  fi
+  rm -rf "$cfg"
+fi
+ok "agent image ready"
+
+# ------------------------------------------------------------------------------------------------ configuration
+say "Configuring the agent"
+json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+cat > "$ETC/agent.json" <<EOF
+{
+  "server_url": "$(json_str "$SERVER")",
+  "agent_url": "$(json_str "$AGENT_URL")",
+  "data_dir": "/var/lib/pdp",
+  "pki_dir": "/var/lib/pdp/pki",
+  "day_tz": "$(json_str "$tz")",
+  "source": {"kind": "$source"}
+}
+EOF
+chmod 0644 "$ETC/agent.json"
+{
+  echo "# written by $SERVER/install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  [ -n "$token" ] && echo "PDP_ENROLL_TOKEN=$token"
+  echo "PDP_CA_SHA256=$ca_sha"
+  echo "PDP_AGENT_IMAGE=$IMAGE"
+} > "$ETC/agent.env"
+chmod 0600 "$ETC/agent.env"
+cat > "/etc/systemd/system/$UNIT.service" <<EOF
+[Unit]
+Description=PDP provenance detection agent ($SERVER)
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=$ETC/agent.env
+ExecStartPre=-/usr/bin/docker rm -f $CONTAINER
+ExecStart=/usr/bin/docker run --rm --name $CONTAINER --privileged --pid=host --network=host \\
+  -e PDP_ENROLL_TOKEN -e PDP_CA_SHA256 -e PDP_AGENT_CONFIG=/etc/pdp/agent.json \\
+  -v $ETC/agent.json:/etc/pdp/agent.json:ro -v $DATA:/var/lib/pdp \\
+  \${PDP_AGENT_IMAGE} run
+ExecStop=/usr/bin/docker stop -t 30 $CONTAINER
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+chmod 0644 "/etc/systemd/system/$UNIT.service"
+systemctl daemon-reload
+ok "wrote $ETC/agent.json, $ETC/agent.env and $UNIT.service"
+
+if [ "$start" -eq 0 ]; then
+  say "Done (not started). Start it with: systemctl enable --now $UNIT"
+  exit 0
+fi
+
+# ------------------------------------------------------------------------------------------------ start and enrol
+say "Starting the agent"
+systemctl enable "$UNIT.service" >/dev/null 2>&1
+systemctl restart "$UNIT.service"
+for i in $(seq 1 60); do
+  if [ -s "$DATA/pki/agent.pem" ]; then break; fi
+  if ! systemctl is-active --quiet "$UNIT.service" && [ "$i" -gt 10 ]; then
+    journalctl -u "$UNIT.service" -n 20 --no-pager >&2 || true
+    die "the agent stopped; see the log above (journalctl -u $UNIT -f)"
+  fi
+  sleep 2
+done
+[ -s "$DATA/pki/agent.pem" ] || die "the agent did not enrol within 2 minutes; check: journalctl -u $UNIT -f"
+# the enrolment token is single use and no longer needed
+sed -i '/^PDP_ENROLL_TOKEN=/d' "$ETC/agent.env"
+ok "enrolled with $SERVER"
+
+cat <<EOF
+
+  The PDP agent is running on $(hostname).
+  It now learns this server's normal activity for 8 days (7 days plus 1 day to check the model), then protects it.
+  Follow its progress in the console: $SERVER/#/endpoints
+  Service log: journalctl -u $UNIT -f      Remove: curl -fsSL $SERVER/install.sh | sudo bash -s -- --uninstall
+EOF

@@ -90,7 +90,7 @@ export type UsersResp = { ok: true; sso?: { enabled: boolean; label: string; pas
 // ---------------------------------------------------------------- organisations (0.5)
 
 /** `endpoints` is what counts against `max_endpoints`. */
-export type Org = { id: number | string; name: string; created_at: string; max_endpoints: number; endpoints: number; users: number; pending_invites: number };
+export type Org = { id: number | string; name: string; created_at: string; max_endpoints: number; endpoints: number; endpoint_usage?: number; users: number; pending_invites: number };
 export type OrgResp = { ok: true; org: Org };
 /** A pending invite (admin view). `email` null = anyone with the link; `endpoints` null = all endpoints. */
 export type Invite = { id: number | string; email: string | null; role: Role; endpoints: { id: string; name: string }[] | null;

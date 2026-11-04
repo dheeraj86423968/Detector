@@ -29,6 +29,8 @@ def _include_console_routes():
     from .allowlist import router as allow_router
     from .console import router
     from .orgs import router as org_router
+    from .distrib import router as dist_router
+    app.include_router(dist_router)
     app.include_router(router)
     app.include_router(allow_router)
     app.include_router(org_router)
@@ -626,11 +628,13 @@ def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
         db.q(c, "INSERT INTO enroll_tokens (token, name, created_by, expires_at, kind, dataset, config, org_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
              (token, req.name, s["u"], datetime.now(timezone.utc) + timedelta(hours=24), req.kind, req.dataset, json.dumps(req.config), s["org"]))
     fp = pki.ca_sha256()
-    host = (request.headers.get("host") or "localhost").split(":")[0]
+    from .distrib import agent_image, public_host
+    host = public_host(request)
     server = f"https://{host}" + ("" if os.environ.get("PDP_CONSOLE_PORT", "443") == "443" else f":{os.environ['PDP_CONSOLE_PORT']}")
     agent = f"https://{host}:{os.environ.get('PDP_AGENT_PORT', '8443')}"
-    image = os.environ.get("PDP_AGENT_IMAGE", "pdp/agent:latest")
-    docker = (f"docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host \\\n"
+    image = agent_image(host) or os.environ.get("PDP_AGENT_IMAGE", "pdp/agent:latest")
+    login = f"echo {token} | docker login {host} -u pdp --password-stdin && \\\n" if agent_image(host) else ""
+    docker = (login + f"docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host \\\n"
               f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN={token} -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
               f"  -e PDP_SERVER_URL={server} -e PDP_AGENT_URL={agent} {image} run")
     return {"ok": True, "token": token, "expires_in_hours": 24, "ca_sha256": fp, "server_url": server, "agent_url": agent,

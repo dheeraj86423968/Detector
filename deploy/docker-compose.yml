@@ -60,6 +60,8 @@ services:
       PDP_ORG_MAX_ENDPOINTS: ${PDP_ORG_MAX_ENDPOINTS:-25}
       PDP_INTERNAL_ORG_NAME: ${PDP_INTERNAL_ORG_NAME:-Internal}
       PDP_SIGNUPS_PER_HOUR: ${PDP_SIGNUPS_PER_HOUR:-5}
+      PDP_AGENT_VERSION: ${PDP_AGENT_VERSION:-}            # the published agent the one-line installer pulls (deploy/publish-agent.sh)
+      PDP_PUBLIC_HOSTNAME: ${PDP_PUBLIC_HOSTNAME:-}
       HTTPS_PROXY: ${PDP_HTTPS_PROXY:-}
       NO_PROXY: ${PDP_NO_PROXY:-kms,localhost,127.0.0.1}
     volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
@@ -110,6 +112,16 @@ services:
     restart: unless-stopped
     depends_on: { api: { condition: service_healthy } }
 
+  registry:                  # agent image distribution: clients pull through the gateway (read-only, enrolment token)
+    image: registry:2.8.3
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+    volumes: [ pdp_registry:/var/lib/registry ]
+    ports: [ "127.0.0.1:${PDP_REGISTRY_PUSH_PORT:-5000}:5000" ]   # pushes only from this host (deploy/publish-agent.sh)
+    networks: [ backend, edge ]          # edge only so the loopback push port can be published (backend is internal)
+    restart: unless-stopped
+
   exporter:                  # alert export to the SOC (syslog CEF / webhook); the only backend service with egress
     image: pdp/server:${PDP_VERSION:-dev}
     command: ["exporter"]
@@ -157,6 +169,7 @@ networks:
   edge: {}
 
 volumes:
+  pdp_registry: {}
   pdp_platform_db: {}
   pdp_telemetry_db: {}
   pdp_data: {}

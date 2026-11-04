@@ -168,7 +168,7 @@ function OrgCard({ org, loading, error, reload, canEdit }: { org: Org | null; lo
   if (!org) return null;
   const max = org.max_endpoints || 0;
   const pct = max > 0 ? Math.min(100, (100 * org.endpoints) / max) : 0;
-  const full = max > 0 && org.endpoints >= max;
+  const full = max > 0 && (org.endpoint_usage ?? org.endpoints) >= max;   // the limit also counts unused install tokens
   return (
     <Card title="Organisation" actions={canEdit && <button className="btn sm" onClick={() => setRenaming(true)}><Pencil size={14} />Rename</button>}>
       <dl className="org-facts">
