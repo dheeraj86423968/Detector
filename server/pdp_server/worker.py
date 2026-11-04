@@ -387,6 +387,32 @@ def schedule_refresh():
             log(f"refresh {ep['id']}: fresh days {days} requested")
 
 
+_last_retention = 0.0
+
+
+def apply_retention():
+    """Daily: each organisation's data older than its retention (orgs.retention_days, default 365) is deleted -
+    alerts (and so incidents), window summaries, incident history, the audit log; delivery logs after 90 days."""
+    global _last_retention
+    if time.time() - _last_retention < 86400:
+        return
+    _last_retention = time.time()
+    with db.conn() as c:
+        for o in db.q(c, "SELECT id, retention_days FROM orgs"):
+            cut = f"{int(o['retention_days'])} days"
+            eps = "SELECT id FROM endpoints WHERE org_id=%s"
+            n = 0
+            for q in (f"DELETE FROM alerts WHERE endpoint_id IN ({eps}) AND created_at < now() - %s::interval",
+                      f"DELETE FROM windows WHERE endpoint_id IN ({eps}) AND to_timestamp(start_ns / 1e9) < now() - %s::interval",
+                      "DELETE FROM incident_events WHERE org_id=%s AND at < now() - %s::interval",
+                      "DELETE FROM audit_log WHERE org_id=%s AND at < now() - %s::interval"):
+                with c.cursor() as cur:
+                    cur.execute(q, (o["id"], cut)); n += cur.rowcount
+            if n:
+                log(f"retention {o['id']}: {n} records older than {cut} deleted")
+        db.q(c, "DELETE FROM notify_log WHERE at < now() - interval '90 days'")
+
+
 def job_train(job: dict, device: str):
     if (job.get("params") or {}).get("early"):
         return job_train_early(job, device)
@@ -600,6 +626,8 @@ def main():
             if "train" in kinds:
                 schedule_early_models()
                 schedule_refresh()
+            if "ingest" in kinds:
+                apply_retention()
             time.sleep(5)
             continue
         hb.start(job["id"])

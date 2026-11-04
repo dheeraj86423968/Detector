@@ -21,6 +21,9 @@ ROLE_TEXT = {"admin": "Full access, including users, endpoints and settings",
              "viewer": "Read-only access to incidents, alerts and endpoint status"}
 
 
+MFA_SETUP_PATHS = {"/api/me", "/api/me/mfa/setup", "/api/me/mfa/enable", "/api/logout", "/api/auth/config"}
+
+
 def session(request: Request) -> dict:
     """Valid session cookie AND the user still exists and is enabled: deleting or disabling a user, or changing
     their role or endpoint access, takes effect on the next request. Role and scope come from the database."""
@@ -28,10 +31,13 @@ def session(request: Request) -> dict:
     if not s:
         raise HTTPException(401, "not authenticated")
     with db.conn() as c:
-        u = db.q(c, "SELECT u.role, u.auth, u.disabled, u.endpoints, u.org_id, u.operator, o.disabled AS org_disabled, o.name AS org_name "
+        u = db.q(c, "SELECT u.role, u.auth, u.disabled, u.endpoints, u.org_id, u.operator, u.totp_enabled, o.require_mfa, "
+                    "o.disabled AS org_disabled, o.name AS org_name "
                     "FROM users u JOIN orgs o ON o.id = u.org_id WHERE u.id=%s", (s["u"],), one=True)
         if not u or u["disabled"] or u["org_disabled"]:
             raise HTTPException(401, "user no longer exists or is disabled")
+        if u["require_mfa"] and u["auth"] == "local" and not u["totp_enabled"] and request.url.path not in MFA_SETUP_PATHS:
+            raise HTTPException(403, "your organisation requires two-factor sign-in: set it up under Account first")
         org_eps = {str(r["id"]) for r in db.q(c, "SELECT id FROM endpoints WHERE org_id=%s", (u["org_id"],))}
     scope = org_eps if u["role"] == "admin" or u["endpoints"] is None else org_eps & {str(x) for x in u["endpoints"]}
     return {**s, "r": u["role"], "a": u["auth"], "scope": scope, "org": str(u["org_id"]), "org_name": u["org_name"],

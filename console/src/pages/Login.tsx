@@ -50,23 +50,52 @@ export async function enterConsole(nav: (to: string) => void) {
 export default function Login() {
   const [u, setU] = useState(""); const [p, setP] = useState(""); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
   const [cfg, setCfg] = useState<AuthConfig | null>(null);
+  const [mfa, setMfa] = useState(false); const [code, setCode] = useState("");
+  const [orgEmail, setOrgEmail] = useState("");
   const nav = useNavigate(); const loc = useLocation();
   useEffect(() => {
     api<AuthConfig>("/api/auth/config").then(setCfg).catch(() => setCfg({ sso: false, sso_label: "", password: true, password_policy: "enabled" }));
-    const e = new URLSearchParams(loc.search).get("sso_error");
+    const q = new URLSearchParams(loc.search);
+    const e = q.get("sso_error") || q.get("error");
     if (e) setErr(e);
   }, [loc.search]);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(""); setBusy(true);
-    try { await api("/api/login", { method: "POST", body: JSON.stringify({ username: u, password: p }) }); nav("/overview"); }
+    try {
+      const r = await api<{ mfa_required?: boolean }>("/api/login", { method: "POST", body: JSON.stringify({ username: u, password: p }) });
+      if (r.mfa_required) { setMfa(true); setBusy(false); return; }
+      nav("/overview");
+    }
     catch (ex: any) { setErr(ex.status === 401 ? "Incorrect email or password." : ex.message); setBusy(false); }
   };
+  const submitCode = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(""); setBusy(true);
+    try { await api("/api/login/mfa", { method: "POST", body: JSON.stringify({ code }) }); nav("/overview"); }
+    catch (ex: any) { setErr(ex.message); setBusy(false); setCode(""); }
+  };
+  if (mfa) return (
+    <AuthFrame foot="Lost your phone? Enter one of your recovery codes instead.">
+      <h1 className="login-title">Two-factor sign-in</h1>
+      <form onSubmit={submitCode} className="login-form">
+        <label className="field"><span className="field-label">Code from your authenticator app</span>
+          <input value={code} onChange={e => setCode(e.target.value)} autoComplete="one-time-code" inputMode="text" autoFocus placeholder="123456" /></label>
+        <button className="btn primary block lg" disabled={busy || code.trim().length < 6}>{busy && <Loader2 size={16} className="spin" />}Verify</button>
+      </form>
+      {err && <div className="err">{err}</div>}
+    </AuthFrame>
+  );
   const showPw = !cfg || cfg.password;
   const signup = !!cfg?.signup && cfg.signup !== "off";
   return (
     <AuthFrame foot={signup ? <>New to PDP? <Link to="/signup">Create an organisation</Link></> : "Trouble signing in? Contact your PDP administrator."}>
       <h1 className="login-title">Sign in to the console</h1>
       {cfg?.sso && <a className="btn primary block lg sso" href="/api/oidc/login">{cfg.sso_label || "Sign in with SSO"}</a>}
+      {(cfg as any)?.org_sso && <form className="login-form" onSubmit={e => { e.preventDefault(); window.location.href = `/api/sso/start?email=${encodeURIComponent(orgEmail.trim())}`; }}>
+        <label className="field"><span className="field-label">Work email (single sign-on)</span>
+          <input value={orgEmail} onChange={e => setOrgEmail(e.target.value)} type="email" autoComplete="email" placeholder="you@company.com" /></label>
+        <button className="btn block lg" disabled={!orgEmail.includes("@")}>Continue with your company account</button>
+        <div className="login-or"><span>or with a password</span></div>
+      </form>}
       {cfg?.sso && showPw && <div className="login-or"><span>{cfg.password_policy === "admin-only" ? "Administrator sign-in" : "or sign in with a password"}</span></div>}
       {showPw && <form onSubmit={submit} className="login-form">
         <label className="field"><span className="field-label">Email or username</span>

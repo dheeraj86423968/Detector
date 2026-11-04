@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Building2, LayoutDashboard, ListChecks, LogOut, Server, ShieldAlert, UserCog, Users } from "lucide-react";
+import { Bell, Building2, KeyRound, LayoutDashboard, ListChecks, LogOut, Server, ShieldAlert, UserCog, Users } from "lucide-react";
 import "@fontsource-variable/inter";
 import "./styles.css";
 import { api, Me, MeContext, MeReloadContext, Overview, post, useApi } from "./api";
@@ -19,6 +19,7 @@ import AllowList from "./pages/AllowList";
 import Account from "./pages/Account";
 import Notifications from "./pages/Notifications";
 import WeeklyReport from "./pages/WeeklyReport";
+import Security from "./pages/Security";
 import { Logo } from "./pages/Login";
 
 // the incident page carries the graph libraries; load it on demand
@@ -59,6 +60,7 @@ function Shell() {
               <NavLink to="/allowlist"><ListChecks size={18} />Allow list</NavLink>
               {team && <NavLink to="/team"><Users size={18} />Team</NavLink>}
               {me?.can?.manage_org && <NavLink to="/settings/notifications"><Bell size={18} />Notifications</NavLink>}
+              {me?.can?.manage_org && <NavLink to="/settings/security"><KeyRound size={18} />Security</NavLink>}
               {me.operator && <>
                 <div className="nav-section">Platform</div>
                 <NavLink to="/operator"><Building2 size={18} />Organisations</NavLink>
@@ -74,7 +76,7 @@ function Shell() {
             </div>
           </aside>
           <main className="main">
-            <Suspense fallback={<Loading block />}><Outlet /></Suspense>
+            <Suspense fallback={<Loading block />}>{(me as any).mfa_setup_required && loc.pathname !== "/account" ? <Navigate to="/account" replace /> : <Outlet />}</Suspense>
           </main>
         </div>
       </MeReloadContext.Provider>
@@ -102,6 +104,7 @@ function App() {
             <Route path="/account" element={<Account />} />
             <Route path="/settings/notifications" element={<Notifications />} />
             <Route path="/reports/weekly" element={<WeeklyReport />} />
+            <Route path="/settings/security" element={<Security />} />
             <Route path="/notifications" element={<Navigate to="/settings/notifications" replace />} />
             {/* links from older consoles / notifications */}
             <Route path="/access" element={<Navigate to="/team" replace />} />

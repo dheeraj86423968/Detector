@@ -152,3 +152,18 @@ CREATE INDEX IF NOT EXISTS incident_events_inc ON incident_events (incident_id, 
 
 -- learning progress (0.6): compressed bytes of every baseline upload (what the client's network carried)
 ALTER TABLE upload_batches ADD COLUMN IF NOT EXISTS bytes BIGINT;
+
+-- console audit log (0.6): every change made through the console API and every sign-in attempt
+CREATE TABLE IF NOT EXISTS audit_log (
+  id BIGSERIAL PRIMARY KEY, org_id UUID REFERENCES orgs(id) ON DELETE CASCADE, user_id INT REFERENCES users(id) ON DELETE SET NULL,
+  username TEXT, action TEXT NOT NULL, target TEXT, status INT, ip TEXT, at TIMESTAMPTZ DEFAULT now());
+CREATE INDEX IF NOT EXISTS audit_log_org ON audit_log (org_id, at DESC);
+
+-- login security and retention (0.6)
+ALTER TABLE orgs ADD COLUMN IF NOT EXISTS retention_days INT NOT NULL DEFAULT 365;
+ALTER TABLE orgs ADD COLUMN IF NOT EXISTS require_mfa BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE orgs ADD COLUMN IF NOT EXISTS sso JSONB;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS recovery_codes JSONB;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_last BIGINT;

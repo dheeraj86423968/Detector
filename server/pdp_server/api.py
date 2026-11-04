@@ -34,6 +34,9 @@ def _include_console_routes():
     from .updates import router as updates_router
     from .metrics import router as metrics_router
     from .reports import router as reports_router
+    from .audit import router as audit_router
+    from .mfa import router as mfa_router
+    from .sso import router as sso_router
     app.include_router(dist_router)
     app.include_router(router)
     app.include_router(allow_router)
@@ -42,6 +45,9 @@ def _include_console_routes():
     app.include_router(updates_router)
     app.include_router(metrics_router)
     app.include_router(reports_router)
+    app.include_router(audit_router)
+    app.include_router(mfa_router)
+    app.include_router(sso_router)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")
@@ -98,6 +104,12 @@ def _initialize():
             with open(os.path.join(DATA_DIR, "initial-admin-password.txt"), "w") as f:
                 f.write(pw + "\n")
             os.chmod(os.path.join(DATA_DIR, "initial-admin-password.txt"), 0o600)
+
+
+@app.middleware("http")
+async def audit_middleware(request: Request, call_next):
+    from .audit import middleware
+    return await middleware(request, call_next)
 
 
 @app.middleware("http")
@@ -351,12 +363,14 @@ def _set_session(response: Response, user_id: int, role: str) -> None:
 def auth_config():
     """Public: which sign-in methods the login page offers."""
     from .orgs import signup_mode
-    return {"ok": True, "sso": oidc.enabled(), "sso_label": oidc.LABEL, "password": oidc.PASSWORD_LOGIN != "disabled",
+    with db.conn() as c:
+        org_sso = bool(db.q(c, "SELECT 1 FROM orgs WHERE sso IS NOT NULL AND (sso->>'enabled')::boolean AND NOT disabled LIMIT 1", one=True))
+    return {"ok": True, "sso": oidc.enabled(), "sso_label": oidc.LABEL, "password": oidc.PASSWORD_LOGIN != "disabled", "org_sso": org_sso,
             "password_policy": oidc.PASSWORD_LOGIN, "signup": signup_mode()}
 
 
 @app.post("/api/login")
-def login(req: Login, response: Response):
+def login(req: Login, response: Response, request: Request):
     # every HTTPException is raised after its transaction committed (db.conn() rolls back on exceptions)
     failure = None
     with db.conn() as c:
@@ -377,10 +391,17 @@ def login(req: Login, response: Response):
             failure = (403, "password sign-in is disabled; use single sign-on")
         else:
             db.q(c, "UPDATE users SET failed_logins=0, locked_until=NULL, last_login=now() WHERE id=%s", (u["id"],))
+    from .audit import record, _client_ip
+    record(u["org_id"] if u else None, u["id"] if u else None, ident, "sign-in" if not failure else f"sign-in refused: {failure[1]}",
+           None, failure[0] if failure else 200, _client_ip(request))
     if failure:
         if failure[0] == 401:
             time.sleep(0.5)
         raise HTTPException(*failure)
+    if u.get("totp_enabled"):        # second step: POST /api/login/mfa with a code
+        from .mfa import pending_cookie
+        response.set_cookie("pdp_mfa", pending_cookie(u["id"]), httponly=True, secure=True, samesite="strict", max_age=300, path="/api/login")
+        return {"ok": True, "mfa_required": True}
     _set_session(response, u["id"], u["role"])
     return {"ok": True, "role": u["role"], "username": u["username"]}
 

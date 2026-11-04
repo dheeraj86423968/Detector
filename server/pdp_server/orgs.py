@@ -76,12 +76,14 @@ def check_endpoint_limit(c, org_id: str) -> None:
 
 def me_body(c, uid: int) -> dict:
     from .access import can
-    u = db.q(c, "SELECT u.*, o.name AS org_name FROM users u JOIN orgs o ON o.id=u.org_id WHERE u.id=%s", (uid,), one=True)
+    u = db.q(c, "SELECT u.*, o.name AS org_name, o.require_mfa FROM users u JOIN orgs o ON o.id=u.org_id WHERE u.id=%s", (uid,), one=True)
     s = {"r": u["role"], "op": bool(u["operator"])}
     return {"ok": True, "role": u["role"], "username": u["username"], "display_name": u["display_name"] or u["username"],
             "user_id": u["id"], "auth": u["auth"], "email": u["email"],
             "endpoints": None if u["role"] == "admin" else u["endpoints"], "can": can(s),
-            "org": {"id": str(u["org_id"]), "name": u["org_name"]}, "operator": bool(u["operator"])}
+            "org": {"id": str(u["org_id"]), "name": u["org_name"]}, "operator": bool(u["operator"]),
+            "mfa_enabled": bool(u.get("totp_enabled")),
+            "mfa_setup_required": bool(u.get("require_mfa")) and u["auth"] == "local" and not u.get("totp_enabled")}
 
 
 def _sign_in(response: Response, uid: int, role: str) -> None:
@@ -272,6 +274,8 @@ def accept_invite(token: str, req: Accept, response: Response):
 def _org_out(c, org_id: str) -> dict:
     o = db.q(c, "SELECT * FROM orgs WHERE id=%s", (org_id,), one=True)
     return {"id": str(o["id"]), "name": o["name"], "created_at": o["created_at"], "max_endpoints": o["max_endpoints"],
+            "retention_days": o.get("retention_days"), "require_mfa": bool(o.get("require_mfa")),
+            "sso": _sso_out(o.get("sso")),
             "endpoints": db.q(c, "SELECT count(*) AS n FROM endpoints WHERE org_id=%s AND phase<>'retired'", (org_id,), one=True)["n"],
             "endpoint_usage": endpoint_usage(c, org_id),
             "users": db.q(c, "SELECT count(*) AS n FROM users WHERE org_id=%s AND NOT disabled", (org_id,), one=True)["n"],
@@ -286,14 +290,31 @@ def get_org(s=Depends(session)):
 
 
 class OrgPatch(BaseModel):
-    name: str = Field(max_length=200)
+    name: str | None = Field(default=None, max_length=200)
+    retention_days: int | None = None
+    require_mfa: bool | None = None
+
+
+def _sso_out(sso: dict | None) -> dict | None:
+    if not sso:
+        return None
+    return {k: v for k, v in sso.items() if k != "client_secret"} | {"has_secret": bool(sso.get("client_secret"))}
 
 
 @router.patch("/api/org")
 def patch_org(req: OrgPatch, s=Depends(admin)):
-    name = _name(req.name, "Organisation name", 2, 80)
+    sets, vals = [], []
+    if req.name is not None:
+        sets.append("name=%s"); vals.append(_name(req.name, "Organisation name", 2, 80))
+    if req.retention_days is not None:
+        if not 30 <= req.retention_days <= 3650:
+            raise HTTPException(400, "keep data between 30 and 3650 days")
+        sets.append("retention_days=%s"); vals.append(req.retention_days)
+    if req.require_mfa is not None:
+        sets.append("require_mfa=%s"); vals.append(req.require_mfa)
     with db.conn() as c:
-        db.q(c, "UPDATE orgs SET name=%s WHERE id=%s", (name, s["org"]))
+        if sets:
+            db.q(c, f"UPDATE orgs SET {', '.join(sets)} WHERE id=%s", (*vals, s["org"]))
         return {"ok": True, "org": _org_out(c, s["org"])}
 
 

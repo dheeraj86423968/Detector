@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { post, useMe } from "../api";
+import { post, useMe, useReloadMe } from "../api";
 import { initials, ROLE_INFO } from "../format";
 import { Card, Field, PageHeader, useToast } from "../ui";
 
@@ -33,6 +33,7 @@ export default function Account() {
           <div><dt>Sign-in method</dt><dd>{me.auth === "oidc" ? "Single sign-on" : "Password"}</dd></div>
         </dl>
       </Card>
+      {me.auth !== "oidc" && <TwoFactor enabled={!!(me as any).mfa_enabled} required={!!(me as any).mfa_setup_required} />}
       {me.auth === "oidc" ? (
         <Card title="Password"><p className="muted">You sign in with single sign-on. Your password and role are managed by your identity provider.</p></Card>
       ) : (
@@ -47,5 +48,51 @@ export default function Account() {
         </Card>
       )}
     </div>
+  );
+}
+
+function TwoFactor({ enabled, required }: { enabled: boolean; required: boolean }) {
+  const toast = useToast(); const reload = useReloadMe();
+  const [setup, setSetup] = useState<{ secret: string; otpauth_uri: string } | null>(null);
+  const [code, setCode] = useState(""); const [codes, setCodes] = useState<string[] | null>(null);
+  const [off, setOff] = useState({ password: "", code: "" }); const [err, setErr] = useState("");
+  const start = async () => { setErr(""); try { setSetup(await post("/api/me/mfa/setup")); } catch (e: any) { setErr(e.message); } };
+  const enable = async () => {
+    setErr("");
+    try { const r = await post<{ recovery_codes: string[] }>("/api/me/mfa/enable", { code }); setCodes(r.recovery_codes); setSetup(null); toast("Two-factor sign-in is on"); reload?.(); }
+    catch (e: any) { setErr(e.message); }
+  };
+  const disable = async () => {
+    setErr("");
+    try { await post("/api/me/mfa/disable", off); toast("Two-factor sign-in is off"); setOff({ password: "", code: "" }); reload?.(); }
+    catch (e: any) { setErr(e.message); }
+  };
+  return (
+    <Card title="Two-factor sign-in">
+      {required && !enabled && <div className="banner warn">Your organisation requires two-factor sign-in. Set it up to continue using the console.</div>}
+      {codes ? (<>
+        <p>Keep these recovery codes somewhere safe (a password manager). Each works once if you lose your phone; they are not shown again.</p>
+        <pre className="codes">{codes.join("\n")}</pre>
+        <button className="btn" onClick={() => setCodes(null)}>I have saved them</button>
+      </>) : enabled ? (<>
+        <p className="muted">On: after your password, the console asks for a code from your authenticator app.</p>
+        <div className="form narrow-form">
+          <Field label="Password"><input type="password" value={off.password} onChange={e => setOff({ ...off, password: e.target.value })} autoComplete="current-password" /></Field>
+          <Field label="Current code"><input value={off.code} onChange={e => setOff({ ...off, code: e.target.value })} autoComplete="one-time-code" /></Field>
+          <div><button className="btn" disabled={!off.password || off.code.length < 6} onClick={disable}>Turn off</button></div>
+        </div>
+      </>) : setup ? (<>
+        <p>Add PDP to your authenticator app (Google Authenticator, Microsoft Authenticator, 1Password, ...): open <a href={setup.otpauth_uri}>this link</a> on your phone, or enter the key by hand.</p>
+        <Field label="Key"><code className="code-inline mono">{setup.secret.match(/.{1,4}/g)!.join(" ")}</code></Field>
+        <div className="form narrow-form">
+          <Field label="Code shown by the app"><input value={code} onChange={e => setCode(e.target.value)} autoComplete="one-time-code" placeholder="123456" /></Field>
+          <div><button className="btn primary" disabled={code.trim().length !== 6} onClick={enable}>Turn on</button></div>
+        </div>
+      </>) : (<>
+        <p className="muted">Off. With two-factor sign-in a stolen password alone does not open your account.</p>
+        <button className="btn primary" onClick={start}>Set up two-factor sign-in</button>
+      </>)}
+      {err && <div className="err">{err}</div>}
+    </Card>
   );
 }

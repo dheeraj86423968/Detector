@@ -142,8 +142,21 @@ endpoint's measured bytes per event), rate per day, expected total, the agent's 
 early model in use (hours, rules-only or all detection types) and when the next model comes. client-vm-02: 7.3 MB so
 far, about 200 MB expected (its first hours include the install's burst).
 
-### 10. Login security — status: todo
+### 10. Login security — status: done (server 0.6; 2026-11-04)
 MFA (TOTP), per-org SSO (Google / Microsoft OIDC), console audit log, per-org data retention setting.
+
+Result: two-factor sign-in for password accounts (TOTP with any authenticator app, one-step clock skew, codes
+accepted once, ten single-use recovery codes; the password step returns only a 5-minute second-step cookie) and an
+organisation setting that requires it (users without it can only reach the setup). Per-organisation single sign-on
+(Google Workspace, Microsoft Entra ID or any OIDC provider) by email domain: code flow with PKCE, ID token verified
+against the provider's keys, verified email in the organisation's domains, users created only inside that
+organisation; domains unique across organisations, public mail domains refused. Audit log of every console change
+(method, route, ids, result, IP; no request bodies) and every sign-in, per organisation (Security page). Data
+retention per organisation (30-3650 days, default 365), applied nightly. Tests: tests/unit/test_login_security.py
+(22), tests/e2e/security_e2e.py (27) and retention_check.py on staging.
+Open: proving domain ownership (DNS TXT) before an organisation's SSO is used; revoking existing sessions when a
+password changes (sessions are signed cookies valid 12 h); the API reaches identity providers only through the egress
+proxy (profile "sso"), whose allow list must list the providers' hosts.
 
 ## Later
 - Response actions (opt-in kill process / network isolate).

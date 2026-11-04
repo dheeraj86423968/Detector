@@ -205,6 +205,19 @@ registry}` when the endpoint should update now; `POST /v1/endpoints/{id}/pull-to
 Endpoint overview `health` adds `disk_free_pct`, `disk_free_mb`, `spool_mb`, `entities`, `update {state, target,
 failed, updater}`; `issues` lists disk, event loss, falling behind, failed update, host needing `--upgrade`.
 
+## Sign-in security, audit, retention (0.6)
+- `POST /api/login` answers `{mfa_required: true}` (and a 5-minute `pdp_mfa` cookie) for accounts with two-factor
+  sign-in; `POST /api/login/mfa {code}` (a TOTP code or a recovery code) completes it.
+- `POST /api/me/mfa/setup` → `{secret, otpauth_uri}`; `POST /api/me/mfa/enable {code}` → `{recovery_codes}` (shown
+  once); `POST /api/me/mfa/disable {password, code}`. `/api/me` adds `mfa_enabled`, `mfa_setup_required`.
+- `PATCH /api/org {retention_days (30-3650), require_mfa}`; `GET /api/org` returns them and `sso` (without secret).
+- `PUT /api/org/sso {provider: google|microsoft|oidc, tenant?, issuer?, client_id, client_secret?, domains,
+  default_role: viewer|analyst, admin_emails, enabled}`, `DELETE /api/org/sso`; sign-in: `GET /api/sso/start?email=`
+  → provider → `GET /api/sso/callback`. `/api/auth/config` adds `org_sso`.
+- `GET /api/audit?limit=` (admins): `{entries: [{at, who, action, target, status, ip}]}`.
+- `POST /api/incidents/{id}/assign {user_id|null}`, `POST /api/incidents/{id}/notes {text}`; incident detail adds
+  `assignee`, `history`, `assignable`; `GET /api/incidents?assignee=me|none`. `GET /api/reports/weekly`.
+
 ## Notifications (0.6, admins)
 `GET /api/notifications/channels` → `{channels: [{id, name, kind, target, has_secret, min_severity, events, every_alert,
 enabled, last_ok_at, last_error, last_error_at, ...}], email_available, notifier_running}` (secrets are never returned).
