@@ -123,7 +123,7 @@ def main():
     ap.add_argument("--seed", type=int, default=0); ap.add_argument("--device", default="cuda")
     ap.add_argument("--deploy", action="store_true"); ap.add_argument("--json")
     a = ap.parse_args()
-    from pdp_engine.bundle import sha256, sign_manifest, write_manifest
+    from pdp_engine.bundle import sha256, write_manifest
     from pdp_server import db, pki
     from pdp_server.worker import store_for
     with db.conn() as c:
@@ -142,7 +142,7 @@ def main():
     man = json.load(open(os.path.join(out, "manifest.json")))
     man["bundle_id"] = bid
     write_manifest(out, {k: v for k, v in man.items() if k not in ("sha256", "format", "created")})
-    sign_manifest(out, pki.signing_private_pem())
+    pki.sign_bundle(out)
     manifest = json.load(open(os.path.join(out, "manifest.json")))
     with db.conn() as c:
         db.q(c, "INSERT INTO bundles (id, endpoint_id, path, sha256, manifest) VALUES (%s,%s,%s,%s,%s)",

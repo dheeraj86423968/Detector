@@ -84,14 +84,92 @@ Done in 0.2:
   heartbeats, and jobs of a crashed worker are re-queued.
 * **Access control.** Users and roles (admin / analyst) managed in the console; password change; retire endpoints.
 
+Done in 0.3:
+* **Signing keys in a KMS** (see "Signing keys in a KMS" below): the agent CA key and the bundle-signing key live
+  in OpenBao / Vault; the platform can only ask for signatures; every signature carries a key id.
+* **Single sign-on** (OIDC, see "Single sign-on" below), sign-in back-off, sessions re-checked on every request
+  (deleting, disabling or re-roling a user takes effect at once).
+
 Still to do per customer:
-* Move the bundle-signing key out of the `pdp_pki` volume into a secrets manager / KMS; key-id in the manifest.
 * Replace the *console* server certificate with the customer's CA or ACME for the real hostname (`PDP_HOSTNAMES`;
   the server certificate is re-issued automatically when new names are added). Keep the internal mTLS agent CA.
 * Back up both Postgres instances (platform + telemetry) with PITR, or use managed Postgres.
-* SSO/OIDC, and per-tenant isolation if multi-tenant.
+* Per-tenant isolation if multi-tenant.
+* Restrict who can reach the console port (firewall / security group / VPN); it should not face the internet.
 * Scale: one GPU server serves tens of endpoints (training a sandbox-size baseline takes ~5 s on the L40S; a
   DARPA-size week minutes). Add a second `worker-train` for parallel retrains if needed.
+
+## Signing keys in a KMS
+
+Two private keys protect the fleet: the **agent CA** (agents and the gateway authenticate with certificates it
+issues) and the **bundle-signing key** (agents run only models signed by it). With `PDP_KMS=transit` (the default
+that `bringup.sh` writes for new installs and on the next bring-up of an existing one) both live in a
+Vault-compatible KMS and never on the platform's disks:
+
+| | KMS engine | what the platform can do (policy `pdp-signer`) |
+|---|---|---|
+| bundle-signing key `pdp-bundle-signing` | transit, ed25519, non-exportable | `transit/sign`, read the public key |
+| agent CA | pki | `pki/sign/pdp-agent` (CN forced to the endpoint id), `pki/sign/pdp-server` (gateway TLS) |
+
+The service token cannot export, import, rotate or delete keys, issue certificates without a CSR, or read
+policies (`tools/kms_setup.py` verifies each of these refusals). Every request is in the KMS audit log
+(bundled: `docker exec pdp-kms-1 cat /openbao/logs/audit.log`). `signature.json` records the signing key
+(`kid`, e.g. `transit:pdp-bundle-signing:v1`) and the platform verifies every signature before publishing a bundle.
+
+**Bundled OpenBao** (compose profile `kms`, `quay.io/openbao/openbao:2.1.0`, internal network only):
+`bringup.sh` initialises it, imports the existing keys - enrolled agents keep their CA fingerprint and bundle
+key, nothing to re-enrol - verifies signing end to end, moves the old key files from the `pdp_pki` volume to
+`deploy/kms-secrets/backup/<time>/` and revokes the root token. Then:
+* **Take `deploy/kms-secrets/backup/` offline** (it is the only key copy outside the KMS) and delete it from the host.
+* `deploy/kms-secrets/unseal/key` is mounted only into the kms container, which unseals itself on start.
+  Keep an offline copy: without it the KMS data cannot be opened after a restart. For stricter setups use
+  several key shares and manual unseal, or an external KMS.
+* The service token (`deploy/kms-secrets/token/token`, mounted read-only into api and worker-train) is a 30-day
+  periodic token the platform renews itself. New token: `kms_setup.py --rotate-token` with an admin token.
+* Admin access later: `docker exec -it pdp-kms-1 bao operator generate-root` with the unseal key.
+* OpenBao 2 does not lock memory: disable swap or encrypt it on the server.
+
+**External Vault / OpenBao** (customer-managed, HSM-backed, ...): set `PDP_KMS=transit`,
+`PDP_KMS_ADDR=https://vault.corp:8200`, `PDP_KMS_CACERT` (and `PDP_KMS_NAMESPACE` on Vault Enterprise), leave
+`COMPOSE_PROFILES` without `kms`, put an admin token in `deploy/kms-secrets/admin-token` and set
+`PDP_KMS_ADMIN_TOKEN_FILE=1` for the bring-up that configures it (engines, keys, roles, policy, service token);
+remove the admin token afterwards. Add the KMS host to `PDP_NO_PROXY`.
+
+Rollback: restore the `pdp_pki` volume from a backup taken before the migration and set `PDP_KMS=file`.
+
+## Single sign-on
+
+The console signs users in with OpenID Connect (authorization code + PKCE; Okta, Entra ID, Google Workspace,
+Keycloak, Auth0, ADFS, Dex, ...). Register a confidential web client at the IdP with redirect URI
+`https://<console host>/api/oidc/callback` and a groups claim in the ID token, then in `deploy/.env`:
+
+```
+PDP_OIDC_ISSUER=https://login.microsoftonline.com/<tenant>/v2.0
+PDP_OIDC_CLIENT_ID=...
+PDP_OIDC_CLIENT_SECRET=...
+PDP_OIDC_REDIRECT_URL=https://pdp.example.com/api/oidc/callback
+PDP_OIDC_ADMIN_GROUPS=<IdP group for PDP admins>
+PDP_OIDC_ANALYST_GROUPS=<IdP group for analysts>
+PDP_PASSWORD_LOGIN=admin-only           # keep a local break-glass admin; or "disabled"
+COMPOSE_PROFILES=kms,sso                # starts the egress proxy
+PDP_HTTPS_PROXY=http://egress:3128      # the api reaches the IdP only through it
+```
+
+* Roles come from IdP groups at every sign-in (`PDP_OIDC_GROUPS_CLAIM`, default `groups`); a user in no mapped
+  group is refused and an existing account of theirs is disabled, ending its open sessions.
+  `PDP_OIDC_DEFAULT_ROLE=analyst` admits every authenticated user as analyst instead.
+* An IdP identity is bound to its issuer + subject. It never takes over an existing local account of the same
+  username (sign-in is refused until an admin renames or deletes that account).
+* The ID token is verified against the IdP's JWKS (RS/PS/ES 256-512; `none` and HS* refused), with issuer,
+  audience, expiry and nonce checks. State, nonce and the PKCE verifier live in a signed 10-minute cookie, so a
+  callback URL cannot be replayed.
+* Logout also ends the IdP session (RP-initiated logout) when the IdP supports it.
+* The backend network has no internet route. The `egress` service (profile `sso`) is an allow-listed CONNECT proxy
+  that relays only to the issuer's host (`PDP_EGRESS_ALLOW` to override); TLS stays end to end.
+* Test: `tests/e2e/sso/run_sso_e2e.sh` runs a throwaway Keycloak realm and a real browser through 21 checks
+  (roles, refusal, account takeover, replay, role changes, logout).
+
+Password sign-in (local accounts): 5 failures, then 30 s, 60 s, ... up to 15 min back-off per account.
 
 ## 5. Desktop app
 
@@ -109,7 +187,7 @@ On the staging fleet, after a baseline week:
 ## Recommended order
 
 1. ~~Linux eBPF on a stock kernel, cross-checked against strace~~ (done on the L40S host); next: libbpf CO-RE packaging.
-2. Server hardening: ~~secrets~~, ~~SIEM export~~, ~~healthz~~ (done); real console cert, backups, signing key in KMS.
+2. Server hardening: ~~secrets~~, ~~SIEM export~~, ~~healthz~~, ~~signing keys in a KMS~~, ~~SSO~~ (done); real console cert, backups.
 3. Windows ETW on a Windows VM (§2); Windows service packaging (§3).
 4. Desktop installers via CI (§5).
 5. Acceptance validation with Atomic Red Team on the staging fleet (§6).

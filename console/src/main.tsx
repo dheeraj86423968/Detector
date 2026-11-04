@@ -19,7 +19,11 @@ function Shell() {
   const nav = useNavigate();
   const [me, setMe] = useState<Me | null>(null);
   useEffect(() => { api<Me>("/api/me").then(setMe).catch(() => setMe(null)); }, []);
-  const logout = async () => { await api("/api/logout", { method: "POST" }); nav("/login"); };
+  const logout = async () => {
+    const r = await api<{ end_session_url?: string | null }>("/api/logout", { method: "POST" }).catch(() => null);
+    if (r?.end_session_url) window.location.href = r.end_session_url;   // also end the IdP session
+    else nav("/login");
+  };
   return (
     <MeContext.Provider value={me}>
       <div className="shell">

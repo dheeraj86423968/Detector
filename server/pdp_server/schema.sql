@@ -4,6 +4,16 @@
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('admin','analyst')), created_at TIMESTAMPTZ DEFAULT now());
+-- 0.3: single sign-on accounts (auth='oidc', bound to issuer + subject; no usable password) and sign-in back-off
+ALTER TABLE users ADD COLUMN IF NOT EXISTS auth TEXT NOT NULL DEFAULT 'local';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS oidc_issuer TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS oidc_sub TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_logins INT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT false;
+CREATE UNIQUE INDEX IF NOT EXISTS users_oidc ON users (oidc_issuer, oidc_sub) WHERE oidc_sub IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS enroll_tokens (
   token TEXT PRIMARY KEY, name TEXT NOT NULL, created_by INT REFERENCES users(id),

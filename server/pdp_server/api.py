@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 import psycopg2.extras
 
-from . import auth, db, pki
+from . import auth, db, oidc, pki
 from .graphs import alert_graph, endpoint_timeline, incident_graph
 
 app = FastAPI(title="PDP", docs_url=None, redoc_url=None, openapi_url=None)
@@ -275,10 +275,16 @@ def healthz():
 
 # ============================================================================ console side
 def session(request: Request) -> dict:
+    """Valid session cookie AND the user still exists: deleting a user or changing their role takes effect on the
+    next request, not when the 12 h cookie expires. The role comes from the database, not from the cookie."""
     s = auth.read_session(request.cookies.get("pdp_session"))
     if not s:
         raise HTTPException(401, "not authenticated")
-    return s
+    with db.conn() as c:
+        u = db.q(c, "SELECT role, auth, disabled FROM users WHERE id=%s", (s["u"],), one=True)
+    if not u or u["disabled"]:
+        raise HTTPException(401, "user no longer exists or is disabled")
+    return {**s, "r": u["role"], "a": u["auth"]}
 
 
 def admin(s=Depends(session)):
@@ -292,30 +298,126 @@ class Login(BaseModel):
     password: str
 
 
+def _set_session(response: Response, user_id: int, role: str) -> None:
+    response.set_cookie("pdp_session", auth.make_session(user_id, role), httponly=True, secure=True, samesite="strict",
+                        max_age=auth.SESSION_TTL, path="/")
+
+
+@app.get("/api/auth/config")
+def auth_config():
+    """Public: which sign-in methods the login page offers."""
+    return {"ok": True, "sso": oidc.enabled(), "sso_label": oidc.LABEL, "password": oidc.PASSWORD_LOGIN != "disabled",
+            "password_policy": oidc.PASSWORD_LOGIN}
+
+
 @app.post("/api/login")
 def login(req: Login, response: Response):
+    # every HTTPException is raised after its transaction committed (db.conn() rolls back on exceptions)
+    failure = None
     with db.conn() as c:
         u = db.q(c, "SELECT * FROM users WHERE username=%s", (req.username,), one=True)
-    if not u or not auth.verify_password(req.password, u["password_hash"]):
-        time.sleep(0.5)
-        raise HTTPException(401, "bad credentials")
-    response.set_cookie("pdp_session", auth.make_session(u["id"], u["role"]), httponly=True, secure=True, samesite="strict", max_age=auth.SESSION_TTL)
+        if u and u.get("locked_until") and u["locked_until"] > datetime.now(timezone.utc):
+            failure = (429, "too many failed sign-ins; try again later")
+        elif not u or u["auth"] != "local" or u["disabled"] or not auth.verify_password(req.password, u["password_hash"]):
+            if u:   # back off: 5 failures free, then 30 s, 60 s, ... up to 15 min (reset by a successful sign-in)
+                db.q(c, "UPDATE users SET failed_logins = failed_logins + 1, locked_until = CASE WHEN failed_logins + 1 >= 5 "
+                        "THEN now() + make_interval(secs => LEAST(900, 30 * power(2, failed_logins + 1 - 5))) END WHERE id=%s", (u["id"],))
+            failure = (401, "bad credentials")
+        elif not oidc.password_login_allowed(u["role"]):
+            failure = (403, "password sign-in is disabled; use single sign-on")
+        else:
+            db.q(c, "UPDATE users SET failed_logins=0, locked_until=NULL, last_login=now() WHERE id=%s", (u["id"],))
+    if failure:
+        if failure[0] == 401:
+            time.sleep(0.5)
+        raise HTTPException(*failure)
+    _set_session(response, u["id"], u["role"])
     return {"ok": True, "role": u["role"], "username": u["username"]}
 
 
+def _console_base(request: Request) -> str:
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    return f"{proto}://{request.headers.get('host', request.url.netloc)}"
+
+
+@app.get("/api/oidc/login")
+def oidc_login(request: Request):
+    from fastapi.responses import RedirectResponse
+    if not oidc.enabled():
+        raise HTTPException(404, "single sign-on is not configured")
+    redirect = oidc.REDIRECT_URL or _console_base(request) + "/api/oidc/callback"
+    try:
+        url, state = oidc.start(redirect)
+    except oidc.OIDCError as e:
+        return _sso_error(str(e))
+    r = RedirectResponse(url, status_code=302)
+    # Lax, not Strict: the IdP's redirect back to the callback is a cross-site navigation
+    r.set_cookie("pdp_oidc", state, httponly=True, secure=True, samesite="lax", max_age=oidc.STATE_TTL, path="/api/oidc")
+    return r
+
+
+def _sso_error(msg: str):
+    from fastapi.responses import RedirectResponse
+    import urllib.parse as _u
+    r = RedirectResponse("/#/login?sso_error=" + _u.quote(msg[:300]), status_code=302)
+    r.delete_cookie("pdp_oidc", path="/api/oidc")
+    return r
+
+
+@app.get("/api/oidc/callback")
+def oidc_callback(request: Request, code: str | None = None, state: str | None = None, error: str | None = None,
+                  error_description: str | None = None):
+    from fastapi.responses import RedirectResponse
+    if not oidc.enabled():
+        raise HTTPException(404, "single sign-on is not configured")
+    if error:
+        return _sso_error(f"the identity provider refused the sign-in: {error_description or error}")
+    try:
+        ident = oidc.finish(code or "", state or "", request.cookies.get("pdp_oidc"))
+    except oidc.OIDCError as e:
+        return _sso_error(str(e))
+    if not ident["role"]:
+        with db.conn() as c:   # lost access at the IdP: also end any session the account still has
+            db.q(c, "UPDATE users SET disabled=true WHERE oidc_issuer=%s AND oidc_sub=%s", (ident["iss"], ident["sub"]))
+        return _sso_error(f"{ident['username']} is not in a group that has access to PDP")
+    with db.conn() as c:
+        u = db.q(c, "SELECT id FROM users WHERE oidc_issuer=%s AND oidc_sub=%s", (ident["iss"], ident["sub"]), one=True)
+        if u:
+            db.q(c, "UPDATE users SET role=%s, email=%s, disabled=false, last_login=now() WHERE id=%s", (ident["role"], ident["email"], u["id"]))
+            uid = u["id"]
+        else:
+            clash = db.q(c, "SELECT auth FROM users WHERE username=%s", (ident["username"],), one=True)
+            if clash:   # never bind an IdP identity to an existing local account (or another IdP subject)
+                return _sso_error(f"the username {ident['username']} is already used by another PDP account; an admin must rename or delete it")
+            uid = db.q(c, "INSERT INTO users (username, password_hash, role, auth, oidc_issuer, oidc_sub, email, last_login) "
+                          "VALUES (%s,'!',%s,'oidc',%s,%s,%s,now()) RETURNING id",
+                       (ident["username"], ident["role"], ident["iss"], ident["sub"], ident["email"]), one=True)["id"]
+    r = RedirectResponse("/#/endpoints", status_code=302)
+    _set_session(r, uid, ident["role"])
+    r.delete_cookie("pdp_oidc", path="/api/oidc")
+    return r
+
+
 @app.post("/api/logout")
-def logout(response: Response):
-    response.delete_cookie("pdp_session")
-    return {"ok": True}
+def logout(request: Request, response: Response):
+    s = auth.read_session(request.cookies.get("pdp_session"))
+    response.delete_cookie("pdp_session", path="/")
+    end = None
+    if s and oidc.enabled():
+        with db.conn() as c:
+            u = db.q(c, "SELECT auth FROM users WHERE id=%s", (s["u"],), one=True)
+        if u and u["auth"] == "oidc":
+            end = oidc.end_session_url(_console_base(request) + "/")
+    return {"ok": True, "end_session_url": end}
 
 
 @app.get("/api/me")
 def me(s=Depends(session)):
     with db.conn() as c:
-        u = db.q(c, "SELECT id, username, role FROM users WHERE id=%s", (s["u"],), one=True)
+        u = db.q(c, "SELECT id, username, role, auth, email FROM users WHERE id=%s", (s["u"],), one=True)
     if not u:
         raise HTTPException(401, "user no longer exists")
-    return {"ok": True, "role": u["role"], "username": u["username"], "user_id": u["id"]}
+    return {"ok": True, "role": u["role"], "username": u["username"], "user_id": u["id"], "auth": u["auth"], "email": u["email"]}
 
 
 class PasswordChange(BaseModel):
@@ -325,6 +427,8 @@ class PasswordChange(BaseModel):
 
 @app.post("/api/me/password")
 def change_password(req: PasswordChange, s=Depends(session)):
+    if s["a"] != "local":
+        raise HTTPException(400, "this account signs in with single sign-on; its password is managed by the identity provider")
     if len(req.new_password) < 10:
         raise HTTPException(400, "the new password must have at least 10 characters")
     with db.conn() as c:
@@ -338,7 +442,7 @@ def change_password(req: PasswordChange, s=Depends(session)):
 @app.get("/api/users")
 def list_users(s=Depends(admin)):
     with db.conn() as c:
-        rows = db.q(c, "SELECT id, username, role, created_at FROM users ORDER BY username")
+        rows = db.q(c, "SELECT id, username, role, auth, email, created_at, last_login FROM users ORDER BY username")
     return {"ok": True, "users": [dict(r) for r in rows]}
 
 

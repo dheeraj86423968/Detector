@@ -2,6 +2,13 @@ name: pdp
 # Server stack. Bring up with ./deploy/bringup.sh (generates PDP_DB_PASSWORD into deploy/.env on first run).
 x-db-env: &db-env
   PDP_DB_PASSWORD: ${PDP_DB_PASSWORD:?set PDP_DB_PASSWORD in deploy/.env (deploy/bringup.sh generates one)}
+# Key management (docs/DEPLOYMENT.md "Signing keys in a KMS"): PDP_KMS=transit keeps the CA and bundle-signing keys in
+# the KMS (bundled OpenBao, compose profile "kms", or an external Vault/OpenBao via PDP_KMS_ADDR).
+x-kms-env: &kms-env
+  PDP_KMS: ${PDP_KMS:-file}
+  PDP_KMS_ADDR: ${PDP_KMS_ADDR:-http://kms:8200}
+  PDP_KMS_CACERT: ${PDP_KMS_CACERT:-}
+  PDP_KMS_NAMESPACE: ${PDP_KMS_NAMESPACE:-}
 
 services:
   platform-db:
@@ -27,13 +34,31 @@ services:
     image: pdp/server:${PDP_VERSION:-dev}
     build: { context: .., dockerfile: deploy/docker/server.Dockerfile }
     environment:
-      <<: *db-env
+      <<: [*db-env, *kms-env]
       PDP_HOSTNAMES: ${PDP_HOSTNAMES:-localhost,gateway}
       PDP_API_WORKERS: ${PDP_API_WORKERS:-4}
-    volumes: [ pdp_data:/data, pdp_pki:/pki ]
+      # single sign-on (docs/DEPLOYMENT.md "Single sign-on"); the IdP is reached through the egress service
+      PDP_OIDC_ISSUER: ${PDP_OIDC_ISSUER:-}
+      PDP_OIDC_CLIENT_ID: ${PDP_OIDC_CLIENT_ID:-}
+      PDP_OIDC_CLIENT_SECRET: ${PDP_OIDC_CLIENT_SECRET:-}
+      PDP_OIDC_REDIRECT_URL: ${PDP_OIDC_REDIRECT_URL:-}
+      PDP_OIDC_SCOPES: ${PDP_OIDC_SCOPES:-openid profile email}
+      PDP_OIDC_GROUPS_CLAIM: ${PDP_OIDC_GROUPS_CLAIM:-groups}
+      PDP_OIDC_USERNAME_CLAIM: ${PDP_OIDC_USERNAME_CLAIM:-preferred_username}
+      PDP_OIDC_ADMIN_GROUPS: ${PDP_OIDC_ADMIN_GROUPS:-}
+      PDP_OIDC_ANALYST_GROUPS: ${PDP_OIDC_ANALYST_GROUPS:-}
+      PDP_OIDC_DEFAULT_ROLE: ${PDP_OIDC_DEFAULT_ROLE:-none}
+      PDP_OIDC_LABEL: ${PDP_OIDC_LABEL:-Sign in with SSO}
+      PDP_PASSWORD_LOGIN: ${PDP_PASSWORD_LOGIN:-enabled}
+      HTTPS_PROXY: ${PDP_HTTPS_PROXY:-}
+      NO_PROXY: ${PDP_NO_PROXY:-kms,localhost,127.0.0.1}
+    volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
     networks: [ backend ]
     restart: unless-stopped
-    depends_on: { platform-db: { condition: service_healthy }, telemetry-db: { condition: service_healthy } }
+    depends_on:
+      platform-db: { condition: service_healthy }
+      telemetry-db: { condition: service_healthy }
+      kms: { condition: service_healthy, required: false }
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz', timeout=5).status == 200 else 1)"]
       interval: 10s
@@ -53,9 +78,9 @@ services:
   worker-train:
     image: pdp/server:${PDP_VERSION:-dev}
     command: ["worker", "--kinds", "train,sim", "--device", "${PDP_TRAIN_DEVICE:-cpu}"]
-    environment: { <<: *db-env }
+    environment: { <<: [*db-env, *kms-env] }
     shm_size: 8g
-    volumes: [ pdp_data:/data, pdp_pki:/pki ]
+    volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
     networks: [ backend ]
     restart: unless-stopped
     depends_on: { api: { condition: service_healthy } }
@@ -86,6 +111,33 @@ services:
     depends_on: { api: { condition: service_healthy } }
     profiles: [ export ]
 
+  egress:                    # allow-listed CONNECT proxy: the api's only route to the identity provider
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["python", "-m", "pdp_server.egress"]
+    environment:
+      PDP_EGRESS_ALLOW: ${PDP_EGRESS_ALLOW:-}
+      PDP_OIDC_ISSUER: ${PDP_OIDC_ISSUER:-}
+    networks: [ backend, edge ]
+    restart: unless-stopped
+    profiles: [ sso ]
+
+  kms:                       # bundled KMS (OpenBao): CA + bundle-signing keys; set up by tools/kms_setup.py
+    image: quay.io/openbao/openbao:2.1.0
+    entrypoint: ["/bin/sh", "/kms/entrypoint.sh"]
+    volumes:
+      - ./kms:/kms:ro
+      - "${PDP_KMS_SECRETS:-./kms-secrets}/unseal:/run/kms-unseal:ro"    # unseal key: this container only
+      - pdp_kms_data:/openbao/file
+      - pdp_kms_logs:/openbao/logs                                      # audit log of every signing request
+    networks: [ backend ]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "BAO_ADDR=http://127.0.0.1:8200 bao status >/dev/null 2>&1 || [ ! -s /run/kms-unseal/key ]"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    profiles: [ kms ]
+
 networks:
   backend: { internal: true }     # no internet egress for api/workers/databases
   edge: {}
@@ -95,3 +147,5 @@ volumes:
   pdp_telemetry_db: {}
   pdp_data: {}
   pdp_pki: {}
+  pdp_kms_data: {}
+  pdp_kms_logs: {}

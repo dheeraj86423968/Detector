@@ -18,7 +18,7 @@ import time
 
 
 def train_one(eid: str, r: int, device: str) -> str:
-    from pdp_engine.bundle import sha256, sign_manifest
+    from pdp_engine.bundle import sha256
     from pdp_engine.trainer import TrainConfig, Trainer
     from pdp_server import db, pki
     from pdp_server.worker import DATA_DIR, store_for, window_ns
@@ -37,7 +37,7 @@ def train_one(eid: str, r: int, device: str) -> str:
     t0 = time.time()
     Trainer(store_for(eid), base["train_days"], base["val_day"], cfg, out).run(
         {"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(ep["config"]), "variant_run": r, "trained_on": device})
-    sign_manifest(out, pki.signing_private_pem())
+    pki.sign_bundle(out)
     manifest = json.load(open(os.path.join(out, "manifest.json")))
     with db.conn() as c:
         db.q(c, "INSERT INTO bundles (id, endpoint_id, path, sha256, manifest) VALUES (%s,%s,%s,%s,%s)",

@@ -1,0 +1,126 @@
+{
+  "realm": "pdp",
+  "enabled": true,
+  "sslRequired": "none",
+  "groups": [
+    {
+      "name": "pdp-admins"
+    },
+    {
+      "name": "pdp-analysts"
+    },
+    {
+      "name": "marketing"
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "pdp-console",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "test-client-secret-not-for-production",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "https://gateway/api/oidc/callback"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://gateway/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "email": "alice@example.com",
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "alice-pass-123",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "pdp-admins"
+      ],
+      "id": "0f3c1c1e-0000-4000-8000-00000000a11c"
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "email": "bob@example.com",
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Analyst",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob-pass-123",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "pdp-analysts"
+      ],
+      "id": "0f3c1c1e-0000-4000-8000-000000000b0b"
+    },
+    {
+      "username": "carol",
+      "enabled": true,
+      "email": "carol@example.com",
+      "emailVerified": true,
+      "firstName": "Carol",
+      "lastName": "Outsider",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "carol-pass-123",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "marketing"
+      ],
+      "id": "0f3c1c1e-0000-4000-8000-0000000ca201"
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "impostor@example.com",
+      "emailVerified": true,
+      "firstName": "Not",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "impostor-pass-123",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "pdp-admins"
+      ],
+      "id": "0f3c1c1e-0000-4000-8000-0000000add01"
+    }
+  ]
+}

@@ -115,6 +115,16 @@ check(analyst.call("POST", "/api/me/password", {"old_password": "wrong", "new_pa
 check(analyst.call("POST", "/api/me/password", {"old_password": "analyst-pass-123", "new_password": "a-new-password-1"})[0] == 200, "analyst changes own password")
 check(Console().call("POST", "/api/login", {"username": uname, "password": "a-new-password-1"})[0] == 200, "new password works")
 check(admin.call("DELETE", f"/api/users/{js and uid}")[0] == 200, "admin deletes user")
+check(analyst.call("GET", "/api/endpoints")[0] == 401, "a deleted user's open session is refused at once")
+st, auth_cfg = Console().call("GET", "/api/auth/config")
+check(st == 200 and auth_cfg["password"] is True and "sso" in auth_cfg, "sign-in methods are published to the login page")
+victim = "lockout" + uuid.uuid4().hex[:6]
+admin.call("POST", "/api/users", {"username": victim, "password": "lockout-pass-789", "role": "analyst"})
+bad = Console()
+codes = [bad.call("POST", "/api/login", {"username": victim, "password": f"wrong-{i}"})[0] for i in range(6)]
+check(codes[:5] == [401] * 5 and codes[5] == 429, "repeated failed sign-ins are throttled")
+check(bad.call("POST", "/api/login", {"username": victim, "password": "lockout-pass-789"})[0] == 429, "even the right password waits out the back-off")
+check(admin.call("GET", "/api/me")[0] == 200, "throttling one account does not affect others")
 st, me = admin.call("GET", "/api/me")
 check(admin.call("DELETE", f"/api/users/{me['user_id']}")[0] == 400, "admin cannot delete self")
 
@@ -190,6 +200,10 @@ st, js = admin.call("GET", f"/api/alerts?endpoint_id={eid}&layer=novelty")
 check([a["label"] for a in js["alerts"]] == ["subject /tmp/.x /tmp/.x"], "alerts filter by layer")
 st, hdr, body = admin.call("GET", f"/api/alerts/export?format=csv&endpoint_id={eid}", raw_body=True)
 check(b",layer,rule,reason," in body.split(b"\n")[0] and b"novel_executable" in body, "CSV export has layer / rule / reason")
+uname2 = "analyst" + uuid.uuid4().hex[:6]
+admin.call("POST", "/api/users", {"username": uname2, "password": "analyst-pass-456", "role": "analyst"})
+analyst = Console()
+analyst.call("POST", "/api/login", {"username": uname2, "password": "analyst-pass-456"})
 check(analyst.call("POST", f"/api/endpoints/{eid}/approved-executables", {"executables": ["/tmp/.x"]})[0] == 403, "analyst cannot approve programs")
 check(admin.call("POST", f"/api/endpoints/{eid}/approved-executables", {"executables": [""] * 0 + [1]})[0] == 422, "approval payload validated")
 st, js = admin.call("POST", f"/api/endpoints/{eid}/approved-executables", {"executables": ["/tmp/.x", "/opt/app/bin/tool"]})

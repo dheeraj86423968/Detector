@@ -30,11 +30,13 @@ export default function Users() {
         {msg && <span className="ok">{msg}</span>} {err && <span className="err">{err}</span>}
       </div>
       <table>
-        <thead><tr><th>Username</th><th>Role</th><th>Created</th><th></th></tr></thead>
+        <thead><tr><th>Username</th><th>Role</th><th>Sign-in</th><th>Created</th><th>Last sign-in</th><th></th></tr></thead>
         <tbody>{rows.map(u => {
           const self = me != null && String(u.id) === String(me.user_id);
           return <tr key={u.id}><td>{u.username} {self && <span className="muted">(you)</span>}</td><td><span className="pill">{u.role}</span></td>
+            <td>{u.auth === "oidc" ? <span title={u.email || ""}>SSO{u.email ? ` · ${u.email}` : ""}</span> : "password"}</td>
             <td className="muted">{u.created_at ? new Date(u.created_at).toLocaleString() : ""}</td>
+            <td className="muted">{u.last_login ? new Date(u.last_login).toLocaleString() : "never"}</td>
             <td><button className="ghost" disabled={self} title={self ? "you cannot delete yourself" : ""} onClick={() => del(u)}>delete</button></td></tr>;
         })}</tbody>
       </table>

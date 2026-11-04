@@ -18,7 +18,7 @@ import traceback
 
 sys.path.insert(0, os.environ.get("PDP_ENGINE_PATH", "/opt/pdp/engine"))
 sys.path.insert(0, os.environ.get("PDP_SIM_PATH", "/opt/pdp/sim"))
-from pdp_engine.bundle import sha256, sign_manifest  # noqa: E402
+from pdp_engine.bundle import sha256  # noqa: E402
 from pdp_engine.data import WindowStore, ingest_day  # noqa: E402
 from pdp_engine.schema import Entity, Event, Registry  # noqa: E402
 from pdp_engine.trainer import TrainConfig, Trainer  # noqa: E402
@@ -166,7 +166,7 @@ def job_train(job: dict, device: str):
         res = calibrate(store, out, device=device)
         apply_to_bundle(out, res)
         log(f"train {eid}: fusion calibrated by simulation -> weights {res['chosen']['weights']} (synthetic detection {res['chosen']['detection_rate']:.2f})")
-    sign_manifest(out, pki.signing_private_pem())
+    pki.sign_bundle(out)
     digest = sha256(os.path.join(out, "manifest.json"))
     manifest = json.load(open(os.path.join(out, "manifest.json")))
     with db.conn() as c:

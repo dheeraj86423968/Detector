@@ -15,6 +15,7 @@ export default function Account() {
     <div>
       <h1>Account</h1>
       {me && <p className="muted">Signed in as <b>{me.username}</b> <span className="pill">{me.role}</span></p>}
+      {me?.auth === "oidc" ? <div className="card"><p className="muted">This account signs in with single sign-on{me.email ? ` (${me.email})` : ""}. Its password and role are managed by your identity provider.</p></div> :
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Change password</h2>
         <form className="form" onSubmit={submit}>
@@ -24,7 +25,7 @@ export default function Account() {
           <button className="primary" disabled={!f.old || !f.next || !f.repeat}>Change password</button>
           {err && <div className="err">{err}</div>}{msg && <div className="ok">{msg}</div>}
         </form>
-      </div>
+      </div>}
     </div>
   );
 }

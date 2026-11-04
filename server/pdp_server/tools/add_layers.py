@@ -22,7 +22,7 @@ def log(m):
 
 
 def layer_bundle(eid: str, src: dict, deploy: bool = False) -> str:
-    from pdp_engine.bundle import sha256, sign_manifest, write_manifest
+    from pdp_engine.bundle import sha256, write_manifest
     from pdp_engine.layers import fit_layers
     from pdp_engine.trainer import TrainConfig
     from pdp_server import db, pki
@@ -45,7 +45,7 @@ def layer_bundle(eid: str, src: dict, deploy: bool = False) -> str:
     meta.setdefault("learned_policy", {"daily_budget": TrainConfig.learned_daily_budget,
                                        "corroboration_percentile": TrainConfig.corroboration_percentile})
     write_manifest(out, meta)
-    sign_manifest(out, pki.signing_private_pem())
+    pki.sign_bundle(out)
     manifest = json.load(open(os.path.join(out, "manifest.json")))
     with db.conn() as c:
         db.q(c, "INSERT INTO bundles (id, endpoint_id, path, sha256, manifest) VALUES (%s,%s,%s,%s,%s)",

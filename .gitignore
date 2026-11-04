@@ -16,3 +16,5 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 .venv/
+deploy/kms-secrets/
+.claude/

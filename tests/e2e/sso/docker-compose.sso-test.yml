@@ -1,0 +1,18 @@
+# SSO end-to-end test overlay (tests/e2e/sso/README in run_sso_e2e.sh): a throwaway Keycloak realm and the api
+# configured against it. Never use in production - the client secret and user passwords are public test values.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.5
+    command: ["start-dev", "--import-realm", "--http-port=8080", "--hostname=http://keycloak:8080"]
+    environment: { KC_BOOTSTRAP_ADMIN_USERNAME: kcadmin, KC_BOOTSTRAP_ADMIN_PASSWORD: kcadmin-test-only }
+    volumes: [ "../tests/e2e/sso/realm-pdp.json:/opt/keycloak/data/import/realm-pdp.json:ro" ]
+    networks: [ backend, edge ]
+  api:
+    environment:
+      PDP_OIDC_ISSUER: http://keycloak:8080/realms/pdp
+      PDP_OIDC_CLIENT_ID: pdp-console
+      PDP_OIDC_CLIENT_SECRET: test-client-secret-not-for-production
+      PDP_OIDC_REDIRECT_URL: https://gateway/api/oidc/callback
+      PDP_OIDC_ADMIN_GROUPS: pdp-admins
+      PDP_OIDC_ANALYST_GROUPS: pdp-analysts
+      PDP_OIDC_LABEL: Sign in with Keycloak

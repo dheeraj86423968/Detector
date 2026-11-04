@@ -17,6 +17,13 @@ if ! grep -q '^PDP_DB_PASSWORD=' "$ENVFILE"; then
   echo "PDP_DB_PASSWORD=$(openssl rand -hex 24)" >> "$ENVFILE"
   echo "generated PDP_DB_PASSWORD in $ENVFILE"
 fi
+# ---- signing keys in a KMS (bundled OpenBao) unless configured otherwise; existing installs migrate on their next
+# bring-up: the CA and bundle-signing keys are imported, so enrolled agents are unaffected.
+if ! grep -q '^PDP_KMS=' "$ENVFILE"; then
+  echo "PDP_KMS=transit" >> "$ENVFILE"
+  grep -q '^PDP_KMS_ADDR=' "$ENVFILE" || echo "COMPOSE_PROFILES=kms" >> "$ENVFILE"
+  echo "enabled the bundled KMS in $ENVFILE"
+fi
 chmod 600 "$ENVFILE"
 set -a; . "$ENVFILE"; set +a
 
@@ -36,6 +43,15 @@ $DC build api &                                                          # serve
 docker build -q -f deploy/docker/agent.Dockerfile -t "pdp/agent:${PDP_VERSION:-dev}" . &   # slim endpoint agent (bcc + strace)
 docker run --rm -v "$PWD/console":/app -w /app node:20-alpine sh -c "npm install --no-audit --no-fund --loglevel=error && npm run build" &
 wait
+
+if [ "${PDP_KMS:-file}" = transit ]; then
+  echo "== KMS: CA and bundle-signing keys =="
+  SECRETS="${PDP_KMS_SECRETS:-$PWD/deploy/kms-secrets}"
+  mkdir -p "$SECRETS/unseal" "$SECRETS/token" && chmod 711 "$SECRETS" && chmod 700 "$SECRETS/unseal"
+  case ",${COMPOSE_PROFILES:-}," in *,kms,*) $DC up -d kms ;; esac
+  $DC run --rm --no-deps -T -v "$SECRETS:/kms-secrets" --entrypoint python api -m pdp_server.tools.kms_setup \
+      --secrets /kms-secrets --remove-local-keys ${PDP_KMS_ADMIN_TOKEN_FILE:+--admin-token-file /kms-secrets/admin-token}
+fi
 
 echo "== starting the stack =="
 $DC up -d platform-db telemetry-db api worker-ingest worker-train gateway
