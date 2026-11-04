@@ -16,7 +16,8 @@ Configuration (environment of the api service):
   PDP_OIDC_GROUPS_CLAIM      default "groups" (Entra ID: "groups" or "roles"; Keycloak: a groups mapper)
   PDP_OIDC_ADMIN_GROUPS      comma-separated IdP groups that get the admin role
   PDP_OIDC_ANALYST_GROUPS    comma-separated IdP groups that get the analyst role
-  PDP_OIDC_DEFAULT_ROLE      role for an authenticated user in no mapped group: "none" (refuse, default) or "analyst"
+  PDP_OIDC_VIEWER_GROUPS     comma-separated IdP groups that get the read-only viewer role
+  PDP_OIDC_DEFAULT_ROLE      role for an authenticated user in no mapped group: "none" (refuse, default), "viewer" or "analyst"
   PDP_OIDC_USERNAME_CLAIM    default "preferred_username" (falls back to email, then sub)
   PDP_OIDC_LABEL             button text, default "Sign in with SSO"
   PDP_PASSWORD_LOGIN         "enabled" (default), "admin-only" (break-glass local admins only) or "disabled"
@@ -60,6 +61,7 @@ def _groups(var: str) -> set[str]:
 
 
 ADMIN_GROUPS, ANALYST_GROUPS = _groups("PDP_OIDC_ADMIN_GROUPS"), _groups("PDP_OIDC_ANALYST_GROUPS")
+VIEWER_GROUPS = _groups("PDP_OIDC_VIEWER_GROUPS")
 
 
 class OIDCError(Exception):
@@ -259,7 +261,9 @@ def role_for(groups: set[str]) -> str | None:
         return "admin"
     if groups & ANALYST_GROUPS:
         return "analyst"
-    return "analyst" if DEFAULT_ROLE == "analyst" else None
+    if groups & VIEWER_GROUPS:
+        return "viewer"
+    return DEFAULT_ROLE if DEFAULT_ROLE in ("analyst", "viewer") else None
 
 
 def end_session_url(post_logout: str) -> str | None:

@@ -19,9 +19,15 @@ from pydantic import BaseModel, Field
 import psycopg2.extras
 
 from . import auth, db, oidc, pki
+from .access import admin, can, require_endpoint, scope_sql, session, triager, visible
 from .graphs import alert_graph, endpoint_timeline, incident_graph
 
 app = FastAPI(title="PDP", docs_url=None, redoc_url=None, openapi_url=None)
+
+
+def _include_console_routes():
+    from .console import router
+    app.include_router(router)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")
@@ -275,25 +281,6 @@ def healthz():
 
 
 # ============================================================================ console side
-def session(request: Request) -> dict:
-    """Valid session cookie AND the user still exists: deleting a user or changing their role takes effect on the
-    next request, not when the 12 h cookie expires. The role comes from the database, not from the cookie."""
-    s = auth.read_session(request.cookies.get("pdp_session"))
-    if not s:
-        raise HTTPException(401, "not authenticated")
-    with db.conn() as c:
-        u = db.q(c, "SELECT role, auth, disabled FROM users WHERE id=%s", (s["u"],), one=True)
-    if not u or u["disabled"]:
-        raise HTTPException(401, "user no longer exists or is disabled")
-    return {**s, "r": u["role"], "a": u["auth"]}
-
-
-def admin(s=Depends(session)):
-    if s["r"] != "admin":
-        raise HTTPException(403, "admin role required")
-    return s
-
-
 class Login(BaseModel):
     username: str
     password: str
@@ -415,10 +402,12 @@ def logout(request: Request, response: Response):
 @app.get("/api/me")
 def me(s=Depends(session)):
     with db.conn() as c:
-        u = db.q(c, "SELECT id, username, role, auth, email FROM users WHERE id=%s", (s["u"],), one=True)
+        u = db.q(c, "SELECT id, username, display_name, role, auth, email, endpoints FROM users WHERE id=%s", (s["u"],), one=True)
     if not u:
         raise HTTPException(401, "user no longer exists")
-    return {"ok": True, "role": u["role"], "username": u["username"], "user_id": u["id"], "auth": u["auth"], "email": u["email"]}
+    return {"ok": True, "role": u["role"], "username": u["username"], "display_name": u["display_name"] or u["username"],
+            "user_id": u["id"], "auth": u["auth"], "email": u["email"],
+            "endpoints": None if u["role"] == "admin" else u["endpoints"], "can": can(s)}
 
 
 class PasswordChange(BaseModel):
@@ -440,17 +429,46 @@ def change_password(req: PasswordChange, s=Depends(session)):
     return {"ok": True}
 
 
+def _user_out(r: dict, names: dict) -> dict:
+    eps = None if r["role"] == "admin" or r["endpoints"] is None else [{"id": str(e), "name": names.get(str(e), "(removed endpoint)")} for e in r["endpoints"]]
+    return {"id": r["id"], "username": r["username"], "display_name": r["display_name"] or r["username"], "email": r["email"],
+            "role": r["role"], "auth": r["auth"], "endpoints": eps, "disabled": r["disabled"],
+            "created_at": r["created_at"], "last_login": r["last_login"]}
+
+
 @app.get("/api/users")
 def list_users(s=Depends(admin)):
     with db.conn() as c:
-        rows = db.q(c, "SELECT id, username, role, auth, email, created_at, last_login FROM users ORDER BY username")
-    return {"ok": True, "users": [dict(r) for r in rows]}
+        rows = db.q(c, "SELECT id, username, display_name, role, auth, email, endpoints, disabled, created_at, last_login FROM users ORDER BY lower(coalesce(display_name, username))")
+        names = {str(r["id"]): r["name"] for r in db.q(c, "SELECT id, name FROM endpoints")}
+    from .access import ROLE_TEXT
+    return {"ok": True, "users": [_user_out(r, names) for r in rows],
+            "roles": [{"id": k, "text": v} for k, v in ROLE_TEXT.items()],
+            "sso": {"enabled": oidc.enabled(), "label": oidc.LABEL, "password_policy": oidc.PASSWORD_LOGIN}}
+
+
+def _check_endpoint_ids(c, ids) -> list[str] | None:
+    if ids is None:
+        return None
+    if not isinstance(ids, list) or not all(isinstance(x, str) for x in ids) or len(ids) > 10000:
+        raise HTTPException(400, "endpoints must be null (all endpoints) or a list of endpoint ids")
+    try:
+        ids = sorted({str(uuidlib.UUID(x)) for x in ids})
+    except ValueError:
+        raise HTTPException(400, "endpoints: not an endpoint id") from None
+    known = {str(r["id"]) for r in db.q(c, "SELECT id FROM endpoints WHERE id = ANY(%s::uuid[])", (ids,))}
+    if set(ids) - known:
+        raise HTTPException(400, f"unknown endpoints: {sorted(set(ids) - known)}")
+    return ids
 
 
 class NewUser(BaseModel):
     username: str
     password: str
     role: str = "analyst"
+    display_name: str | None = Field(default=None, max_length=128)
+    email: str | None = Field(default=None, max_length=254)
+    endpoints: list[str] | None = None
 
 
 @app.post("/api/users")
@@ -458,16 +476,71 @@ def create_user(req: NewUser, s=Depends(admin)):
     import re as _re
     if not _re.fullmatch(r"[A-Za-z0-9_.@-]{2,64}", req.username):
         raise HTTPException(400, "username: 2-64 characters of letters, digits and _ . @ -")
-    if req.role not in ("admin", "analyst"):
-        raise HTTPException(400, "role must be admin or analyst")
+    if req.role not in ("admin", "analyst", "viewer"):
+        raise HTTPException(400, "role must be admin, analyst or viewer")
     if len(req.password) < 10:
         raise HTTPException(400, "password must have at least 10 characters")
     with db.conn() as c:
-        row = db.q(c, "INSERT INTO users (username, password_hash, role) VALUES (%s,%s,%s) ON CONFLICT (username) DO NOTHING RETURNING id",
-                   (req.username, auth.hash_password(req.password), req.role), one=True)
+        eps = _check_endpoint_ids(c, req.endpoints)
+        row = db.q(c, "INSERT INTO users (username, password_hash, role, display_name, email, endpoints) VALUES (%s,%s,%s,%s,%s,%s) "
+                      "ON CONFLICT (username) DO NOTHING RETURNING id",
+                   (req.username, auth.hash_password(req.password), req.role, (req.display_name or "").strip() or None,
+                    (req.email or "").strip() or None, json.dumps(eps) if eps is not None else None), one=True)
     if not row:
-        raise HTTPException(409, "user exists")
+        raise HTTPException(409, "a user with this username exists")
     return {"ok": True, "id": row["id"]}
+
+
+_UNSET = object()
+
+
+@app.patch("/api/users/{user_id}")
+def update_user(user_id: int, body: dict, s=Depends(admin)):
+    allowed = {"role", "display_name", "email", "endpoints", "disabled", "password"}
+    if set(body) - allowed:
+        raise HTTPException(400, f"unknown fields: {sorted(set(body) - allowed)}")
+    with db.conn() as c:
+        u = db.q(c, "SELECT * FROM users WHERE id=%s", (user_id,), one=True)
+        if not u:
+            raise HTTPException(404, "user not found")
+        sets, params = [], []
+        if "role" in body:
+            if body["role"] not in ("admin", "analyst", "viewer"):
+                raise HTTPException(400, "role must be admin, analyst or viewer")
+            if u["auth"] == "oidc" and body["role"] != u["role"]:
+                raise HTTPException(400, "this account signs in with single sign-on: its role comes from the identity provider's groups")
+            sets.append("role=%s"); params.append(body["role"])
+        if "display_name" in body:
+            sets.append("display_name=%s"); params.append((str(body["display_name"] or "")[:128]).strip() or None)
+        if "email" in body:
+            sets.append("email=%s"); params.append((str(body["email"] or "")[:254]).strip() or None)
+        if "endpoints" in body:
+            eps = _check_endpoint_ids(c, body["endpoints"])
+            sets.append("endpoints=%s"); params.append(json.dumps(eps) if eps is not None else None)
+        if "disabled" in body:
+            if not isinstance(body["disabled"], bool):
+                raise HTTPException(400, "disabled must be true or false")
+            sets.append("disabled=%s"); params.append(body["disabled"])
+        if "password" in body:
+            if u["auth"] != "local":
+                raise HTTPException(400, "this account signs in with single sign-on and has no PDP password")
+            if not isinstance(body["password"], str) or len(body["password"]) < 10:
+                raise HTTPException(400, "password must have at least 10 characters")
+            sets.append("password_hash=%s"); params.append(auth.hash_password(body["password"]))
+            sets.append("failed_logins=0"); sets.append("locked_until=NULL")
+        demote = body.get("role", u["role"]) != "admin" or body.get("disabled", u["disabled"])
+        if u["role"] == "admin" and not u["disabled"] and demote:
+            if user_id == s["u"]:
+                raise HTTPException(400, "you cannot remove your own admin access")
+            if _enabled_admins(c) <= 1:
+                raise HTTPException(400, "this is the last enabled admin")
+        if sets:
+            db.q(c, f"UPDATE users SET {', '.join(sets)} WHERE id=%s", (*params, user_id))
+    return {"ok": True}
+
+
+def _enabled_admins(c) -> int:
+    return db.q(c, "SELECT count(*) AS n FROM users WHERE role='admin' AND NOT disabled", one=True)["n"]
 
 
 @app.delete("/api/users/{user_id}")
@@ -475,6 +548,11 @@ def delete_user(user_id: int, s=Depends(admin)):
     if user_id == s["u"]:
         raise HTTPException(400, "you cannot delete yourself")
     with db.conn() as c:
+        u = db.q(c, "SELECT role, disabled FROM users WHERE id=%s", (user_id,), one=True)
+        if not u:
+            raise HTTPException(404, "user not found")
+        if u["role"] == "admin" and not u["disabled"] and _enabled_admins(c) <= 1:
+            raise HTTPException(400, "this is the last enabled admin")
         db.q(c, "UPDATE enroll_tokens SET created_by=NULL WHERE created_by=%s", (user_id,))
         db.q(c, "DELETE FROM users WHERE id=%s", (user_id,))
     return {"ok": True}
@@ -482,13 +560,14 @@ def delete_user(user_id: int, s=Depends(admin)):
 
 @app.get("/api/endpoints")
 def list_endpoints(s=Depends(session)):
-    with db.conn() as c:
-        rows = db.q(c, "SELECT e.*, (SELECT count(*) FROM alerts a WHERE a.endpoint_id=e.id AND a.status='open') AS open_alerts FROM endpoints e ORDER BY name")
-    return {"ok": True, "endpoints": [_ep_out(r) for r in rows]}
+    from .console import endpoint_rows
+    return {"ok": True, "endpoints": endpoint_rows(s)}
 
 
 def _ep_out(r: dict) -> dict:
-    return dict(r, id=str(r["id"]), current_bundle=str(r["current_bundle"]) if r["current_bundle"] else None, health=r.get("health"))
+    from .console import endpoint_state
+    return dict(r, id=str(r["id"]), current_bundle=str(r["current_bundle"]) if r["current_bundle"] else None, health=r.get("health"),
+                **endpoint_state(r))
 
 
 class NewEndpoint(BaseModel):
@@ -517,6 +596,7 @@ def create_endpoint(req: NewEndpoint, s=Depends(admin)):
 
 @app.get("/api/endpoints/{endpoint_id}")
 def endpoint_detail(endpoint_id: str, s=Depends(session)):
+    require_endpoint(s, endpoint_id)
     with db.conn() as c:
         ep = db.q(c, "SELECT * FROM endpoints WHERE id=%s", (endpoint_id,), one=True)
         if not ep:
@@ -664,12 +744,15 @@ def retrain(endpoint_id: str, s=Depends(admin)):
 @app.get("/api/alerts")
 def list_alerts(s=Depends(session), endpoint_id: str | None = None, status: str | None = None, layer: str | None = None, limit: int = 200):
     limit = max(1, min(int(limit), 5000))
+    if endpoint_id:
+        require_endpoint(s, endpoint_id)
+    sc, sp = scope_sql(s, "a.endpoint_id")
     with db.conn() as c:
         rows = db.q(c, "SELECT a.id, a.endpoint_id, e.name AS endpoint, a.window_start_ns, a.node_uuid, a.ntype, a.label, a.fused, a.r1, a.r2, a.status, a.created_at, "
                        "coalesce(a.layer, 'learned') AS layer, a.rule, a.reason "
                        "FROM alerts a JOIN endpoints e ON e.id=a.endpoint_id WHERE (%s::uuid IS NULL OR a.endpoint_id=%s) AND (%s::text IS NULL OR a.status=%s) "
-                       "AND (%s::text IS NULL OR coalesce(a.layer, 'learned')=%s) "
-                       "ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, layer, layer, limit))
+                       f"AND (%s::text IS NULL OR coalesce(a.layer, 'learned')=%s) AND {sc} "
+                       "ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, layer, layer, *sp, limit))
     return {"ok": True, "alerts": [dict(r, endpoint_id=str(r["endpoint_id"])) for r in rows]}
 
 
@@ -678,11 +761,12 @@ class AlertUpdate(BaseModel):
 
 
 @app.post("/api/alerts/{alert_id}")
-def update_alert(alert_id: int, req: AlertUpdate, s=Depends(session)):
+def update_alert(alert_id: int, req: AlertUpdate, s=Depends(triager)):
     if req.status not in ALERT_STATUSES:
         raise HTTPException(400, f"status must be one of {list(ALERT_STATUSES)}")
+    sc, sp = scope_sql(s, "endpoint_id")
     with db.conn() as c:
-        if not db.q(c, "UPDATE alerts SET status=%s WHERE id=%s RETURNING id", (req.status, alert_id), one=True):
+        if not db.q(c, f"UPDATE alerts SET status=%s WHERE id=%s AND {sc} RETURNING id", (req.status, alert_id, *sp), one=True):
             raise HTTPException(404)
     return {"ok": True}
 
@@ -693,10 +777,13 @@ def export_alerts(s=Depends(session), format: str = "csv", endpoint_id: str | No
     import csv
     if format not in ("csv", "ndjson"):
         raise HTTPException(400, "format must be csv or ndjson")
+    if endpoint_id:
+        require_endpoint(s, endpoint_id)
+    sc, sp = scope_sql(s, "a.endpoint_id")
     with db.conn() as c:
         rows = db.q(c, "SELECT a.id, a.endpoint_id, e.name AS endpoint, e.hostname, a.window_start_ns, a.node_uuid, a.ntype, a.label, a.fused, a.r1, a.r2, a.status, a.created_at, "
                        "coalesce(a.layer, 'learned') AS layer, a.rule, a.reason FROM alerts a JOIN endpoints e ON e.id=a.endpoint_id WHERE (%s::uuid IS NULL OR a.endpoint_id=%s) AND (%s::text IS NULL OR a.status=%s) "
-                       "ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, max(1, min(limit, 1_000_000))))
+                       f"AND {sc} ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, *sp, max(1, min(limit, 1_000_000))))
     for r in rows:
         r["endpoint_id"] = str(r["endpoint_id"]); r["created_at"] = r["created_at"].isoformat() if r["created_at"] else None
         r["window_start"] = datetime.fromtimestamp(r["window_start_ns"] / 1e9, tz=timezone.utc).isoformat()
@@ -714,17 +801,21 @@ def export_alerts(s=Depends(session), format: str = "csv", endpoint_id: str | No
 
 @app.get("/api/alerts/{alert_id}/graph")
 def get_alert_graph(alert_id: int, s=Depends(session), expand: str | None = None, hops: int = 1):
-    return {"ok": True, **alert_graph(alert_id, expand, hops)}
+    g = alert_graph(alert_id, expand, hops)
+    if not g.get("alert") or not visible(s, g["alert"]["endpoint_id"]):
+        raise HTTPException(404, "not found")
+    return {"ok": True, **g}
 
 
 @app.get("/api/endpoints/{endpoint_id}/incident")
 def get_incident(endpoint_id: str, s=Depends(session), focus_ns: int | None = None, span: int = 3):
     """The stitched attack graph + analyst summary around a focus window (default: the strongest detection)."""
+    require_endpoint(s, endpoint_id)
     return {"ok": True, **incident_graph(endpoint_id, focus_ns, span)}
 
 
 @app.get("/api/jobs")
-def list_jobs(s=Depends(session)):
+def list_jobs(s=Depends(admin)):
     with db.conn() as c:
         rows = db.q(c, "SELECT j.*, e.name AS endpoint FROM jobs j LEFT JOIN endpoints e ON e.id=j.endpoint_id ORDER BY j.created_at DESC LIMIT 100")
     return {"ok": True, "jobs": [dict(r, id=str(r["id"]), endpoint_id=str(r["endpoint_id"]) if r["endpoint_id"] else None) for r in rows]}
@@ -734,9 +825,11 @@ def list_jobs(s=Depends(session)):
 
 @app.get("/api/sim/campaigns")
 def list_campaigns(s=Depends(session)):
+    sc_, sp = scope_sql(s, "sc.endpoint_id")
     with db.conn() as c:
         rows = db.q(c, "SELECT sc.id, sc.name, sc.state, sc.seed, sc.created_at, sc.finished_at, e.name AS endpoint, sc.spec->'summary' AS summary, "
-                       "(SELECT count(*) FROM sim_runs r WHERE r.campaign_id=sc.id) AS runs FROM sim_campaigns sc LEFT JOIN endpoints e ON e.id=sc.endpoint_id ORDER BY sc.created_at DESC LIMIT 100")
+                       "(SELECT count(*) FROM sim_runs r WHERE r.campaign_id=sc.id) AS runs FROM sim_campaigns sc LEFT JOIN endpoints e ON e.id=sc.endpoint_id "
+                       f"WHERE {sc_} ORDER BY sc.created_at DESC LIMIT 100", sp)
     return {"ok": True, "campaigns": [dict(r, id=str(r["id"])) for r in rows]}
 
 
@@ -748,7 +841,8 @@ class NewCampaign(BaseModel):
 
 
 @app.post("/api/sim/campaigns")
-def create_campaign(req: NewCampaign, s=Depends(admin)):
+def create_campaign(req: NewCampaign, s=Depends(triager)):
+    require_endpoint(s, req.endpoint_id)
     spec = dict(req.spec)
     from_sim = {"days", "runs", "attacks_per_pass", "families", "evasion_levels", "seed", "horizon_windows", "fp_budget"}
     if set(spec) - from_sim:
@@ -786,10 +880,14 @@ def sim_families(s=Depends(session)):
 @app.get("/api/sim/campaigns/{campaign_id}/results")
 def campaign_results(campaign_id: str, s=Depends(session)):
     with db.conn() as c:
-        camp = db.q(c, "SELECT id, name, state, seed, spec, created_at, finished_at FROM sim_campaigns WHERE id=%s", (campaign_id,), one=True)
-        if not camp:
+        camp = db.q(c, "SELECT id, name, state, seed, spec, created_at, finished_at, endpoint_id FROM sim_campaigns WHERE id=%s", (campaign_id,), one=True)
+        if not camp or not visible(s, camp["endpoint_id"]):
             raise HTTPException(404)
+        camp.pop("endpoint_id")
         runs = db.q(c, "SELECT run_index, attack, result FROM sim_runs WHERE campaign_id=%s ORDER BY run_index", (campaign_id,))
     spec = camp["spec"] or {}
     return {"ok": True, "campaign": dict(camp, id=str(camp["id"])), "summary": spec.get("summary"), "by_family": spec.get("by_family", []),
             "by_evasion": spec.get("by_evasion", []), "runs": [dict(r) for r in runs]}
+
+
+_include_console_routes()

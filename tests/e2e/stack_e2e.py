@@ -200,6 +200,68 @@ st, js = admin.call("GET", f"/api/alerts?endpoint_id={eid}&layer=novelty")
 check([a["label"] for a in js["alerts"]] == ["subject /tmp/.x /tmp/.x"], "alerts filter by layer")
 st, hdr, body = admin.call("GET", f"/api/alerts/export?format=csv&endpoint_id={eid}", raw_body=True)
 check(b",layer,rule,reason," in body.split(b"\n")[0] and b"novel_executable" in body, "CSV export has layer / rule / reason")
+# ---- access control: roles (admin / analyst / viewer) and endpoint scope
+st, eps_all = admin.call("GET", "/api/endpoints")
+other = next(e["id"] for e in eps_all["endpoints"] if e["id"] != eid)
+other_alert = next((a["id"] for a in admin.call("GET", f"/api/alerts?endpoint_id={other}&limit=1")[1]["alerts"]), None)
+st, incs = admin.call("GET", f"/api/incidents?endpoint_id={eid}")
+check(st == 200 and incs["incidents"] and incs["incidents"][0]["endpoint_id"] == eid and "title" in incs["incidents"][0]
+      and "fused" not in json.dumps(incs), "incidents group the endpoint's alerts, without scores")
+inc_id = incs["incidents"][0]["id"]
+st, inc = admin.call("GET", f"/api/incidents/{inc_id}")
+check(st == 200 and inc["graph"]["nodes"] and inc["alerts"] and all("order" in e for e in inc["graph"]["edges"]),
+      "incident detail has the attack graph, story and alerts")
+vname = "viewer" + uuid.uuid4().hex[:6]
+st, js = admin.call("POST", "/api/users", {"username": vname, "password": "viewer-pass-123", "role": "viewer", "display_name": "Vera Viewer",
+                                          "endpoints": [eid]})
+check(st == 200, "admin creates a viewer limited to one endpoint"); vid = js.get("id")
+check(admin.call("POST", "/api/users", {"username": "x" + vname, "password": "viewer-pass-123", "role": "viewer", "endpoints": ["not-an-id"]})[0] == 400,
+      "endpoint access must name real endpoints")
+viewer = Console()
+viewer.call("POST", "/api/login", {"username": vname, "password": "viewer-pass-123"})
+st, m = viewer.call("GET", "/api/me")
+check(st == 200 and m["role"] == "viewer" and m["can"] == {"manage_users": False, "manage_endpoints": False, "triage": False, "run_checks": False}
+      and m["endpoints"] == [eid], "viewer: read-only permissions and endpoint scope in /api/me")
+st, ve = viewer.call("GET", "/api/endpoints")
+check(st == 200 and [e["id"] for e in ve["endpoints"]] == [eid], "a scoped user sees only their endpoints")
+check(viewer.call("GET", f"/api/endpoints/{other}")[0] == 404 and viewer.call("GET", f"/api/endpoints/{other}/overview")[0] == 404,
+      "other endpoints answer 404 (not 403) to a scoped user")
+st, va = viewer.call("GET", "/api/alerts?limit=1000")
+check(st == 200 and va["alerts"] and {a["endpoint_id"] for a in va["alerts"]} == {eid}, "alerts list is scoped")
+check(viewer.call("GET", f"/api/alerts?endpoint_id={other}")[0] == 404, "alerts of another endpoint: 404")
+st, vi = viewer.call("GET", "/api/incidents")
+check(st == 200 and {i["endpoint_id"] for i in vi["incidents"]} == {eid}, "incidents list is scoped")
+st, ov = viewer.call("GET", "/api/overview")
+check(st == 200 and ov["endpoints"]["total"] == 1, "overview counts only visible endpoints")
+st, hdr, body = viewer.call("GET", "/api/alerts/export?format=ndjson", raw_body=True)
+check(st == 200 and all(json.loads(l)["endpoint_id"] == eid for l in body.decode().splitlines() if l), "export is scoped")
+if other_alert:
+    check(viewer.call("GET", f"/api/alerts/{other_alert}/graph")[0] == 404, "another endpoint's alert graph: 404")
+    check(viewer.call("GET", f"/api/incidents/{other_alert}")[0] == 404, "another endpoint's incident: 404")
+check(viewer.call("GET", f"/api/incidents/{inc_id}")[0] == 200, "the viewer opens incidents of their endpoint")
+check(viewer.call("POST", f"/api/incidents/{inc_id}/status", {"status": "investigating"})[0] == 403, "a viewer cannot triage incidents")
+check(viewer.call("POST", f"/api/alerts/{inc['alerts'][0]['id']}", {"status": "ack"})[0] == 403, "a viewer cannot triage alerts")
+check(viewer.call("POST", f"/api/endpoints/{eid}/checks")[0] == 403, "a viewer cannot run detection checks")
+check(viewer.call("GET", "/api/users")[0] == 403 and viewer.call("GET", "/api/jobs")[0] == 403, "a viewer cannot see users or jobs")
+st, _ = admin.call("PATCH", f"/api/users/{vid}", {"role": "analyst"})
+st2, m = viewer.call("GET", "/api/me")
+check(st == 200 and m["role"] == "analyst" and m["can"]["triage"], "role change applies to the open session")
+check(viewer.call("POST", f"/api/incidents/{inc_id}/status", {"status": "investigating"})[0] == 200, "an analyst triages an incident")
+st, inc2 = admin.call("GET", f"/api/incidents/{inc_id}")
+check(inc2["incident"]["status"] == "investigating" and all(a["status"] == "ack" for a in inc2["alerts"]), "incident status applies to all its alerts")
+if other_alert:
+    check(viewer.call("POST", f"/api/alerts/{other_alert}", {"status": "ack"})[0] == 404, "a scoped analyst cannot triage other endpoints' alerts")
+admin.call("PATCH", f"/api/users/{vid}", {"endpoints": None})
+check(len(viewer.call("GET", "/api/endpoints")[1]["endpoints"]) == len(eps_all["endpoints"]), "endpoint access 'all' restores full visibility")
+admin.call("PATCH", f"/api/users/{vid}", {"disabled": True})
+check(viewer.call("GET", "/api/me")[0] == 401, "disabling a user ends their session")
+check(Console().call("POST", "/api/login", {"username": vname, "password": "viewer-pass-123"})[0] == 401, "a disabled user cannot sign in")
+st, me_ = admin.call("GET", "/api/me")
+check(admin.call("PATCH", f"/api/users/{me_['user_id']}", {"role": "viewer"})[0] == 400, "an admin cannot remove their own admin access")
+check(admin.call("PATCH", f"/api/users/{vid}", {"password": "short"})[0] == 400, "password reset enforces the minimum length")
+check(admin.call("DELETE", f"/api/users/{vid}")[0] == 200, "admin removes the user")
+admin.call("POST", f"/api/incidents/{inc_id}/status", {"status": "open"})
+
 uname2 = "analyst" + uuid.uuid4().hex[:6]
 admin.call("POST", "/api/users", {"username": uname2, "password": "analyst-pass-456", "role": "analyst"})
 analyst = Console()
