@@ -5,7 +5,7 @@ import { AllowEntry, AllowListResp, Check as CheckT, del, EndpointConfigResp, En
 import { AddAllowDialog, allowedText } from "../allowlist";
 import { AppliesTo } from "./AllowList";
 import { DailyBars } from "../chart";
-import { DETECTION, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtRel, plural } from "../format";
+import { DETECTION, fmtBytes, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtRel, plural } from "../format";
 import { IncidentTable } from "../incidents";
 import { AllowKindIcon, Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, Mid, PageHeader, ShowMore, Tabs, Toggle, useShowMore, useToast } from "../ui";
 
@@ -68,6 +68,7 @@ function OverviewTab({ d, reload }: { d: EndpointOverview; reload: () => void })
           <DailyBars data={days} unit={["event", "events"]} height={110} tick={fmtCompact} />
         </div>}
       </Card>
+      {(d as any).learning && <LearningCard l={(d as any).learning} />}
       <div className="grid grid-2">
         <HealthCard h={d.health} />
         <DetectionCard d={d} />
@@ -128,6 +129,31 @@ function updateText(h: EndpointOverview["health"]) {
     return u.updater === false ? `${u.target} available (installer --upgrade needed)` : `${u.target} scheduled`;
   }
   return u.target ? "Up to date" : "Manual";
+}
+
+type Learning = { day: number; days_needed: number; days_done: number; uploaded_bytes: number; uploaded_events: number; bytes_per_day: number | null;
+  expected_total_bytes: number | null; events_per_day: number | null; local_mb: number | null; disk_free_pct: number | null;
+  early_model: { hours: number | null; rules_only: boolean; since: string | null } | null; next_model_hours: number | null; hours_recorded: number | null };
+
+/** While the endpoint learns: how far, how much data so far and in total, the early model in use. */
+function LearningCard({ l }: { l: Learning }) {
+  const pct = Math.min(100, Math.round(100 * l.days_done / Math.max(1, l.days_needed)));
+  return (
+    <Card title={`Learning: day ${l.day} of ${l.days_needed}`} className="learning-card">
+      <div className="progress"><div style={{ width: `${pct}%` }} /></div>
+      <dl className="facts">
+        <div><dt>Uploaded so far</dt><dd>{fmtBytes(l.uploaded_bytes)} · {fmtCompact(l.uploaded_events)} events</dd></div>
+        <div><dt>Per day</dt><dd>{l.bytes_per_day == null ? "measured after the first hours" : `${fmtBytes(l.bytes_per_day)} · ${fmtCompact(l.events_per_day)} events`}</dd></div>
+        <div><dt>Expected in total</dt><dd>{l.expected_total_bytes == null ? "—" : `about ${fmtBytes(l.expected_total_bytes)}`}</dd></div>
+        <div><dt>Disk on the endpoint</dt><dd>{l.local_mb == null ? "—" : `${Math.round(l.local_mb)} MB for the agent`}{l.disk_free_pct != null ? ` · ${l.disk_free_pct.toFixed(0)} % free` : ""}</dd></div>
+        <div><dt>Detection now</dt><dd>{l.early_model
+          ? `Early model on ${l.early_model.hours ?? "?"} h of activity${l.early_model.rules_only ? " (high-confidence rules only)" : " (all detection types)"}`
+          : l.hours_recorded != null && l.hours_recorded < 1 ? "Starts after the first hour" : "Waiting for the first model"}</dd></div>
+        <div><dt>Next model</dt><dd>{l.next_model_hours == null ? "—" : l.next_model_hours < 24 ? `after ${l.next_model_hours} h of activity`
+          : `after day ${Math.round(l.next_model_hours / 24)}`}{l.days_done + 1 >= l.days_needed ? "; final model after the last day" : ""}</dd></div>
+      </dl>
+    </Card>
+  );
 }
 
 function HealthCard({ h }: { h: EndpointOverview["health"] }) {

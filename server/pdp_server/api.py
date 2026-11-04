@@ -201,7 +201,8 @@ async def upload_events(endpoint_id: str, request: Request, ep=Depends(agent_end
                 cur, f"INSERT INTO {s}.events (ts_ns, src, op, dst, event_uuid, batch_id) VALUES %s",
                 [(r["ts_ns"], r["src"], r["op"], r["dst"], r["event_uuid"], x_batch_id) for r in rows], page_size=10000)
     with db.conn() as c:
-        db.q(c, "INSERT INTO upload_batches (endpoint_id, batch_id, kind, rows) VALUES (%s,%s,'events',%s) ON CONFLICT DO NOTHING", (endpoint_id, x_batch_id, len(rows)))
+        db.q(c, "INSERT INTO upload_batches (endpoint_id, batch_id, kind, rows, bytes) VALUES (%s,%s,'events',%s,%s) ON CONFLICT DO NOTHING",
+             (endpoint_id, x_batch_id, len(rows), int(request.headers.get("content-length") or 0) or None))
     return {"ok": True, "batch_id": x_batch_id}
 
 

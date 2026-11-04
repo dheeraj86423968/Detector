@@ -715,3 +715,6 @@ td.reason { margin: 0; }
 .report .kpi { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
 .report .kpi b { font-size: 22px; display: block; }
 @media print { .sidebar, .no-print { display: none !important; } .report { max-width: none; } }
+.learning-card { margin-bottom: 14px; }
+.progress { height: 8px; border-radius: 6px; background: var(--border); overflow: hidden; margin: 2px 0 14px; }
+.progress > div { height: 100%; background: var(--accent, #2563eb); border-radius: 6px; }

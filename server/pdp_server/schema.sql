@@ -149,3 +149,6 @@ CREATE TABLE IF NOT EXISTS incident_events (
   user_id INT REFERENCES users(id) ON DELETE SET NULL, kind TEXT NOT NULL CHECK (kind IN ('status','assign','note')),
   text TEXT, value TEXT, at TIMESTAMPTZ DEFAULT now());
 CREATE INDEX IF NOT EXISTS incident_events_inc ON incident_events (incident_id, at);
+
+-- learning progress (0.6): compressed bytes of every baseline upload (what the client's network carried)
+ALTER TABLE upload_batches ADD COLUMN IF NOT EXISTS bytes BIGINT;

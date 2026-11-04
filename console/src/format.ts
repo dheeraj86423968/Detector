@@ -213,3 +213,10 @@ export function shortCmd(t: string, head = 32): string {
   const exe = i < 0 ? line : line.slice(0, i), rest = i < 0 ? "" : line.slice(i);
   return (exe.length > head ? midTrunc(exe, head) : shortHex(exe)) + shortHex(rest);
 }
+
+export const fmtBytes = (b: number | null | undefined) => {
+  if (b == null) return "—";
+  const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0, v = b;
+  while (v >= 1000 && i < u.length - 1) { v /= 1000; i++; }
+  return `${v >= 100 || i === 0 ? Math.round(v) : v.toFixed(1)} ${u[i]}`;
+};

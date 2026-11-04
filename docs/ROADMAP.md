@@ -133,8 +133,14 @@ column and Mine / No owner filters on the incident list. Weekly summary: printab
 (/#/reports/weekly, print to PDF) and a Monday-morning notification on channels with the "weekly" event (default for
 new channels). tests/e2e/triage_e2e.py (13 checks on staging, including organisation isolation).
 
-### 9. Learning progress per endpoint — status: todo
+### 9. Learning progress per endpoint — status: done (server 0.6; 2026-11-04)
 Console shows "day N of 8, X MB uploaded, early detection on", expected upload volume and local disk use.
+
+Result: the endpoint page shows a "Learning: day N of 8" card while an endpoint learns: progress bar, data uploaded so
+far (compressed bytes the client's network carried, recorded per upload; older uploads estimated from the
+endpoint's measured bytes per event), rate per day, expected total, the agent's local disk use and free space, the
+early model in use (hours, rules-only or all detection types) and when the next model comes. client-vm-02: 7.3 MB so
+far, about 200 MB expected (its first hours include the install's burst).
 
 ### 10. Login security — status: todo
 MFA (TOTP), per-org SSO (Google / Microsoft OIDC), console audit log, per-org data retention setting.

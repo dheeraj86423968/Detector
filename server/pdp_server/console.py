@@ -262,6 +262,26 @@ def set_incident_status(incident_id: int, req: IncidentStatus, s=Depends(triager
 
 
 # ---------------------------------------------------------------------------------------------- endpoint overview
+def learning_progress(row: dict, done: int, need: int, bundle: dict | None, h: dict, up: dict) -> dict:
+    """What a learning endpoint has done and will need: day N of need, data uploaded (compressed, as the client's
+    network carried it) and the expected total, local disk use, the early model in use and the next one."""
+    from .early import EARLY_MILESTONES_H, EARLY_RULES_ONLY_BELOW_H
+    mat = ((bundle or {}).get("manifest") or {}).get("maturity") or {}
+    hours = None
+    if up["first"] is not None:
+        hours = (time.time() - up["first"].timestamp()) / 3600
+    per_day = float(up["bytes24"]) if hours and hours >= 24 else (float(up["bytes"]) / hours * 24 if hours and hours > 0.5 else None)
+    remaining_days = max(0, need - done)
+    expected = float(up["bytes"]) + per_day * remaining_days if per_day is not None else None
+    have_h = float(mat.get("milestone_h") or mat.get("baseline_hours") or 0) if mat.get("early") else None
+    nxt = next((m for m in EARLY_MILESTONES_H if have_h is None or m > have_h), None)
+    return {"day": min(done + 1, need), "days_needed": need, "days_done": done,
+            "uploaded_bytes": int(up["bytes"]), "uploaded_events": int(up["events"]), "bytes_per_day": per_day, "expected_total_bytes": expected,
+            "events_per_day": float(up["events24"]) if hours and hours >= 24 else (float(up["events"]) / hours * 24 if hours and hours > 0.5 else None),
+            "local_mb": h.get("spool_mb"), "disk_free_pct": h.get("disk_free_pct"),
+            "early_model": {"hours": mat.get("baseline_hours"), "rules_only": bool(have_h is not None and have_h < EARLY_RULES_ONLY_BELOW_H),
+                            "since": bundle.get("created_at") if bundle else None} if mat.get("early") else None,
+            "next_model_hours": nxt if row["phase"] == "baseline" else None, "hours_recorded": round(hours, 1) if hours else None}
 def check_summary(r: dict) -> dict:
     spec = r.get("spec") or {}
     summ = spec.get("summary") or {}
@@ -323,6 +343,14 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
         checks = _checks(c, endpoint_id)
         training = db.q(c, "SELECT state, created_at, started_at FROM jobs WHERE endpoint_id=%s AND kind IN ('train','train_rules') ORDER BY created_at DESC LIMIT 1", (endpoint_id,), one=True)
         org = db.q(c, "SELECT agent_update FROM orgs WHERE id=%s", (row["org_id"],), one=True)
+        # uploads before server 0.6 have no recorded size: estimated from this endpoint's measured bytes per event,
+        # else 11 bytes (measured on the L40S host and client-vm-02, gzip NDJSON)
+        up = db.q(c, "WITH b AS (SELECT rows, bytes, received_at FROM upload_batches WHERE endpoint_id=%s AND kind='events'), "
+                     "r AS (SELECT coalesce(sum(bytes)::float / nullif(sum(rows) FILTER (WHERE bytes IS NOT NULL), 0), 11.0) AS bpe FROM b) "
+                     "SELECT coalesce(sum(coalesce(bytes, rows * r.bpe)), 0) AS bytes, coalesce(sum(rows), 0) AS events, "
+                     "coalesce(sum(coalesce(bytes, rows * r.bpe)) FILTER (WHERE received_at > now() - interval '24 hours'), 0) AS bytes24, "
+                     "coalesce(sum(rows) FILTER (WHERE received_at > now() - interval '24 hours'), 0) AS events24, min(received_at) AS first "
+                     "FROM b, r GROUP BY r.bpe", (endpoint_id,), one=True) or {"bytes": 0, "events": 0, "bytes24": 0, "events24": 0, "first": None}
     need, done = _needed(row["config"]), int(row["baseline_days_done"])
     has_model = bundle is not None
     # ---- lifecycle
@@ -396,7 +424,8 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
         blocked = "a detection check is already running"
     elif row["phase"] == "retired":
         blocked = "the endpoint is retired"
-    return {"ok": True, "endpoint": ep, "lifecycle": lifecycle, "health": health, "detection": detection,
+    learning_info = learning_progress(row, done, need, bundle, h, up) if row["phase"] in ("pending", "baseline", "training") else None
+    return {"ok": True, "endpoint": ep, "lifecycle": lifecycle, "health": health, "detection": detection, "learning": learning_info,
             "check": checks[0] if checks else None, "can_run_check": blocked is None and s["r"] in ("admin", "analyst"),
             "check_blocked_reason": blocked if blocked else (None if s["r"] in ("admin", "analyst") else "your role is read-only")}
 
