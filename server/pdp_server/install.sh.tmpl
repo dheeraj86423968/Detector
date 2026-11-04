@@ -66,6 +66,7 @@ if [ "$uninstall" -eq 1 ]; then
   docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
   rm -f "/etc/systemd/system/$UNIT.service"
   systemctl daemon-reload
+  systemctl reset-failed "$UNIT.service" >/dev/null 2>&1 || true
   rm -rf "$ETC"
   ok "service and configuration removed"
   if [ "$purge" -eq 1 ]; then rm -rf "$DATA"; ok "agent data removed ($DATA)"; else ok "agent data kept in $DATA (--purge removes it)"; fi
@@ -151,7 +152,7 @@ say "Configuring the agent"
 json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
 cat > "$ETC/agent.json" <<EOF
 {
-  "server_url": "$(json_str "$SERVER")",
+  "server_url": "$(json_str "$AGENT_URL")",
   "agent_url": "$(json_str "$AGENT_URL")",
   "data_dir": "/var/lib/pdp",
   "pki_dir": "/var/lib/pdp/pki",
@@ -177,7 +178,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 EnvironmentFile=$ETC/agent.env
-ExecStartPre=-/usr/bin/docker rm -f $CONTAINER
+ExecStartPre=-/bin/sh -c 'docker rm -f $CONTAINER >/dev/null 2>&1 || true'
 ExecStart=/usr/bin/docker run --rm --name $CONTAINER --privileged --pid=host --network=host \\
   -e PDP_ENROLL_TOKEN -e PDP_CA_SHA256 -e PDP_AGENT_CONFIG=/etc/pdp/agent.json \\
   -v $ETC/agent.json:/etc/pdp/agent.json:ro -v $DATA:/var/lib/pdp \\

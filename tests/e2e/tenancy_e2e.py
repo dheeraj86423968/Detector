@@ -209,6 +209,10 @@ epB = js.get("endpoint_id")
 st, statB = agent_call(certB, "GET", f"/v1/endpoints/{epB}/status")
 check(st == 200 and "198.51.100.0/24" not in statB.get("config", {}).get("trusted_addresses", []), "B's agent does not receive A's entry")
 check(agent_call(certA, "GET", f"/v1/endpoints/{epB}/status")[0] == 403, "A's agent certificate cannot act for B's endpoint")
+nc = http.client.HTTPSConnection(HOST, 8443, context=ctx); nc.request("GET", f"/v1/endpoints/{epA}/status"); r = nc.getresponse(); r.read()
+check(r.status == 403, f"agent port: calls without a client certificate are refused ({r.status})")
+nc = http.client.HTTPSConnection(HOST, 8443, context=ctx); nc.request("GET", "/dl/ca.pem"); r = nc.getresponse(); body = r.read()
+check(r.status == 200 and body == CA_PEM, "agent port: new agents fetch the pinned CA and enrol here")
 
 # ---------------------------------------------------------------- invites
 st, inv = A.call("POST", "/api/invites", {"role": "viewer", "endpoints": [epA]})

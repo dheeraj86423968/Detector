@@ -636,10 +636,10 @@ def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
     login = f"echo {token} | docker login {host} -u pdp --password-stdin && \\\n" if agent_image(host) else ""
     docker = (login + f"docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host \\\n"
               f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN={token} -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
-              f"  -e PDP_SERVER_URL={server} -e PDP_AGENT_URL={agent} {image} run")
+              f"  -e PDP_SERVER_URL={agent} -e PDP_AGENT_URL={agent} {image} run")
     return {"ok": True, "token": token, "expires_in_hours": 24, "ca_sha256": fp, "server_url": server, "agent_url": agent,
             "install_command": f"curl -fsSL {server}/install.sh | sudo bash -s -- --token {token}",
-            "package_command": f"sudo pdp-agent-install --server {server} --agent-url {agent} --token {token} --ca-sha256 {fp}",
+            "package_command": f"sudo pdp-agent-install --server {agent} --agent-url {agent} --token {token} --ca-sha256 {fp}",
             "docker_command": docker,
             "enroll_command": f"python -m pdp_agent enroll {token} --ca-sha256 {fp}"}
 
