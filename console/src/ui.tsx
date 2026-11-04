@@ -125,14 +125,22 @@ export function RelTime({ t, seconds }: { t: number | string | null | undefined;
 
 // ---------------------------------------------------------------- inputs
 
+async function copyText(value: string) {
+  try { await navigator.clipboard.writeText(value); } catch {
+    const ta = document.createElement("textarea"); ta.value = value; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+  }
+}
+
+/** A small "Copy" button for a value that is not shown in full (an invite link in a table row). */
+export function CopyButton({ value, label = "Copy", title = "Copy to clipboard" }: { value: string; label?: string; title?: string }) {
+  const [done, setDone] = useState(false);
+  const copy = async () => { await copyText(value); setDone(true); setTimeout(() => setDone(false), 1500); };
+  return <button className="btn sm" onClick={copy} title={title}>{done ? <><Check size={14} /> Copied</> : <><Copy size={14} /> {label}</>}</button>;
+}
+
 export function CopyField({ value, label, multiline }: { value: string; label?: string; multiline?: boolean }) {
   const [done, setDone] = useState(false);
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(value); } catch {
-      const ta = document.createElement("textarea"); ta.value = value; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
-    }
-    setDone(true); setTimeout(() => setDone(false), 1500);
-  };
+  const copy = async () => { await copyText(value); setDone(true); setTimeout(() => setDone(false), 1500); };
   return (
     <div className="copyfield">
       {label && <div className="copyfield-label">{label}</div>}

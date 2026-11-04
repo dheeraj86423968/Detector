@@ -3,8 +3,12 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 // ---------------------------------------------------------------- transport
 
 export class ApiError extends Error {
-  constructor(message: string, public status: number) { super(message); }
+  /** `detail` is the server's own message (null when `message` is a generic fallback). */
+  constructor(message: string, public status: number, public detail: string | null = null) { super(message); }
 }
+
+/** Pages anyone can open without signing in: a 401 there must not bounce to the sign-in page. */
+const PUBLIC_HASH = /^#\/(login|signup|join)(\/|\?|$)/;
 
 const detailText = (d: unknown): string | null => {
   if (!d) return null;
@@ -13,14 +17,16 @@ const detailText = (d: unknown): string | null => {
   return String(d);
 };
 
-/** Same-origin JSON call. A 401 anywhere except the sign-in call sends the browser to the login page. */
+/** Same-origin JSON call. A 401 anywhere except the sign-in call and the public pages sends the browser to the login page. */
 export async function api<T = any>(path: string, opts: RequestInit = {}): Promise<T> {
   const r = await fetch(path, { credentials: "same-origin", ...opts, headers: { "Content-Type": "application/json", ...(opts.headers || {}) } });
   const js = await r.json().catch(() => ({}));
-  if (r.status === 401 && path !== "/api/login" && !window.location.hash.startsWith("#/login")) window.location.hash = "#/login";
+  if (r.status === 401 && path !== "/api/login" && !PUBLIC_HASH.test(window.location.hash)) window.location.hash = "#/login";
   if (!r.ok || js.ok === false) {
-    const msg = detailText(js.detail) || detailText(js.error) || (r.status === 403 ? "You do not have permission to do this." : r.status === 404 ? "Not found." : r.statusText || "Request failed");
-    throw new ApiError(msg.charAt(0).toUpperCase() + msg.slice(1), r.status);
+    const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
+    const server = detailText(js.detail) || detailText(js.error);
+    const msg = server || (r.status === 403 ? "You do not have permission to do this." : r.status === 404 ? "Not found." : r.statusText || "Request failed");
+    throw new ApiError(cap(msg), r.status, server ? cap(server) : null);
   }
   return js as T;
 }
@@ -57,22 +63,51 @@ export function useApi<T>(path: string | null, intervalMs = 0) {
 // ---------------------------------------------------------------- session / access control
 
 export type Role = "admin" | "analyst" | "viewer";
-export type Can = { manage_users: boolean; manage_endpoints: boolean; triage: boolean; run_checks: boolean };
+/** `manage_org`: organisation admin (rename it); `operate`: platform operator (every organisation's usage). */
+export type Can = { manage_users: boolean; manage_endpoints: boolean; triage: boolean; run_checks: boolean; manage_org: boolean; operate: boolean };
 export type Me = { ok: true; user_id: number; username: string; display_name?: string | null; email?: string | null; role: Role;
-  auth?: "local" | "oidc"; endpoints?: string[] | null; can?: Partial<Can> };
-export type AuthConfig = { sso: boolean; sso_label: string; password: boolean; password_policy: "enabled" | "admin-only" | "disabled" };
+  auth?: "local" | "oidc"; endpoints?: string[] | null; can?: Partial<Can>;
+  org?: { id: number | string; name: string } | null; operator?: boolean };
+export type SignupMode = "off" | "code" | "open";
+export type AuthConfig = { sso: boolean; sso_label: string; password: boolean; password_policy: "enabled" | "admin-only" | "disabled"; signup?: SignupMode };
 
 export const MeContext = createContext<Me | null>(null);
 export const useMe = () => useContext(MeContext);
+/** Re-reads /api/me (e.g. after the organisation was renamed, so the sidebar follows). */
+export const MeReloadContext = createContext<() => void>(() => { });
+export const useReloadMe = () => useContext(MeReloadContext);
 /** Permission flags from /api/me (the server decides; the UI never infers from role names). */
 export const useCan = (): Can => {
   const c = useMe()?.can || {};
-  return { manage_users: !!c.manage_users, manage_endpoints: !!c.manage_endpoints, triage: !!c.triage, run_checks: !!c.run_checks };
+  return { manage_users: !!c.manage_users, manage_endpoints: !!c.manage_endpoints, triage: !!c.triage, run_checks: !!c.run_checks,
+    manage_org: !!c.manage_org, operate: !!c.operate };
 };
 
 export type UserRow = { id: number; username: string; display_name?: string | null; email?: string | null; role: Role; auth: "local" | "oidc";
   endpoints: { id: string; name: string }[] | null; disabled: boolean; created_at: string; last_login: string | null };
 export type UsersResp = { ok: true; sso?: { enabled: boolean; label: string; password_policy: AuthConfig["password_policy"] }; users: UserRow[] };
+
+// ---------------------------------------------------------------- organisations (0.5)
+
+/** `endpoints` is what counts against `max_endpoints`. */
+export type Org = { id: number | string; name: string; created_at: string; max_endpoints: number; endpoints: number; users: number; pending_invites: number };
+export type OrgResp = { ok: true; org: Org };
+/** A pending invite (admin view). `email` null = anyone with the link; `endpoints` null = all endpoints. */
+export type Invite = { id: number | string; email: string | null; role: Role; endpoints: { id: string; name: string }[] | null;
+  created_at: string; expires_at: string; created_by: string | null; link: string };
+export type InvitesResp = { ok: true; invites: Invite[] };
+export type NewInvite = { email?: string; role: Role; endpoints: string[] | null };
+/** What the person opening an invite link sees (public). */
+export type PublicInvite = { ok: true; organisation: string; role: Role; email: string | null; expires_at: string; invited_by: string | null };
+export type SignupBody = { organisation: string; name: string; email: string; password: string; code?: string };
+export type AcceptInviteBody = { name: string; email?: string; password: string };
+export type OperatorOrg = { id: number | string; name: string; created_at: string; disabled: boolean; max_endpoints: number;
+  users: number; endpoints: number; endpoints_online: number; alerts_7d: number; last_activity: string | null };
+export type OperatorOrgsResp = { ok: true; signup: { mode: SignupMode; code: string | null }; orgs: OperatorOrg[] };
+
+/** Client-side checks shared by sign-up and invite acceptance (the server checks again). */
+export const looksLikeEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
+export const PASSWORD_MIN = 10;
 
 // ---------------------------------------------------------------- endpoints
 
@@ -94,6 +129,8 @@ export type EndpointOverview = { ok: true; endpoint: Endpoint; lifecycle: Lifecy
     triaged: { true_positive: number; false_positive: number; open: number }; per_day: { date: string; alerts: number; incidents: number }[] };
   check: Check | null; can_run_check: boolean; check_blocked_reason: string | null };
 export type EndpointConfigResp = { ok: true; endpoint: { id: string; name: string; config?: Record<string, any> } };
+/** `install_command`: one line for a Linux server (`curl -fsSL https://<host>/install.sh | sudo bash -s -- --token <token>`);
+ *  `docker_command`: hosts that only run containers; `enroll_command`: an agent that is already installed. */
 export type EnrollToken = { ok: true; token: string; expires_in_hours: number; ca_sha256: string; enroll_command: string;
   install_command?: string; docker_command?: string; server_url?: string; agent_url?: string };
 

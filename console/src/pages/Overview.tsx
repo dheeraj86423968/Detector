@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, CircleSlash, FlaskConical, ShieldCheck, Hourglass, WifiOff, TriangleAlert, ServerCrash } from "lucide-react";
-import { Overview, Severity, useApi } from "../api";
+import { ArrowRight, Check, CheckCircle2, CircleSlash, FlaskConical, ShieldCheck, Hourglass, Loader2, Mail, Plus, WifiOff, TriangleAlert, ServerCrash } from "lucide-react";
+import { Endpoint, OrgResp, Overview, Severity, useApi, useCan, useMe } from "../api";
 import { DailyBars } from "../chart";
 import { plural, SEVERITIES, SEVERITY_LABEL } from "../format";
 import { IncidentTable } from "../incidents";
-import { Card, Empty, ErrorState, Loading, PageHeader } from "../ui";
+import { Card, cx, Empty, ErrorState, Loading, PageHeader } from "../ui";
 
 const ATTENTION_ICON: Record<string, JSX.Element> = {
   offline: <WifiOff size={16} />, dropping_events: <ServerCrash size={16} />, check_failed: <TriangleAlert size={16} />, no_check: <FlaskConical size={16} />,
@@ -27,6 +28,7 @@ export default function OverviewPage() {
   return (
     <div className="page">
       <PageHeader title="Overview" subtitle={headline} />
+      <GetStarted fleet={e} />
       <div className="grid grid-2">
         <Card title="Endpoints" subtitle={`${plural(e.total, "endpoint")} enrolled`} actions={<Link to="/endpoints" className="card-link">View all <ArrowRight size={14} /></Link>}>
           <div className="fleet">
@@ -86,6 +88,74 @@ export default function OverviewPage() {
           : <IncidentTable rows={d.recent_incidents} compact />}
       </Card>
     </div>
+  );
+}
+
+/** Learning period of a new endpoint: 7 days of learning plus 1 validation day. */
+const BASELINE_DAYS = 8;
+type StepState = "done" | "active" | "pending";
+
+/**
+ * First steps for a new organisation: install an agent, let it learn, invite the team. Shown until an endpoint is
+ * protected (so organisations that already have protected endpoints never see it) or until dismissed.
+ */
+function GetStarted({ fleet }: { fleet: Overview["endpoints"] }) {
+  const me = useMe(); const can = useCan();
+  const key = `pdp.getStarted.dismissed.${me?.org?.id ?? "default"}`;
+  const [hidden, setHidden] = useState(() => { try { return localStorage.getItem(key) === "1"; } catch { return false; } });
+  const show = !hidden && fleet.protected === 0;
+  const eps = useApi<{ endpoints: Endpoint[] }>(show && fleet.total > 0 ? "/api/endpoints" : null, 60000);
+  const org = useApi<OrgResp>(show && can.manage_users ? "/api/org" : null);
+  if (!show) return null;
+  const dismiss = () => { try { localStorage.setItem(key, "1"); } catch { /* private window: hide for this visit only */ } setHidden(true); };
+
+  const installed = fleet.total > 0;
+  const learning = (eps.data?.endpoints || []).filter(x => x.state !== "retired" && x.baseline && x.baseline.needed > 0);
+  const best = learning.reduce<Endpoint | null>((a, x) => (!a || x.baseline!.done / x.baseline!.needed > a.baseline!.done / a.baseline!.needed ? x : a), null);
+  const o = org.data?.org;
+  const invited = !!o && (o.users > 1 || o.pending_invites > 0);
+  const s1: StepState = installed ? "done" : "active";
+  const s2: StepState = fleet.protected > 0 ? "done" : installed ? "active" : "pending";
+  const s3: StepState = invited ? "done" : installed ? "active" : "pending";
+  return (
+    <Card title="Get started" subtitle="How to start protecting your servers."
+      actions={<button className="btn sm ghost" onClick={dismiss} title="Hide this card">Hide</button>}>
+      <ol className={cx("stepper", can.manage_users ? "three" : "two")}>
+        <Step n={1} state={s1} title="Install the agent on a Linux server"
+          text={installed ? `${plural(fleet.total, "endpoint")} connected.` : "One command, run as root on the server. It installs the agent and connects it to this console."}>
+          {can.manage_endpoints
+            ? <Link to="/endpoints?add=1" className={cx("btn sm", !installed && "primary")}><Plus size={14} />{installed ? "Add another" : "Add endpoint"}</Link>
+            : !installed && <span className="muted sm">Ask an admin of your organisation to add an endpoint.</span>}
+        </Step>
+        <Step n={2} state={s2} title={`The agent learns normal activity for ${BASELINE_DAYS} days`}
+          text="7 days of learning, then 1 day to check the result. Detection starts automatically; you do not need to do anything.">
+          {best && best.baseline && (
+            <div className="step-progress">
+              <div className="bar"><span style={{ width: `${Math.min(100, (100 * best.baseline.done) / best.baseline.needed)}%` }} /></div>
+              <span>{learning.length > 1 ? <><Link to={`/endpoints/${best.id}`}>{best.name}</Link> is furthest along: </> : null}
+                {best.baseline.done} of {best.baseline.needed} days complete</span>
+            </div>
+          )}
+        </Step>
+        {can.manage_users && <Step n={3} state={s3} title="Invite your team"
+          text={invited && o ? `${plural(o.users, "user")}${o.pending_invites ? `, ${plural(o.pending_invites, "invite")} pending` : ""}.` : "Give colleagues their own sign-in, with the role and endpoints they need."}>
+          <Link to="/team" className="btn sm"><Mail size={14} />{invited ? "Manage team" : "Invite people"}</Link>
+        </Step>}
+      </ol>
+    </Card>
+  );
+}
+
+function Step({ n, state, title, text, children }: { n: number; state: StepState; title: string; text: string; children?: React.ReactNode }) {
+  return (
+    <li className={cx("step", `s-${state}`)}>
+      <div className="step-mark">{state === "done" ? <Check size={14} strokeWidth={3} /> : state === "active" && n === 2 ? <Loader2 size={14} className="spin-slow" /> : <span>{n}</span>}</div>
+      <div className="step-body">
+        <div className="step-title">{title}</div>
+        <div className="step-text">{text}</div>
+        {children && <div className="step-action">{children}</div>}
+      </div>
+    </li>
   );
 }
 
