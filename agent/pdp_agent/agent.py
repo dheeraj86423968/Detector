@@ -250,6 +250,12 @@ class Agent:
             if getattr(self, "_approved", None) is not None:
                 log(f"approved executables updated ({len(appr)})")
             self._approved = appr
+        allow = (sorted(cfg.get("trusted_addresses") or []), sorted(tuple(x) for x in (cfg.get("suppressed_detections") or [])))
+        if allow != getattr(self, "_allow", None) and hasattr(self.runtime, "set_allowlist"):
+            self.runtime.set_allowlist(*allow)
+            if getattr(self, "_allow", None) is not None:
+                log(f"allow list updated ({len(allow[0])} addresses, {len(allow[1])} detections)")
+            self._allow = allow
         la = bool(cfg.get("learned_alerts", True))
         if self.runtime.policy is not None and la != self.runtime.policy.learned_alerts:
             self.runtime.set_learned_alerts(la)

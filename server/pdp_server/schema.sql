@@ -89,3 +89,10 @@ ALTER TABLE alerts ADD COLUMN IF NOT EXISTS rule TEXT;
 ALTER TABLE alerts ADD COLUMN IF NOT EXISTS reason TEXT;
 ALTER TABLE alerts ADD COLUMN IF NOT EXISTS reasons JSONB;
 CREATE INDEX IF NOT EXISTS alerts_layer ON alerts (endpoint_id, layer);
+
+-- 0.4: allow list (pdp_server/allowlist.py); alerts it covers are kept but not part of incidents
+CREATE TABLE IF NOT EXISTS allowlist (
+  id SERIAL PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('program','address','detection')), value TEXT NOT NULL,
+  rule TEXT, endpoint_ids JSONB, note TEXT, created_by INT REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ DEFAULT now());
+ALTER TABLE alerts ADD COLUMN IF NOT EXISTS allowed_by INT;
+CREATE INDEX IF NOT EXISTS alerts_allowed ON alerts (allowed_by) WHERE allowed_by IS NOT NULL;

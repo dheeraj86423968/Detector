@@ -190,6 +190,7 @@ class TagEngine:
                  n_preexisting: int, fit: bool = False):
         self.p = params
         self.trusted = set(trusted_ips)
+        self.allowed_nets: list = []        # console allow list: addresses / networks treated as trusted
         self.thr = thresholds or {}
         self.n_pre = int(n_preexisting)
         self.first_day: dict[int, int] | None = None   # fit mode: node -> index of the baseline day it was first seen
@@ -220,7 +221,8 @@ class TagEngine:
             e = reg.entities[n]
             if e.ntype == "netflow":
                 ip = remote_ip(e.label)
-                t = _Tag(1.0 if (is_local(ip) or ip in self.trusted) else 0.0, 0.0, n)
+                t = _Tag(1.0 if (is_local(ip) or ip in self.trusted or self._allowed(ip)) else 0.0, 0.0, n)
+                self.__dict__.setdefault("_net_nodes", set()).add(n)
             elif e.ntype == "file":
                 t = _Tag(1.0, 1.0 if SENSITIVE.search(file_path(e.label)) else 0.0, n)
             else:
@@ -238,6 +240,29 @@ class TagEngine:
         cur = self._data(t, now)
         if v < cur:
             t.data, t.t, t.origin = v, now, origin
+
+    def set_allowed_addresses(self, items) -> None:
+        import ipaddress
+        nets = []
+        for x in items or ():
+            try:
+                nets.append(ipaddress.ip_network(str(x).strip(), strict=False))
+            except ValueError:
+                continue
+        if nets != self.allowed_nets:
+            self.allowed_nets = nets
+            for n in getattr(self, "_net_nodes", ()):        # re-evaluate network endpoints seen so far
+                self.tags.pop(n, None)
+
+    def _allowed(self, ip: str) -> bool:
+        if not self.allowed_nets or not ip:
+            return False
+        import ipaddress
+        try:
+            a = ipaddress.ip_address(ip)
+        except ValueError:
+            return False
+        return any(a in n for n in self.allowed_nets)
 
     def _check(self, out: list, rule: str, key: str, value: float, nodes: tuple, ts: int, detail: str):
         if self.fit_mode:
@@ -376,6 +401,12 @@ class DeterministicLayers:
         if self.novelty is not None:
             self.novelty.approved = set(approved or ())
 
+    def set_allowlist(self, addresses=(), suppressed=()) -> None:
+        """Console allow list: trusted network addresses (layer 2) and specific detections (rule, key) not to raise."""
+        if self.tags is not None:
+            self.tags.set_allowed_addresses(addresses)
+        self.suppressed = {(str(r), str(k)) for r, k in (suppressed or ())}
+
     def reset(self):
         if self.novelty is not None:
             self.novelty.reset()
@@ -388,6 +419,9 @@ class DeterministicLayers:
             hits += self.novelty.process(w, reg, ids)
         if self.tags is not None:
             hits += self.tags.process(w, reg)
+        sup = getattr(self, "suppressed", None)
+        if sup:
+            hits = [h for h in hits if (h.rule, h.key) not in sup]
         return hits
 
 

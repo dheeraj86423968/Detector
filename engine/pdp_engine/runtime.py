@@ -163,6 +163,11 @@ class Runtime:
         if self.layers is not None:
             self.layers.set_approved(approved)
 
+    def set_allowlist(self, addresses=(), suppressed=()) -> None:
+        """Console allow list: trusted addresses / networks and (rule, key) detections that must not alert."""
+        if self.layers is not None:
+            self.layers.set_allowlist(addresses, suppressed)
+
     def _featurize(self, ids):
         """Features for registry rows `ids` (label cache inside the featuriser: many entities share a label)."""
         ids = list(ids)

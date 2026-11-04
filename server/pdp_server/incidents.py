@@ -88,7 +88,7 @@ def _det_key(a: dict) -> tuple:
 def load_alerts(c, scope: list[str] | None, endpoint_id: str | None = None, with_context: bool = False) -> list[dict]:
     cols = ("a.id, a.endpoint_id, e.name AS endpoint_name, a.window_start_ns, a.node_uuid, a.ntype, a.label, a.display, "
             "coalesce(a.layer, 'learned') AS layer, a.rule, a.reason, a.status" + (", a.context" if with_context else ""))
-    where, params = ["TRUE"], []
+    where, params = ["a.allowed_by IS NULL"], []
     if scope is not None:
         where.append("a.endpoint_id = ANY(%s::uuid[])"); params.append(scope)
     if endpoint_id:
@@ -290,29 +290,40 @@ def build_graph(alerts: list[dict]) -> tuple[dict, list[dict]]:
             return False
         return aggressive or bool(SYSTEM_RE.search(p))
 
-    def fold(pred, label_fmt):
+    def fold(pred, label_fmt, both_ways=False):
+        """Replace files matching `pred` next to a process by one group node per process (and direction)."""
         nonlocal edges
-        groups: dict[str, dict] = {}
+        groups: dict[tuple, dict] = {}
         keep = []
         for e in edges:
-            f = e["src"] if pred(e["src"]) and ntype(e["dst"]) == "subject" else None
-            if f is None:
+            if pred(e["src"]) and ntype(e["dst"]) == "subject" and e["op"] != "EXECUTE":
+                f, key = e["src"], (e["dst"], "in")
+            elif both_ways and pred(e["dst"]) and ntype(e["src"]) == "subject":
+                f, key = e["dst"], (e["src"], "out")
+            else:
                 keep.append(e); continue
-            g = groups.setdefault(e["dst"], {"files": {}, "first_ns": e["first_ns"]})
+            g = groups.setdefault(key, {"files": {}, "first_ns": e["first_ns"]})
             g["files"][f] = path_of(f)
             g["first_ns"] = min(g["first_ns"], e["first_ns"]) if g["first_ns"] else e["first_ns"]
-        for proc, g in groups.items():
-            gid = f"group:{label_fmt[0]}:{proc}"
-            sample = sorted(g["files"].values())
-            raw_nodes[gid] = {"uuid": gid, "ntype": "group", "label": label_fmt[1].format(n=len(sample)),
-                              "sample": sample[:25], "count": len(sample)}
-            keep.append({"src": gid, "dst": proc, "op": "READ", "first_ns": g["first_ns"], "count": len(sample)})
+        for (proc, way), g in groups.items():
+            gid = f"group:{label_fmt[0]}:{way}:{proc}"
+            sample = sorted(v for v in g["files"].values() if v not in UNKNOWN)
+            raw_nodes[gid] = {"uuid": gid, "ntype": "group", "label": label_fmt[1].format(n=len(g["files"]), s="" if len(g["files"]) == 1 else "s"),
+                              "sample": sample[:25], "count": len(g["files"])}
+            if way == "in":
+                keep.append({"src": gid, "dst": proc, "op": "READ", "first_ns": g["first_ns"], "count": len(g["files"])})
+            else:
+                keep.append({"src": proc, "dst": gid, "op": "WRITE", "first_ns": g["first_ns"], "count": len(g["files"])})
         edges = keep
 
-    fold(lambda u: foldable(u), ("sys", "{n} system files"))
+    def unnamed(u):   # files whose path the collector did not record (common in DARPA CADETS, not in PDP's eBPF data)
+        return u not in flagged and ntype(u) == "file" and path_of(u) in UNKNOWN + ("None",) and not (touch.get(u, set()) & {"EXECUTE"})
+
+    fold(unnamed, ("unnamed", "{n} file{s} without a recorded path"), both_ways=True)
+    fold(lambda u: foldable(u), ("sys", "{n} system file{s}"))
     live = {e["src"] for e in edges} | {e["dst"] for e in edges} | set(flagged)
     if len(live) > MAX_NODES:
-        fold(lambda u: foldable(u, aggressive=True), ("read", "{n} other files read"))
+        fold(lambda u: foldable(u, aggressive=True), ("read", "{n} other file{s} read"))
     live = {e["src"] for e in edges} | {e["dst"] for e in edges} | set(flagged)
     truncated = False
     if len(live) > MAX_NODES:
@@ -341,7 +352,7 @@ def build_graph(alerts: list[dict]) -> tuple[dict, list[dict]]:
         n = raw_nodes.get(u) or {"uuid": u, "ntype": "file", "label": u}
         if n.get("ntype") == "group":
             nodes_out.append({"id": u, "type": "group", "label": n["label"], "title": n["label"],
-                              "details": {"Files": n["count"], "Examples": ", ".join(n["sample"][:8])}, "sample": n["sample"],
+                              "details": {"Files": n["count"], **({"Examples": ", ".join(n["sample"][:8])} if n["sample"] else {"Paths": "not recorded by the collector"})}, "sample": n["sample"],
                               "alerted": False, "detection": None, "first_ns": first_seen.get(u), "count": n["count"]})
             continue
         d = parse_label(n.get("ntype") or "file", n.get("label"), u, display.get(u))

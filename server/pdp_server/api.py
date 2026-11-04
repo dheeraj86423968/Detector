@@ -26,8 +26,10 @@ app = FastAPI(title="PDP", docs_url=None, redoc_url=None, openapi_url=None)
 
 
 def _include_console_routes():
+    from .allowlist import router as allow_router
     from .console import router
     app.include_router(router)
+    app.include_router(allow_router)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")
@@ -61,6 +63,9 @@ def initialize():
 def _initialize():
     pki.ensure_pki(SERVER_HOSTNAMES)
     db.init_platform(os.path.join(os.path.dirname(__file__), "schema.sql"))
+    from .allowlist import migrate
+    with db.conn() as c:
+        migrate(c)
     with db.conn() as c:   # telemetry DDL is idempotent: re-apply it so schema changes reach existing endpoints
         for ep in db.q(c, "SELECT id FROM endpoints"):
             db.init_telemetry(str(ep["id"]))
@@ -194,7 +199,9 @@ def status(endpoint_id: str, ep=Depends(agent_endpoint)):
     with db.conn() as c:
         b = db.q(c, "SELECT id, sha256 FROM bundles WHERE id=%s", (ep["current_bundle"],), one=True) if ep["current_bundle"] else None
         cmds = db.q(c, "SELECT id, params FROM jobs WHERE endpoint_id=%s AND kind='command' AND state='queued' ORDER BY created_at", (endpoint_id,))
-    return {"ok": True, "phase": ep["phase"], "baseline_days_done": ep["baseline_days_done"], "config": ep["config"],
+        from .allowlist import effective_config
+        cfg = effective_config(c, endpoint_id, ep["config"])
+    return {"ok": True, "phase": ep["phase"], "baseline_days_done": ep["baseline_days_done"], "config": cfg,
             "bundle": {"id": str(b["id"]), "sha256": b["sha256"]} if b else None,
             "commands": [{**r["params"], "id": str(r["id"])} for r in cmds]}
 
@@ -245,6 +252,9 @@ async def upload_alerts(endpoint_id: str, request: Request, ep=Depends(agent_end
                             [(endpoint_id, r["window_start_ns"], r["node"]["uuid"], r["node"]["ntype"], r["node"]["label"], json.dumps(r["node"].get("display", {})),
                               r["fused"], r["r1"], r["r2"], json.dumps(r.get("context", {})), r.get("layer", "learned"), r.get("rule"), r.get("reason"),
                               json.dumps(r.get("reasons", []))) for r in rows])
+        from .allowlist import mark_new_alerts
+        new = [x["id"] for x in db.q(c, "SELECT id FROM alerts WHERE endpoint_id=%s AND created_at = now()", (endpoint_id,))]
+        mark_new_alerts(c, endpoint_id, new)
     return {"ok": True, "rows": len(rows)}
 
 
@@ -612,6 +622,9 @@ def endpoint_detail(endpoint_id: str, s=Depends(session)):
             raise HTTPException(404)
         jobs = db.q(c, "SELECT id, kind, state, params, progress, error, created_at, finished_at FROM jobs WHERE endpoint_id=%s ORDER BY created_at DESC LIMIT 20", (endpoint_id,))
         days = db.q(c, "SELECT date, events, windows, complete FROM baseline_days WHERE endpoint_id=%s ORDER BY date", (endpoint_id,))
+    from .allowlist import effective_config
+    with db.conn() as c:
+        ep = dict(ep, config=effective_config(c, endpoint_id, ep["config"]))
     return {"ok": True, "endpoint": _ep_out(ep),
             "jobs": [dict(j, id=str(j["id"])) for j in jobs], "baseline_days": [dict(d, date=str(d["date"])) for d in days],
             "timeline": endpoint_timeline(endpoint_id)}
@@ -649,24 +662,29 @@ class ApprovalReq(BaseModel):
 
 @app.post("/api/endpoints/{endpoint_id}/approved-executables")
 def approve_executables(endpoint_id: str, req: ApprovalReq, s=Depends(admin)):
-    """Layer-1 allowlist maintenance: approve (or revoke) programs so that their novelty alerts stop. The list is part
-    of the endpoint configuration; the agent applies it on its next status poll, without a new bundle."""
+    """Layer-1 approvals (kept for older consoles and scripts): program entries of the allow list for this endpoint.
+    Approving resolves the endpoint's open 'new program' alerts for these programs."""
+    from .allowlist import entries_for, mark_alerts
     items = [x.strip() for x in req.executables if x and x.strip()]
     _validate_config({"approved_executables": items})
     with db.conn() as c:
-        ep = db.q(c, "SELECT config FROM endpoints WHERE id=%s", (endpoint_id,), one=True)
-        if not ep:
+        if not db.q(c, "SELECT 1 FROM endpoints WHERE id=%s", (endpoint_id,), one=True):
             raise HTTPException(404)
-        cur = list(ep["config"].get("approved_executables", []))
-        new = sorted(set(cur) | set(items)) if req.approve else [x for x in cur if x not in set(items)]
-        _validate_config({"approved_executables": new})
-        row = db.q(c, "UPDATE endpoints SET config = config || %s WHERE id=%s RETURNING config",
-                   (json.dumps({"approved_executables": new}), endpoint_id), one=True)
-        if req.approve and items:   # open novelty alerts for these programs are resolved as benign
-            db.q(c, "UPDATE alerts SET status='false_positive' WHERE endpoint_id=%s AND layer='novelty' AND status='open' "
-                    "AND reasons @> '[{\"rule\": \"novel_executable\"}]' AND (SELECT bool_or(x->>'key' = ANY(%s)) FROM jsonb_array_elements(reasons) x)",
-                 (endpoint_id, items))
-    return {"ok": True, "approved_executables": row["config"].get("approved_executables", [])}
+        mine = [e for e in entries_for(c, endpoint_id) if e["kind"] == "program" and e["endpoint_ids"] == [endpoint_id]]
+        for prog in items:
+            have = [e for e in mine if e["value"] == prog]
+            if req.approve and not have:
+                row = db.q(c, "INSERT INTO allowlist (kind, value, endpoint_ids, created_by) VALUES ('program', %s, %s, %s) RETURNING *",
+                           (prog, json.dumps([endpoint_id]), s["u"]), one=True)
+                mark_alerts(c, row)
+            elif not req.approve:
+                for e in have:
+                    db.q(c, "DELETE FROM allowlist WHERE id=%s", (e["id"],))
+                    db.q(c, "UPDATE alerts SET allowed_by=NULL WHERE allowed_by=%s", (e["id"],))
+        ep = db.q(c, "SELECT config FROM endpoints WHERE id=%s", (endpoint_id,), one=True)
+        from .allowlist import effective_config
+        approved = effective_config(c, endpoint_id, ep["config"])["approved_executables"]
+    return {"ok": True, "approved_executables": approved}
 
 
 def _validate_config(cfg: dict) -> None:
@@ -758,7 +776,7 @@ def list_alerts(s=Depends(session), endpoint_id: str | None = None, status: str 
     sc, sp = scope_sql(s, "a.endpoint_id")
     with db.conn() as c:
         rows = db.q(c, "SELECT a.id, a.endpoint_id, e.name AS endpoint, a.window_start_ns, a.node_uuid, a.ntype, a.label, a.fused, a.r1, a.r2, a.status, a.created_at, "
-                       "coalesce(a.layer, 'learned') AS layer, a.rule, a.reason "
+                       "coalesce(a.layer, 'learned') AS layer, a.rule, a.reason, a.allowed_by "
                        "FROM alerts a JOIN endpoints e ON e.id=a.endpoint_id WHERE (%s::uuid IS NULL OR a.endpoint_id=%s) AND (%s::text IS NULL OR a.status=%s) "
                        f"AND (%s::text IS NULL OR coalesce(a.layer, 'learned')=%s) AND {sc} "
                        "ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, layer, layer, *sp, limit))

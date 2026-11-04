@@ -163,3 +163,37 @@ score-free sentences),
 
 Detection type names for the UI: `novelty` "New program", `rules` "Suspicious data flow", `corroborated`
 "Related activity", `learned` "Unusual behaviour", `evidence` "Supporting evidence".
+
+## Allow list (0.4)
+
+What the customer accepts as normal, so it stops alerting. Entries apply to all endpoints (`endpoints: null`) or to
+selected endpoints. Agents receive the merged list with their configuration; the server also marks matching alerts
+(`allowed_by` = entry id, status `false_positive`). Allowed alerts are kept but are **not part of any incident**.
+
+`GET /api/allowlist?endpoint_id=` (any role; scoped) →
+```json
+{"ok": true,
+ "kinds": [{"id": "program", "label": "Program", "text": "..."}, {"id": "address", "label": "Network address", "text": "..."},
+           {"id": "detection", "label": "Specific detection", "text": "..."}],
+ "entries": [{"id": 3, "kind": "program|address|detection", "value": "/usr/local/bin/links",
+              "rule": null | "untrusted_exec", "rule_text": "Executes a downloaded file",
+              "endpoints": null | [{"id": "...", "name": "web-01"}], "note": "browser used by ops",
+              "created_by": "admin", "created_at": "...", "alerts_allowed": 18}]}
+```
+`POST /api/allowlist` (`can.manage_endpoints`) `{"kind", "value", "rule"?, "endpoints": null|[ids], "note"?, "resolve_open": true}`
+→ `{"ok": true, "id": 3, "alerts_allowed": 18}` (how many open alerts it covered and removed from incidents).
+`value`: program = path (`/usr/bin/links`) or bare name (`links`, matches any path); address = IP or CIDR (at most /16,
+IPv6 /48); detection = the detection's key with `rule` one of `novel_executable, untrusted_exec, untrusted_code_network,
+exfiltration, tainted_modify, tainted_spawn`. 409 if the same entry exists; 400 with a message on invalid input.
+`DELETE /api/allowlist/{id}` (`can.manage_endpoints`) → `{"ok": true}` (alerts it covered stay marked as false alarms).
+
+`GET /api/alerts/{id}/allow-options` → ready-made entries for an "Allow..." dialog on an alert / graph node:
+```json
+{"ok": true, "alert_id": 817, "endpoint_id": "...", "allowed_by": null,
+ "options": [{"kind": "program", "value": "/bin/sh", "rule": null, "title": "Allow the program /bin/sh", "text": "..."},
+             {"kind": "detection", "value": "/tmp/font", "rule": "untrusted_exec", "title": "Don't alert on this again: ...", "text": "..."},
+             {"kind": "address", "value": "155.162.39.48", "rule": null, "title": "Trust the address 155.162.39.48", "text": "..."}]}
+```
+`GET /api/alerts` rows carry `allowed_by` (null or entry id). `POST /api/endpoints/{id}/approved-executables` still works
+and creates/removes `program` entries for that endpoint; `GET /api/endpoints/{id}` returns the effective
+`config.approved_executables`, `trusted_addresses`, `suppressed_detections`.
