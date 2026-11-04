@@ -155,7 +155,7 @@ Moved to the GPU host (NVIDIA L40S 46 GB, Ubuntu 26.04, kernel 7.0). Changes thi
 * **Baseline completion for live collectors** (ebpf/strace/etw never declared their days, so such endpoints never
   trained); idle hosts complete a day by the wall clock. Day order no longer depends on set iteration order.
 * **Agent/server node ids** derived from the agent's registry order (see Telemetry notes).
-* Agent image (Ubuntu 24.04, bcc, CPU torch 2.4) runs every collector; idempotent enrolment with CA pinning; full
+* Agent image (Ubuntu 24.04, CPU torch 2.4; CO-RE eBPF loader since 0.3.1) runs every collector; idempotent enrolment with CA pinning; full
   heartbeat; acknowledged commands; window length from the bundle; tz from the server config.
 * Server: users/roles management, password change, retire endpoint, agent commands, config validation, `/healthz`,
   CSV/NDJSON alert export and a SOC exporter (syslog CEF / webhook), generated DB secret, serialised multi-worker
@@ -167,6 +167,18 @@ Moved to the GPU host (NVIDIA L40S 46 GB, Ubuntu 26.04, kernel 7.0). Changes thi
 * Tests: unit tests for the agent logic and the new eBPF decoder, an end-to-end test of the running stack through
   the gateway (41 checks), the collector cross-check.
 
-Still open (need hardware or data that is not on this host): Windows ETW on a Windows host; desktop installers on
-per-OS CI runners; DARPA TC benchmark replays and parity tests (need the research Postgres and PIDSMaker artifacts);
-SSO/OIDC. (Done since: libbpf CO-RE packaging of the eBPF program, 2026-11-04 - endpoints need BTF, no kernel headers.)
+Done on 2026-11-04 (0.3 hardening round; docs/DEPLOYMENT.md):
+* Source under git (`main`).
+* Signing keys in a KMS: agent CA (pki engine) and bundle-signing key (transit) in OpenBao/Vault, sign-only service
+  token, audit log, key id in every bundle signature; existing keys imported, so enrolled agents are unaffected.
+* SSO (OIDC code + PKCE) with IdP group -> role mapping, allow-listed egress proxy for the offline backend, sessions
+  re-checked per request, sign-in back-off, password policy (enabled / admin-only / disabled).
+* libbpf CO-RE eBPF collector (agent 0.3.1): no kernel headers, compiler or tracefs on endpoints; 16 MB ring buffer;
+  dropped-event counter in the heartbeat; dirfd-path race fixed; path-resolution cache.
+* Release CI (`.github/workflows`): desktop installers on macOS / Windows / Linux runners with optional signing and
+  notarisation, agent .deb/.rpm, images, SHA256SUMS. Built and checked locally for Linux only; the hosted
+  workflow has not run (no remote yet).
+* Field validation started: the agent runs as a systemd service on this host (endpoint `l40s-host`).
+
+Still open: Windows ETW on a Windows host; macOS/Windows installer builds and signing on real runners; PIDSMaker
+parity tests (need PIDSMaker's trained artifacts); console certificate from the customer's CA / ACME; backups.
