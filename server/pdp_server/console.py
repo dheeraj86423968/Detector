@@ -333,7 +333,7 @@ def run_check(endpoint_id: str, s=Depends(triager)):
         if db.q(c, "SELECT 1 FROM sim_campaigns WHERE endpoint_id=%s AND state IN ('queued','running')", (endpoint_id,), one=True):
             raise HTTPException(409, "a detection check is already running")
         spec = {"days": ["validation"], "families": CHECK_FAMILIES, "evasion_levels": CHECK_LEVELS,
-                "runs": len(CHECK_FAMILIES) * len(CHECK_LEVELS) * 2, "attacks_per_pass": 3, "seed": secrets.randbits(31)}
+                "runs": len(CHECK_FAMILIES) * len(CHECK_LEVELS) * 6, "attacks_per_pass": 3, "seed": secrets.randbits(31)}
         cid = pki.new_id()
         db.q(c, "INSERT INTO sim_campaigns (id, name, endpoint_id, bundle_id, spec, seed, state) VALUES (%s,%s,%s,%s,%s,%s,'queued')",
              (cid, f"Detection check {datetime.now(timezone.utc):%Y-%m-%d %H:%M}", endpoint_id, None, json.dumps(spec), spec["seed"]))
