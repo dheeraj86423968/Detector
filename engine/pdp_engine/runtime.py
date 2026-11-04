@@ -197,6 +197,10 @@ class Runtime:
         # models run on the GPU spares ~N*(emb+3)*4 bytes of GPU memory (large registries OOM'd otherwise)
         self.featdev = torch.device(feat_device) if feat_device else self.dev
         self.reg = registry
+        self.layers_only = bool(self.m.get("layers_only"))
+        if self.layers_only:       # early model below one day: layers 1-2 only, nothing learned to load
+            self._init_layers_only(bundle_dir, registry, approved_executables, daily_budget, seen_at_load_ns)
+            return
         self.feat = Word2VecFeaturizer.load(os.path.join(bundle_dir, "featurizer"))
         d1, d2 = self.m["detectors"]["detector-1"], self.m["detectors"]["detector-2"]
         self.deg1 = bool(d1.get("degree_features", False))
@@ -298,9 +302,28 @@ class Runtime:
         ents = self.reg.entities
         self.x.assign([(i, ents[i].label, ents[i].ntype) for i in ids], self.feat)
 
+    def _init_layers_only(self, bundle_dir, registry, approved_executables, daily_budget, seen_at_load_ns):
+        self.feat, self.velox, self.orthrus, self.deg1, self.x, self.state = None, [], [], False, None, None
+        self.keep_reset_state, self._tgn_init, self._tgn_init_val = False, None, None
+        self.N = self.m["num_nodes"]
+        self.layers = DeterministicLayers.load(bundle_dir, self.N, set(approved_executables or ()))
+        pol = self.m.get("learned_policy") or {}
+        self.daily_budget = int(daily_budget if daily_budget is not None else pol.get("daily_budget", 0))
+        self.corroboration = float("inf")
+        ev = self.layers.spec.get("config", {}).get("evidence_rules", EVIDENCE_RULES) if self.layers is not None else ()
+        self.policy = AlertPolicy(self.layers, self.daily_budget, self.corroboration, pol.get("corroboration_percentile", "99.9"), ev) if self.layers else None
+        if self.policy is not None:
+            self.policy.alert_layers = set(pol.get("alert_layers") or ("novelty", "rules"))
+        self.N0 = len(registry)
+        self.last_seen = np.full(len(registry), int(seen_at_load_ns), dtype=np.int64)
+
     def grow(self):
         """Call after new entities were added to the registry."""
         n = len(self.reg)
+        if self.layers_only:
+            if n > len(self.last_seen):
+                self.last_seen = np.concatenate([self.last_seen, np.full(n - len(self.last_seen), NOT_YET, dtype=np.int64)])
+            return
         if n > self.x.shape[0]:
             old = self.x.shape[0]
             self.x.resize(n)
@@ -329,6 +352,18 @@ class Runtime:
     def score(self, w: Window, keep_edge_losses: bool = False, hits: list[Hit] | None = None) -> WindowResult:
         """hits: the layers' hits for this window from rules() (real-time path); None runs the layers here."""
         self.grow()
+        if self.layers_only:
+            ids = w.nodes()
+            self.last_seen[ids] = int(w.end_ns or w.start_ns)
+            z = np.zeros(len(ids), dtype=np.float64)
+            if self.policy is None:
+                alerts, reasons, hits = np.zeros(0, dtype=np.int64), {}, []
+            else:
+                alerts, reasons, hits = self.policy.apply(w, self.reg, ids, z, hits)
+            res = WindowResult(w.start_ns, w.end_ns, w.num_edges, ids, z, z, z, alerts, reasons=reasons, hits=hits)
+            if keep_edge_losses:
+                res.edge_loss = {}
+            return res
         n = self.x.shape[0]
         src, dst, et = (torch.from_numpy(a).to(self.dev) for a in (w.src, w.dst, w.etype))
         x = self.x
@@ -381,11 +416,12 @@ class Runtime:
             st = np.fromiter(self.layers.keep_nodes(now_ns), dtype=np.int64)
             if st.size:
                 keep[st[(st >= 0) & (st < n)]] = True
-        L = self.state.loader
-        rows = torch.as_tensor(np.nonzero(keep)[0], device=L.neighbors.device)
-        nb, ei = L.neighbors[rows], L.e_id[rows]
-        ref = torch.unique(nb[ei >= 0]).cpu().numpy()
-        keep[ref[ref < n]] = True
+        if self.state is not None:
+            L = self.state.loader
+            rows = torch.as_tensor(np.nonzero(keep)[0], device=L.neighbors.device)
+            nb, ei = L.neighbors[rows], L.e_id[rows]
+            ref = torch.unique(nb[ei >= 0]).cpu().numpy()
+            keep[ref[ref < n]] = True
         return keep
 
     def compact(self, keep: np.ndarray) -> list[int]:
@@ -396,10 +432,11 @@ class Runtime:
             raise RuntimeError("compaction needs a runtime without reset state (keep_reset_state=False)")
         self.grow()
         old2new = self.reg.compact(keep)
-        kidx = torch.as_tensor(np.nonzero(keep)[0], dtype=torch.long)
-        o2n = torch.as_tensor(old2new, dtype=torch.long)
-        self.x.compact(kidx)
-        self.state.compact(kidx, o2n)
+        if not self.layers_only:
+            kidx = torch.as_tensor(np.nonzero(keep)[0], dtype=torch.long)
+            o2n = torch.as_tensor(old2new, dtype=torch.long)
+            self.x.compact(kidx)
+            self.state.compact(kidx, o2n)
         if self.layers is not None:
             self.layers.remap(old2new)
         self.last_seen = self.last_seen[keep]

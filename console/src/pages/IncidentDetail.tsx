@@ -6,6 +6,7 @@ import { AllowOption, api, ApiError, GNode, IncidentDetail as Detail, IncidentSt
 import { detection, fmtDateTime, fmtRel, fmtSpan, fmtTime, plural, reasonText, shortCmd } from "../format";
 import { AttackGraph } from "../graph/AttackGraph";
 import type { VNode } from "../graph/model";
+import { TriageCard } from "../triage";
 import { Card, Chip, cx, DetectionTag, Empty, ErrorState, Loading, Mid, NodeIcon, PageHeader, PathText, SeverityBadge, ShowMore, StatusBadge, useShowMore, useToast } from "../ui";
 
 const ACTIONS: { status: IncidentStatus; label: string; icon: JSX.Element; tone?: string; done: string }[] = [
@@ -102,6 +103,9 @@ export default function IncidentDetail() {
           ))}
         </div>
       )}
+
+      <TriageCard incidentId={inc.id} assignee={(data as any).assignee || null} assignable={(data as any).assignable || []}
+        history={(data as any).history || []} reload={reload} />
 
       <div className="inc-grid" ref={graphRef}>
         <Card className="story-card" title="What happened" subtitle={`${plural(d.story.length, "step")} · ${plural(detections, "detection")} · click a step to find it in the graph`} pad={false}>

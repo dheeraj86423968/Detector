@@ -61,6 +61,8 @@ class TrainConfig:
     learned_daily_budget: int = 20    # at most this many learned-only alerts per day (highest scores first)
     corroboration_percentile: str = "99.9"   # learned score (validation percentile) that alerts next to a layer 1/2 alert
     alert_layers: tuple | None = None        # layers allowed to alert (None = all); early models restrict this
+    layers_only: bool = False                # rules-only model: layers 1-2 fitted, no learned detectors (early models
+                                             # below one day of baseline: seconds on a CPU instead of a GPU run)
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
 
 
@@ -199,6 +201,8 @@ class Trainer:
     # ---------------------------------------------------------------- full run
     def run(self, meta: dict | None = None) -> str:
         os.makedirs(self.out_dir, exist_ok=True)
+        if self.cfg.layers_only:
+            return self.run_layers_only(meta)
         self.fit_featurizer()
         self.feat.save(os.path.join(self.out_dir, "featurizer"))
         cal1s, ratios1 = [], []
@@ -257,4 +261,22 @@ class Trainer:
                        "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()}},
             "learned_policy": policy,
         })
+        return self.out_dir
+
+    def run_layers_only(self, meta: dict | None = None) -> str:
+        """A bundle with layers 1-2 only (known programs, trusted addresses, per-key thresholds): what an early model
+        alerts with anyway. The runtime scores nothing learned with it (fused = 0)."""
+        lcfg = LayerConfig(novelty=self.cfg.layer_novelty, rules=self.cfg.layer_rules, tags=TagParams())
+        spec = fit_layers(self.store, self.train_days + [self.val_day], self.reg, self.N, lcfg, log=log)
+        json.dump(spec, open(os.path.join(self.out_dir, "layers.json"), "w"))
+        policy = {"daily_budget": 0, "corroboration_percentile": self.cfg.corroboration_percentile,
+                  "alert_layers": sorted(self.cfg.alert_layers or ("novelty", "rules"))}
+        write_manifest(self.out_dir, {
+            **(meta or {}), "layers_only": True,
+            "num_nodes": self.N, "train_days": self.train_days, "val_day": self.val_day, "detectors": None, "calibration": None,
+            "layers": {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules, "known_executables": len(spec["known_executables"]),
+                       "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()}},
+            "learned_policy": policy,
+        })
+        log(f"rules-only bundle: {len(spec['known_executables'])} known programs, {len(spec.get('trusted_ips', []))} trusted addresses")
         return self.out_dir

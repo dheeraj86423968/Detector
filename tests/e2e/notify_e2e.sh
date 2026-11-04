@@ -1,6 +1,7 @@
 #!/bin/bash
-# Notifications end to end against the running stack (signs up two throw-away organisations).
-#   tests/e2e/notify_e2e.sh
+# Notifications end to end against a running stack (signs up two throw-away organisations).
+#   tests/e2e/notify_e2e.sh                 the production stack (compose project pdp, deploy/.env)
+#   PDP_E2E_STACK=staging tests/e2e/notify_e2e.sh    the staging stack (deploy/staging.sh)
 # 1. a receiver container answers HTTPS as hooks.pdp-e2e.example (a docker network alias, so: an internal address)
 # 2. the deployed notifier must refuse it (internal-address guard on, as in production)
 # 3. the test runs notifier rounds itself with internal targets allowed and checks what arrives
@@ -27,9 +28,10 @@ open("/out/hook.pem", "wb").write(leaf.public_bytes(serialization.Encoding.PEM))
 open("/out/hook.key", "wb").write(k.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
 PY
 chmod 644 "$OUT"/*
-RID=$(docker run -d --rm --network pdp_edge --network-alias hooks.pdp-e2e.example -v "$OUT":/out -v "$PWD":/src:ro --entrypoint python pdp/server:dev /src/tests/e2e/hook_receiver.py)
+if [ "${PDP_E2E_STACK:-prod}" = staging ]; then PROJ=pdp-staging; ENVF=staging.env; else PROJ=pdp; ENVF=.env; fi
+RID=$(docker run -d --rm --network ${PROJ}_edge --network-alias hooks.pdp-e2e.example -v "$OUT":/out -v "$PWD":/src:ro --entrypoint python pdp/server:dev /src/tests/e2e/hook_receiver.py)
 trap 'docker stop "$RID" >/dev/null 2>&1 || true; rm -rf "$OUT"' EXIT
-CODE=$(grep -E '^PDP_SIGNUP_CODE=' deploy/.env | cut -d= -f2-)
+CODE=$(grep -E '^PDP_SIGNUP_CODE=' "deploy/$ENVF" | cut -d= -f2- || true)
 cd deploy
-docker compose run --rm --no-deps -T -v "$PWD/..":/src:ro -v "$OUT":/out -w /src -e PDP_SIGNUP_CODE="$CODE" \
+docker compose -p "$PROJ" --env-file "$ENVF" -f docker-compose.yml run --rm --no-deps -T -v "$PWD/..":/src:ro -v "$OUT":/out -w /src -e PDP_SIGNUP_CODE="$CODE" \
   -e PYTHONPATH=/src/server:/src/engine --entrypoint python notifier tests/e2e/notify_e2e.py

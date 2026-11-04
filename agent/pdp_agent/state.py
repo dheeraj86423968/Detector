@@ -103,10 +103,11 @@ class State:
         n = int(self.c.execute("SELECT coalesce(max(dense_id), 0) FROM entities").fetchone()[0])
         return max(n, int(self.get("next_gid", 0) or 0))
 
-    def prune_entities(self, keep_gids, min_gid: int, next_gid: int) -> int:
-        """Delete entity rows with global id >= min_gid (registered after the model's baseline) that are uploaded
-        and not in keep_gids (the live set): the table would otherwise grow by every entity ever seen. Baseline
-        entities stay (the rules tell pre-existing files by their global id)."""
+    def prune_entities(self, keep_gids, min_gid: int, next_gid: int, require_uploaded: bool = True) -> int:
+        """Delete entity rows with global id >= min_gid (registered after the model's baseline) that are not in
+        keep_gids (the live set) - and uploaded, unless require_uploaded is False (protected endpoints upload no
+        entities): the table would otherwise grow by every entity ever seen. Baseline entities stay (the rules
+        tell pre-existing files by their global id)."""
         self.set("next_gid", int(next_gid))
         self.c.execute("CREATE TEMP TABLE IF NOT EXISTS keep_g (g INTEGER PRIMARY KEY)")
         self.c.execute("DELETE FROM keep_g")
@@ -116,8 +117,8 @@ class State:
         n = 0
         for a in range(int(min_gid), hi, 100_000):       # in slices: a bounded WAL
             n += self._tx(lambda: self.c.execute(
-                "DELETE FROM entities WHERE dense_id - 1 >= ? AND dense_id - 1 < ? AND uploaded = 1 "
-                "AND NOT EXISTS (SELECT 1 FROM keep_g WHERE g = dense_id - 1)", (a, a + 100_000)).rowcount)
+                "DELETE FROM entities WHERE dense_id - 1 >= ? AND dense_id - 1 < ? AND (uploaded = 1 OR ?) "
+                "AND NOT EXISTS (SELECT 1 FROM keep_g WHERE g = dense_id - 1)", (a, a + 100_000, 0 if require_uploaded else 1)).rowcount)
             self.c.execute("PRAGMA wal_checkpoint(TRUNCATE)")
         self.c.execute("DELETE FROM keep_g")
         self.compact()

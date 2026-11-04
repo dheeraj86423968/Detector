@@ -20,3 +20,8 @@ deploy/kms-secrets/
 .claude/
 deploy/nginx/public/*.conf
 deploy/nginx/public/*.redirect
+deploy/staging.env
+deploy/nginx/public-staging/
+deploy/backup.key
+deploy/backups/
+deploy/kms-secrets-staging/

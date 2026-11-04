@@ -31,7 +31,7 @@ from .config import Config
 from .state import State
 from .transport import Transport, TransportError
 
-VERSION = "0.3.11"
+VERSION = "0.3.13"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -249,14 +249,18 @@ class Agent:
         if (self.state.get("phase") == "protected" and not mat.get("early")) or getattr(self.cfg, "prune_entities_always", False):
             # final model: entities registered after its baseline and no longer held are deleted from disk too
             live = set(self.reg.gid_array().tolist()) | self.state.spool_gids()
-            pruned = self.state.prune_entities(live, int(self.runtime.N), self.next_gid)
+            pruned = self.state.prune_entities(live, int(self.runtime.N), self.next_gid,
+                                               require_uploaded=self.state.get("phase") != "protected")
         log(f"registry compacted: {n} -> {len(self.reg)} entities in {time.time() - t0:.1f}s"
             + (f"; {pruned} entity records deleted from disk" if pruned else ""))
 
     def baseline_days(self) -> list[str]:
-        """The first N+1 days seen (N baseline days plus the validation day): the only days uploaded to the server."""
-        need = int((self.state.get("config") or {}).get("baseline_days", 7)) + 1
-        return [d for d, _, _ in self.state.days()[:need]]
+        """Days uploaded to the server: the first N+1 days seen (N baseline days plus the validation day), and later
+        the fresh days the server asks a protected agent for to retrain (config refresh_days)."""
+        cfg = self.state.get("config") or {}
+        need = int(cfg.get("baseline_days", 7)) + 1
+        days = [d for d, _, _ in self.state.days()[:need]]
+        return days + [d for d in (cfg.get("refresh_days") or []) if d not in days]
 
     @property
     def tz(self) -> str:
@@ -280,8 +284,9 @@ class Agent:
             self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/entities", pend)
             self.state.mark_entities_uploaded([p["uuid"] for p in pend])
             pend = self.state.pending_entities()
-        need = int((self.state.get("config") or {}).get("baseline_days", 7)) + 1
-        days = self.state.days()[:need]        # the baseline is the first N+1 days seen; later days stay local
+        want = self.baseline_days()             # the baseline (first N+1 days) and requested fresh days; others stay local
+        known = {d: (c_, r_) for d, c_, r_ in self.state.days()}
+        days = [(d, *known[d]) for d in want if d in known]
         for i, (day, completed, reported) in enumerate(days):
             rows = self.state.pending_events(day)
             while rows:
@@ -589,12 +594,20 @@ class Agent:
                         self.state.set("config", st["config"])
                         self._apply_fp_budget(st["config"].get("fp_budget"))
                         self._apply_layer_config(st["config"])
-                    if phase == "baseline":
-                        self.upload_baseline()     # keeps learning, also while an early model already detects
+                    if phase == "baseline" or (phase == "protected" and (st.get("config") or {}).get("refresh_days")):
+                        self.upload_baseline()     # keeps learning, also while an early model detects; fresh days later
                     if phase in ("baseline", "protected"):
                         b = st.get("bundle")       # while learning: an early model (server 0.5), replaced as it improves
-                        if b and b["id"] != self.state.get("bundle_id"):
-                            self.fetch_bundle(b["id"])
+                        if b and b["id"] != self.state.get("bundle_id") and b["id"] != getattr(self, "_bad_bundle", None):
+                            try:
+                                self.fetch_bundle(b["id"])
+                            except (TransportError, OSError):
+                                raise
+                            except Exception as e:  # noqa - a model this agent cannot use must not stop it
+                                self._bad_bundle = b["id"]
+                                log(f"bundle {b['id']} could not be loaded ({type(e).__name__}: {e}); keeping the current model")
+                                if self.runtime is None:          # it was released for the new one: load it again
+                                    self.load_local_bundle()
                     for cmd in st.get("commands", []):
                         self.handle_command(cmd)
                     self._update_offer = st.get("update")

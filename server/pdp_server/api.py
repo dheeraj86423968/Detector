@@ -32,18 +32,22 @@ def _include_console_routes():
     from .distrib import router as dist_router
     from .notify import router as notify_router
     from .updates import router as updates_router
+    from .metrics import router as metrics_router
+    from .reports import router as reports_router
     app.include_router(dist_router)
     app.include_router(router)
     app.include_router(allow_router)
     app.include_router(org_router)
     app.include_router(notify_router)
     app.include_router(updates_router)
+    app.include_router(metrics_router)
+    app.include_router(reports_router)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")
 AGENT_COMMANDS = ("refetch_bundle",)
 CONFIG_KEYS = {"baseline_days", "tz", "retain_baseline_events", "train", "window_minutes", "fp_budget",
-               "approved_executables", "learned_daily_budget", "learned_alerts"}
+               "approved_executables", "learned_daily_budget", "learned_alerts", "periodic_retrain", "early_models"}
 SERVER_HOSTNAMES = os.environ.get("PDP_HOSTNAMES", "localhost").split(",")
 
 
@@ -83,7 +87,8 @@ def _initialize():
                 db.init_telemetry(str(ep["id"]))
     with db.conn() as c:
         if not db.q(c, "SELECT 1 FROM users LIMIT 1"):
-            pw = secrets.token_urlsafe(12)
+            # PDP_INITIAL_ADMIN_PASSWORD: only for the very first admin (staging / automated stacks); else generated
+            pw = os.environ.get("PDP_INITIAL_ADMIN_PASSWORD") or secrets.token_urlsafe(12)
             from .orgs import internal_org
             created = db.q(c, "INSERT INTO users (username, password_hash, role, org_id, operator) VALUES ('admin', %s, 'admin', %s, true) "
                               "ON CONFLICT (username) DO NOTHING RETURNING id", (auth.hash_password(pw), internal_org(c)), one=True)
@@ -189,6 +194,8 @@ async def upload_events(endpoint_id: str, request: Request, ep=Depends(agent_end
     rows = [r async for r in ndjson_rows(request)]
     s = db.tschema(endpoint_id)
     with db.conn(db.TELEMETRY_DSN) as c:
+        if rows:
+            db.ensure_partitions(c, s, min(r["ts_ns"] for r in rows), max(r["ts_ns"] for r in rows))
         with c.cursor() as cur:
             psycopg2.extras.execute_values(   # batched multi-row INSERTs (row-by-row executemany was the upload bottleneck)
                 cur, f"INSERT INTO {s}.events (ts_ns, src, op, dst, event_uuid, batch_id) VALUES %s",
@@ -821,11 +828,19 @@ def queue_command(endpoint_id: str, req: AgentCommand, s=Depends(admin)):
 
 @app.post("/api/endpoints/{endpoint_id}/retrain")
 def retrain(endpoint_id: str, s=Depends(admin)):
+    """Protected endpoints with agent 0.3.13+: collect two fresh days, then retrain on the most recent days and the
+    false-alarm verdicts (the model follows the server's current normal). Otherwise: retrain on the baseline days."""
     require_endpoint(s, endpoint_id)
     with db.conn() as c:
-        ep = db.q(c, "SELECT phase FROM endpoints WHERE id=%s", (endpoint_id,), one=True)
+        ep = db.q(c, "SELECT phase, config, agent_version FROM endpoints WHERE id=%s", (endpoint_id,), one=True)
         if not ep or ep["phase"] == "retired":
             raise HTTPException(404)
+        from .refresh import capable, request_refresh
+        if ep["phase"] == "protected" and capable(ep["agent_version"]):
+            if (ep["config"] or {}).get("refresh_days"):
+                raise HTTPException(409, "fresh days are already being collected for a retraining")
+            days = request_refresh(c, endpoint_id, ep["config"], "requested from the console")
+            return {"ok": True, "refresh_days": days}
         if db.q(c, "SELECT 1 FROM jobs WHERE endpoint_id=%s AND kind='train' AND state IN ('queued','running')", (endpoint_id,), one=True):
             raise HTTPException(409, "a training job is already queued or running")
         db.q(c, "INSERT INTO jobs (id, endpoint_id, kind) VALUES (%s,%s,'train')", (pki.new_id(), endpoint_id))

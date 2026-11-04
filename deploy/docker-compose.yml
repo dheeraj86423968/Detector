@@ -60,6 +60,7 @@ services:
       PDP_PASSWORD_LOGIN: ${PDP_PASSWORD_LOGIN:-enabled}
       # hosted multi-tenant: client self sign-up (off | code | open), endpoint limit per new organisation
       PDP_NOTIFY_ALLOW_PRIVATE: ${PDP_NOTIFY_ALLOW_PRIVATE:-0}
+      PDP_INITIAL_ADMIN_PASSWORD: ${PDP_INITIAL_ADMIN_PASSWORD:-}   # first start only (staging); else generated
       PDP_SIGNUP: ${PDP_SIGNUP:-off}
       PDP_SIGNUP_CODE: ${PDP_SIGNUP_CODE:-}
       PDP_ORG_MAX_ENDPOINTS: ${PDP_ORG_MAX_ENDPOINTS:-25}
@@ -85,7 +86,7 @@ services:
 
   worker-ingest:
     image: pdp/server:${PDP_VERSION:-dev}
-    command: ["worker", "--kinds", "ingest"]
+    command: ["worker", "--kinds", "ingest,train_rules"]
     environment: { <<: *db-env }
     volumes: [ pdp_data:/data, pdp_pki:/pki ]
     networks: [ backend ]
@@ -108,7 +109,7 @@ services:
     volumes:
       - ./nginx/gateway.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/console.conf:/etc/nginx/snippets/console.conf:ro
-      - ./nginx/public:/etc/nginx/public:ro          # public-hostname server, written by deploy/acme.sh
+      - ${PDP_NGINX_PUBLIC:-./nginx/public}:/etc/nginx/public:ro   # public-hostname server, written by deploy/acme.sh
       - pdp_acme:/etc/letsencrypt:ro
       - pdp_acme_web:/acme:ro
       - pdp_pki:/pki:ro
@@ -145,6 +146,42 @@ services:
     networks: [ backend, edge ]
     restart: unless-stopped
     depends_on: { api: { condition: service_healthy } }
+
+  backup:                    # encrypted backups of the platform database, CA / KMS keys and current models
+    image: postgres:17
+    entrypoint: ["/bin/sh", "/backup/backup.sh"]
+    environment:
+      <<: *db-env
+      PDP_BACKUP_INTERVAL_H: ${PDP_BACKUP_INTERVAL_H:-24}
+      PDP_BACKUP_KEEP: ${PDP_BACKUP_KEEP:-7}
+      PDP_BACKUP_FULL: ${PDP_BACKUP_FULL:-0}     # 1: also raw telemetry and training windows (endpoints still learning)
+    volumes:
+      - ./backup:/backup:ro
+      - "${PDP_BACKUP_DIR:-./backups}:/backups"
+      - "${PDP_BACKUP_KEY:-./backup.key}:/run/backup.key:ro"     # keep a copy of this key off the host
+      - pdp_pki:/pki:ro
+      - pdp_data:/data:ro
+      - pdp_kms_data:/kms-data:ro
+      - "${PDP_KMS_SECRETS:-./kms-secrets}:/kms-secrets:ro"
+    networks: [ backend ]
+    restart: unless-stopped
+    depends_on: { platform-db: { condition: service_healthy } }
+
+  prometheus:                # platform monitoring (profile "monitoring"): metrics of every API replica + alert rules
+    image: prom/prometheus:v2.54.1
+    volumes: [ ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro, ./monitoring/rules.yml:/etc/prometheus/rules.yml:ro, pdp_prometheus:/prometheus ]
+    networks: [ backend ]
+    restart: unless-stopped
+    profiles: [ monitoring ]
+
+  grafana:                   # dashboards on 127.0.0.1:3000 only (ssh -L 3000:127.0.0.1:3000 to view)
+    image: grafana/grafana:11.2.2
+    environment: { GF_AUTH_ANONYMOUS_ENABLED: "false", GF_USERS_ALLOW_SIGN_UP: "false", GF_SECURITY_ADMIN_PASSWORD: "${PDP_GRAFANA_PASSWORD:-change-me}" }
+    volumes: [ ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro, ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro, pdp_grafana:/var/lib/grafana ]
+    ports: [ "127.0.0.1:${PDP_GRAFANA_PORT:-3000}:3000" ]
+    networks: [ backend, edge ]
+    restart: unless-stopped
+    profiles: [ monitoring ]
 
   egress:                    # allow-listed CONNECT proxy: the api's only route to the identity provider
     image: pdp/server:${PDP_VERSION:-dev}
@@ -184,6 +221,8 @@ volumes:
   pdp_data: {}
   pdp_pki: {}
   pdp_kms_data: {}
+  pdp_prometheus: {}
+  pdp_grafana: {}
   pdp_acme: {}
   pdp_acme_web: {}
   pdp_kms_logs: {}

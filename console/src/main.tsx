@@ -18,6 +18,7 @@ import Team from "./pages/Team";
 import AllowList from "./pages/AllowList";
 import Account from "./pages/Account";
 import Notifications from "./pages/Notifications";
+import WeeklyReport from "./pages/WeeklyReport";
 import { Logo } from "./pages/Login";
 
 // the incident page carries the graph libraries; load it on demand
@@ -100,6 +101,7 @@ function App() {
             <Route path="/operator" element={<Operator />} />
             <Route path="/account" element={<Account />} />
             <Route path="/settings/notifications" element={<Notifications />} />
+            <Route path="/reports/weekly" element={<WeeklyReport />} />
             <Route path="/notifications" element={<Navigate to="/settings/notifications" replace />} />
             {/* links from older consoles / notifications */}
             <Route path="/access" element={<Navigate to="/team" replace />} />

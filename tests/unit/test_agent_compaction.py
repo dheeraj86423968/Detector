@@ -164,6 +164,15 @@ check(rows1 < rows0 and base_kept == int(b.runtime.N), f"entity records on disk 
 check(all(b.state.gid_for(b.reg[i].uuid) == b.reg.gid(i) for i in range(len(b.reg))), "every live entity still has its record")
 check(b.state.next_gid() == nxt, f"next global id unchanged by the deletion ({nxt})")
 
+# protected endpoints upload no entities: their unuploaded post-baseline records are pruned too
+newer = [Entity.file(f"file:/tmp/protected-{k}", f"/tmp/protected-{k}") for k in range(50)]
+b.state.add_entities([(e, b.next_gid + k) for k, e in enumerate(newer)]); b.next_gid += 50
+before = b.state.c.execute("SELECT count(*) FROM entities WHERE uploaded=0").fetchone()[0]
+b.state.prune_entities(set(), int(b.runtime.N), b.next_gid, require_uploaded=False)
+after = b.state.c.execute("SELECT count(*) FROM entities WHERE uploaded=0").fetchone()[0]
+check(before >= 50 and after == 0, f"protected phase: {before} never-uploaded records pruned as well")
+nxt = b.next_gid
+
 # an entity registered after the deletion gets the next id on disk too (not sqlite's max rowid + 1)
 b.state.c.execute("DELETE FROM entities WHERE dense_id = (SELECT max(dense_id) FROM entities)")   # highest row gone
 nx = b.next_gid

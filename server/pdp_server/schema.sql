@@ -138,3 +138,14 @@ ALTER TABLE endpoints ADD COLUMN IF NOT EXISTS agent_version_since TIMESTAMPTZ;
 CREATE TABLE IF NOT EXISTS pull_tokens (
   token TEXT PRIMARY KEY, endpoint_id UUID NOT NULL REFERENCES endpoints(id) ON DELETE CASCADE,
   expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ DEFAULT now());
+
+-- incident triage (0.6): owner and history (status changes, assignments, notes). Incidents are computed groups of
+-- alerts; their id is the id of their first alert.
+CREATE TABLE IF NOT EXISTS incident_meta (
+  incident_id BIGINT PRIMARY KEY, org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  assignee INT REFERENCES users(id) ON DELETE SET NULL, updated_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS incident_events (
+  id BIGSERIAL PRIMARY KEY, incident_id BIGINT NOT NULL, org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  user_id INT REFERENCES users(id) ON DELETE SET NULL, kind TEXT NOT NULL CHECK (kind IN ('status','assign','note')),
+  text TEXT, value TEXT, at TIMESTAMPTZ DEFAULT now());
+CREATE INDEX IF NOT EXISTS incident_events_inc ON incident_events (incident_id, at);

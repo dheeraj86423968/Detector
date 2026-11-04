@@ -16,11 +16,13 @@ import sys
 import time
 import traceback
 
+import numpy as np
+
 sys.path.insert(0, os.environ.get("PDP_ENGINE_PATH", "/opt/pdp/engine"))
 sys.path.insert(0, os.environ.get("PDP_SIM_PATH", "/opt/pdp/sim"))
 from pdp_engine.bundle import sha256  # noqa: E402
 from pdp_engine.data import WindowStore, ingest_day  # noqa: E402
-from pdp_engine.schema import Entity, Event, Registry  # noqa: E402
+from pdp_engine.schema import EDGE_TYPE_ID, Entity, Event, Registry  # noqa: E402
 from pdp_engine.trainer import TrainConfig, Trainer  # noqa: E402
 
 from . import db, pki  # noqa: E402
@@ -50,10 +52,13 @@ def telemetry_entities(endpoint_id: str) -> dict[str, Entity]:
     return {r["uuid"]: Entity(r["uuid"], r["ntype"], r["label"], r["display"] or {}) for r in rows}
 
 
-def extend_registry(endpoint_id: str, reg: Registry) -> int:
+def extend_registry(endpoint_id: str, reg: Registry, fill_gaps: bool = False) -> int:
     """Append the uploaded entities to the endpoint registry in the agent's dense-id order (contiguously from the
-    current size). Node ids then equal the agent's own registry indices, which the detector-2 neighbour state in the
-    bundle is keyed by — independently of event order, ties or the order days are ingested in."""
+    current size). Node ids then equal the agent's own global ids, which the detector-2 neighbour state in the
+    bundle is keyed by — independently of event order, ties or the order days are ingested in.
+
+    fill_gaps: a protected agent that uploads fresh days (periodic retraining) never uploaded the entities it pruned
+    in between; their ids are filled with placeholders (never referenced by an event) so the ids stay aligned."""
     s = db.tschema(endpoint_id)
     added = 0
     with db.conn(db.TELEMETRY_DSN) as c:
@@ -61,9 +66,12 @@ def extend_registry(endpoint_id: str, reg: Registry) -> int:
     for r in rows:
         if r["uuid"] in reg.ids:
             continue
-        if r["dense_id"] != len(reg):    # not yet contiguous (an upload still in flight): stop, the next ingest continues
-            log(f"registry {endpoint_id}: gap at dense id {len(reg)} (next uploaded is {r['dense_id']}); continuing later")
-            break
+        if r["dense_id"] != len(reg):
+            if not fill_gaps:          # not yet contiguous (an upload still in flight): stop, the next ingest continues
+                log(f"registry {endpoint_id}: gap at dense id {len(reg)} (next uploaded is {r['dense_id']}); continuing later")
+                break
+            while len(reg) < r["dense_id"]:
+                reg.add(Entity(f"pruned:{len(reg)}", "file", "file None", {}))
         reg.add(Entity(r["uuid"], r["ntype"], r["label"], r["display"] or {}))
         added += 1
     return added
@@ -105,7 +113,9 @@ def job_ingest(job: dict):
     eid, date = str(job["endpoint_id"]), job["params"]["date"]
     store = store_for(eid)
     reg = load_registry(eid, store)
-    added = extend_registry(eid, reg)
+    with db.conn() as c:
+        phase = db.q(c, "SELECT phase FROM endpoints WHERE id=%s", (eid,), one=True)["phase"]
+    added = extend_registry(eid, reg, fill_gaps=phase == "protected")    # refresh days: pruned ids are placeholders
     cfg = ep_config(eid)
     tz = cfg.get("tz", "UTC")
     stats = {}
@@ -116,8 +126,9 @@ def job_ingest(job: dict):
     with db.conn(db.TELEMETRY_DSN) as c:
         n_events = db.q(c, f"SELECT count(*) AS n FROM {db.tschema(eid)}.events WHERE ts_ns >= %s AND ts_ns < %s", day_bounds(date, tz), one=True)["n"]
         if not ep_config(eid).get("retain_baseline_events", False):   # retention: raw events live only until they are windowed
-            with c.cursor() as cur:
-                cur.execute(f"DELETE FROM {db.tschema(eid)}.events WHERE ts_ns >= %s AND ts_ns < %s", day_bounds(date, tz))
+            dropped = db.delete_events(c, db.tschema(eid), *day_bounds(date, tz))
+            if dropped:
+                log(f"ingest {eid} {date}: dropped {dropped} raw-event partition(s)")
     with db.conn() as c:
         db.q(c, "UPDATE baseline_days SET events=%s, windows=%s WHERE endpoint_id=%s AND date=%s", (n_events, n, eid, date))
         db.q(c, "UPDATE jobs SET progress=%s WHERE id=%s", (json.dumps({"windows": n, "events": n_events, "entities_added": added, "dropped": stats.get("dropped", 0)}), str(job["id"])))
@@ -129,6 +140,13 @@ def job_ingest(job: dict):
         if ep["phase"] == "baseline" and done >= need:
             db.q(c, "INSERT INTO jobs (id, endpoint_id, kind) VALUES (%s,%s,'train')", (pki.new_id(), eid))
             db.q(c, "UPDATE endpoints SET phase='training' WHERE id=%s", (eid,))
+        refresh = (ep["config"] or {}).get("refresh_days") or []
+        if ep["phase"] == "protected" and refresh and set(refresh) <= set(store.days()):
+            # the fresh days a protected agent was asked for are in: retrain on the most recent days (+ feedback)
+            db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, params) VALUES (%s,%s,'train',%s)", (pki.new_id(), eid, json.dumps({"refresh": True})))
+            db.q(c, "UPDATE endpoints SET config = config - 'refresh_days' || jsonb_build_object('refresh_queued', %s) WHERE id=%s",
+                 (time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), eid))
+            log(f"ingest {eid}: fresh days {refresh} in, retraining queued")
     log(f"ingest {eid} {date}: {n} windows ({done}/{need} days)")
 
 
@@ -157,6 +175,13 @@ def baseline_hours(eid: str) -> float:
     return n / 4.0 + open_h
 
 
+def _vkey(v) -> tuple:
+    try:
+        return tuple(int(x) for x in str(v or "").split("."))
+    except ValueError:
+        return ()
+
+
 def due_milestones(maturity: dict, hours: float) -> list[int]:
     """Milestones passed since the current model's. Compared with the milestone the model was trained for: its own
     baseline_hours can be a little below the milestone (windows are cut at 15 minutes), and comparing that queued
@@ -172,9 +197,9 @@ def schedule_early_models():
         return
     _last_milestone_check = time.time()
     with db.conn() as c:
-        eps = db.q(c, "SELECT e.id, e.config, b.manifest FROM endpoints e LEFT JOIN bundles b ON b.id=e.current_bundle "
+        eps = db.q(c, "SELECT e.id, e.config, e.agent_version, b.manifest FROM endpoints e LEFT JOIN bundles b ON b.id=e.current_bundle "
                       "WHERE e.phase='baseline' AND e.kind='live' AND NOT EXISTS (SELECT 1 FROM jobs j WHERE j.endpoint_id=e.id "
-                      "AND j.kind='train' AND j.state IN ('queued','running'))")
+                      "AND j.kind IN ('train','train_rules') AND j.state IN ('queued','running'))")
     for ep in eps:
         if (ep["config"] or {}).get("early_models") is False:
             continue
@@ -187,8 +212,12 @@ def schedule_early_models():
         due = due_milestones((ep["manifest"] or {}).get("maturity") or {}, hours)
         if due:
             with db.conn() as c:
-                db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, params) VALUES (%s,%s,'train',%s)",
-                     (pki.new_id(), eid, json.dumps({"early": True, "milestone_h": due[-1]})))
+                # rules-only milestones (< 1 day) go to the CPU workers' queue: never behind a long GPU training
+                # agents from 0.3.12 load rules-only models; older ones get the minimally trained full model
+                rules_only = due[-1] < EARLY_RULES_ONLY_BELOW_H and _vkey(ep.get("agent_version")) >= (0, 3, 12)
+                kind = "train_rules" if rules_only else "train"
+                db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, params) VALUES (%s,%s,%s,%s)",
+                     (pki.new_id(), eid, kind, json.dumps({"early": True, "milestone_h": due[-1], "layers_only": rules_only})))
             log(f"early model for {eid}: {hours:.1f} h recorded, milestone {due[-1]} h queued")
 
 
@@ -266,14 +295,17 @@ def job_train_early(job: dict, device: str):
     t0 = time.time()
     log(f"train {eid}: early model on {len(paths)} windows ({hours} h), {n_val} for calibration")
     if hours < EARLY_RULES_ONLY_BELOW_H:
-        # rules-only model: the learned detectors only rank here, so they are trained minimally (minutes, not an hour,
-        # on a busy host) - detection starts soon after the first hour
         overrides["alert_layers"] = ("rules",)
-        overrides.setdefault("orthrus_seeds", (0,))
-        overrides.setdefault("velox_runs", 1)
-        overrides.setdefault("orthrus_epochs", 3)
-        overrides.setdefault("velox_epochs", 3)
-        overrides.setdefault("w2v_epochs", 10)
+        if (job.get("params") or {}).get("layers_only"):
+            # rules-only model: below one day only layer 2 alerts (maturity study), so nothing learned is trained -
+            # seconds on a CPU worker (job kind train_rules), a bundle of a few KB, no learned state on the agent
+            overrides["layers_only"] = True
+        else:      # agents before 0.3.12: the learned detectors only rank here, trained minimally
+            overrides.setdefault("orthrus_seeds", (0,))
+            overrides.setdefault("velox_runs", 1)
+            overrides.setdefault("orthrus_epochs", 3)
+            overrides.setdefault("velox_epochs", 3)
+            overrides.setdefault("w2v_epochs", 10)
     Trainer(store, ["train"], "val", TrainConfig(device=device, **overrides), out).run(
         {"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(cfg), "trained_on": device,
          "maturity": {"early": True, "baseline_hours": hours, "windows": len(paths), "trained_until_ns": int(last.end_ns),
@@ -296,6 +328,71 @@ def job_train_early(job: dict, device: str):
     log(f"train {eid}: early bundle {bid} published ({hours} h of activity)")
 
 
+FEEDBACK_DAY = "feedback"
+RETRAIN_DAYS = float(os.environ.get("PDP_RETRAIN_DAYS", "30"))
+RETRAIN_FP = int(os.environ.get("PDP_RETRAIN_FP", "20"))
+_last_refresh_check = 0.0
+
+
+def write_feedback_day(eid: str, store) -> int:
+    """Analyst verdicts as training data: the event context of every alert marked a false alarm on this endpoint
+    becomes a window of benign activity (day "feedback" of its store), so the next model - learned layers and the
+    rules' known programs / trusted addresses alike - treats that activity as normal. Returns windows written."""
+    from pdp_engine.windows import Window
+    import shutil as _sh
+    reg = store.load_registry()
+    with db.conn() as c:
+        rows = db.q(c, "SELECT id, context FROM alerts WHERE endpoint_id=%s AND status='false_positive' ORDER BY id DESC LIMIT 2000", (eid,))
+    wins, seen = [], set()
+    for r in rows:
+        ctx = r["context"] or {}
+        ev = []
+        for e in ctx.get("edges") or []:
+            s_, d_ = reg.get(e.get("src")), reg.get(e.get("dst"))
+            op = EDGE_TYPE_ID.get(e.get("op"))
+            if s_ is None or d_ is None or op is None:
+                continue
+            key = (s_, d_, op, int(e.get("ts_ns") or 0))
+            if key not in seen:
+                seen.add(key); ev.append(key)
+        if not ev:
+            continue
+        ev.sort(key=lambda x: x[3])
+        wins.append(Window(start_ns=ev[0][3], end_ns=ev[-1][3], src=np.array([x[0] for x in ev], dtype=np.int64),
+                           dst=np.array([x[1] for x in ev], dtype=np.int64), t=np.array([x[3] for x in ev], dtype=np.int64),
+                           etype=np.array([x[2] for x in ev], dtype=np.int64), event_uuid=[f"fb{r['id']}:{k}" for k in range(len(ev))]))
+    _sh.rmtree(os.path.join(store.root, "windows", FEEDBACK_DAY), ignore_errors=True)
+    if wins:
+        store.add_day(FEEDBACK_DAY, wins)
+    return len(wins)
+
+
+def schedule_refresh():
+    """Ask protected agents (0.3.13+) for two fresh days when their model is RETRAIN_DAYS old or RETRAIN_FP of
+    their alerts were marked false alarms since it was built; ingesting those days queues the retraining."""
+    global _last_refresh_check
+    if time.time() - _last_refresh_check < 600:
+        return
+    _last_refresh_check = time.time()
+    from datetime import datetime, timedelta
+    from zoneinfo import ZoneInfo
+    with db.conn() as c:
+        eps = db.q(c, "SELECT e.id, e.config, e.agent_version, b.created_at AS model_at, "
+                      "(SELECT count(*) FROM alerts a WHERE a.endpoint_id=e.id AND a.status='false_positive' AND a.created_at > b.created_at) AS fps "
+                      "FROM endpoints e JOIN bundles b ON b.id=e.current_bundle WHERE e.phase='protected' AND e.kind='live' "
+                      "AND coalesce((b.manifest->'maturity'->>'early')::boolean, false) = false")
+        for ep in eps:
+            cfg = ep["config"] or {}
+            if cfg.get("refresh_days") or cfg.get("periodic_retrain") is False or _vkey(ep["agent_version"]) < (0, 3, 13):
+                continue
+            age_d = (time.time() - ep["model_at"].timestamp()) / 86400
+            if age_d < RETRAIN_DAYS and ep["fps"] < RETRAIN_FP:
+                continue
+            from .refresh import request_refresh
+            days = request_refresh(c, str(ep["id"]), cfg, f"model {age_d:.0f} days old, {ep['fps']} false-alarm verdicts since")
+            log(f"refresh {ep['id']}: fresh days {days} requested")
+
+
 def job_train(job: dict, device: str):
     if (job.get("params") or {}).get("early"):
         return job_train_early(job, device)
@@ -305,11 +402,19 @@ def job_train(job: dict, device: str):
         ep = db.q(c, "SELECT config FROM endpoints WHERE id=%s", (eid,), one=True)
         rows = db.q(c, "SELECT date FROM baseline_days WHERE endpoint_id=%s AND complete ORDER BY completed_at NULLS LAST, date", (eid,))
     need = int(ep["config"].get("baseline_days", 7)) + 1
-    days = sorted(str(r["date"]) for r in rows[:need])      # the first N+1 days completed, in calendar order
+    refresh = bool((job.get("params") or {}).get("refresh"))
+    if refresh:   # periodic retraining: the most recent N+1 ingested days (fresh days last), sliding
+        days = sorted(d for d in store.days() if d != FEEDBACK_DAY)[-need:]
+    else:
+        days = sorted(str(r["date"]) for r in rows[:need])      # the first N+1 days completed, in calendar order
     days = [d for d in days if d in store.days()]
     if len(days) < 2:
         raise RuntimeError("need at least two ingested baseline days (train + validation)")
     train_days, val_day = days[:-1], days[-1]
+    fb = write_feedback_day(eid, store)
+    if fb:
+        train_days = train_days + [FEEDBACK_DAY]
+        log(f"train {eid}: {fb} benign-verdict windows added to the training days")
     log(f"train {eid}: train days {train_days}, validation {val_day}")
     overrides = dict(ep["config"].get("train", {}))
     fusion_mode = overrides.pop("fusion_calibration", "fixed")   # "fixed" (2:1 / train.fusion_weights) | "simulation"
@@ -324,6 +429,7 @@ def job_train(job: dict, device: str):
     tz = ep["config"].get("tz", "UTC")
     Trainer(store, train_days, val_day, cfg, out).run({"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(ep["config"]),
                                                       "trained_on": device,
+                                                      "refresh": refresh, "feedback_windows": fb,
                                                       "maturity": {"early": False, "baseline_days": len(train_days) + 1,
                                                                    "baseline_hours": 24.0 * (len(train_days) + 1),
                                                                    "trained_until_ns": day_bounds(val_day, tz)[1]}})
@@ -343,8 +449,8 @@ def job_train(job: dict, device: str):
     manifest = json.load(open(os.path.join(out, "manifest.json")))
     with db.conn() as c:
         db.q(c, "INSERT INTO bundles (id, endpoint_id, job_id, path, sha256, manifest) VALUES (%s,%s,%s,%s,%s,%s)", (bid, eid, str(job["id"]), out, digest, json.dumps(manifest)))
-        db.q(c, "UPDATE endpoints SET current_bundle=%s, phase='protected' WHERE id=%s", (bid, eid))
-    log(f"train {eid}: bundle {bid} published")
+        db.q(c, "UPDATE endpoints SET current_bundle=%s, phase='protected', config = config - 'refresh_queued' WHERE id=%s", (bid, eid))
+    log(f"train {eid}: bundle {bid} published" + (" (periodic retraining)" if refresh else ""))
     prune_early_bundles(eid)
     if ep["config"].get("retain_baseline_events", False):
         return
@@ -461,6 +567,18 @@ class Heartbeat:
         self._ev.set()
 
 
+# Next job, fair between organisations: among queued jobs of this worker's kinds, the organisation whose last job of
+# that kind started longest ago (or never) goes first, then the oldest job; one busy organisation (or one huge host)
+# cannot keep the others waiting for its whole queue. Jobs without an endpoint (none today) count as one organisation.
+NEXT_JOB = """
+UPDATE jobs SET state='running', started_at=now(), heartbeat=now() WHERE id = (
+  SELECT j.id FROM jobs j LEFT JOIN endpoints e ON e.id = j.endpoint_id
+  WHERE j.state='queued' AND j.kind = ANY(%s)
+  ORDER BY (SELECT max(j2.started_at) FROM jobs j2 JOIN endpoints e2 ON e2.id = j2.endpoint_id
+            WHERE e2.org_id IS NOT DISTINCT FROM e.org_id AND j2.kind = j.kind) ASC NULLS FIRST, j.created_at
+  LIMIT 1 FOR UPDATE OF j SKIP LOCKED) RETURNING *"""
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--kinds", default="ingest,train")
@@ -483,12 +601,11 @@ def main():
     while True:
         job = None
         with db.conn() as c:
-            job = db.q(c, "UPDATE jobs SET state='running', started_at=now(), heartbeat=now() WHERE id = "
-                          "(SELECT id FROM jobs WHERE state='queued' AND kind = ANY(%s) ORDER BY created_at LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING *",
-                       (list(kinds),), one=True)
+            job = db.q(c, NEXT_JOB, (list(kinds),), one=True)
         if not job:
             if "train" in kinds:
                 schedule_early_models()
+                schedule_refresh()
             time.sleep(5)
             continue
         hb.start(job["id"])
@@ -497,6 +614,8 @@ def main():
                 job_ingest(job)
             elif job["kind"] == "train":
                 job_train(job, a.device)
+            elif job["kind"] == "train_rules":
+                job_train(job, "cpu")
             elif job["kind"] == "sim":
                 job_sim(job, a.device)
             with db.conn() as c:

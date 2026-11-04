@@ -49,7 +49,7 @@ from .access import admin
 router = APIRouter()
 
 KINDS = ("email", "slack", "teams", "webhook", "syslog")
-EVENTS = ("incident", "agent_offline", "agent_health")
+EVENTS = ("incident", "agent_offline", "agent_health", "weekly", "platform")   # platform: operator alerts (internal organisation)
 SEVERITIES = ("low", "medium", "high", "critical")
 SEV_RANK = {s: i for i, s in enumerate(SEVERITIES)}
 EMAIL_RE = re.compile(r"^[^@\s,;<>]+@[^@\s,;<>]+\.[^@\s,;<>]+$")
@@ -315,6 +315,27 @@ def pending_messages(c, ch: dict, eps: list[dict], incidents: list[dict]) -> lis
             if SEV_RANK.get(inc["severity"], 0) < floor or inc["max_alert_id"] <= ch["since_alert_id"]:
                 continue
             out.append((f"incident:{inc['id']}:{inc['severity']}", (inc, None)))
+    if "weekly" in events:
+        nowdt = datetime.now(timezone.utc)
+        if nowdt.weekday() == 0 and nowdt.hour >= 7:          # Monday morning (UTC)
+            from .reports import weekly, weekly_text
+            org_row = db.q(c, "SELECT name FROM orgs WHERE id=%s", (ch["org_id"],), one=True)
+            w = weekly(c, ch["org_id"], nowdt)
+            iso = nowdt.isocalendar()
+            title = f"Weekly summary: {w['incidents_new']} new incidents, {w['incidents_open']} open"
+            out.append((f"weekly:{iso[0]}-{iso[1]:02d}", {"event": "weekly", "subject": f"[PDP] {title} ({org_row['name'] if org_row else ''})",
+                                                          "text": weekly_text(w, org_row["name"] if org_row else "", console_url()), "title": title,
+                                                          "severity": "low", "link": f"{console_url()}/#/reports/weekly", "data": {"type": "weekly", **w}}))
+    if "platform" in events:
+        org_row = db.q(c, "SELECT internal FROM orgs WHERE id=%s", (ch["org_id"],), one=True)
+        if org_row and org_row["internal"]:
+            from .metrics import platform_problems
+            day = time.strftime("%Y-%m-%d", time.gmtime())
+            for p in platform_problems(c):
+                title = f"Platform: {p['text']}"
+                out.append((f"platform:{p['key']}:{day}", {"event": "platform", "subject": f"[PDP] {title}", "text": title, "title": title,
+                                                         "severity": "high" if p["level"] == "error" else "medium", "link": f"{console_url()}/#/operator",
+                                                         "data": {"type": "platform", "problem": p["key"], "detail": p["text"]}}))
     now = time.time()
     for ep in eps:
         if "agent_offline" in events and ep["last_seen"] is not None and ep["phase"] in ("baseline", "training", "protected"):
@@ -544,7 +565,7 @@ class ChannelIn(BaseModel):
     target: str = Field(min_length=1, max_length=2000)
     secret: str | None = Field(default=None, max_length=200)
     min_severity: str = "high"
-    events: list[str] = Field(default_factory=lambda: list(EVENTS))
+    events: list[str] = Field(default_factory=lambda: ["incident", "agent_offline", "agent_health", "weekly"])
     every_alert: bool = False
     enabled: bool = True
 

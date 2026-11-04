@@ -40,7 +40,7 @@ export function IncidentTable({ rows, showEndpoint = true, compact }: { rows: In
                 <div className="muted sm nowrap">{fmtRel(i.first_ns)}{i.last_ns - i.first_ns > 6e10 ? ` · lasted ${fmtDuration(i.last_ns - i.first_ns)}` : ""}</div>
               </td>
               {!compact && <td className="num">{i.alerts.toLocaleString()}</td>}
-              <td><StatusBadge status={i.status} /></td>
+              <td><StatusBadge status={i.status} />{i.assignee && <div className="muted sm ellipsis" title={`Owner: ${i.assignee.name}`}>{i.assignee.name}</div>}</td>
             </tr>
           ))}
         </tbody>

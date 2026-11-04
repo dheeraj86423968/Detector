@@ -1,0 +1,17 @@
+groups:
+  - name: pdp
+    rules:
+      - alert: PdpBackupFailed
+        expr: max(pdp_backup_ok) == 0
+        for: 10m
+      - alert: PdpBackupOld
+        expr: min(pdp_backup_age_seconds) > 36 * 3600
+      - alert: PdpJobsWaiting
+        expr: max by (kind) (pdp_job_oldest_seconds{state="queued", kind!="command"}) > 7200
+      - alert: PdpNotifierStopped
+        expr: min(pdp_notifier_age_seconds) > 300
+      - alert: PdpDataDiskLow
+        expr: min(pdp_data_free_bytes / pdp_data_total_bytes) < 0.10
+      - alert: PdpApiDown
+        expr: count(up{job="pdp-api"} == 1) < 1
+        for: 2m

@@ -224,6 +224,7 @@ check(any("reporting again" in m["text"] for m in opsm), "agent back -> 'reporti
 st, bwh = B.call("POST", "/api/notifications/channels", {"name": "B hook", "kind": "webhook", "target": HOOK + "/b", "events": ["incident", "agent_offline"], "min_severity": "low"})
 N.run_once([B.call("GET", "/api/me")[1]["org"]["id"]])
 check(not received("/b"), "B's channel receives nothing of A's incidents or agents")
+B.call("DELETE", f"/api/notifications/channels/{bwh['channel']['id']}")
 
 for cid in (whid, sl["channel"]["id"], ops["channel"]["id"], feed["channel"]["id"]):
     A.call("DELETE", f"/api/notifications/channels/{cid}")

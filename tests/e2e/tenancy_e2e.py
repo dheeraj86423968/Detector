@@ -95,9 +95,14 @@ st, _ = op.call("POST", "/api/login", {"username": "admin", "password": os.envir
 check(st == 200, "operator signs in")
 st, me = op.call("GET", "/api/me")
 check(me.get("operator") is True and me["can"].get("operate") and me.get("org", {}).get("name"), f"operator flag and organisation in /api/me ({me.get('org')})")
-internal_eps = [e["id"] for e in op.call("GET", "/api/endpoints")[1]["endpoints"]]
+_eps = op.call("GET", "/api/endpoints")[1]["endpoints"]
+internal_eps = [e["id"] for e in sorted(_eps, key=lambda e: e.get("state") == "retired")]   # a live one is the victim
 internal_incs = op.call("GET", "/api/incidents?status=all&limit=5")[1]["incidents"]
 internal_alerts = op.call("GET", "/api/alerts?limit=5")[1].get("alerts", [])
+if not [e for e in _eps if e.get("state") != "retired"]:      # a fresh stack (staging): give the operator a live endpoint
+    _st, _tok = op.call("POST", "/api/endpoints", {"name": f"internal-{secrets.token_hex(3)}"})
+    _st, _js, _ = enroll(_tok["token"])
+    internal_eps = [_js["endpoint_id"]] + internal_eps
 check(len(internal_eps) > 0, f"internal organisation has endpoints to protect ({len(internal_eps)})")
 victim_ep = internal_eps[0]
 

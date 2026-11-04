@@ -150,7 +150,8 @@ ACTIVE = ("open", "investigating", "true_positive")
 
 
 @router.get("/api/incidents")
-def get_incidents(s=Depends(session), status: str = "all", endpoint_id: str | None = None, severity: str | None = None, limit: int = 100):
+def get_incidents(s=Depends(session), status: str = "all", endpoint_id: str | None = None, severity: str | None = None, limit: int = 100,
+                  assignee: str | None = None):
     if endpoint_id:
         require_endpoint(s, endpoint_id)
     with db.conn() as c:
@@ -161,17 +162,85 @@ def get_incidents(s=Depends(session), status: str = "all", endpoint_id: str | No
         incs = [i for i in incs if i["status"] == status]
     if severity:
         incs = [i for i in incs if i["severity"] in severity.split(",")]
+    with db.conn() as c:
+        meta = _meta(c, s["org"], [i["id"] for i in incs])
+    for i in incs:
+        i["assignee"] = meta.get(i["id"])
+    if assignee == "me":
+        incs = [i for i in incs if i["assignee"] and i["assignee"]["id"] == s["u"]]
+    elif assignee == "none":
+        incs = [i for i in incs if not i["assignee"]]
     incs.sort(key=lambda i: i["last_ns"], reverse=True)
     return {"ok": True, "incidents": incs[:max(1, min(int(limit), 5000))]}
+
+
+def _meta(c, org, ids) -> dict:
+    if not ids:
+        return {}
+    rows = db.q(c, "SELECT m.incident_id, u.id, coalesce(u.display_name, u.username) AS name FROM incident_meta m JOIN users u ON u.id=m.assignee "
+                   "WHERE m.org_id=%s AND m.incident_id = ANY(%s)", (org, list(ids)))
+    return {r["incident_id"]: {"id": r["id"], "name": r["name"]} for r in rows}
+
+
+def _history(c, org, incident_id) -> list[dict]:
+    return db.q(c, "SELECT e.id, e.kind, e.text, e.value, e.at, coalesce(u.display_name, u.username) AS by FROM incident_events e "
+                   "LEFT JOIN users u ON u.id=e.user_id WHERE e.org_id=%s AND e.incident_id=%s ORDER BY e.at, e.id", (org, incident_id))
+
+
+def _event(c, s, incident_id, kind, text=None, value=None):
+    db.q(c, "INSERT INTO incident_events (incident_id, org_id, user_id, kind, text, value) VALUES (%s,%s,%s,%s,%s,%s)",
+         (incident_id, s["org"], s["u"], kind, text, value))
 
 
 @router.get("/api/incidents/{incident_id}")
 def get_incident(incident_id: int, s=Depends(session)):
     with db.conn() as c:
         alerts = incidents.find(c, scope_list(s), incident_id, with_context=True)
-    if not alerts:
-        raise HTTPException(404, "not found")
-    return {"ok": True, **incidents.detail(alerts)}
+        if not alerts:
+            raise HTTPException(404, "not found")
+        meta = _meta(c, s["org"], [incident_id]).get(incident_id)
+        hist = _history(c, s["org"], incident_id)
+        team = db.q(c, "SELECT id, coalesce(display_name, username) AS name FROM users WHERE org_id=%s AND NOT disabled AND role IN ('admin','analyst') ORDER BY 2", (s["org"],))
+    return {"ok": True, **incidents.detail(alerts), "assignee": meta, "history": hist, "assignable": team}
+
+
+class Assign(BaseModel):
+    user_id: int | None = None
+
+
+class Note(BaseModel):
+    text: str
+
+
+@router.post("/api/incidents/{incident_id}/assign")
+def assign_incident(incident_id: int, req: Assign, s=Depends(triager)):
+    with db.conn() as c:
+        if not incidents.find(c, scope_list(s), incident_id):
+            raise HTTPException(404, "not found")
+        name = None
+        if req.user_id is not None:
+            u = db.q(c, "SELECT coalesce(display_name, username) AS name FROM users WHERE id=%s AND org_id=%s AND NOT disabled AND role IN ('admin','analyst')",
+                     (req.user_id, s["org"]), one=True)
+            if not u:
+                raise HTTPException(400, "assign to an admin or analyst of your organisation")
+            name = u["name"]
+        db.q(c, "INSERT INTO incident_meta (incident_id, org_id, assignee, updated_at) VALUES (%s,%s,%s,now()) "
+                "ON CONFLICT (incident_id) DO UPDATE SET assignee=excluded.assignee, updated_at=now()", (incident_id, s["org"], req.user_id))
+        _event(c, s, incident_id, "assign", name or "unassigned", str(req.user_id) if req.user_id else None)
+    return {"ok": True}
+
+
+@router.post("/api/incidents/{incident_id}/notes")
+def add_note(incident_id: int, req: Note, s=Depends(triager)):
+    t = (req.text or "").strip()
+    if not t or len(t) > 5000:
+        raise HTTPException(400, "a note has 1 to 5000 characters")
+    with db.conn() as c:
+        if not incidents.find(c, scope_list(s), incident_id):
+            raise HTTPException(404, "not found")
+        _event(c, s, incident_id, "note", t)
+        hist = _history(c, s["org"], incident_id)
+    return {"ok": True, "history": hist}
 
 
 class IncidentStatus(BaseModel):
@@ -188,6 +257,7 @@ def set_incident_status(incident_id: int, req: IncidentStatus, s=Depends(triager
         if not alerts:
             raise HTTPException(404, "not found")
         db.q(c, "UPDATE alerts SET status=%s WHERE id = ANY(%s)", (incidents.STATUS_OF_ACTION[req.status], [a["id"] for a in alerts]))
+        _event(c, s, incident_id, "status", (req.note or "").strip()[:5000] or None, req.status)
     return {"ok": True}
 
 
@@ -251,7 +321,7 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
         alerts = db.q(c, "SELECT window_start_ns, coalesce(layer, 'learned') AS layer, status FROM alerts WHERE endpoint_id=%s", (endpoint_id,))
         incs = incidents.list_incidents(c, None, endpoint_id)
         checks = _checks(c, endpoint_id)
-        training = db.q(c, "SELECT state, created_at, started_at FROM jobs WHERE endpoint_id=%s AND kind='train' ORDER BY created_at DESC LIMIT 1", (endpoint_id,), one=True)
+        training = db.q(c, "SELECT state, created_at, started_at FROM jobs WHERE endpoint_id=%s AND kind IN ('train','train_rules') ORDER BY created_at DESC LIMIT 1", (endpoint_id,), one=True)
         org = db.q(c, "SELECT agent_update FROM orgs WHERE id=%s", (row["org_id"],), one=True)
     need, done = _needed(row["config"]), int(row["baseline_days_done"])
     has_model = bundle is not None

@@ -74,25 +74,64 @@ self-update via the registry (confirmed in 1 s), deliberately broken 0.3.10 roll
 held. tests/unit/test_updater.py (10), test_agent.py update checks. The L40S host keeps its hand-made unit
 (updated by hand); 0.3.9/0.3.10 were rollout test builds, 0.3.11 is the release.
 
-### 5. Our own operations — status: todo
+### 5. Our own operations — status: done (2026-11-04)
 Done when: staging stack; CI runs unit + stack_e2e (99) + tenancy_e2e (90) on every commit; scheduled backups of the
 platform DB, telemetry needed for training and bundles, with a tested restore; monitoring/alerting of our own
 services (Prometheus + Grafana or equivalent); load test with ~50 simulated endpoints and the training queue.
 
+Result (docs/OPERATIONS.md): staging stack (deploy/staging.sh: own project, volumes, ports 9445/9446, known admin
+password); tests/run_unit.sh (server + agent images, also in CI) and tests/run_e2e.sh (stack 96, tenancy 90,
+notify 27 checks, all passing on staging); encrypted daily backups (backup service: database, CA / KMS, current
+models; deploy/restore.sh, rehearsed into staging: identical data, same CA, enrolment through the restored KMS);
+/metrics + Prometheus/Grafana profile + `platform` operator notifications; load test with 50 simulated agents
+(9 M events/hour, 2180 requests, 0 errors, p95 95 ms for event uploads, 15 ms for status polls).
+
 ## Soon after
 
-### 6. Storage and training capacity — status: todo
+### 6. Storage and training capacity — status: done (server 0.6, agent 0.3.12; 2026-11-04)
 Raw events ~180 B each in Postgres until the final model (~1 GB for a quiet client, ~90 GB for a busy host).
 Done when raw events are partitioned per day (cheap drop) or moved to compressed files; per-org fair training queue;
 early (rules-only) models train on CPU so big hosts never block small ones.
 
-### 7. Learn from analyst decisions — status: todo
+Correction to the premise: raw events were already deleted once their day was cut into windows (one open day
+stays), but row by row - on a busy host 60 M rows a day, slow and bloating. Result:
+- raw events of new endpoints are partitioned by UTC day; after a day is windowed its partitions are dropped as
+  tables (partially covered ones deleted, emptied ones dropped); partitions are created on upload
+  (tests/e2e/partitions_check.py on staging's PostgreSQL). Existing endpoints keep their table until they finish.
+- early models below one day are rules-only bundles (layers 1-2, no learned detectors; same rule alerts as the full
+  model restricted to rules, tests/unit/test_rules_only.py): job kind `train_rules` on the CPU worker, seconds
+  instead of a GPU run (23 min and 1.1 GB on the L40S host), a bundle of a few KB, no learned state on the agent.
+  Only for agents >= 0.3.12 (older agents get the previous minimal model); agents now survive a model they cannot
+  load (they keep / reload the current one).
+- the job queue is fair between organisations: the organisation whose last job of that kind started longest ago
+  goes first (tests/e2e/queue_check.py: ABAAAA instead of AAAAAB).
+- fixed on the way: the early-model scheduler retrained the 6 h milestone every minute (milestone vs measured hours).
+Open: one GPU worker still runs one final training at a time; scale `worker-train` (or add GPUs) when many clients
+finish their baseline the same day.
+
+### 7. Learn from analyst decisions — status: done (server 0.6, agent 0.3.13; 2026-11-04)
 "Benign" verdicts feed the next retrain, not only the allowlist; periodic (monthly) retrain on recent benign activity
 so models do not go stale after software updates.
 
-### 8. Incident triage workflow — status: todo
+Result: protected endpoints are retrained on fresh activity: after PDP_RETRAIN_DAYS (30) days, after
+PDP_RETRAIN_FP (20) false-alarm verdicts, or from the console's Retrain button, the server asks the agent for the
+next two whole days (config refresh_days); the agent (0.3.13) uploads them like its baseline while it keeps
+protecting; once ingested, the endpoint is retrained on the most recent N+1 days plus a "feedback" day built from
+the event context of every alert marked a false alarm (so the learned layers and the rules' known programs /
+trusted addresses learn it). Entity ids the agent pruned meanwhile become placeholders on the server, so ids stay
+aligned. Per-endpoint opt-out: config periodic_retrain=false. tests/e2e/refresh_e2e.py (12 checks on staging:
+final model, verdict, two fresh days requested and seen by the agent, retrained model on the newest days + 1
+feedback window, ids aligned, endpoint protected throughout).
+
+### 8. Incident triage workflow — status: done (server 0.6; 2026-11-04)
 Incident status (new / investigating / resolved / benign), assignee, notes, history; weekly per-org summary
 (e-mail/PDF).
+
+Result: incident owner (admins and analysts of the organisation), notes and a history of status changes
+(with an optional note), assignments and notes, each with author and time (incident page "Triage" card); owner
+column and Mine / No owner filters on the incident list. Weekly summary: printable console report
+(/#/reports/weekly, print to PDF) and a Monday-morning notification on channels with the "weekly" event (default for
+new channels). tests/e2e/triage_e2e.py (13 checks on staging, including organisation isolation).
 
 ### 9. Learning progress per endpoint — status: todo
 Console shows "day N of 8, X MB uploaded, early detection on", expected upload volume and local disk use.

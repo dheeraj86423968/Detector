@@ -37,16 +37,16 @@ function EndpointSelect({ value, onChange, eps }: { value: string; onChange: (v:
 }
 
 function IncidentList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, v: string) => void; eps: Endpoint[] }) {
-  const status = sp.get("status") || "open", sev = sp.get("severity") || "", ep = sp.get("endpoint_id") || "";
+  const status = sp.get("status") || "open", sev = sp.get("severity") || "", ep = sp.get("endpoint_id") || "", owner = sp.get("owner") || "";
   const [q, setQ] = useState("");
-  const qs = new URLSearchParams({ status, limit: "500" }); if (sev) qs.set("severity", sev); if (ep) qs.set("endpoint_id", ep);
+  const qs = new URLSearchParams({ status, limit: "500" }); if (sev) qs.set("severity", sev); if (ep) qs.set("endpoint_id", ep); if (owner) qs.set("assignee", owner);
   const { data, error, loading, reload } = useApi<{ incidents: IncidentSummary[] }>(`/api/incidents?${qs}`, 30000);
   const rows = useMemo(() => {
     const t = q.trim().toLowerCase();
     return (data?.incidents || []).filter(i => !t || i.title.toLowerCase().includes(t) || i.endpoint_name.toLowerCase().includes(t) || i.tactics.some(x => x.toLowerCase().includes(t)) || !!i.behaviours?.some(b => b.label.toLowerCase().includes(t)));
   }, [data, q]);
-  const filtered = status !== "all" || sev || ep || q;
-  const page = useShowMore(rows, 50, `${status}|${sev}|${ep}|${q}`);
+  const filtered = status !== "all" || sev || ep || q || owner;
+  const page = useShowMore(rows, 50, `${status}|${sev}|${ep}|${q}|${owner}`);
   const protectedN = eps.filter(e => e.state === "protected").length;
   return (
     <Card pad={false}>
@@ -60,6 +60,9 @@ function IncidentList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, 
           {SEVERITIES.map(s => <option key={s} value={s}>{SEVERITY_LABEL[s]}</option>)}
         </select>
         <EndpointSelect value={ep} onChange={v => set("endpoint_id", v)} eps={eps} />
+        <select value={owner} onChange={e => set("owner", e.target.value)} aria-label="Owner">
+          <option value="">Any owner</option><option value="me">Mine</option><option value="none">No owner yet</option>
+        </select>
         <div className="filters-end muted">{data ? plural(rows.length, "incident") : ""}</div>
       </div>
       {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :

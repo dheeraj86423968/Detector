@@ -86,10 +86,71 @@ CREATE SCHEMA IF NOT EXISTS {s};
 CREATE TABLE IF NOT EXISTS {s}.entities (uuid TEXT PRIMARY KEY, dense_id INT UNIQUE, ntype TEXT NOT NULL, label TEXT NOT NULL, display JSONB);
 CREATE SEQUENCE IF NOT EXISTS {s}.dense_seq START 0 MINVALUE 0;
 CREATE TABLE IF NOT EXISTS {s}.events (ts_ns BIGINT NOT NULL, src TEXT NOT NULL, op TEXT NOT NULL, dst TEXT NOT NULL, event_uuid TEXT NOT NULL,
-                                       batch_id TEXT NOT NULL);
+                                       batch_id TEXT NOT NULL) PARTITION BY RANGE (ts_ns);
 ALTER TABLE {s}.events DROP CONSTRAINT IF EXISTS events_pkey;
 CREATE INDEX IF NOT EXISTS {s}_events_ts ON {s}.events (ts_ns);
 """
+
+
+# Raw baseline events are partitioned by UTC day (endpoints created from server 0.6; older ones keep one table until
+# they finish learning): a day that has been cut into windows is dropped as a table instead of deleted row by row
+# (on a busy host 60 M rows a day - slow, and it bloats the table). Partitions are created as uploads need them.
+DAY_NS = 86400 * 10**9
+
+
+def is_partitioned(c, s: str) -> bool:
+    with c.cursor() as cur:
+        cur.execute("SELECT c.relkind = 'p' FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=%s AND c.relname='events'", (s,))
+        r = cur.fetchone()
+    return bool(r and r[0])
+
+
+def ensure_partitions(c, s: str, lo_ns: int, hi_ns: int) -> None:
+    """Daily partitions covering [lo_ns, hi_ns] (no-op for an unpartitioned table). Looked up in the catalog on every
+    upload (no cache: the worker drops partitions of days already cut into windows)."""
+    days = range(int(lo_ns) // DAY_NS, int(hi_ns) // DAY_NS + 1)
+    if not is_partitioned(c, s):
+        return
+    with c.cursor() as cur:
+        cur.execute("SELECT c.relname FROM pg_inherits i JOIN pg_class c ON c.oid=i.inhrelid JOIN pg_class p ON p.oid=i.inhparent "
+                    "JOIN pg_namespace n ON n.oid=p.relnamespace WHERE n.nspname=%s AND p.relname='events'", (s,))
+        known = {int(r[0].rsplit("_d", 1)[1]) for r in cur.fetchall()}
+    import psycopg2
+    for d in days:
+        if d in known:
+            continue
+        with c.cursor() as cur:
+            try:
+                cur.execute("SAVEPOINT p")
+                cur.execute(f"CREATE TABLE IF NOT EXISTS {s}.events_d{d} PARTITION OF {s}.events FOR VALUES FROM ({d * DAY_NS}) TO ({(d + 1) * DAY_NS})")
+                cur.execute("RELEASE SAVEPOINT p")
+            except psycopg2.Error:            # created concurrently by the other API replica
+                cur.execute("ROLLBACK TO SAVEPOINT p")
+
+
+
+def delete_events(c, s: str, t0: int, t1: int) -> int:
+    """Delete raw events with t0 <= ts_ns < t1: partitions entirely inside are dropped, the rest deleted; partitions
+    that end before t1 and are empty afterwards are dropped too. Returns partitions dropped."""
+    dropped = 0
+    with c.cursor() as cur:
+        if not is_partitioned(c, s):
+            cur.execute(f"DELETE FROM {s}.events WHERE ts_ns >= %s AND ts_ns < %s", (t0, t1))
+            return 0
+        cur.execute("SELECT c.relname FROM pg_inherits i JOIN pg_class c ON c.oid=i.inhrelid JOIN pg_class p ON p.oid=i.inhparent "
+                    "JOIN pg_namespace n ON n.oid=p.relnamespace WHERE n.nspname=%s AND p.relname='events'", (s,))
+        parts = [r[0] for r in cur.fetchall()]
+        for name in parts:
+            d = int(name.rsplit("_d", 1)[1])
+            lo, hi = d * DAY_NS, (d + 1) * DAY_NS
+            if lo >= t0 and hi <= t1:
+                cur.execute(f"DROP TABLE {s}.{name}"); dropped += 1
+            elif lo < t1 and hi > t0:
+                cur.execute(f"DELETE FROM {s}.{name} WHERE ts_ns >= %s AND ts_ns < %s", (t0, t1))
+                cur.execute(f"SELECT 1 FROM {s}.{name} LIMIT 1")
+                if cur.fetchone() is None:          # emptied (the rest of its day went with an earlier day): drop it;
+                    cur.execute(f"DROP TABLE {s}.{name}"); dropped += 1   # an upload would simply recreate it
+    return dropped
 
 
 def init_telemetry(endpoint_id: str) -> str:
