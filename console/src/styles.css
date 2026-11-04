@@ -632,3 +632,17 @@ td.reason { margin: 0; }
 .allowed-pill:hover { color: var(--ok); filter: brightness(.95); }
 .flex-min { display: flex; min-width: 0; }
 .row-title.wrap2 { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+
+/* recognised attack behaviour (incident page strip, list chips) */
+.chip.chip-serious { color: var(--sev-critical); background: #fff1f3; border-color: #fecdd6; }
+.beh-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin: 0 0 16px; }
+.beh { min-width: 0; display: flex; flex-direction: column; gap: 3px; text-align: left; font: inherit; color: inherit;
+  background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--sev-medium); border-radius: 8px; padding: 8px 12px;
+  box-shadow: var(--shadow-sm); cursor: pointer; }
+.beh:hover:not(:disabled) { border-color: var(--accent); border-left-color: var(--accent); }
+.beh:disabled { cursor: default; }
+.beh.serious { border-left-color: var(--sev-critical); }
+.beh-h { display: flex; align-items: baseline; gap: 8px; font-weight: 600; font-size: 13px; }
+.beh-dot { display: none; }
+.beh-tac { margin-left: auto; font-weight: 500; font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.beh-x { font-size: 12.5px; color: var(--text-2); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }

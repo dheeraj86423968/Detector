@@ -14,7 +14,8 @@ const STRONG_OPS = new Set(["EXECUTE", "WRITE", "CONNECT", "SENDTO", "SENDMSG", 
  * network peers), and what alerted entities executed, wrote or talked to. Library reads are left out.
  */
 export function attackPath(nodes: GNode[], edges: GEdge[]): Set<string> {
-  const type = new Map(nodes.map(n => [n.id, n.type]));
+  // folded system/unnamed files are context; a bulk group (the 35 files ransomware rewrote) is part of the attack
+  const type = new Map(nodes.map(n => [n.id, n.type === "group" && !n.id.startsWith("group:bulk:") ? "group" : n.type]));
   const alerted = nodes.filter(n => n.alerted).map(n => n.id);
   const keep = new Set(alerted);
   const adj = new Map<string, string[]>();
@@ -41,6 +42,11 @@ export function attackPath(nodes: GNode[], edges: GEdge[]): Set<string> {
     if (!STRONG_OPS.has(e.op)) continue;
     if (al.has(e.source) && type.get(e.target) !== "group") keep.add(e.target);
     if (al.has(e.target) && type.get(e.source) !== "group") keep.add(e.source);
+  }
+  // bulk groups next to anything on the path (the files a forked encryptor rewrote)
+  for (const e of edges) {
+    if (e.source.startsWith("group:bulk:") && keep.has(e.target)) keep.add(e.source);
+    if (e.target.startsWith("group:bulk:") && keep.has(e.source)) keep.add(e.target);
   }
   return keep;
 }

@@ -77,7 +77,7 @@ export default function IncidentDetail() {
             <Link to={`/endpoints/${inc.endpoint_id}`} className="meta-item subtle-link"><Server size={14} /><span className="meta-ep"><Mid text={inc.endpoint_name} /></span></Link>
             <span className="meta-item" title={fmtRel(inc.first_ns)}><Clock size={14} />{fmtSpan(inc.first_ns, inc.last_ns)}</span>
             <span className="meta-item">{plural(inc.alerts, "alert")} · {plural(inc.processes, "process", "processes")}</span>
-            {inc.tactics.map(t => <Chip key={t}>{t}</Chip>)}
+            {!inc.behaviours?.length && inc.tactics.map(t => <Chip key={t}>{t}</Chip>)}
           </div>
           <div className="triage">
             <StatusBadge status={inc.status} />
@@ -90,6 +90,18 @@ export default function IncidentDetail() {
           </div>
         </div>
       </PageHeader>
+
+      {!!inc.behaviours?.length && (
+        <div className="beh-strip" aria-label="Recognised attack behaviour">
+          {inc.behaviours.map(b => (
+            <button key={b.label} type="button" className={cx("beh", b.serious && "serious")} disabled={!b.node}
+              onClick={() => b.node && focusNode(b.node, true)} title={b.node ? `${b.text} - click to find it in the graph` : b.text}>
+              <span className="beh-h"><span className="beh-dot" />{b.label}<span className="beh-tac">{b.tactic}</span></span>
+              <span className="beh-x">{b.text}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="inc-grid" ref={graphRef}>
         <Card className="story-card" title="What happened" subtitle={`${plural(d.story.length, "step")} · ${plural(detections, "detection")} · click a step to find it in the graph`} pad={false}>

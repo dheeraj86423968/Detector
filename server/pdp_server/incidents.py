@@ -16,11 +16,13 @@ from __future__ import annotations
 import os
 import re
 
+from . import behaviours as beh
 from . import db
 
 GAP_NS = 30 * 60 * 1_000_000_000
 WINDOW_NS = 15 * 60 * 1_000_000_000      # an alert covers its detection window
 MAX_NODES = 300
+BULK_FILES = 12          # this many plain files with the same neighbours are folded into one node
 MAX_STORY = 80
 
 TYPE_RANK = {"rules": 0, "novelty": 1, "corroborated": 2, "evidence": 3, "learned": 4}
@@ -29,7 +31,14 @@ RULE_RANK = {"exfiltration": 0, "untrusted_code_network": 1, "untrusted_exec": 2
 TACTIC = {"novel_executable": "Execution", "untrusted_exec": "Execution", "tainted_spawn": "Execution",
           "untrusted_code_network": "Command and control", "exfiltration": "Exfiltration",
           "tainted_modify": "Persistence"}
-TACTIC_ORDER = ["Execution", "Persistence", "Command and control", "Exfiltration", "Unusual behaviour"]
+TACTIC_ORDER = ["Initial access", "Execution", "Persistence", "Privilege escalation", "Defense evasion", "Credential access",
+                "Discovery", "Lateral movement", "Collection", "Command and control", "Exfiltration", "Impact", "Unusual behaviour"]
+# Title precedence: recognised behaviours and the data-flow rules' findings, most important first.
+# The exfiltration rule's finding ("sensitive data sent to ...") titles an incident only when no more specific technique
+# was recognised; it always stays in the behaviour list.
+TITLE_RANK = ["ransomware", "web_shell", "remote_shell", "cryptominer", "credential", "dns_tunnel", "staged_exfil",
+              "c2_download", "dropped_exec", "persistence", "lateral", "masquerade", "log_wipe", "tool_download",
+              "exfiltration", "privesc_recon", "discovery"]
 STATUS_OF_ACTION = {"open": "open", "investigating": "ack", "true_positive": "true_positive",
                     "false_positive": "false_positive", "resolved": "closed"}
 OP_LABEL = {"READ": "read", "WRITE": "wrote", "EXECUTE": "executed", "CLONE": "started", "CONNECT": "connected",
@@ -186,7 +195,7 @@ def _ip_in(reason: str | None) -> str | None:
     return m.group(1) if m else None
 
 
-def summarise(alerts: list[dict]) -> dict:
+def summarise(alerts: list[dict], behaviours: list[dict] | None = None) -> dict:
     top = min(alerts, key=_det_key)
     rules = {a["rule"] for a in alerts if a["layer"] == "rules"}
     layers = {a["layer"] for a in alerts}
@@ -200,12 +209,24 @@ def summarise(alerts: list[dict]) -> dict:
         severity = "low"
     who = parse_label(top["ntype"], top["label"], top["node_uuid"], top.get("display"))
     name = _actor_in(top["reason"]) or who["label"]
-    if top["layer"] == "rules" and top["rule"] == "exfiltration":
-        title = f"Sensitive data sent to untrusted {_ip_in(top['reason']) or 'address'} by {name}"
-    elif top["layer"] == "rules" and top["rule"] == "untrusted_code_network":
-        title = f"Downloaded program {name} contacted {_ip_in(top['reason']) or 'an untrusted address'}"
-    elif top["layer"] == "rules" and top["rule"] == "untrusted_exec":
-        title = f"A dropped file was executed ({name})"
+    found = list(behaviours if behaviours is not None else _BEHAVIOURS.get(alerts[0]["id"], []))
+    # the data-flow rules' own findings compete for the title with the recognised behaviours
+    for a in sorted((a for a in alerts if a["layer"] == "rules"), key=_det_key):
+        actor = _actor_in(a["reason"]) or parse_label(a["ntype"], a["label"], a["node_uuid"], a.get("display"))["label"]
+        if a["rule"] == "exfiltration" and not any(b["kind"] == "exfiltration" for b in found):
+            found.append({"kind": "exfiltration", "label": "Data exfiltration", "tactic": "Exfiltration",
+                          "title": f"Sensitive data sent to untrusted {_ip_in(a['reason']) or 'address'} by {actor}", "text": clean_reason("rules", a["reason"])})
+        elif a["rule"] == "untrusted_code_network" and not any(b["kind"] == "c2_download" for b in found):
+            found.append({"kind": "c2_download", "label": "Downloaded program", "tactic": "Command and control",
+                          "title": f"Downloaded program {actor} contacted {_ip_in(a['reason']) or 'an untrusted address'}", "text": clean_reason("rules", a["reason"])})
+        elif a["rule"] == "untrusted_exec" and not any(b["kind"] == "dropped_exec" for b in found):
+            found.append({"kind": "dropped_exec", "label": "Dropped program run", "tactic": "Execution",
+                          "title": f"A dropped file was executed ({actor})", "text": clean_reason("rules", a["reason"])})
+    found.sort(key=lambda b: TITLE_RANK.index(b["kind"]) if b["kind"] in TITLE_RANK else 99)
+    if found:
+        title = found[0]["title"]
+        if any(b["kind"] in beh.SERIOUS for b in found) and severity in ("medium", "low"):
+            severity = "high"
     elif top["layer"] == "rules":
         title = f"Suspicious data flow involving {name}"
     elif top["layer"] == "novelty":
@@ -215,14 +236,24 @@ def summarise(alerts: list[dict]) -> dict:
         title = f"Unusual activity of {name}"
     tactics = {TACTIC.get(a["rule"] or "", "Unusual behaviour" if a["layer"] == "learned" else None) for a in alerts}
     tactics.discard(None)
+    tactics |= {b["tactic"] for b in found}
+    if found:
+        tactics.discard("Unusual behaviour")
+    seen_labels, blist = set(), []
+    for b in found:
+        if b["label"] not in seen_labels:
+            seen_labels.add(b["label"])
+            blist.append({"kind": b["kind"], "label": b["label"], "tactic": b["tactic"], "text": b["text"], "node": b.get("node"),
+                          "serious": b["kind"] in beh.SERIOUS or b["kind"] in ("exfiltration", "c2_download")})
     procs = {a["node_uuid"] for a in alerts if a["ntype"] == "subject"}
     return {"id": alerts[0]["id"], "endpoint_id": str(alerts[0]["endpoint_id"]), "endpoint_name": alerts[0]["endpoint_name"],
             "first_ns": int(alerts[0]["window_start_ns"]), "last_ns": int(alerts[-1]["window_start_ns"]) + WINDOW_NS,
             "severity": severity, "title": title, "tactics": [t for t in TACTIC_ORDER if t in tactics],
-            "alerts": len(alerts), "processes": len(procs), "status": incident_status(alerts)}
+            "alerts": len(alerts), "processes": len(procs), "status": incident_status(alerts), "behaviours": blist}
 
 
 _GROUP_CACHE: dict[str, tuple[tuple, list[list[int]]]] = {}
+_BEHAVIOURS: dict[int, list[dict]] = {}      # incident id -> recognised behaviours (computed with the grouping)
 
 
 def grouped(c, scope, endpoint_id=None) -> list[list[dict]]:
@@ -239,6 +270,11 @@ def grouped(c, scope, endpoint_id=None) -> list[list[dict]]:
         hit = _GROUP_CACHE.get(eid)
         if hit is None or hit[0] != key:
             groups = group(load_alerts(c, None, eid, with_context=True))
+            if hit is not None:
+                for ids in hit[1]:
+                    _BEHAVIOURS.pop(ids[0], None)
+            for g in groups:
+                _BEHAVIOURS[g[0]["id"]] = beh.analyse(g)
             hit = (key, [[a["id"] for a in g] for g in groups])
             _GROUP_CACHE[eid] = hit
         for g in hit[1]:
@@ -350,6 +386,38 @@ def build_graph(alerts: list[dict]) -> tuple[dict, list[dict]]:
 
     fold(unnamed, ("unnamed", "{n} file{s} without a recorded path"), both_ways=True)
     fold(lambda u: foldable(u), ("sys", "{n} system file{s}"))
+    # bulk: many plain files with the same neighbours (a ransomware run, an archive job, a build) become one node; the
+    # edges keep their processes and operations, so writer -> [35 files] -> reader stays connected
+    sig: dict[str, set] = {}
+    for e in edges:
+        if ntype(e["dst"]) == "file" and ntype(e["src"]) == "subject":
+            sig.setdefault(e["dst"], set()).add((e["src"], e["op"], "out"))
+        elif ntype(e["src"]) == "file" and ntype(e["dst"]) == "subject":
+            sig.setdefault(e["src"], set()).add((e["dst"], e["op"], "in"))
+    members: dict[frozenset, list] = {}
+    for f, sg in sig.items():
+        if f not in flagged and "EXECUTE" not in touch.get(f, set()) and not SENSITIVE_RE.search(path_of(f)):
+            members.setdefault(frozenset(sg), []).append(f)
+    gof = {}
+    for k, fs in members.items():
+        if len(fs) >= BULK_FILES:
+            gid = f"group:bulk:{len(gof)}:{fs[0]}"
+            sample = sorted(p for p in (path_of(f) for f in fs) if p not in UNKNOWN)
+            raw_nodes[gid] = {"uuid": gid, "ntype": "group", "label": f"{len(fs)} files", "sample": sample[:25], "count": len(fs)}
+            for f in fs:
+                gof[f] = gid
+    if gof:
+        merged: dict[tuple, dict] = {}
+        keep = []
+        for e in edges:
+            if e["src"] in gof or e["dst"] in gof:
+                k = (gof.get(e["src"], e["src"]), gof.get(e["dst"], e["dst"]), e["op"])
+                m = merged.setdefault(k, {"src": k[0], "dst": k[1], "op": k[2], "first_ns": e["first_ns"], "count": 0})
+                m["count"] += e.get("count", 1)
+                m["first_ns"] = min(m["first_ns"], e["first_ns"]) if m["first_ns"] and e["first_ns"] else (m["first_ns"] or e["first_ns"])
+            else:
+                keep.append(e)
+        edges = keep + list(merged.values())
     live = {e["src"] for e in edges} | {e["dst"] for e in edges} | set(flagged)
     if len(live) > MAX_NODES:
         fold(lambda u: foldable(u, aggressive=True), ("read", "{n} other file{s} read"))
@@ -514,7 +582,7 @@ def detail(alerts: list[dict]) -> dict:
         d = nodes.get(a["node_uuid"]) or {**parse_label(a["ntype"], a["label"], a["node_uuid"], a.get("display"))}
         alist.append({"id": a["id"], "ts_ns": int(a["window_start_ns"]), "node": a["node_uuid"], "label": d["label"], "title": d["title"],
                       "type": a["layer"], "rule": a["rule"], "reason": _reason(a), "status": a["status"]})
-    inc = summarise(alerts)
+    inc = summarise(alerts, beh.analyse(alerts) if any(a.get("context") for a in alerts) else None)
     ts = [e["first_ns"] for e in graph["edges"] if e.get("first_ns")]
     if ts:
         inc["first_ns"], inc["last_ns"] = min(ts), max(ts)

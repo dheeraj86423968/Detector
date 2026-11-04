@@ -43,7 +43,7 @@ function IncidentList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, 
   const { data, error, loading, reload } = useApi<{ incidents: IncidentSummary[] }>(`/api/incidents?${qs}`, 30000);
   const rows = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return (data?.incidents || []).filter(i => !t || i.title.toLowerCase().includes(t) || i.endpoint_name.toLowerCase().includes(t) || i.tactics.some(x => x.toLowerCase().includes(t)));
+    return (data?.incidents || []).filter(i => !t || i.title.toLowerCase().includes(t) || i.endpoint_name.toLowerCase().includes(t) || i.tactics.some(x => x.toLowerCase().includes(t)) || !!i.behaviours?.some(b => b.label.toLowerCase().includes(t)));
   }, [data, q]);
   const filtered = status !== "all" || sev || ep || q;
   const page = useShowMore(rows, 50, `${status}|${sev}|${ep}|${q}`);

@@ -104,8 +104,8 @@ export function DetectionTag({ type, compact }: { type: string | null | undefine
   const d = detection(type);
   return <span className="dtag" style={{ ["--dc" as any]: d.color }} title={d.describe}><span className="dtag-dot" />{compact ? d.short : d.label}</span>;
 }
-export function Chip({ children, title }: { children: ReactNode; title?: string }) {
-  return <span className="chip" title={title}>{children}</span>;
+export function Chip({ children, title, serious }: { children: ReactNode; title?: string; serious?: boolean }) {
+  return <span className={cx("chip", serious && "chip-serious")} title={title}>{children}</span>;
 }
 const STATE_TONE: Record<EndpointState, string> = { protected: "ok", learning: "info", training: "info", offline: "bad", retired: "muted" };
 export const STATE_LABEL: Record<EndpointState, string> = { protected: "Protected", learning: "Learning", training: "Training", offline: "Offline", retired: "Retired" };
