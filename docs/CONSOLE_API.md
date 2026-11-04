@@ -197,3 +197,57 @@ exfiltration, tainted_modify, tainted_spawn`, or `learned` with a program as val
 `GET /api/alerts` rows carry `allowed_by` (null or entry id); `?allowed=false` lists only alerts not covered by the allow list, `?allowed=true` only covered ones. `POST /api/endpoints/{id}/approved-executables` still works
 and creates/removes `program` entries for that endpoint; `GET /api/endpoints/{id}` returns the effective
 `config.approved_executables`, `trusted_addresses`, `suppressed_detections`.
+
+## Organisations (multi-tenant, 0.5)
+
+PDP is hosted for many client organisations on one server. Every user and endpoint belongs to exactly one
+organisation; a user sees only their organisation's endpoints, incidents, alerts, allow list, users and invites
+(anything else answers 404). Roles (admin / analyst / viewer) and per-user endpoint scope apply *within* the
+organisation. The platform operator (`me.operator`) additionally sees the list of organisations and their usage -
+never their incidents, alerts or graphs.
+
+`GET /api/me` adds
+```
+org: {id, name}, operator: bool,
+can: {..., manage_org: bool (org admin), operate: bool (operator)}
+```
+
+### Sign-up (public)
+`GET /api/auth/config` adds `signup: "off" | "code" | "open"`.
+
+`POST /api/signup` `{organisation, name, email, password, code?}` creates the organisation and its first admin
+(username = email) and signs them in (sets the session cookie, returns the same body as `/api/me`).
+Errors: 400 invalid field (message says which), 403 sign-up off or wrong code, 409 email already registered,
+429 too many sign-ups from this address.
+
+### Invites
+Admin:
+- `GET /api/invites` -> `{ok, invites: [{id, email|null, role, endpoints: [{id,name}]|null, created_at, expires_at, created_by, link}]}`
+  (pending only)
+- `POST /api/invites` `{email?: string, role, endpoints: [ids]|null}` -> `{ok, invite: {...same fields, link}}`.
+  `link` is `https://<host>/#/join/<token>`; valid 7 days, single use. The console shows it to copy (no e-mail is sent).
+- `DELETE /api/invites/{id}` -> `{ok}`
+
+Public:
+- `GET /api/invites/{token}` -> `{ok, organisation, role, email|null, expires_at, invited_by}`; 404 if unknown,
+  used, revoked or expired.
+- `POST /api/invites/{token}/accept` `{name, email?, password}` (email required when the invite has none; must match
+  when it has one) -> signs in, returns the `/api/me` body. 409 if the email is already registered.
+
+### Organisation
+- `GET /api/org` -> `{ok, org: {id, name, created_at, max_endpoints, endpoints, users, pending_invites}}`
+- `PATCH /api/org` `{name}` (admin) -> `{ok, org}`
+
+Endpoint limit: `POST /api/endpoints` answers 403 "Your organisation has reached its limit of N endpoints" when
+active endpoints plus unused enrolment tokens reach `max_endpoints`.
+
+Install: `POST /api/endpoints` returns `install_command`, a one-line installer for a Linux server:
+`curl -fsSL https://<host>/install.sh | sudo bash -s -- --token <token>` (checks kernel/BTF, root and docker,
+pulls the agent from `<host>`'s read-only registry, writes the configuration, starts `pdp-agent.service`, enrols).
+`docker_command` remains for hosts that only run containers.
+
+### Operator
+- `GET /api/operator/orgs` -> `{ok, signup: {mode, code|null}, orgs: [{id, name, created_at, disabled, max_endpoints,
+  users, endpoints, endpoints_online, alerts_7d, last_activity|null}]}`
+- `PATCH /api/operator/orgs/{id}` `{disabled?: bool, max_endpoints?: int}` -> `{ok, org}`. A disabled organisation's
+  users cannot sign in; its agents keep running.
