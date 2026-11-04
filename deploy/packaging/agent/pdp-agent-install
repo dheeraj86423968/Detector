@@ -103,7 +103,6 @@ command -v docker >/dev/null 2>&1 || die "docker is not installed (the agent run
 docker info >/dev/null 2>&1 || warn "the docker daemon is not reachable; start docker before the agent"
 if [ "$source" = ebpf ]; then
   [ -e /sys/kernel/btf/vmlinux ] || warn "/sys/kernel/btf/vmlinux missing: the eBPF collector needs a kernel with BTF (>= 5.8 stock distro kernel)"
-  [ -e "/lib/modules/$(uname -r)/build" ] || warn "kernel headers for $(uname -r) not found; images that compile the eBPF program at start need linux-headers-$(uname -r)"
 fi
 
 # --- image ---
