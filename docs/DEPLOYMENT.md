@@ -167,7 +167,8 @@ Done in 0.3:
   (deleting, disabling or re-roling a user takes effect at once).
 
 Still to do per customer:
-* Replace the *console* server certificate with the customer's CA or ACME for the real hostname (`PDP_HOSTNAMES`;
+* Console certificate (see "Console HTTPS" below): a publicly trusted one for the console's hostname, or distribute
+  the PDP CA. Original note: replace the *console* server certificate with the customer's CA or ACME for the real hostname (`PDP_HOSTNAMES`;
   the server certificate is re-issued automatically when new names are added). Keep the internal mTLS agent CA.
 * Back up both Postgres instances (platform + telemetry) with PITR, or use managed Postgres.
 * Per-tenant isolation if multi-tenant.
@@ -212,6 +213,20 @@ key, nothing to re-enrol - verifies signing end to end, moves the old key files 
 remove the admin token afterwards. Add the KMS host to `PDP_NO_PROXY`.
 
 Rollback: restore the `pdp_pki` volume from a backup taken before the migration and set `PDP_KMS=file`.
+
+## Console HTTPS
+
+The console is served only over HTTPS (port 80 redirects; HSTS, CSP, nosniff). Two ways to a browser-trusted lock:
+
+1. **Public certificate (recommended)**: set `PDP_PUBLIC_HOSTNAME` (a DNS name for this host; for a bare IP
+   `<a-b-c-d>.sslip.io` works) in `deploy/.env`, make sure TCP 80 is reachable, then `./deploy/acme.sh issue`
+   (Let's Encrypt, HTTP-01 via the gateway). Install `deploy/systemd/pdp-acme-renew.{service,timer}` for renewal.
+   The public hostname gets that certificate through SNI; browsers opening the console by IP are redirected to it.
+   Agents, `localhost` and the internal names keep the internal CA's certificate, which agents and the desktop app pin.
+   Behind a corporate CA instead: put the certificate in `deploy/nginx/public/console-public.conf` the same way.
+2. **Trust the PDP CA**: list every name/IP users type in `PDP_HOSTNAMES` (the server certificate is re-issued by the
+   KMS CA on the next api start) and install `https://<host>/dl/ca.pem` as a trusted root on analyst machines
+   (compare its SHA-256 with the fingerprint `bringup.sh` prints).
 
 ## Single sign-on
 

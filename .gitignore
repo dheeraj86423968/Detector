@@ -18,3 +18,5 @@ __pycache__/
 .venv/
 deploy/kms-secrets/
 .claude/
+deploy/nginx/public/*.conf
+deploy/nginx/public/*.redirect

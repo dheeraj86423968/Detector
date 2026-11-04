@@ -88,9 +88,13 @@ services:
 
   gateway:
     image: nginx:1.27-alpine
-    ports: [ "${PDP_CONSOLE_PORT:-443}:443", "${PDP_AGENT_PORT:-8443}:8443" ]
+    ports: [ "${PDP_HTTP_PORT:-80}:80", "${PDP_CONSOLE_PORT:-443}:443", "${PDP_AGENT_PORT:-8443}:8443" ]
     volumes:
       - ./nginx/gateway.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/console.conf:/etc/nginx/snippets/console.conf:ro
+      - ./nginx/public:/etc/nginx/public:ro          # public-hostname server, written by deploy/acme.sh
+      - pdp_acme:/etc/letsencrypt:ro
+      - pdp_acme_web:/acme:ro
       - pdp_pki:/pki:ro
       - ../console/dist:/console:ro
     networks: [ backend, edge ]
@@ -149,4 +153,6 @@ volumes:
   pdp_data: {}
   pdp_pki: {}
   pdp_kms_data: {}
+  pdp_acme: {}
+  pdp_acme_web: {}
   pdp_kms_logs: {}

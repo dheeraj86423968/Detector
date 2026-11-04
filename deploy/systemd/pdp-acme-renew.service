@@ -1,0 +1,12 @@
+# Renews the console's public certificate (deploy/acme.sh) and reloads the gateway.
+# Install: cp pdp-acme-renew.{service,timer} /etc/systemd/system/ && systemctl enable --now pdp-acme-renew.timer
+# (set WorkingDirectory to the platform checkout)
+[Unit]
+Description=PDP console certificate renewal
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/pdp/platform
+ExecStart=/opt/pdp/platform/deploy/acme.sh renew
