@@ -1,8 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { AllowKind, AllowKindInfo, AllowOption, AllowOptionsResp, Endpoint, NewAllowEntry, post, useApi } from "./api";
 import { ALLOW_KINDS, ALLOW_RULES, allowValueError, plural } from "./format";
 import { AllowKindIcon, cx, Dialog, Empty, EndpointPicker, ErrorState, Field, Loading, PathText } from "./ui";
+
+/** keep a server error (400/409) in view: it sits at the end of a dialog that may scroll */
+const useErrInView = (err: string) => useEffect(() => { if (err) document.querySelector(".dialog .err")?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [err]);
 
 /** "Added to the allow list · 18 open alerts allowed" */
 export const allowedText = (n: number) => (n > 0 ? `Added to the allow list · ${plural(n, "open alert")} allowed` : "Added to the allow list");
@@ -29,6 +32,7 @@ export function AddAllowDialog({ kinds, initial, onClose, onDone }: { kinds?: Al
   const [picked, setPicked] = useState<Set<string>>(new Set(initial?.endpoints || []));
   const [note, setNote] = useState(""); const [resolve, setResolve] = useState(true);
   const [touched, setTouched] = useState(false); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
+  useErrInView(err);
   const info = (k: AllowKind) => kinds?.find(x => x.id === k) || { id: k, ...ALLOW_KINDS[k] };
   const r = RULES.find(x => x.id === rule);
   const vui = kind === "detection" ? { label: r?.subject || "Subject", placeholder: r?.placeholder || "", hint: rule === "learned" ? VALUE_UI.program.hint : "Exactly as the alert shows it, e.g. the full path of the file or program." } : VALUE_UI[kind];
@@ -129,6 +133,7 @@ export function AllowAlertDialog({ alertId, preset, endpoint, subject, onClose, 
   const [note, setNote] = useState(""); const [resolve, setResolve] = useState(true);
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
   const sel = options[pick];
+  useErrInView(err);
   const submit = async () => {
     if (!sel) return;
     setBusy(true); setErr("");
@@ -142,7 +147,7 @@ export function AllowAlertDialog({ alertId, preset, endpoint, subject, onClose, 
     <Dialog title={preset ? "Trust this address" : "Allow this activity"} width={620} onClose={onClose}
       subtitle={subject ? <>Stop alerting on <span className="mono subject-inline" title={subject}><PathText text={subject} max={56} /></span> when it is normal for you.</> : "Choose what to accept as normal. It stops alerting from the agent's next check-in."}
       footer={<><button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn primary" disabled={!sel || busy || loading} onClick={submit}>{busy && <Loader2 size={14} className="spin" />}Add to allow list</button></>}>
+        {(loading || options.length > 0) && <button className="btn primary" disabled={!sel || busy || loading} onClick={submit}>{busy && <Loader2 size={14} className="spin" />}Add to allow list</button>}</>}>
       {loading ? <Loading block /> : opts.error && !preset ? <ErrorState error={opts.error} onRetry={opts.reload} /> : options.length === 0 ? (
         <Empty title="Nothing to allow for this alert"
           text={already ? "This alert is already covered by an allow-list entry." : "This alert was raised because it is closely connected to other detections in this incident. Allow those detections instead; this one usually goes away with them."} />

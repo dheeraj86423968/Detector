@@ -40,7 +40,7 @@ export default function OverviewPage() {
             {e.offline > 0 && <span className="bad" style={{ flex: e.offline }} />}
           </div>}
         </Card>
-        <Card title="Open incidents" subtitle={inc.last_7d ? `${plural(inc.last_7d, "incident")} in the last 7 days` : "None detected in the last 7 days"}
+        <Card title="Open incidents" subtitle={inc.last_7d ? `${plural(inc.last_7d, "incident")} in the last 7 days` : inc.open ? "No new incidents in the last 7 days" : "None detected in the last 7 days"}
           actions={<Link to="/incidents" className="card-link">View all <ArrowRight size={14} /></Link>}>
           <div className="open-inc">
             <div className="big-num">{inc.open.toLocaleString()}</div>

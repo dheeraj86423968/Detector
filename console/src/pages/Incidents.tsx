@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowUpRight, Download, Search, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Download, ListChecks, Search, ShieldCheck } from "lucide-react";
+import { AllowAlertDialog, allowedText } from "../allowlist";
 import { Endpoint, IncidentSummary, post, RawAlert, useApi, useCan } from "../api";
-import { ALERT_STATUS, DETECTION, entityOf, fmtDateTime, fmtRel, plural, reasonText, SEVERITIES, SEVERITY_LABEL } from "../format";
+import { ALERT_STATUS, DETECTION, entityOf, fmtDateTime, fmtRel, plural, reasonText, SEVERITIES, SEVERITY_LABEL, midTrunc, shortCmd } from "../format";
 import { IncidentTable } from "../incidents";
-import { Card, DetectionTag, Empty, ErrorState, Loading, NodeIcon, PageHeader, StatusBadge, Tabs, useToast } from "../ui";
+import { Card, cx, DetectionTag, Empty, ErrorState, Loading, Mid, NodeIcon, PageHeader, PathText, ShowMore, StatusBadge, Tabs, Toggle, useShowMore, useToast } from "../ui";
 
 const STATUS_FILTERS = [
   { id: "open", label: "Active" }, { id: "investigating", label: "Investigating" }, { id: "true_positive", label: "Confirmed threat" },
@@ -45,6 +46,7 @@ function IncidentList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, 
     return (data?.incidents || []).filter(i => !t || i.title.toLowerCase().includes(t) || i.endpoint_name.toLowerCase().includes(t) || i.tactics.some(x => x.toLowerCase().includes(t)));
   }, [data, q]);
   const filtered = status !== "all" || sev || ep || q;
+  const page = useShowMore(rows, 50, `${status}|${sev}|${ep}|${q}`);
   const protectedN = eps.filter(e => e.state === "protected").length;
   return (
     <Card pad={false}>
@@ -62,10 +64,10 @@ function IncidentList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, 
       </div>
       {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :
         rows.length === 0 ? (
-          <Empty icon={<ShieldCheck size={22} />} title={filtered ? "No incidents match these filters" : "No incidents"}
-            text={status === "open" && !sev && !ep && !q ? `Nothing needs your attention. Detection is active on ${plural(protectedN, "endpoint")}.` : "Try a different status, severity or endpoint."}
+          <Empty icon={<ShieldCheck size={22} />} title={status === "open" && !sev && !ep && !q ? "No open incidents" : filtered ? "No incidents match these filters" : "No incidents yet"}
+            text={status === "open" && !sev && !ep && !q ? (protectedN ? `Nothing needs your attention. Detection is active on ${plural(protectedN, "endpoint")}.` : eps.length ? "No endpoint is protected yet. Endpoints start detecting once they have learned their normal behaviour." : "Add an endpoint to start collecting activity.") : "Try a different status, severity or endpoint."}
             action={filtered ? <button className="btn sm" onClick={() => { set("status", "all"); set("severity", ""); set("endpoint_id", ""); setQ(""); }}>Show all incidents</button> : undefined} />
-        ) : <IncidentTable rows={rows} showEndpoint={!ep} />}
+        ) : <><IncidentTable rows={page.visible} showEndpoint={!ep} /><ShowMore s={page} noun={["incident", "incidents"]} /></>}
     </Card>
   );
 }
@@ -75,8 +77,13 @@ const ALERT_ACTIONS: [string, string][] = [["ack", "Acknowledge"], ["true_positi
 function AlertList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, v: string) => void; eps: Endpoint[] }) {
   const can = useCan(); const toast = useToast();
   const ep = sp.get("endpoint_id") || "", status = sp.get("astatus") || "", layer = sp.get("type") || "";
+  const showAllowed = sp.get("allowed") === "1";
+  const [allowing, setAllowing] = useState<RawAlert | null>(null);
   const qs = new URLSearchParams({ limit: "500" }); if (ep) qs.set("endpoint_id", ep); if (status) qs.set("status", status); if (layer) qs.set("layer", layer);
+  const allowedQs = new URLSearchParams(qs); allowedQs.set("allowed", "true"); allowedQs.set("limit", "5000");
+  if (!showAllowed) qs.set("allowed", "false");     // filtered on the server, so allowed alerts never crowd out the rest
   const { data, error, loading, reload } = useApi<{ alerts: RawAlert[] }>(`/api/alerts?${qs}`, 30000);
+  const allowedData = useApi<{ alerts: RawAlert[] }>(`/api/alerts?${allowedQs}`, 60000);
   // alert -> incident (incident = the endpoint's alerts close in time; its span covers the alert's window)
   const incQs = new URLSearchParams({ status: "all", limit: "2000" }); if (ep) incQs.set("endpoint_id", ep);
   const incs = useApi<{ incidents: IncidentSummary[] }>(`/api/incidents?${incQs}`);
@@ -93,7 +100,10 @@ function AlertList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, v: 
     try { await post(`/api/alerts/${a.id}`, { status: s }); toast(`Alert marked as ${ALERT_STATUS[s].toLowerCase()}`); reload(); }
     catch (e: any) { toast(e.message, "err"); }
   };
-  const rows = data?.alerts || [];
+  const fetched = data?.alerts || [];
+  const allowedN = allowedData.data?.alerts.length ?? 0;
+  const rows = showAllowed ? fetched : fetched.filter(a => a.allowed_by == null);
+  const page = useShowMore(rows, 50, `${ep}|${status}|${layer}|${showAllowed}`);
   return (
     <Card pad={false}>
       <div className="filters">
@@ -106,42 +116,49 @@ function AlertList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, v: 
           <option value="">All statuses</option>
           {["open", "ack", "true_positive", "false_positive", "closed"].map(s => <option key={s} value={s}>{ALERT_STATUS[s]}</option>)}
         </select>
+        <label className="inline-toggle" title="Alerts covered by the allow list are kept for the record as false alarms"><Toggle checked={showAllowed} onChange={v => set("allowed", v ? "1" : "")} label="Show allowed alerts" />Show allowed{allowedN ? ` (${allowedN.toLocaleString()})` : ""}</label>
         <div className="filters-end">
-          <span className="muted">{data ? `${plural(rows.length, "alert")}${rows.length >= 500 ? " (newest 500)" : ""}` : ""}</span>
+          <span className="muted">{data ? `${plural(rows.length, "alert")}${fetched.length >= 500 ? " (of the newest 500)" : ""}` : ""}</span>
           <a className="btn sm" href={`/api/alerts/export?${new URLSearchParams([...exportQs, ["format", "csv"]])}`} download><Download size={14} />CSV</a>
           <a className="btn sm" href={`/api/alerts/export?${new URLSearchParams([...exportQs, ["format", "ndjson"]])}`} download><Download size={14} />NDJSON</a>
         </div>
       </div>
       {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :
-        rows.length === 0 ? <Empty icon={<ShieldCheck size={22} />} title="No alerts" text={ep || status || layer ? "No alerts match these filters." : "Alerts appear here as protected endpoints detect suspicious activity."} /> : (
+        rows.length === 0 ? <Empty icon={<ShieldCheck size={22} />} title="No alerts" text={ep || status || layer ? "No alerts match these filters." : allowedN ? `All ${plural(allowedN, "alert")} shown here are covered by the allow list.` : "Alerts appear here as protected endpoints detect suspicious activity."}
+          action={!showAllowed && allowedN > 0 ? <button className="btn sm" onClick={() => set("allowed", "1")}>Show allowed alerts</button> : undefined} /> : (<>
           <div className="table-wrap">
             <table className="table">
               <thead><tr><th style={{ width: 168 }}>Time</th><th style={{ width: "14%" }}>Endpoint</th><th style={{ width: 172 }}>Detection</th><th>What was detected</th><th style={{ width: 132 }}>Status</th><th style={{ width: can.triage ? 236 : 110 }}></th></tr></thead>
-              <tbody>{rows.map(a => {
+              <tbody>{page.visible.map(a => {
                 const en = entityOf(a.ntype, a.label); const inc = incidentOf(a);
                 return (
-                  <tr key={a.id}>
+                  <tr key={a.id} className={cx(a.allowed_by != null && "row-allowed")}>
                     <td><div className="nowrap" title={fmtDateTime(a.window_start_ns, true)}>{fmtDateTime(a.window_start_ns)}</div><div className="muted sm nowrap">{fmtRel(a.window_start_ns)}</div></td>
-                    <td><Link to={`/endpoints/${a.endpoint_id}`} className="ellipsis subtle-link" title={a.endpoint}>{a.endpoint}</Link></td>
+                    <td><Link to={`/endpoints/${a.endpoint_id}`} className="subtle-link block-link"><Mid text={a.endpoint} /></Link></td>
                     <td><DetectionTag type={a.layer} /></td>
                     <td className="cell-main">
-                      <div className="entity" title={en.full}><NodeIcon type={en.kind} /><span className="mono ellipsis">{en.name}</span><span className="muted mono ellipsis entity-full">{en.full !== en.name ? en.full : ""}</span></div>
-                      <div className="reason clamp2" title={reasonText(a.layer, a.reason)}>{reasonText(a.layer, a.reason)}</div>
+                      <div className="entity" title={en.full}><NodeIcon type={en.kind} /><Mid text={en.name} className="mono entity-name" title={null} />{en.kind !== "network" && en.full !== en.name && <span className="muted mono ellipsis entity-full">{en.kind === "file" ? midTrunc(en.full, 48) : shortCmd(en.full)}</span>}</div>
+                      <div className="reason clamp2" title={reasonText(a.layer, a.reason)}><PathText text={reasonText(a.layer, a.reason)} /></div>
                     </td>
-                    <td><StatusBadge status={a.status} /></td>
+                    <td><StatusBadge status={a.status} />{a.allowed_by != null && <div><Link to="/allowlist" className="pill ok allowed-pill" title={`Covered by allow-list entry ${a.allowed_by}`}><ListChecks size={12} />Allowed</Link></div>}</td>
                     <td><div className="row-actions">
                       {inc && <Link className="btn sm" to={`/incidents/${inc.id}`} title={`Open incident: ${inc.title}`}>Incident<ArrowUpRight size={13} /></Link>}
-                      {can.triage && <select className="sm" value="" onChange={e => e.target.value && setStatus(a, e.target.value)} aria-label="Set status">
+                      {can.triage && <select className="sm" value="" onChange={e => e.target.value === "allow" ? setAllowing(a) : e.target.value && setStatus(a, e.target.value)} aria-label="Set status">
                         <option value="">Triage…</option>
                         {ALERT_ACTIONS.filter(([s]) => s !== a.status).map(([s, l]) => <option key={s} value={s}>{l}</option>)}
+                        {can.manage_endpoints && a.allowed_by == null && <option value="allow">Add to allow list…</option>}
                       </select>}
+                      {!can.triage && can.manage_endpoints && a.allowed_by == null && <button className="btn sm" onClick={() => setAllowing(a)}>Allow…</button>}
                     </div></td>
                   </tr>
                 );
               })}</tbody>
             </table>
           </div>
-        )}
+          <ShowMore s={page} noun={["alert", "alerts"]} />
+        </>)}
+      {allowing && <AllowAlertDialog alertId={allowing.id} endpoint={{ id: allowing.endpoint_id, name: allowing.endpoint }} subject={entityOf(allowing.ntype, allowing.label).full.split("\n")[0]}
+        onClose={() => setAllowing(null)} onDone={n => { toast(allowedText(n)); reload(); incs.reload(); }} />}
     </Card>
   );
 }

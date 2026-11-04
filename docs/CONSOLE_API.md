@@ -194,6 +194,6 @@ exfiltration, tainted_modify, tainted_spawn`, or `learned` with a program as val
              {"kind": "detection", "value": "/tmp/font", "rule": "untrusted_exec", "title": "Don't alert on this again: ...", "text": "..."},
              {"kind": "address", "value": "155.162.39.48", "rule": null, "title": "Trust the address 155.162.39.48", "text": "..."}]}
 ```
-`GET /api/alerts` rows carry `allowed_by` (null or entry id). `POST /api/endpoints/{id}/approved-executables` still works
+`GET /api/alerts` rows carry `allowed_by` (null or entry id); `?allowed=false` lists only alerts not covered by the allow list, `?allowed=true` only covered ones. `POST /api/endpoints/{id}/approved-executables` still works
 and creates/removes `program` entries for that endpoint; `GET /api/endpoints/{id}` returns the effective
 `config.approved_executables`, `trusted_addresses`, `suppressed_detections`.

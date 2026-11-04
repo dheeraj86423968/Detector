@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronRight, FlaskConical, Loader2, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
-import { Check as CheckT, EndpointConfigResp, EndpointOverview, IncidentSummary, LifecycleStep, post, useApi, useCan } from "../api";
+import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronRight, FlaskConical, ListChecks, Loader2, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
+import { AllowEntry, AllowListResp, Check as CheckT, del, EndpointConfigResp, EndpointOverview, IncidentSummary, LifecycleStep, post, useApi, useCan } from "../api";
+import { AddAllowDialog, allowedText } from "../allowlist";
+import { AppliesTo } from "./AllowList";
 import { DailyBars } from "../chart";
 import { DETECTION, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtRel, plural } from "../format";
 import { IncidentTable } from "../incidents";
-import { Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, PageHeader, Tabs, Toggle, useToast } from "../ui";
+import { AllowKindIcon, Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, Mid, PageHeader, ShowMore, Tabs, Toggle, useShowMore, useToast } from "../ui";
 
 type Tab = "overview" | "incidents" | "settings";
 
@@ -38,7 +40,7 @@ export default function EndpointDetail() {
         ...(can.manage_endpoints && !retired ? [{ id: "settings" as Tab, label: "Settings" }] : []),
       ]} />
       {tab === "overview" && <OverviewTab d={d} reload={ov.reload} />}
-      {tab === "incidents" && <IncidentsTab id={id!} />}
+      {tab === "incidents" && <IncidentsTab id={id!} learning={ep.state === "learning" || ep.state === "training"} />}
       {tab === "settings" && can.manage_endpoints && <SettingsTab id={id!} name={ep.name} />}
     </div>
   );
@@ -51,17 +53,19 @@ function Crumbs({ name }: { name?: string }) {
 // ---------------------------------------------------------------- overview
 
 const STEP_TITLE: Record<string, string> = { enrolled: "Enrolled", baseline: "Learning baseline", model: "Model trained", protecting: "Protecting" };
+const STEP_TITLE_PENDING: Record<string, string> = { baseline: "Learn baseline", model: "Train model", protecting: "Protect" };
+const STEP_TITLE_ACTIVE: Record<string, string> = { model: "Training model" };
 
 function OverviewTab({ d, reload }: { d: EndpointOverview; reload: () => void }) {
   const base = d.lifecycle.find(s => s.step === "baseline");
-  const days = base?.days || [];
+  const days = baselineSlots(base);
   return (
     <>
       <Card title="Is detection working on this endpoint?" subtitle="PDP learns what is normal on each endpoint, trains a model on it, then alerts on what departs from it.">
         <Stepper steps={d.lifecycle} />
         {days.length > 0 && <div className="baseline-days">
           <div className="sub-title">Activity recorded per baseline day</div>
-          <DailyBars data={days.map(x => ({ date: x.date, value: x.events }))} unit={["event", "events"]} height={110} tick={fmtCompact} />
+          <DailyBars data={days} unit={["event", "events"]} height={110} tick={fmtCompact} />
         </div>}
       </Card>
       <div className="grid grid-2">
@@ -73,6 +77,18 @@ function OverviewTab({ d, reload }: { d: EndpointOverview; reload: () => void })
   );
 }
 
+/** Recorded baseline days, then the days still needed as empty slots ("day 1 of 8" reads as one bar of eight). */
+function baselineSlots(base: LifecycleStep | undefined) {
+  const rec = (base?.days || []).map(x => ({ date: x.date, value: x.events, partial: !x.complete }));
+  if (!base || base.status !== "active" || !base.needed || rec.length === 0 || rec.length >= base.needed) return rec;
+  const out = [...rec]; const last = new Date(rec[rec.length - 1].date + "T12:00:00");
+  for (let i = 1; out.length < base.needed; i++) {
+    const t = new Date(last.getTime() + i * 864e5);
+    out.push({ date: `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`, value: 0, partial: false, future: true } as any);
+  }
+  return out;
+}
+
 function Stepper({ steps }: { steps: LifecycleStep[] }) {
   return (
     <ol className="stepper">
@@ -80,7 +96,7 @@ function Stepper({ steps }: { steps: LifecycleStep[] }) {
         <li key={s.step} className={cx("step", `s-${s.status}`)}>
           <div className="step-mark">{s.status === "done" ? <Check size={14} strokeWidth={3} /> : s.status === "active" ? (s.step === "protecting" ? <ShieldCheck size={14} /> : <Loader2 size={14} className="spin-slow" />) : <span>{i + 1}</span>}</div>
           <div className="step-body">
-            <div className="step-title">{STEP_TITLE[s.step] || s.step}</div>
+            <div className="step-title">{(s.status === "pending" ? STEP_TITLE_PENDING[s.step] : s.status === "active" ? STEP_TITLE_ACTIVE[s.step] : null) || STEP_TITLE[s.step] || s.step}</div>
             <div className="step-text">{s.text}</div>
             {s.step === "baseline" && s.needed ? (
               <div className="step-progress">
@@ -172,9 +188,10 @@ function CheckCard({ d, reload }: { d: EndpointOverview; reload: () => void }) {
     <Card title="Detection check" subtitle="Replays realistic simulated attacks into this endpoint's own recorded activity and checks that its model catches them. Nothing runs on the host."
       actions={can.run_checks && d.endpoint.state !== "retired" && <button className="btn primary" disabled={!allowed || busy} onClick={run} title={blocked || undefined}>
         {busy || running ? <Loader2 size={15} className="spin" /> : <FlaskConical size={15} />}{running ? "Check running…" : "Run detection check"}</button>}>
-      {!c ? (
-        <Empty icon={<FlaskConical size={22} />} title="No detection check yet"
-          text={d.check_blocked_reason ? `A check can run once the model is trained — ${d.check_blocked_reason}.` : "Run a check to see which attack types this endpoint's model detects."} />
+      {!c ? (d.check_blocked_reason ? (
+        <div className="inline-empty"><FlaskConical size={18} /><div><div className="setting-name">No detection check yet</div>
+          <div className="muted sm">A check can run once the model is trained. Right now {d.check_blocked_reason.replace(/^the endpoint/, "the endpoint")}.</div></div></div>
+      ) : <Empty icon={<FlaskConical size={22} />} title="No detection check yet" text="Run a check to see which attack types this endpoint's model detects." />
       ) : running ? (
         <div className="verdict v-running"><Loader2 size={20} className="spin" /><div><div className="verdict-title">{c.state === "queued" ? "Check queued" : "Check running"}</div><div className="muted sm">Started {fmtRel(c.created_at)}. This usually takes a few minutes.</div></div></div>
       ) : c.state === "failed" ? (
@@ -216,13 +233,14 @@ function CheckCard({ d, reload }: { d: EndpointOverview; reload: () => void }) {
 
 // ---------------------------------------------------------------- incidents
 
-function IncidentsTab({ id }: { id: string }) {
+function IncidentsTab({ id, learning }: { id: string; learning: boolean }) {
   const { data, error, loading, reload } = useApi<{ incidents: IncidentSummary[] }>(`/api/incidents?endpoint_id=${id}&status=all&limit=500`, 30000);
+  const page = useShowMore(data?.incidents || [], 50, id);
   return (
     <Card pad={false}>
       {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :
-        !data!.incidents.length ? <Empty icon={<ShieldCheck size={22} />} title="No incidents on this endpoint" text="Incidents appear here when the endpoint's detection finds something." /> :
-          <IncidentTable rows={data!.incidents} showEndpoint={false} />}
+        !data!.incidents.length ? <Empty icon={<ShieldCheck size={22} />} title="No incidents on this endpoint" text={learning ? "Detection starts once the endpoint has learned its normal behaviour and its model is trained. Incidents will appear here after that." : "Nothing suspicious has been detected on this endpoint. Incidents appear here when its detection finds something."} /> :
+          <><IncidentTable rows={page.visible} showEndpoint={false} /><ShowMore s={page} noun={["incident", "incidents"]} /></>}
     </Card>
   );
 }
@@ -232,28 +250,16 @@ function IncidentsTab({ id }: { id: string }) {
 function SettingsTab({ id, name }: { id: string; name: string }) {
   const toast = useToast();
   const { data, error, loading, reload } = useApi<EndpointConfigResp>(`/api/endpoints/${id}`);
-  const [prog, setProg] = useState(""); const [budget, setBudget] = useState<string>(""); const [retire, setRetire] = useState(false);
+  const [budget, setBudget] = useState<string>(""); const [retire, setRetire] = useState(false);
   const cfg = data?.endpoint.config || {};
   useEffect(() => { if (data) setBudget(String(cfg.learned_daily_budget ?? 20)); }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
   if (loading && !data) return <Loading block />;
   if (error && !data) return <ErrorState error={error} onRetry={reload} />;
-  const approved: string[] = cfg.approved_executables || [];
   const act = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast(ok); reload(); } catch (e: any) { toast(e.message, "err"); } };
-  const setApproved = (x: string, approve: boolean) => act(() => post(`/api/endpoints/${id}/approved-executables`, { executables: [x], approve }), approve ? `${x} approved` : `Approval of ${x} revoked`);
   const learnedOn = cfg.learned_alerts ?? true;
   return (
     <div className="settings">
-      <Card title="Approved programs" subtitle="Programs that never ran during the baseline raise a “New program” alert. Approve the ones you trust; this takes effect on the agent's next check-in without retraining.">
-        <form className="inline-form" onSubmit={e => { e.preventDefault(); if (prog.trim()) setApproved(prog.trim(), true).then(() => setProg("")); }}>
-          <input className="mono" placeholder="/opt/app/bin/tool" value={prog} onChange={e => setProg(e.target.value)} aria-label="Program path" />
-          <button className="btn" disabled={!prog.trim().startsWith("/")}><Plus size={15} />Approve program</button>
-        </form>
-        {approved.length === 0 ? <div className="muted sm pad-y">No programs approved yet.</div> : (
-          <ul className="prog-list">{approved.map(x => (
-            <li key={x}><span className="mono ellipsis" title={x}>{x}</span><button className="btn sm ghost" onClick={() => setApproved(x, false)}><Trash2 size={14} />Revoke</button></li>
-          ))}</ul>
-        )}
-      </Card>
+      <AllowCard id={id} name={name} />
       <Card title="Unusual-behaviour alerts" subtitle="Besides new programs and suspicious data flows, the learned model can raise alerts on its own for behaviour unlike the baseline.">
         <div className="setting-row">
           <div><div className="setting-name">Raise unusual-behaviour alerts</div><div className="muted sm">When off, the model only adds context to the other detections.</div></div>
@@ -280,3 +286,44 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
   );
 }
 
+
+/** The allow-list entries that apply to this endpoint (its own and fleet-wide ones). */
+function AllowCard({ id, name }: { id: string; name: string }) {
+  const toast = useToast();
+  const { data, error, loading, reload } = useApi<AllowListResp>(`/api/allowlist?endpoint_id=${encodeURIComponent(id)}`);
+  const [adding, setAdding] = useState(false); const [removing, setRemoving] = useState<AllowEntry | null>(null);
+  const rows = data?.entries || [];
+  const page = useShowMore(rows, 10, id);
+  return (
+    <Card title="Allow list" subtitle={`Activity accepted as normal on ${name}: its own entries and those for all endpoints. Changes reach the agent at its next check-in, without retraining.`}
+      actions={<><Link to={`/allowlist?endpoint_id=${id}`} className="card-link">Open allow list <ChevronRight size={14} /></Link>
+        <button className="btn" onClick={() => setAdding(true)}><Plus size={15} />Add</button></>}>
+      {loading && !data ? <Loading /> : error && !data ? <ErrorState error={error} onRetry={reload} /> : rows.length === 0 ? (
+        <div className="inline-empty"><ListChecks size={18} /><div><div className="setting-name">Nothing is allowed on this endpoint yet</div>
+          <div className="muted sm">Add programs, trusted addresses or specific detections that are normal here, or use <b>Allow…</b> on an alert in one of its incidents.</div></div></div>
+      ) : <>
+        <ul className="allow-list">{page.visible.map(e => (
+          <li key={e.id}>
+            <AllowKindIcon kind={e.kind} size={14} />
+            <div className="min0 grow">
+              <Mid text={e.value} className="mono allow-value" />
+              <div className="muted sm ellipsis">{e.kind === "detection" ? e.rule_text || e.rule : e.kind === "program" ? "Program" : "Network address"}
+                {e.note ? ` · ${e.note}` : ""}</div>
+            </div>
+            <span className="allow-scope"><AppliesTo e={e} here={id} /></span>
+            <span className="allow-n muted sm nowrap">{e.alerts_allowed ? `${e.alerts_allowed.toLocaleString()} allowed` : ""}</span>
+            <button className="btn sm ghost" onClick={() => setRemoving(e)} title={e.endpoints ? undefined : "This entry applies to all endpoints"}><Trash2 size={14} />Remove</button>
+          </li>
+        ))}</ul>
+        <ShowMore s={page} noun={["entry", "entries"]} />
+      </>}
+      {adding && <AddAllowDialog kinds={data?.kinds} initial={{ endpoints: [id] }} onClose={() => setAdding(false)} onDone={(_, n) => { toast(allowedText(n)); reload(); }} />}
+      {removing && <Confirm danger title="Remove from the allow list?" confirmLabel="Remove entry" onClose={() => setRemoving(null)}
+        text={<>
+          <p>PDP will alert on <code className="code-inline">{removing.value}</code> again{removing.endpoints ? (removing.endpoints.length > 1 ? <> on {removing.endpoints.map(x => x.name).join(", ")}</> : <> on {name}</>) : <> on <b>all endpoints</b></>}.</p>
+          {!removing.endpoints && <p className="muted">This entry applies to every endpoint, not only {name}.</p>}
+        </>}
+        onConfirm={async () => { await del(`/api/allowlist/${removing.id}`); toast("Removed from the allow list"); reload(); }} />}
+    </Card>
+  );
+}

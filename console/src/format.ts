@@ -196,3 +196,11 @@ export function allowValueError(kind: string, value: string, rule?: string | nul
   if (v.length > 1 && v.endsWith("/")) return "This looks like a folder. Enter the path of a file or program.";
   return null;
 }
+
+/** First line of a command line with a long program path middle-truncated (args stay visible) and hashes shortened. */
+export function shortCmd(t: string, head = 32): string {
+  const line = (t || "").split("\n")[0];
+  const i = line.indexOf(" ");
+  const exe = i < 0 ? line : line.slice(0, i), rest = i < 0 ? "" : line.slice(i);
+  return (exe.length > head ? midTrunc(exe, head) : shortHex(exe)) + shortHex(rest);
+}

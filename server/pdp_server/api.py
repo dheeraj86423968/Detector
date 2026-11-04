@@ -771,7 +771,8 @@ def retrain(endpoint_id: str, s=Depends(admin)):
 
 
 @app.get("/api/alerts")
-def list_alerts(s=Depends(session), endpoint_id: str | None = None, status: str | None = None, layer: str | None = None, limit: int = 200):
+def list_alerts(s=Depends(session), endpoint_id: str | None = None, status: str | None = None, layer: str | None = None, limit: int = 200,
+                allowed: str | None = None):
     limit = max(1, min(int(limit), 5000))
     if endpoint_id:
         require_endpoint(s, endpoint_id)
@@ -781,7 +782,8 @@ def list_alerts(s=Depends(session), endpoint_id: str | None = None, status: str 
                        "coalesce(a.layer, 'learned') AS layer, a.rule, a.reason, a.allowed_by "
                        "FROM alerts a JOIN endpoints e ON e.id=a.endpoint_id WHERE (%s::uuid IS NULL OR a.endpoint_id=%s) AND (%s::text IS NULL OR a.status=%s) "
                        f"AND (%s::text IS NULL OR coalesce(a.layer, 'learned')=%s) AND {sc} "
-                       "ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, layer, layer, *sp, limit))
+                       + {"true": "AND a.allowed_by IS NOT NULL ", "false": "AND a.allowed_by IS NULL "}.get(allowed or "", "")
+                       + "ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, layer, layer, *sp, limit))
         from . import incidents as _inc
         eps = sorted({str(r["endpoint_id"]) for r in rows})
         inc_of = {}

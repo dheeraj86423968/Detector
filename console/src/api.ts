@@ -20,7 +20,7 @@ export async function api<T = any>(path: string, opts: RequestInit = {}): Promis
   if (r.status === 401 && path !== "/api/login" && !window.location.hash.startsWith("#/login")) window.location.hash = "#/login";
   if (!r.ok || js.ok === false) {
     const msg = detailText(js.detail) || detailText(js.error) || (r.status === 403 ? "You do not have permission to do this." : r.status === 404 ? "Not found." : r.statusText || "Request failed");
-    throw new ApiError(msg, r.status);
+    throw new ApiError(msg.charAt(0).toUpperCase() + msg.slice(1), r.status);
   }
   return js as T;
 }

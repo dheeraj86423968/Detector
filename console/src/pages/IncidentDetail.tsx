@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, ChevronRight, Clock, Cpu, FileText, Globe, Layers, Play, RotateCcw, Search, Server, ShieldCheck, ShieldX, Siren, X } from "lucide-react";
 import { AllowAlertDialog, addressOptions, allowedText } from "../allowlist";
 import { AllowOption, api, ApiError, GNode, IncidentDetail as Detail, IncidentStatus, IncidentSummary, post, useApi, useCan } from "../api";
-import { detection, fmtDateTime, fmtRel, fmtSpan, fmtTime, plural, reasonText } from "../format";
+import { detection, fmtDateTime, fmtRel, fmtSpan, fmtTime, plural, reasonText, shortCmd } from "../format";
 import { AttackGraph } from "../graph/AttackGraph";
 import type { VNode } from "../graph/model";
 import { Card, Chip, cx, DetectionTag, Empty, ErrorState, Loading, Mid, NodeIcon, PageHeader, PathText, SeverityBadge, ShowMore, StatusBadge, useShowMore, useToast } from "../ui";
@@ -53,7 +53,9 @@ export default function IncidentDetail() {
     try { await api(`/api/incidents/${inc.id}`); toast(msg); setSel(null); reload(); return; }
     catch (e) { if (!(e instanceof ApiError && e.status === 404)) { toast(msg); reload(); return; } }
     const rest = await api<{ incidents: IncidentSummary[] }>(`/api/incidents?endpoint_id=${inc.endpoint_id}&status=all&limit=500`).catch(() => null);
-    const next = rest?.incidents.find(i => i.first_ns <= inc.last_ns && i.last_ns >= inc.first_ns);
+    // an incident's id is the id of its first alert, so what remains of this one carries one of its alert ids
+    const mine = new Set(d.alerts.map(x => x.id));
+    const next = rest?.incidents.find(i => mine.has(i.id));
     if (next) { toast(`${msg} · the incident continues with its remaining alerts`); nav(`/incidents/${next.id}`, { replace: true }); }
     else { toast(`${msg} · no alerts are left in this incident`); nav("/incidents"); }
   };
@@ -131,7 +133,7 @@ export default function IncidentDetail() {
       <Card title="Alerts in this incident" subtitle="Each alert is one detection on one process, file or network peer." pad={false}>
         <div className="table-wrap">
           <table className="table clickable">
-            <thead><tr><th style={{ width: 96 }}>Time</th><th style={{ width: 186 }}>Detection</th><th style={{ width: "28%" }}>Entity</th><th>Why it was flagged</th><th style={{ width: 120 }}>Status</th>{can.manage_endpoints && <th style={{ width: 92 }}></th>}</tr></thead>
+            <thead><tr><th style={{ width: 96 }}>Time</th><th style={{ width: 186 }}>Detection</th><th style={{ width: "28%" }}>Entity</th><th>Why it was flagged</th><th style={{ width: 120 }}>Status</th>{can.manage_endpoints && <th style={{ width: 118 }}></th>}</tr></thead>
             <tbody>{alertRows.visible.map(a => {
               const n = nodeMap.get(a.node);
               return (
@@ -139,7 +141,8 @@ export default function IncidentDetail() {
                   <td title={fmtDateTime(a.ts_ns, true)}>{fmtTime(a.ts_ns, false)}</td>
                   <td><DetectionTag type={a.type} /></td>
                   <td><div className="entity" title={a.title || a.label}><NodeIcon type={n?.type || "process"} /><Mid text={a.label} className="mono entity-name" title={null} /></div>
-                    {a.title && a.title !== a.label && <div className="muted mono sm ellipsis" title={a.title}>{shortCmd(a.title)}</div>}</td>
+                    {a.title && a.title !== a.label && (n?.type === "file" ? <div className="muted mono sm flex-min"><Mid text={a.title} /></div>
+                      : <div className="muted mono sm ellipsis" title={a.title}>{shortCmd(a.title)}</div>)}</td>
                   <td className="reason"><PathText text={reasonText(a.type, a.reason)} /></td>
                   <td><StatusBadge status={a.status} /></td>
                   {can.manage_endpoints && <td className="row-actions"><button className="btn sm" title="Add this activity to the allow list" onClick={e => { e.stopPropagation(); setAllow({ alertId: a.id, subject: n?.type === "process" && n.details?.Program && !n.details.Program.startsWith("(") ? n.details.Program : a.title || a.label }); }}><ShieldCheck size={14} />Allow…</button></td>}
@@ -156,9 +159,6 @@ export default function IncidentDetail() {
     </div>
   );
 }
-
-/** First line of a command line, hashes shortened (the full text is in the tooltip and the details panel). */
-const shortCmd = (t: string) => t.split("\n")[0].replace(/[0-9a-f]{24,}/gi, m => m.slice(0, 8) + "…");
 
 function Crumbs({ id }: { id?: number }) {
   return <><Link to="/incidents"><ArrowLeft size={14} />Incidents</Link>{id != null && <><ChevronRight size={14} className="muted" /><span>Incident {id}</span></>}</>;
@@ -195,7 +195,7 @@ function NodePanel({ node, vnode, d, onClose, onFocus, onAllow, onExpand }: { no
     <aside className="node-panel" aria-label="Entity details">
       <div className="np-head">
         <span className={cx("np-icon", `t-${node.type}`)}><NodeIcon type={node.type} size={16} /></span>
-        <div className="np-title"><div className="np-type">{typeName}</div><div className="np-label" title={node.title || node.label}><Mid text={node.label} title={null} /></div></div>
+        <div className="np-title"><div className="np-type">{typeName}</div><div className="np-label" title={node.title || node.label}>{node.label}</div></div>
         <button className="icon-btn" onClick={onClose} aria-label="Close details"><X size={16} /></button>
       </div>
       <div className="np-body">

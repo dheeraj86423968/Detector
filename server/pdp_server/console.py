@@ -267,7 +267,8 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
     learning = row["phase"] in ("pending", "baseline")
     lifecycle = [
         {"step": "enrolled", "status": "done", "at": row["enrolled_at"], "text": "Agent installed and enrolled"},
-        {"step": "baseline", "status": "active" if learning else "done", "text": "Learning normal behaviour",
+        {"step": "baseline", "status": "active" if learning else "done",
+         "text": f"Learning normal behaviour: {need - 1} days of activity plus 1 day to validate the model",
          "done": min(done, need), "needed": need,
          "days": [{"date": str(d["date"]), "events": int(d["events"]), "complete": d["complete"]} for d in days]},
         {"step": "model", "status": "done" if has_model else "active" if row["phase"] == "training" else "pending",
@@ -291,7 +292,8 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
         issues.append("No events have been received yet")
     status = "error" if not ep["online"] and row["kind"] == "live" and row["phase"] != "retired" else "warning" if issues else "ok"
     health = {"online": ep["online"], "last_seen": row["last_seen"], "agent_version": h.get("agent_version") or row["agent_version"],
-              "collector": "eBPF (CO-RE)" if h.get("collector_lost") is not None else {"benchmark": "Dataset replay"}.get(row["kind"], "Agent"),
+              "collector": "eBPF (CO-RE)" if h.get("collector_lost") is not None else "Dataset replay" if row["kind"] == "benchmark"
+                           else f"{(row['os'] or 'endpoint').capitalize()} agent {h.get('agent_version') or row['agent_version'] or ''}".strip(),
               "events_dropped": h.get("collector_lost"), "queue_depth": h.get("queue_depth"), "cpu_pct": h.get("cpu_pct"), "rss_mb": h.get("rss_mb"),
               "events_24h": int(ev24) + int(w24), "status": status, "issues": issues}
     # ---- detection

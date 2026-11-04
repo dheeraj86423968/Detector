@@ -6,7 +6,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { Maximize2, Minimize2, Route, Waypoints } from "lucide-react";
 import type { GEdge, GNode } from "../api";
-import { detection, DETECTION, midTrunc, reasonText, shortHex } from "../format";
+import { detection, DETECTION, midTrunc, reasonText, shortCmd } from "../format";
 import { cx, NodeIcon, Segmented } from "../ui";
 import { attackPath, clusterLeaves, layout, stackSiblings, VNode } from "./model";
 
@@ -33,12 +33,13 @@ const sublabel = (n: VNode) => {
     const cmd = (n.details?.["Command line"] || n.title || "").split("\n")[0];
     const prog = known(n.details?.Program);
     // a bare command line that only repeats the name says nothing: show where the program lives instead
-    return cmd && cmd !== n.label ? shortHex(cmd) : prog ? midTrunc(prog, SUB_MAX) : cmd;
+    return cmd && cmd !== n.label ? shortCmd(cmd, 18) : prog ? midTrunc(prog, SUB_MAX) : cmd;
   }
   if (n.type === "file") { const p = n.details?.Path || n.title || ""; const i = p.lastIndexOf("/"); return midTrunc(i > 0 ? p.slice(0, i) : p, SUB_MAX); }
   if (n.type === "network") {
-    const port = n.details?.Port, scope = n.details?.Scope;
-    return [port ? `port ${port}` : "", scope ? scope : ""].filter(Boolean).join(" · ") || "Network peer";
+    const port = n.details?.Port, scope = n.details?.Scope === "external" ? "public" : n.details?.Scope === "local network" ? "local" : n.details?.Scope;
+    const full = [port ? `port ${port}` : "", scope || ""].filter(Boolean).join(" · ");
+    return full.length <= 18 ? full || "Network peer" : port ? `port ${port}` : full;
   }
   if (n.cluster) return n.title || "";
   if (n.details?.Paths) return "paths not recorded";

@@ -53,8 +53,8 @@ export default function AllowList() {
           ) : <>
             <div className="table-wrap">
               <table className="table middle allow-table">
-                <thead><tr><th>Entry</th><th style={{ width: "19%" }}>Applies to</th><th style={{ width: "21%" }}>Note</th><th style={{ width: 150 }}>Added</th>
-                  <th className="num" style={{ width: 118 }}>Alerts allowed</th>{can.manage_endpoints && <th style={{ width: 104 }}></th>}</tr></thead>
+                <thead><tr><th>Entry</th><th style={{ width: "19%" }}>Applies to</th><th style={{ width: "18%" }}>Note</th><th style={{ width: 150 }}>Added</th>
+                  <th className="num" style={{ width: 104 }} title="Alerts this entry has allowed">Allowed</th>{can.manage_endpoints && <th style={{ width: 104 }}></th>}</tr></thead>
                 <tbody>{page.visible.map(e => (
                   <tr key={e.id}>
                     <td className="cell-main">
@@ -62,7 +62,7 @@ export default function AllowList() {
                         <AllowKindIcon kind={e.kind} />
                         <div className="min0">
                           <Mid text={e.value} className="mono allow-value" />
-                          <div className="muted sm ellipsis">{e.kind === "detection" ? <>Specific detection · {e.rule_text || e.rule}</> : kindLabel(e.kind)}
+                          <div className="muted sm ellipsis">{e.kind === "detection" ? <span title={`Specific detection: ${e.rule_text || e.rule}`}>Detection · {e.rule_text || e.rule}</span> : kindLabel(e.kind)}
                             {e.kind === "program" && !e.value.includes("/") ? " · any folder" : ""}</div>
                         </div>
                       </div>
