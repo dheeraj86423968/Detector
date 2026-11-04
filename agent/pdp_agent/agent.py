@@ -28,7 +28,7 @@ from .config import Config
 from .state import State
 from .transport import Transport, TransportError
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 

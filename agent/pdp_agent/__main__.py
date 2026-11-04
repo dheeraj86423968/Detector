@@ -39,7 +39,7 @@ def main():
         source = StraceLive(command=src["command"], trace_dir=src.get("trace_dir"), batch=int(src.get("batch", 1000)))
     elif src["kind"] == "ebpf":
         from .sources.ebpf import EbpfLive
-        source = EbpfLive(batch=int(src.get("batch", 2000)), ring_pages=int(src.get("ring_pages", 1024)), proc=src.get("proc", "/proc"),
+        source = EbpfLive(batch=int(src.get("batch", 2000)), ring_pages=int(src.get("ring_pages", 4096)), proc=src.get("proc", "/proc"),
                           engine=src.get("engine"))   # "core" (libbpf CO-RE, default) or "bcc" (header-compiled fallback)
     elif src["kind"] == "etw":
         from .sources.windows_etw import EtwLive
