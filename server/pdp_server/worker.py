@@ -157,6 +157,14 @@ def baseline_hours(eid: str) -> float:
     return n / 4.0 + open_h
 
 
+def due_milestones(maturity: dict, hours: float) -> list[int]:
+    """Milestones passed since the current model's. Compared with the milestone the model was trained for: its own
+    baseline_hours can be a little below the milestone (windows are cut at 15 minutes), and comparing that queued
+    the same milestone again every minute."""
+    have = float(maturity.get("milestone_h") or maturity.get("baseline_hours") or 0)
+    return [m for m in EARLY_MILESTONES_H if have < m <= hours]
+
+
 def schedule_early_models():
     """Queue an early training job for each learning endpoint that has passed its next milestone."""
     global _last_milestone_check
@@ -172,12 +180,11 @@ def schedule_early_models():
             continue
         eid = str(ep["id"])
         try:
-            have = float(((ep["manifest"] or {}).get("maturity") or {}).get("baseline_hours") or 0)
             hours = baseline_hours(eid)
         except Exception as e:  # noqa - a missing telemetry schema etc. must not stop the worker
             log(f"early model check {eid}: {e}")
             continue
-        due = [m for m in EARLY_MILESTONES_H if have < m <= hours]
+        due = due_milestones((ep["manifest"] or {}).get("maturity") or {}, hours)
         if due:
             with db.conn() as c:
                 db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, params) VALUES (%s,%s,'train',%s)",
