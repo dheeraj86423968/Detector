@@ -39,6 +39,15 @@ export const fmtRel = (t: TimeLike) => {
   if (days < 365 * 2) return `${Math.round(days / 30.4)} months ago`;
   return `${Math.round(days / 365)} years ago`;
 };
+/** A time in the future: "in 20 min", "in 5 h", "in 6 days"; "expired" once past. */
+export const fmtIn = (t: TimeLike) => {
+  const d = toDate(t); if (!d) return "—";
+  const s = Math.round((d.getTime() - Date.now()) / 1000);
+  if (s <= 0) return "expired";
+  if (s < 3600) return `in ${Math.max(1, Math.round(s / 60))} min`;
+  if (s < 86400 * 2) return `in ${Math.round(s / 3600)} h`;
+  const n = Math.round(s / 86400); return `in ${n} days`;
+};
 export const fmtDuration = (ns: number) => {
   const m = Math.max(1, Math.round(ns / 6e10));
   if (m < 60) return `${m} min`;

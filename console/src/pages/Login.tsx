@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { ReactNode, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { api, AuthConfig } from "../api";
+import { api, AuthConfig, looksLikeEmail, PASSWORD_MIN } from "../api";
+import { cx } from "../ui";
 
 export function Logo({ size = 32 }: { size?: number }) {
   return (
@@ -13,6 +14,37 @@ export function Logo({ size = 32 }: { size?: number }) {
       <path d="M11.8 13.3 14.6 19M20.2 13.3 17.4 19M13 11h6" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" opacity=".85" />
     </svg>
   );
+}
+
+/** The frame of the public pages (sign in, sign up, join): brand, one card, a line underneath. */
+export function AuthFrame({ children, foot, wide }: { children: ReactNode; foot?: ReactNode; wide?: boolean }) {
+  return (
+    <div className="login-page">
+      <div className={cx("login-card", wide && "wide")}>
+        <div className="login-brand"><Logo size={40} /><div><div className="login-name">PDP</div><div className="login-tag">Provenance-based intrusion detection</div></div></div>
+        {children}
+      </div>
+      {foot && <div className="login-foot">{foot}</div>}
+    </div>
+  );
+}
+
+/** Name, email and password checks shared by sign-up and joining (the server checks again). */
+export type AccountFields = { name: string; email: string; password: string; confirm: string };
+export function accountErrors(f: AccountFields): Partial<Record<keyof AccountFields, string>> {
+  const e: Partial<Record<keyof AccountFields, string>> = {};
+  if (!f.name.trim()) e.name = "Enter your name.";
+  if (!f.email.trim()) e.email = "Enter your email address.";
+  else if (!looksLikeEmail(f.email)) e.email = "This does not look like an email address.";
+  if (f.password.length < PASSWORD_MIN) e.password = `Use at least ${PASSWORD_MIN} characters.`;
+  if (!e.password && f.confirm !== f.password) e.confirm = "The passwords do not match.";
+  return e;
+}
+
+/** After sign-up or joining the server has set the session: check it works, then open the console. */
+export async function enterConsole(nav: (to: string) => void) {
+  await api("/api/me");
+  nav("/overview");
 }
 
 export default function Login() {
@@ -27,26 +59,23 @@ export default function Login() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(""); setBusy(true);
     try { await api("/api/login", { method: "POST", body: JSON.stringify({ username: u, password: p }) }); nav("/overview"); }
-    catch (ex: any) { setErr(ex.status === 401 ? "Incorrect username or password." : ex.message); setBusy(false); }
+    catch (ex: any) { setErr(ex.status === 401 ? "Incorrect email or password." : ex.message); setBusy(false); }
   };
   const showPw = !cfg || cfg.password;
+  const signup = !!cfg?.signup && cfg.signup !== "off";
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="login-brand"><Logo size={40} /><div><div className="login-name">PDP</div><div className="login-tag">Provenance-based intrusion detection</div></div></div>
-        <h1 className="login-title">Sign in to the console</h1>
-        {cfg?.sso && <a className="btn primary block lg sso" href="/api/oidc/login">{cfg.sso_label || "Sign in with SSO"}</a>}
-        {cfg?.sso && showPw && <div className="login-or"><span>{cfg.password_policy === "admin-only" ? "Administrator sign-in" : "or sign in with a password"}</span></div>}
-        {showPw && <form onSubmit={submit} className="login-form">
-          <label className="field"><span className="field-label">Username</span>
-            <input value={u} onChange={e => setU(e.target.value)} autoComplete="username" autoFocus={!cfg?.sso} /></label>
-          <label className="field"><span className="field-label">Password</span>
-            <input value={p} onChange={e => setP(e.target.value)} type="password" autoComplete="current-password" /></label>
-          <button className={cfg?.sso ? "btn block lg" : "btn primary block lg"} disabled={busy || !u || !p}>{busy && <Loader2 size={16} className="spin" />}Sign in</button>
-        </form>}
-        {err && <div className="err">{err}</div>}
-      </div>
-      <div className="login-foot">Trouble signing in? Contact your PDP administrator.</div>
-    </div>
+    <AuthFrame foot={signup ? <>New to PDP? <Link to="/signup">Create an organisation</Link></> : "Trouble signing in? Contact your PDP administrator."}>
+      <h1 className="login-title">Sign in to the console</h1>
+      {cfg?.sso && <a className="btn primary block lg sso" href="/api/oidc/login">{cfg.sso_label || "Sign in with SSO"}</a>}
+      {cfg?.sso && showPw && <div className="login-or"><span>{cfg.password_policy === "admin-only" ? "Administrator sign-in" : "or sign in with a password"}</span></div>}
+      {showPw && <form onSubmit={submit} className="login-form">
+        <label className="field"><span className="field-label">Email or username</span>
+          <input value={u} onChange={e => setU(e.target.value)} autoComplete="username" autoFocus={!cfg?.sso} /></label>
+        <label className="field"><span className="field-label">Password</span>
+          <input value={p} onChange={e => setP(e.target.value)} type="password" autoComplete="current-password" /></label>
+        <button className={cfg?.sso ? "btn block lg" : "btn primary block lg"} disabled={busy || !u || !p}>{busy && <Loader2 size={16} className="spin" />}Sign in</button>
+      </form>}
+      {err && <div className="err">{err}</div>}
+    </AuthFrame>
   );
 }

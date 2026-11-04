@@ -1,14 +1,21 @@
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, Plus, Search, Server } from "lucide-react";
-import { Endpoint, EnrollToken, post, useApi, useCan } from "../api";
+import { ApiError, Endpoint, EnrollToken, post, useApi, useCan } from "../api";
 import { fmtDateTime, fmtRel, plural } from "../format";
-import { Card, CopyField, Dialog, Empty, EndpointStateBadge, ErrorState, Field, Loading, PageHeader, Segmented, Toggle } from "../ui";
+import { Card, CopyField, Dialog, Empty, EndpointStateBadge, ErrorState, Field, Loading, PageHeader, Toggle } from "../ui";
 
 export default function Endpoints() {
   const can = useCan(); const nav = useNavigate();
   const { data, error, loading, reload } = useApi<{ endpoints: Endpoint[] }>("/api/endpoints", 20000);
   const [q, setQ] = useState(""); const [retired, setRetired] = useState(false); const [adding, setAdding] = useState(false);
+  // "#/endpoints?add=1" (from the overview's get-started card) opens the add dialog
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (params.get("add") !== "1") return;
+    if (can.manage_endpoints) setAdding(true);
+    const p = new URLSearchParams(params); p.delete("add"); setParams(p, { replace: true });
+  }, [params, setParams, can.manage_endpoints]);
   const all = data?.endpoints || [];
   const rows = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -58,44 +65,46 @@ export default function Endpoints() {
 
 function AddEndpointDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [name, setName] = useState(""); const [tok, setTok] = useState<EnrollToken | null>(null);
-  const [err, setErr] = useState(""); const [busy, setBusy] = useState(false); const [how, setHow] = useState<"package" | "docker">("package");
+  const [err, setErr] = useState<{ text: string; limit: boolean } | null>(null); const [busy, setBusy] = useState(false);
   const create = async (e: React.FormEvent) => {
-    e.preventDefault(); setErr(""); setBusy(true);
-    try { setTok(await post<EnrollToken>("/api/endpoints", { name: name.trim() })); onCreated(); } catch (ex: any) { setErr(ex.message); }
+    e.preventDefault(); setErr(null); setBusy(true);
+    try { setTok(await post<EnrollToken>("/api/endpoints", { name: name.trim() })); onCreated(); }
+    catch (ex: any) {
+      // 403 here is the organisation's endpoint limit; the server says what the limit is
+      const limit = ex instanceof ApiError && ex.status === 403;
+      setErr({ text: limit ? ex.detail || "Your organisation has reached its endpoint limit." : ex.message, limit });
+    }
     setBusy(false);
   };
-  const server = `https://${window.location.host}`;
-  const isDocker = !!tok?.docker_command;
+  const primary = tok?.install_command || tok?.enroll_command || "";
   return (
-    <Dialog title={tok ? `Install the agent on ${name}` : "Add endpoint"} width={680} onClose={onClose}
-      subtitle={tok ? `The enrolment token is valid for ${tok.expires_in_hours} hours and can be used once.` : "Create a one-time enrolment token, then run the install command on the host."}
+    <Dialog title={tok ? `Install the agent on ${name.trim()}` : "Add endpoint"} width={680} onClose={onClose}
+      subtitle={tok ? `The command contains a one-time token, valid for ${plural(tok.expires_in_hours, "hour")}.` : "Name the server, then run one command on it to install the agent."}
       footer={tok ? <button className="btn primary" onClick={onClose}>Done</button> : <>
         <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn primary" form="add-ep" disabled={!name.trim() || busy}>{busy && <Loader2 size={14} className="spin" />}Create token</button></>}>
+        <button className="btn primary" form="add-ep" disabled={!name.trim() || busy}>{busy && <Loader2 size={14} className="spin" />}Continue</button></>}>
       {!tok ? (
         <form id="add-ep" onSubmit={create}>
           <Field label="Endpoint name" hint="Shown in the console, e.g. web-01 or build-server.">
             <input value={name} onChange={e => setName(e.target.value)} autoFocus maxLength={128} placeholder="web-01" />
           </Field>
-          {err && <div className="err">{err}</div>}
+          {err && <div className="err">{err.text}{err.limit && <> Retire an endpoint you no longer use, or contact PDP support to raise the limit.</>}</div>}
         </form>
       ) : (
         <div className="install">
-          <Segmented value={how} onChange={setHow} options={[{ id: "package", label: "Linux package" }, { id: "docker", label: isDocker ? "Docker" : "Manual enrolment" }]} />
-          {how === "package" ? <>
-            <ol className="steps">
-              <li>Install the <b>pdp-agent</b> package (.deb or .rpm) on the host.</li>
-              <li>Run this command as root:</li>
-            </ol>
-            <CopyField multiline value={tok.install_command || `sudo pdp-agent-install --server ${server} --token ${tok.token} --ca-sha256 ${tok.ca_sha256}`} />
-          </> : <>
-            <p className="muted">{isDocker ? "Run the agent as a container on the host:" : "On a host where the agent is already installed, enrol it with:"}</p>
-            <CopyField multiline value={tok.docker_command || tok.enroll_command} />
-          </>}
+          <div className="install-step">Run on the Linux server as root</div>
+          <CopyField multiline value={primary} />
+          <div className="install-req">Needs Linux kernel 5.8 or newer, internet access to this console, and Docker (installed automatically if missing).</div>
           <div className="install-note">
-            The endpoint appears here once the agent enrols. It first learns the host's normal behaviour for a few days; detection starts automatically after that.
+            The endpoint appears here as soon as the agent enrols. It then learns the server's normal activity for 8 days
+            (7 days of learning and 1 day to check the result); detection starts automatically after that.
           </div>
-          <CopyField label="Server CA fingerprint (SHA-256) — also used to pin the desktop console" value={tok.ca_sha256} />
+          <details className="install-more">
+            <summary>Other ways to install</summary>
+            {tok.docker_command && <CopyField label="Servers that only run containers: start the agent with Docker" multiline value={tok.docker_command} />}
+            {tok.install_command && tok.enroll_command && <CopyField label="Agent already installed: enrol it with" multiline value={tok.enroll_command} />}
+            <CopyField label="Server CA fingerprint (SHA-256), also used to pin the desktop console" value={tok.ca_sha256} />
+          </details>
         </div>
       )}
     </Dialog>
