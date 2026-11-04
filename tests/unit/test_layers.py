@@ -142,6 +142,25 @@ check(te._private_trusted("172.18.0.10") and te._private_trusted("10.0.5.77"), "
 check(not te._private_trusted("172.18.1.10") and not te._private_trusted("8.8.8.9") and not te._private_trusted("192.168.1.1"),
       "other private /24s and neighbours of public addresses are not")
 
+# ---------------------------------------------------------------- a program's private services on new addresses
+r3 = Registry()
+J = {k: r3.add(e) for k, e in [("ngx", Entity.process("p:ngx", "/usr/sbin/nginx", "nginx")), ("ngx2", Entity.process("p:ngx2", "/usr/sbin/nginx", "nginx")),
+                                ("key", Entity.file("f:key", "/etc/ssl/private/site.key")), ("old", Entity.socket("n:old", "172.18.0.5", 8000)),
+                                ("new", Entity.socket("n:new", "172.22.0.5", 8000)), ("ssh", Entity.socket("n:ssh", "172.22.0.5", 22)),
+                                ("curl", Entity.process("p:curl", "/usr/bin/curl", "curl")), ("pub", Entity.socket("n:pub", "203.0.113.9", 8000))]}
+bdays = {f"d{k}": [win([(J["ngx"], "CONNECT", J["old"])])] for k in (1, 2)}
+sp = fit_layers(Store(bdays), ["d1", "d2"], r3, len(r3), log=lambda m: None)
+check(sp["private_services"] == ["/usr/sbin/nginx|8000"], f"fit: private services per program and port {sp['private_services']}")
+L3 = DeterministicLayers(sp, len(r3))
+leak = lambda dst, prog="ngx2": {x.rule for x in L3.process(win([(J["key"], "READ", J[prog]), (J[prog], "CONNECT", J[dst])]), r3, np.array([J[prog], J[dst]]))}
+check("exfiltration" not in leak("new"), "nginx to a new docker address on its baseline port: no alarm (re-assigned container)")
+L3 = DeterministicLayers(sp, len(r3))
+check("exfiltration" in leak("ssh"), "the same new address on another port still alarms")
+L3 = DeterministicLayers(sp, len(r3))
+check("exfiltration" in leak("new", "curl"), "another program to that address still alarms")
+L3 = DeterministicLayers(sp, len(r3))
+check("exfiltration" in leak("pub"), "public addresses are never covered")
+
 # ---------------------------------------------------------------- runtime alert policy (budget, corroboration)
 try:
     from pdp_engine.runtime import AlertPolicy  # noqa: F401

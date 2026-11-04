@@ -97,6 +97,23 @@ def is_local(ip: str) -> bool:
         return True          # not an address (unix socket names, 'NA') -> not a remote host
 
 
+def remote_port(label: str) -> str:
+    parts = label.split(" ")
+    return parts[2] if len(parts) > 2 else "None"
+
+
+_PRIVATE_NETS = [ipaddress.ip_network(n) for n in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7")]
+
+
+def is_private(ip: str) -> bool:
+    """RFC 1918 / IPv6 unique-local only (Python's is_private also covers documentation and other reserved ranges)."""
+    try:
+        a = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    return any(a.version == n.version and a in n for n in _PRIVATE_NETS)
+
+
 def dir_key(path: str, depth: int = 2) -> str:
     """Directory part of a path, truncated to `depth` components ('/home/admin/.ssh/x' -> '/home/admin')."""
     if not path.startswith("/"):
@@ -190,7 +207,7 @@ class _Tag:
 
 class TagEngine:
     def __init__(self, params: TagParams, trusted_ips: set[str], thresholds: dict[str, dict[str, float]] | None,
-                 n_preexisting: int, fit: bool = False):
+                 n_preexisting: int, fit: bool = False, private_services: set[str] | None = None):
         self.p = params
         self.trusted = set(trusted_ips)
         # private addresses are re-assigned (docker networks, DHCP): a private address in the /24 of a trusted private
@@ -203,6 +220,9 @@ class TagEngine:
                 continue
             if a.version == 4 and a.is_private and not a.is_loopback:
                 self.trusted_private24.add(ipaddress.ip_network(f"{ip}/24", strict=False))
+        # "<program>|<port>" a program sent to on private addresses during the baseline: a new private address on the
+        # same port (containers get new addresses on every redeploy, new docker networks) is that service again
+        self.private_services = set(private_services or ())
         self.allowed_nets: list = []        # console allow list: addresses / networks treated as trusted
         self.thr = thresholds or {}
         self.n_pre = int(n_preexisting)
@@ -395,6 +415,10 @@ class TagEngine:
                     f.conf = c
             elif e in SEND:                                 # process -> netflow
                 q, n = self._tag(reg, s), self._tag(reg, d)
+                if n.data < U and self.private_services and reg.entities[d].ntype == "netflow":
+                    lab = reg.entities[d].label
+                    if is_private(remote_ip(lab)) and f"{self._label(reg, s)}|{remote_port(lab)}" in self.private_services:
+                        continue                            # a known service of this program on a re-assigned address
                 if n.data < U:
                     prog = self._label(reg, s)
                     if q.conf >= p.sensitive:
@@ -438,7 +462,7 @@ class DeterministicLayers:
         cfg = spec.get("config", {})
         self.novelty = NoveltyLayer(set(spec["known_executables"]), approved) if cfg.get("novelty", True) else None
         self.tags = TagEngine(TagParams(**cfg.get("tags", {})), set(spec.get("trusted_ips", [])), spec.get("thresholds", {}),
-                              n_preexisting) if cfg.get("rules", True) else None
+                              n_preexisting, private_services=set(spec.get("private_services", []))) if cfg.get("rules", True) else None
 
     @classmethod
     def load(cls, bundle_dir: str, n_preexisting: int, approved: set[str] | None = None) -> "DeterministicLayers | None":
@@ -508,7 +532,18 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
                     ip_days[ip].add(k)
     ips = set(ip_days)
     recurring = {ip for ip, ds in ip_days.items() if len(ds) >= 2}
-    eng = TagEngine(cfg.tags, recurring, None, n_preexisting, fit=True)
+    # program|port pairs sent to on private addresses (recurring on two baseline days, like trusted addresses)
+    svc_days: dict[str, set[int]] = defaultdict(set)
+    send_ops = np.array(sorted(SEND), dtype=np.int64)
+    for k, d in enumerate(days):
+        for w in store.windows(d):
+            m = np.isin(w.etype, send_ops)
+            for s_, d_ in zip(w.src[m].tolist(), w.dst[m].tolist()):
+                e = reg.entities[d_]
+                if e.ntype == "netflow" and is_private(remote_ip(e.label)) and reg.entities[s_].ntype == "subject":
+                    svc_days[f"{executable(reg.entities[s_].label)}|{remote_port(e.label)}"].add(k)
+    private_services = sorted(k for k, ds in svc_days.items() if len(ds) >= 2 or len(days) == 1)
+    eng = TagEngine(cfg.tags, recurring, None, n_preexisting, fit=True, private_services=set(private_services))
     eng.first_day = first_day
     for k, d in enumerate(days):
         eng.cur_day = k
@@ -519,4 +554,5 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
         f"benign alarm keys " + (", ".join(f"{r}={len(v)}" for r, v in sorted(thr.items())) or "none"))
     return {"version": 1, "config": {"novelty": cfg.novelty, "rules": cfg.rules, "tags": asdict(cfg.tags), "evidence_rules": list(cfg.evidence_rules)},
             "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(ips), "thresholds": thr,
+            "private_services": private_services,
             "benign_alarm_events": dict(eng.benign_count)}
