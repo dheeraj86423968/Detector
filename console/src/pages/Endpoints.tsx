@@ -1,45 +1,103 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { api, EnrollToken, Endpoint, fmtTs, isStale, useMe } from "../api";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Loader2, Plus, Search, Server } from "lucide-react";
+import { Endpoint, EnrollToken, post, useApi, useCan } from "../api";
+import { fmtDateTime, fmtRel, plural } from "../format";
+import { Card, CopyField, Dialog, Empty, EndpointStateBadge, ErrorState, Field, Loading, PageHeader, Segmented, Toggle } from "../ui";
 
 export default function Endpoints() {
-  const me = useMe();
-  const [eps, setEps] = useState<Endpoint[]>([]); const [name, setName] = useState(""); const [tok, setTok] = useState<EnrollToken | null>(null); const [err, setErr] = useState("");
-  const load = () => api("/api/endpoints").then(r => setEps(r.endpoints));
-  useEffect(() => { load(); const t = setInterval(load, 15000); return () => clearInterval(t); }, []);
-  const add = async () => {
-    setErr("");
-    try { const r = await api<EnrollToken>("/api/endpoints", { method: "POST", body: JSON.stringify({ name }) }); setTok(r); setName(""); load(); }
-    catch (e: any) { setErr(e.message); }
-  };
-  const copy = (s: string) => navigator.clipboard?.writeText(s).catch(() => { });
+  const can = useCan(); const nav = useNavigate();
+  const { data, error, loading, reload } = useApi<{ endpoints: Endpoint[] }>("/api/endpoints", 20000);
+  const [q, setQ] = useState(""); const [retired, setRetired] = useState(false); const [adding, setAdding] = useState(false);
+  const all = data?.endpoints || [];
+  const rows = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    const order: Record<string, number> = { offline: 0, learning: 1, training: 1, protected: 2, retired: 3 };
+    return all.filter(e => (retired || e.state !== "retired") && (!t || e.name.toLowerCase().includes(t) || (e.hostname || "").toLowerCase().includes(t)))
+      .sort((a, b) => (b.open_incidents || 0) - (a.open_incidents || 0) || order[a.state] - order[b.state] || a.name.localeCompare(b.name));
+  }, [all, q, retired]);
+  const retiredN = all.filter(e => e.state === "retired").length;
+  const active = all.length - retiredN;
   return (
-    <div>
-      <h1>Endpoints</h1>
-      {me?.role === "admin" && <div className="card">
-        <b>Add endpoint</b> <input value={name} onChange={e => setName(e.target.value)} placeholder="name" /> <button className="primary" onClick={add} disabled={!name}>Create token</button>
-        {err && <span className="err"> {err}</span>}
-        {tok && <div>
-          <p>Install the agent on the host and run (token valid {tok.expires_in_hours} h, single use):</p>
-          <p><code className="mono sel break">{tok.enroll_command}</code> <button className="ghost" onClick={() => copy(tok.enroll_command)}>copy</button></p>
-          <p className="sm">CA fingerprint (sha256 of the CA certificate DER): <code className="mono sel break">{tok.ca_sha256}</code> <button className="ghost" onClick={() => copy(tok.ca_sha256)}>copy</button></p>
-          <p className="muted sm">Docker image form: <code className="mono sel break">docker run ... -e PDP_ENROLL_TOKEN={tok.token} -e PDP_CA_SHA256={tok.ca_sha256} pdp/agent:dev run</code></p>
-          <p className="muted sm">The same fingerprint is the pin for the desktop console's server settings.</p>
-        </div>}
-      </div>}
-      <table>
-        <thead><tr><th>Name</th><th>Host</th><th>Phase</th><th>Baseline days</th><th>Open alerts</th><th>Agent</th><th>Queue</th><th>Last window</th><th>CPU / RSS</th><th>Last seen</th></tr></thead>
-        <tbody>{eps.map(e => {
-          const h = e.health;
-          return <tr key={e.id} className={e.phase === "retired" ? "retired" : ""}><td><Link to={`/endpoints/${e.id}`}>{e.name}</Link> <span className="muted">{e.kind !== "live" ? e.kind : ""}</span></td><td>{e.hostname}</td>
-            <td><span className={`pill ${e.phase}`}>{e.phase}</span> {e.phase !== "retired" && isStale(h) && <span className="pill stale" title="no heartbeat for more than 5 minutes">stale</span>}</td>
-            <td>{e.baseline_days_done}</td><td>{e.open_alerts}</td>
-            <td className="mono">{h?.agent_version ?? "–"}</td><td className="score">{h ? h.queue_depth : "–"}</td>
-            <td className="mono">{h?.last_window_end_ns ? fmtTs(h.last_window_end_ns) : "–"}</td>
-            <td className="score">{h ? `${h.cpu_pct != null ? h.cpu_pct.toFixed(0) + "%" : "–"} / ${h.rss_mb != null ? h.rss_mb.toFixed(0) + " MB" : "–"}` : "–"}</td>
-            <td className="muted">{e.last_seen ? new Date(e.last_seen).toLocaleString() : "never"}</td></tr>;
-        })}</tbody>
-      </table>
+    <div className="page">
+      <PageHeader title="Endpoints" subtitle={data ? `${plural(active, "endpoint")} · ${all.filter(e => e.state === "protected").length} protected` : undefined}
+        actions={can.manage_endpoints && <button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add endpoint</button>} />
+      <Card pad={false}>
+        <div className="filters">
+          <div className="search"><Search size={15} /><input placeholder="Search by name or host" value={q} onChange={e => setQ(e.target.value)} /></div>
+          {retiredN > 0 && <label className="inline-toggle"><Toggle checked={retired} onChange={setRetired} label="Show retired" />Show retired ({retiredN})</label>}
+          <div className="filters-end muted">{data ? plural(rows.length, "endpoint") : ""}</div>
+        </div>
+        {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :
+          rows.length === 0 ? <Empty icon={<Server size={22} />} title={all.length ? "No endpoints match" : "No endpoints yet"}
+            text={all.length ? "Try another search." : "Install the PDP agent on a Linux host to start learning its normal behaviour."}
+            action={!all.length && can.manage_endpoints ? <button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add endpoint</button> : undefined} /> : (
+            <div className="table-wrap">
+              <table className="table clickable">
+                <thead><tr><th>Endpoint</th><th style={{ width: "30%" }}>Status</th><th className="num" style={{ width: 150 }}>Open incidents</th><th style={{ width: 150 }}>Last seen</th><th style={{ width: 110 }}>Agent</th></tr></thead>
+                <tbody>{rows.map(e => (
+                  <tr key={e.id} onClick={() => nav(`/endpoints/${e.id}`)} className={e.state === "retired" ? "row-muted" : ""}>
+                    <td className="cell-main">
+                      <Link to={`/endpoints/${e.id}`} className="row-title" onClick={ev => ev.stopPropagation()}>{e.name}</Link>
+                      <div className="row-meta muted">{e.hostname}{e.os ? ` · ${e.os === "linux" ? "Linux" : e.os}` : ""}{e.kind && e.kind !== "live" ? ` · ${e.kind === "benchmark" ? "dataset replay" : e.kind}` : ""}</div>
+                    </td>
+                    <td><EndpointStateBadge state={e.state} text={e.state_text} />{e.state_text && <div className="muted sm ellipsis" title={e.state_text}>{e.state_text}</div>}</td>
+                    <td className="num">{e.open_incidents ? <Link to={`/incidents?endpoint_id=${e.id}`} className="count-pill" onClick={ev => ev.stopPropagation()}>{e.open_incidents}</Link> : <span className="muted">0</span>}</td>
+                    <td title={fmtDateTime(e.last_seen, true)}>{e.last_seen ? fmtRel(e.last_seen) : <span className="muted">never</span>}</td>
+                    <td className="mono">{e.agent_version || "—"}</td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          )}
+      </Card>
+      {adding && <AddEndpointDialog onClose={() => setAdding(false)} onCreated={reload} />}
     </div>
+  );
+}
+
+function AddEndpointDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [name, setName] = useState(""); const [tok, setTok] = useState<EnrollToken | null>(null);
+  const [err, setErr] = useState(""); const [busy, setBusy] = useState(false); const [how, setHow] = useState<"package" | "docker">("package");
+  const create = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(""); setBusy(true);
+    try { setTok(await post<EnrollToken>("/api/endpoints", { name: name.trim() })); onCreated(); } catch (ex: any) { setErr(ex.message); }
+    setBusy(false);
+  };
+  const server = `https://${window.location.host}`;
+  const isDocker = !!tok?.enroll_command.trim().startsWith("docker");
+  return (
+    <Dialog title={tok ? `Install the agent on ${name}` : "Add endpoint"} width={680} onClose={onClose}
+      subtitle={tok ? `The enrolment token is valid for ${tok.expires_in_hours} hours and can be used once.` : "Create a one-time enrolment token, then run the install command on the host."}
+      footer={tok ? <button className="btn primary" onClick={onClose}>Done</button> : <>
+        <button className="btn" onClick={onClose}>Cancel</button>
+        <button className="btn primary" form="add-ep" disabled={!name.trim() || busy}>{busy && <Loader2 size={14} className="spin" />}Create token</button></>}>
+      {!tok ? (
+        <form id="add-ep" onSubmit={create}>
+          <Field label="Endpoint name" hint="Shown in the console, e.g. web-01 or build-server.">
+            <input value={name} onChange={e => setName(e.target.value)} autoFocus maxLength={128} placeholder="web-01" />
+          </Field>
+          {err && <div className="err">{err}</div>}
+        </form>
+      ) : (
+        <div className="install">
+          <Segmented value={how} onChange={setHow} options={[{ id: "package", label: "Linux package" }, { id: "docker", label: isDocker ? "Docker" : "Manual enrolment" }]} />
+          {how === "package" ? <>
+            <ol className="steps">
+              <li>Install the <b>pdp-agent</b> package (.deb or .rpm) on the host.</li>
+              <li>Run this command as root:</li>
+            </ol>
+            <CopyField multiline value={`sudo pdp-agent-install --server ${server} --token ${tok.token} --ca-sha256 ${tok.ca_sha256}`} />
+          </> : <>
+            <p className="muted">{isDocker ? "Run the agent as a container on the host:" : "On a host where the agent is already installed, enrol it with:"}</p>
+            <CopyField multiline value={tok.enroll_command} />
+          </>}
+          <div className="install-note">
+            The endpoint appears here once the agent enrols. It first learns the host's normal behaviour for a few days; detection starts automatically after that.
+          </div>
+          <CopyField label="Server CA fingerprint (SHA-256) — also used to pin the desktop console" value={tok.ca_sha256} />
+        </div>
+      )}
+    </Dialog>
   );
 }
