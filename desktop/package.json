@@ -1,24 +1,105 @@
 {
   "name": "pdp-console-desktop",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Desktop wrapper for the PDP analyst console",
+  "author": {
+    "name": "PDP Engineering",
+    "email": "pdp-release@example.com"
+  },
+  "homepage": "https://pdp.example.com",
+  "license": "UNLICENSED",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder",
-    "dist:all": "electron-builder -mwl"
+    "test": "node scripts/pin-selftest.js",
+    "dist": "electron-builder --publish never",
+    "dist:linux": "electron-builder --linux --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:all": "electron-builder -mwl --publish never"
   },
   "devDependencies": {
+    "@electron/notarize": "2.5.0",
     "electron": "31.7.6",
     "electron-builder": "24.13.3"
   },
   "build": {
     "appId": "com.pdp.console",
     "productName": "PDP Console",
-    "files": ["main.js", "pin.js", "preload.js", "settings.html", "icon.*"],
-    "mac": { "category": "public.app-category.developer-tools", "target": ["dmg", "zip"] },
-    "win": { "target": ["nsis", "zip"] },
-    "linux": { "target": ["AppImage", "deb"], "category": "Security" }
+    "copyright": "Copyright (c) PDP",
+    "artifactName": "pdp-console-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "buildResources": "resources",
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "pin.js",
+      "preload.js",
+      "settings.html",
+      "package.json"
+    ],
+    "publish": null,
+    "afterSign": "scripts/notarize.js",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "resources/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "resources/entitlements.mac.plist",
+      "entitlementsInherit": "resources/entitlements.mac.plist",
+      "notarize": false,
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
+      ]
+    },
+    "dmg": {
+      "artifactName": "pdp-console-${version}-mac-${arch}.${ext}"
+    },
+    "win": {
+      "icon": "resources/icon.ico",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "zip", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "pdp-console-${version}-win-${arch}-setup.${ext}"
+    },
+    "linux": {
+      "icon": "resources/icons",
+      "category": "Network;Security",
+      "synopsis": "PDP analyst console (cert-pinned desktop wrapper)",
+      "maintainer": "PDP Engineering <pdp-release@example.com>",
+      "vendor": "PDP",
+      "executableName": "pdp-console",
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
+      ]
+    },
+    "deb": {
+      "packageName": "pdp-console",
+      "packageCategory": "net",
+      "depends": [
+        "libgtk-3-0",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0",
+        "libuuid1",
+        "libsecret-1-0",
+        "libasound2t64 | libasound2"
+      ],
+      "priority": "optional",
+      "artifactName": "pdp-console_${version}_${arch}.${ext}"
+    }
   }
 }

@@ -1,0 +1,4 @@
+# Not a Debian-archive package: there is no ITP bug to close.
+pdp-agent: initial-upload-closes-no-bugs *
+# nfpm writes the License field (also used for the .rpm); dpkg ignores unknown fields.
+pdp-agent: unknown-field License

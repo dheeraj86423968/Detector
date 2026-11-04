@@ -1,0 +1,13 @@
+#!/bin/sh
+# rpm %post: $1 = 1 on install, 2 on upgrade
+[ -d /etc/pdp ] || install -d -m 0750 /etc/pdp
+[ -d /var/lib/pdp ] || install -d -m 0700 /var/lib/pdp
+if [ -d /run/systemd/system ]; then
+  systemctl daemon-reload >/dev/null 2>&1 || :
+  if [ "$1" -ge 2 ] 2>/dev/null; then systemctl try-restart pdp-agent.service >/dev/null 2>&1 || :; fi
+fi
+if [ ! -f /etc/pdp/agent.json ]; then
+  echo "pdp-agent: not configured yet. Next step (values from the console):"
+  echo "  pdp-agent-install --server https://<gateway> --token <token> --ca-sha256 <fingerprint> [--pull | --image-tar FILE]"
+fi
+exit 0

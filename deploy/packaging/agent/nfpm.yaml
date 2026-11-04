@@ -1,0 +1,86 @@
+# nfpm package definition for the PDP Linux agent (.deb and .rpm). Build with deploy/packaging/agent/build.sh, which
+# stages the generated files (defaults, copyright, changelog, man page) and runs nfpm from the repository root.
+#
+# The package carries the systemd unit exactly as it is in deploy/systemd/pdp-agent.service at build time (not a
+# copy kept here), the pdp-agent-install helper and example configuration. The agent itself is the container image
+# (pdp/agent), pulled from a registry or `docker load`ed; it is not part of this package.
+name: pdp-agent
+arch: amd64
+platform: linux
+version: ${PDP_VERSION}
+version_schema: semver
+release: "1"
+section: admin
+priority: optional
+maintainer: ${PDP_MAINTAINER}
+vendor: PDP
+homepage: ${PDP_HOMEPAGE}
+license: Proprietary
+description: |-
+  PDP provenance-based intrusion detection endpoint agent (service, installer)
+  Installs the pdp-agent systemd service, which runs the PDP agent
+  container image (eBPF collector, local detection) with docker, and the
+  pdp-agent-install helper, which writes /etc/pdp/agent.json and agent.env,
+  verifies the server CA fingerprint and enrols the endpoint. The container
+  image is pulled from a registry or loaded from an image archive.
+
+contents:
+  - src: ./deploy/systemd/pdp-agent.service
+    dst: /usr/lib/systemd/system/pdp-agent.service
+    file_info: { mode: 0644 }
+  - src: ./deploy/packaging/agent/pdp-agent-install
+    dst: /usr/sbin/pdp-agent-install
+    file_info: { mode: 0755 }
+  - src: ./dist/agent/.stage/defaults
+    dst: /usr/share/pdp-agent/defaults
+    file_info: { mode: 0644 }
+  - src: ./deploy/packaging/agent/agent.json.example
+    dst: /usr/share/pdp-agent/agent.json.example
+    file_info: { mode: 0644 }
+  - src: ./deploy/packaging/agent/agent.env.example
+    dst: /usr/share/pdp-agent/agent.env.example
+    file_info: { mode: 0644 }
+  - src: ./dist/agent/.stage/pdp-agent-install.8.gz
+    dst: /usr/share/man/man8/pdp-agent-install.8.gz
+    file_info: { mode: 0644 }
+  - src: ./dist/agent/.stage/copyright
+    dst: /usr/share/doc/pdp-agent/copyright
+    file_info: { mode: 0644 }
+  - src: ./dist/agent/.stage/changelog.Debian.gz
+    dst: /usr/share/doc/pdp-agent/changelog.Debian.gz
+    file_info: { mode: 0644 }
+    packager: deb
+  - src: ./deploy/packaging/agent/lintian-overrides
+    dst: /usr/share/lintian/overrides/pdp-agent
+    file_info: { mode: 0644 }
+    packager: deb
+
+overrides:
+  deb:
+    depends:
+      - docker.io | docker-ce | moby-engine
+    recommends:
+      - curl
+      - openssl
+    scripts:
+      postinstall: ./deploy/packaging/agent/deb/postinst
+      preremove: ./deploy/packaging/agent/deb/prerm
+      postremove: ./deploy/packaging/agent/deb/postrm
+  rpm:
+    depends:
+      - /usr/bin/docker
+    recommends:
+      - curl
+      - openssl
+    scripts:
+      postinstall: ./deploy/packaging/agent/rpm/post
+      preremove: ./deploy/packaging/agent/rpm/preun
+      postremove: ./deploy/packaging/agent/rpm/postun
+
+rpm:
+  group: System Environment/Daemons
+  summary: PDP provenance-based intrusion detection endpoint agent
+  compression: xz
+
+deb:
+  compression: xz

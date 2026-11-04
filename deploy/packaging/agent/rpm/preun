@@ -1,0 +1,6 @@
+#!/bin/sh
+# rpm %preun: $1 = 0 on erase, 1 on upgrade
+if [ "$1" -eq 0 ] 2>/dev/null && [ -d /run/systemd/system ]; then
+  systemctl disable --now pdp-agent.service >/dev/null 2>&1 || :
+fi
+exit 0

@@ -1,0 +1,7 @@
+#!/bin/sh
+# rpm %postun: $1 = 0 on erase, 1 on upgrade. /etc/pdp (token) and /var/lib/pdp (identity) are left in place:
+# rpm has no purge; delete them by hand when the endpoint is retired.
+if [ -d /run/systemd/system ]; then
+  systemctl daemon-reload >/dev/null 2>&1 || :
+fi
+exit 0

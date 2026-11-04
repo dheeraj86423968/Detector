@@ -1,0 +1,187 @@
+#!/bin/bash
+# pdp-agent-install: configure and start the PDP endpoint agent installed by the pdp-agent package.
+#
+# Writes /etc/pdp/agent.json and /etc/pdp/agent.env (enrolment token, CA fingerprint, agent image), optionally loads or
+# pulls the agent image, checks the CA fingerprint against the server, then enables and starts pdp-agent.service.
+# The unit (/usr/lib/systemd/system/pdp-agent.service) runs the agent image with docker; see `man pdp-agent-install`.
+set -euo pipefail
+
+DEFAULTS=/usr/share/pdp-agent/defaults
+PDP_AGENT_IMAGE_DEFAULT=pdp/agent:latest
+PDP_PACKAGE_VERSION=unknown
+# shellcheck source=/dev/null
+[ -r "$DEFAULTS" ] && . "$DEFAULTS"
+
+ETC=${PDP_ETC_DIR:-/etc/pdp}
+DATA=/var/lib/pdp
+UNIT=pdp-agent.service
+
+server="" agent_url="" token="" ca="" image="" image_tar="" pull=0 source=ebpf tz=UTC
+verify=1 start=1 force=0
+
+usage() {
+  cat <<EOF
+Usage: pdp-agent-install --server URL --ca-sha256 FINGERPRINT [--token TOKEN] [options]
+
+Required:
+  --server URL       gateway console/enrolment URL, e.g. https://pdp.example.com
+  --ca-sha256 FP     CA fingerprint shown in the console with the enrolment token (hex sha256, ':' allowed)
+  --token TOKEN      one-time enrolment token (not needed if this host is already enrolled)
+
+Options:
+  --agent-url URL    agent mTLS API (default: the server host on port 8443 when --server uses the default
+                     port 443; required when the gateway publishes non-default ports)
+  --image REF        agent image (default: ${PDP_AGENT_IMAGE_DEFAULT})
+  --image-tar FILE   'docker load' this image archive first (air-gapped installs; .tar or .tar.gz)
+  --pull             'docker pull' the image first
+  --source KIND      collector: ebpf (default), auditd or strace
+  --tz TZ            calendar for baseline days (default UTC)
+  --no-verify        do not compare --ca-sha256 with <server>/dl/ca.pem before enrolment
+  --no-start         write the configuration only; do not enable/start ${UNIT}
+  --force            overwrite an existing ${ETC}/agent.json
+  -h, --help         this help;  --version  package version
+EOF
+}
+
+die() { echo "pdp-agent-install: error: $*" >&2; exit 1; }
+warn() { echo "pdp-agent-install: warning: $*" >&2; }
+info() { echo "pdp-agent-install: $*"; }
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --server) server=${2:?}; shift ;;
+    --agent-url) agent_url=${2:?}; shift ;;
+    --token) token=${2:?}; shift ;;
+    --ca-sha256) ca=${2:?}; shift ;;
+    --image) image=${2:?}; shift ;;
+    --image-tar) image_tar=${2:?}; shift ;;
+    --pull) pull=1 ;;
+    --source) source=${2:?}; shift ;;
+    --tz) tz=${2:?}; shift ;;
+    --no-verify) verify=0 ;;
+    --no-start) start=0 ;;
+    --force) force=1 ;;
+    --version) echo "pdp-agent-install ${PDP_PACKAGE_VERSION}"; exit 0 ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage >&2; die "unknown argument: $1" ;;
+  esac
+  shift
+done
+
+[ "$(id -u)" -eq 0 ] || die "must run as root"
+[ -n "$server" ] || { usage >&2; die "--server is required"; }
+[ -n "$ca" ] || { usage >&2; die "--ca-sha256 is required (shown in the console next to the enrolment token)"; }
+image=${image:-$PDP_AGENT_IMAGE_DEFAULT}
+
+case "$server" in https://*) ;; *) die "--server must be an https:// URL" ;; esac
+server=${server%/}
+ca_norm=$(printf '%s' "$ca" | sed -E 's/^[Ss][Hh][Aa]-?256 *[Ff]ingerprint *= *//' | tr -d ': ' | tr 'A-F' 'a-f')
+printf '%s' "$ca_norm" | grep -Eq '^[0-9a-f]{64}$' || die "--ca-sha256 must be a hex sha256 (64 hex digits, ':' separators allowed)"
+case "$source" in ebpf|auditd|strace) ;; *) die "--source must be ebpf, auditd or strace" ;; esac
+
+# host[:port] of the server URL; derive the agent URL for the default port layout (console 443, agent 8443)
+hostport=${server#https://}; hostport=${hostport%%/*}
+if [ -z "$agent_url" ]; then
+  case "$hostport" in
+    \[*\]:443|\[*\]) agent_url="https://${hostport%:443}:8443" ;;
+    *:443) agent_url="https://${hostport%:443}:8443" ;;
+    *:*) die "--server uses a non-default port ($hostport); pass --agent-url explicitly (the gateway's agent port)" ;;
+    *) agent_url="https://${hostport}:8443" ;;
+  esac
+fi
+case "$agent_url" in https://*) ;; *) die "--agent-url must be an https:// URL" ;; esac
+agent_url=${agent_url%/}
+
+enrolled=0
+[ -s "$DATA/pki/agent.pem" ] && enrolled=1
+if [ -z "$token" ] && [ "$enrolled" -eq 0 ]; then
+  die "--token is required: this host is not enrolled yet ($DATA/pki/agent.pem missing)"
+fi
+
+# --- pre-flight (warnings only: the agent itself reports precise errors at start) ---
+command -v docker >/dev/null 2>&1 || die "docker is not installed (the agent runs as a container)"
+docker info >/dev/null 2>&1 || warn "the docker daemon is not reachable; start docker before the agent"
+if [ "$source" = ebpf ]; then
+  [ -e /sys/kernel/btf/vmlinux ] || warn "/sys/kernel/btf/vmlinux missing: the eBPF collector needs a kernel with BTF (>= 5.8 stock distro kernel)"
+  [ -e "/lib/modules/$(uname -r)/build" ] || warn "kernel headers for $(uname -r) not found; images that compile the eBPF program at start need linux-headers-$(uname -r)"
+fi
+
+# --- image ---
+if [ -n "$image_tar" ]; then
+  [ -r "$image_tar" ] || die "cannot read $image_tar"
+  info "loading image archive $image_tar"
+  docker load -i "$image_tar"
+fi
+if [ "$pull" -eq 1 ]; then
+  info "pulling $image"
+  docker pull "$image"
+fi
+if ! docker image inspect "$image" >/dev/null 2>&1; then
+  warn "image $image is not present locally; the service will fail until it is pulled (use --pull or --image-tar)"
+fi
+
+# --- CA fingerprint check against the server (the agent verifies it again when it enrols) ---
+if [ "$verify" -eq 1 ]; then
+  if command -v curl >/dev/null 2>&1 && command -v openssl >/dev/null 2>&1; then
+    # -k is fine here: the downloaded certificate is only compared with the fingerprint given out of band
+    if pem=$(curl -fsSk --max-time 15 "$server/dl/ca.pem"); then
+      got=$(printf '%s\n' "$pem" | openssl x509 -outform der 2>/dev/null | sha256sum | cut -d' ' -f1)
+      [ "$got" = "$ca_norm" ] || die "server CA fingerprint is $got, expected $ca_norm: refusing to configure (wrong server or interception?)"
+      info "server CA fingerprint verified ($ca_norm)"
+    else
+      warn "could not fetch $server/dl/ca.pem; skipping the fingerprint pre-check (the agent still verifies it at enrolment)"
+    fi
+  else
+    warn "curl/openssl not installed; skipping the fingerprint pre-check (the agent still verifies it at enrolment)"
+  fi
+fi
+
+# --- configuration ---
+umask 077
+install -d -m 0750 "$ETC"
+[ -d "$DATA" ] || install -d -m 0700 "$DATA"
+if [ -e "$ETC/agent.json" ] && [ "$force" -ne 1 ]; then
+  info "keeping existing $ETC/agent.json (use --force to overwrite)"
+else
+  json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+  tmp=$(mktemp "$ETC/.agent.json.XXXXXX")
+  cat >"$tmp" <<EOF
+{
+  "server_url": "$(json_str "$server")",
+  "agent_url": "$(json_str "$agent_url")",
+  "data_dir": "/var/lib/pdp",
+  "pki_dir": "/var/lib/pdp/pki",
+  "day_tz": "$(json_str "$tz")",
+  "source": {"kind": "$source"}
+}
+EOF
+  chmod 0644 "$tmp"; mv -f "$tmp" "$ETC/agent.json"
+  info "wrote $ETC/agent.json"
+fi
+# agent.env overrides the unit's Environment= defaults (EnvironmentFile wins); it holds the token, so mode 0600
+tmp=$(mktemp "$ETC/.agent.env.XXXXXX")
+{
+  echo "# written by pdp-agent-install $(date -u +%Y-%m-%dT%H:%M:%SZ); read by $UNIT"
+  [ -n "$token" ] && echo "PDP_ENROLL_TOKEN=$token"
+  echo "PDP_CA_SHA256=$ca_norm"
+  echo "PDP_AGENT_IMAGE=$image"
+} >"$tmp"
+chmod 0600 "$tmp"; mv -f "$tmp" "$ETC/agent.env"
+info "wrote $ETC/agent.env (mode 0600)"
+
+# --- service ---
+if [ "$start" -eq 0 ]; then
+  info "configuration written; start with: systemctl enable --now $UNIT"
+  exit 0
+fi
+if [ ! -d /run/systemd/system ]; then
+  warn "systemd is not running here; start the agent with: systemctl enable --now $UNIT (once systemd runs)"
+  exit 0
+fi
+systemctl daemon-reload
+if systemctl is-active --quiet "$UNIT"; then
+  systemctl enable "$UNIT" && systemctl restart "$UNIT"
+else
+  systemctl enable --now "$UNIT"
+fi
+info "$UNIT started; follow it with: journalctl -u $UNIT -f"

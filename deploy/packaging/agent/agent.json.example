@@ -1,0 +1,8 @@
+{
+  "server_url": "https://pdp.example.com",
+  "agent_url": "https://pdp.example.com:8443",
+  "data_dir": "/var/lib/pdp",
+  "pki_dir": "/var/lib/pdp/pki",
+  "day_tz": "UTC",
+  "source": {"kind": "ebpf"}
+}

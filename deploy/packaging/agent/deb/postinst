@@ -1,0 +1,29 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  configure)
+    [ -d /etc/pdp ] || install -d -m 0750 /etc/pdp
+    [ -d /var/lib/pdp ] || install -d -m 0700 /var/lib/pdp
+    # register the unit with systemd's preset machinery without enabling it: it cannot start before
+    # pdp-agent-install has written /etc/pdp/agent.json and the enrolment token
+    if command -v deb-systemd-helper >/dev/null; then
+      deb-systemd-helper update-state pdp-agent.service >/dev/null || true
+    fi
+    if [ -d /run/systemd/system ]; then
+      systemctl --system daemon-reload >/dev/null || true
+      # upgrade of a configured agent: pick up the new unit / image reference
+      if [ -n "$2" ] && command -v deb-systemd-invoke >/dev/null; then
+        deb-systemd-invoke try-restart pdp-agent.service >/dev/null || true
+      fi
+    fi
+    if [ ! -f /etc/pdp/agent.json ]; then
+      echo "pdp-agent: not configured yet. Next step (values from the console):"
+      echo "  pdp-agent-install --server https://<gateway> --token <token> --ca-sha256 <fingerprint> [--pull | --image-tar FILE]"
+    fi
+    ;;
+  abort-upgrade|abort-remove|abort-deconfigure) ;;
+  *) echo "postinst called with unknown argument '$1'" >&2; exit 1 ;;
+esac
+
+exit 0

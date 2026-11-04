@@ -1,0 +1,29 @@
+#!/bin/sh
+set -e
+
+if [ -d /run/systemd/system ]; then
+  systemctl --system daemon-reload >/dev/null || true
+fi
+
+case "$1" in
+  remove)
+    if command -v deb-systemd-helper >/dev/null; then
+      deb-systemd-helper mask pdp-agent.service >/dev/null || true
+    fi
+    ;;
+  purge)
+    if command -v deb-systemd-helper >/dev/null; then
+      deb-systemd-helper purge pdp-agent.service >/dev/null || true
+      deb-systemd-helper unmask pdp-agent.service >/dev/null || true
+    fi
+    # configuration written by pdp-agent-install (holds the enrolment token)
+    rm -f /etc/pdp/agent.json /etc/pdp/agent.env
+    rmdir /etc/pdp 2>/dev/null || true
+    # the agent identity, spool and bundles stay: delete /var/lib/pdp by hand to re-enrol from scratch
+    if [ -d /var/lib/pdp ]; then
+      echo "pdp-agent: kept /var/lib/pdp (agent identity and data); remove it manually if this endpoint is retired"
+    fi
+    ;;
+esac
+
+exit 0

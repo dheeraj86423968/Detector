@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = remove ] && [ -d /run/systemd/system ] && command -v deb-systemd-invoke >/dev/null; then
+  deb-systemd-invoke stop pdp-agent.service >/dev/null || true
+fi
+
+exit 0
