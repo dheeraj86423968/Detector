@@ -251,3 +251,6 @@ pulls the agent from `<host>`'s read-only registry, writes the configuration, st
   users, endpoints, endpoints_online, alerts_7d, last_activity|null}]}`
 - `PATCH /api/operator/orgs/{id}` `{disabled?: bool, max_endpoints?: int}` -> `{ok, org}`. A disabled organisation's
   users cannot sign in; its agents keep running.
+- `DELETE /api/operator/orgs/{id}` -> `{ok, endpoints_deleted}`: offboards a client - deletes the organisation and
+  everything it owns (users, endpoints and their telemetry, alerts, models, checks, allow list, invites). Only a
+  disabled organisation can be deleted; the operator's own organisation never.

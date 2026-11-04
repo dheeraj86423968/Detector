@@ -229,6 +229,7 @@ def _checks(c, endpoint_id: str) -> list[dict]:
 
 @router.get("/api/endpoints/{endpoint_id}/overview")
 def endpoint_overview(endpoint_id: str, s=Depends(session)):
+    require_endpoint(s, endpoint_id)
     ep = _one_endpoint(s, endpoint_id)
     with db.conn() as c:
         row = db.q(c, "SELECT * FROM endpoints WHERE id=%s", (endpoint_id,), one=True)
@@ -320,6 +321,7 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
 
 @router.get("/api/endpoints/{endpoint_id}/checks")
 def endpoint_checks(endpoint_id: str, s=Depends(session)):
+    require_endpoint(s, endpoint_id)
     _one_endpoint(s, endpoint_id)
     with db.conn() as c:
         return {"ok": True, "checks": _checks(c, endpoint_id)}
@@ -327,6 +329,7 @@ def endpoint_checks(endpoint_id: str, s=Depends(session)):
 
 @router.post("/api/endpoints/{endpoint_id}/checks")
 def run_check(endpoint_id: str, s=Depends(triager)):
+    require_endpoint(s, endpoint_id)
     _one_endpoint(s, endpoint_id)
     with db.conn() as c:
         ep = db.q(c, "SELECT current_bundle, phase FROM endpoints WHERE id=%s", (endpoint_id,), one=True)

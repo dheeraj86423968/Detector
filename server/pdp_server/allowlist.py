@@ -90,9 +90,10 @@ def matches(entry: dict, alert: dict) -> bool:
     return False
 
 
-def entries_for(c, endpoint_id: str | None) -> list[dict]:
-    rows = db.q(c, "SELECT * FROM allowlist ORDER BY created_at")
-    return [r for r in rows if endpoint_id is None or r["endpoint_ids"] is None or str(endpoint_id) in set(r["endpoint_ids"])]
+def entries_for(c, endpoint_id: str) -> list[dict]:
+    """Entries that apply to an endpoint: its organisation's entries for all endpoints or naming it."""
+    rows = db.q(c, "SELECT * FROM allowlist WHERE org_id = (SELECT org_id FROM endpoints WHERE id=%s) ORDER BY created_at", (endpoint_id,))
+    return [r for r in rows if r["endpoint_ids"] is None or str(endpoint_id) in set(r["endpoint_ids"])]
 
 
 def effective_config(c, endpoint_id: str, cfg: dict) -> dict:
@@ -111,6 +112,7 @@ def mark_alerts(c, entry: dict, where_status=("open", "ack")) -> int:
     params = [list(where_status)]
     q = ("SELECT id, endpoint_id, ntype, label, coalesce(layer,'learned') AS layer, rule, reasons FROM alerts "
          "WHERE allowed_by IS NULL AND status = ANY(%s)")
+    q += " AND endpoint_id IN (SELECT id FROM endpoints WHERE org_id=%s)"; params.append(entry["org_id"])
     if entry.get("endpoint_ids") is not None:
         q += " AND endpoint_id = ANY(%s::uuid[])"; params.append(list(entry["endpoint_ids"]))
     ids = [a["id"] for a in db.q(c, q, tuple(params)) if matches(entry, a)]
@@ -148,8 +150,8 @@ def migrate(c) -> None:
     for ep in db.q(c, "SELECT id, config FROM endpoints WHERE config ? 'approved_executables' AND jsonb_array_length(config->'approved_executables') > 0"):
         for prog in ep["config"]["approved_executables"]:
             if not db.q(c, "SELECT 1 FROM allowlist WHERE kind='program' AND value=%s AND endpoint_ids = %s::jsonb", (prog, json.dumps([str(ep["id"])])), one=True):
-                db.q(c, "INSERT INTO allowlist (kind, value, endpoint_ids, note) VALUES ('program', %s, %s, 'approved before 0.4')",
-                     (prog, json.dumps([str(ep["id"])])))
+                db.q(c, "INSERT INTO allowlist (kind, value, endpoint_ids, note, org_id) VALUES ('program', %s, %s, 'approved before 0.4', "
+                        "(SELECT org_id FROM endpoints WHERE id=%s))", (prog, json.dumps([str(ep["id"])]), ep["id"]))
         db.q(c, "UPDATE endpoints SET config = config - 'approved_executables' WHERE id=%s", (ep["id"],))
     for ep in db.q(c, "SELECT id FROM endpoints WHERE phase='retired'"):
         forget_endpoint(c, str(ep["id"]))
@@ -169,9 +171,11 @@ def list_allowlist(s=Depends(session), endpoint_id: str | None = None):
         require_endpoint(s, endpoint_id)
     scope = scope_list(s)
     with db.conn() as c:
-        rows = db.q(c, "SELECT a.*, u.username AS created_by_name FROM allowlist a LEFT JOIN users u ON u.id=a.created_by ORDER BY a.created_at DESC")
-        names = {str(r["id"]): r["name"] for r in db.q(c, "SELECT id, name FROM endpoints")}
-        counts = {r["allowed_by"]: r["n"] for r in db.q(c, "SELECT allowed_by, count(*) AS n FROM alerts WHERE allowed_by IS NOT NULL GROUP BY 1")}
+        rows = db.q(c, "SELECT a.*, u.username AS created_by_name FROM allowlist a LEFT JOIN users u ON u.id=a.created_by "
+                       "WHERE a.org_id=%s ORDER BY a.created_at DESC", (s["org"],))
+        names = {str(r["id"]): r["name"] for r in db.q(c, "SELECT id, name FROM endpoints WHERE org_id=%s", (s["org"],))}
+        counts = {r["allowed_by"]: r["n"] for r in db.q(c, "SELECT allowed_by, count(*) AS n FROM alerts WHERE allowed_by IS NOT NULL "
+                                                           "AND endpoint_id = ANY(%s::uuid[]) GROUP BY 1", (scope or [],))}
     out = []
     for r in rows:
         eps = r["endpoint_ids"]
@@ -217,15 +221,15 @@ def add_entry(req: NewEntry, s=Depends(admin)):
         eps = None
         if req.endpoints is not None:
             from .api import _check_endpoint_ids
-            eps = _check_endpoint_ids(c, req.endpoints)
+            eps = _check_endpoint_ids(c, req.endpoints, s)
             if not eps:
                 raise HTTPException(400, "choose at least one endpoint, or all endpoints")
-        dup = db.q(c, "SELECT id FROM allowlist WHERE kind=%s AND value=%s AND coalesce(rule,'')=%s AND endpoint_ids IS NOT DISTINCT FROM %s::jsonb",
-                   (req.kind, value, req.rule or "", json.dumps(eps) if eps is not None else None), one=True)
+        dup = db.q(c, "SELECT id FROM allowlist WHERE org_id=%s AND kind=%s AND value=%s AND coalesce(rule,'')=%s AND endpoint_ids IS NOT DISTINCT FROM %s::jsonb",
+                   (s["org"], req.kind, value, req.rule or "", json.dumps(eps) if eps is not None else None), one=True)
         if dup:
             raise HTTPException(409, "this entry is already on the allow list")
-        row = db.q(c, "INSERT INTO allowlist (kind, value, rule, endpoint_ids, note, created_by) VALUES (%s,%s,%s,%s,%s,%s) RETURNING *",
-                   (req.kind, value, req.rule, json.dumps(eps) if eps is not None else None, (req.note or "").strip() or None, s["u"]), one=True)
+        row = db.q(c, "INSERT INTO allowlist (kind, value, rule, endpoint_ids, note, created_by, org_id) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING *",
+                   (req.kind, value, req.rule, json.dumps(eps) if eps is not None else None, (req.note or "").strip() or None, s["u"], s["org"]), one=True)
         n = mark_alerts(c, row) if req.resolve_open else 0
     return {"ok": True, "id": row["id"], "alerts_allowed": n}
 
@@ -233,7 +237,7 @@ def add_entry(req: NewEntry, s=Depends(admin)):
 @router.delete("/api/allowlist/{entry_id}")
 def delete_entry(entry_id: int, s=Depends(admin)):
     with db.conn() as c:
-        if not db.q(c, "DELETE FROM allowlist WHERE id=%s RETURNING id", (entry_id,), one=True):
+        if not db.q(c, "DELETE FROM allowlist WHERE id=%s AND org_id=%s RETURNING id", (entry_id, s["org"]), one=True):
             raise HTTPException(404, "not found")
         db.q(c, "UPDATE alerts SET allowed_by=NULL WHERE allowed_by=%s", (entry_id,))   # they stay marked as false alarms
     return {"ok": True}

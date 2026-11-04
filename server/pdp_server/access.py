@@ -3,8 +3,11 @@
 Roles:   admin    everything (users and access, endpoints and their settings, triage, detection checks)
          analyst  view everything in scope, triage incidents and alerts, run detection checks
          viewer   view everything in scope, read-only
-Scope:   users.endpoints NULL = all endpoints; otherwise a JSON list of endpoint ids the user may see. Admins always
-         see every endpoint. Objects outside a user's scope answer 404, so a scoped user cannot probe other endpoints.
+Tenancy: every user belongs to one organisation (orgs) and only ever sees that organisation's endpoints; this holds
+         for admins too. The platform operator flag (users.operator) adds the organisation list (usage only), never
+         another organisation's data.
+Scope:   the organisation's endpoints, narrowed by users.endpoints (NULL = all of them; admins always see all of their
+         organisation's). Objects outside a user's scope answer 404, so nobody can probe other endpoints.
 """
 from __future__ import annotations
 
@@ -25,16 +28,25 @@ def session(request: Request) -> dict:
     if not s:
         raise HTTPException(401, "not authenticated")
     with db.conn() as c:
-        u = db.q(c, "SELECT role, auth, disabled, endpoints FROM users WHERE id=%s", (s["u"],), one=True)
-    if not u or u["disabled"]:
-        raise HTTPException(401, "user no longer exists or is disabled")
-    scope = None if u["role"] == "admin" or u["endpoints"] is None else {str(x) for x in u["endpoints"]}
-    return {**s, "r": u["role"], "a": u["auth"], "scope": scope}
+        u = db.q(c, "SELECT u.role, u.auth, u.disabled, u.endpoints, u.org_id, u.operator, o.disabled AS org_disabled, o.name AS org_name "
+                    "FROM users u JOIN orgs o ON o.id = u.org_id WHERE u.id=%s", (s["u"],), one=True)
+        if not u or u["disabled"] or u["org_disabled"]:
+            raise HTTPException(401, "user no longer exists or is disabled")
+        org_eps = {str(r["id"]) for r in db.q(c, "SELECT id FROM endpoints WHERE org_id=%s", (u["org_id"],))}
+    scope = org_eps if u["role"] == "admin" or u["endpoints"] is None else org_eps & {str(x) for x in u["endpoints"]}
+    return {**s, "r": u["role"], "a": u["auth"], "scope": scope, "org": str(u["org_id"]), "org_name": u["org_name"],
+            "op": bool(u["operator"])}
 
 
 def admin(s=Depends(session)) -> dict:
     if s["r"] != "admin":
         raise HTTPException(403, "admin role required")
+    return s
+
+
+def operator(s=Depends(session)) -> dict:
+    if not s["op"]:
+        raise HTTPException(404, "not found")
     return s
 
 
@@ -47,7 +59,8 @@ def triager(s=Depends(session)) -> dict:
 def can(s: dict) -> dict:
     r = s["r"]
     return {"manage_users": r == "admin", "manage_endpoints": r == "admin",
-            "triage": r in ("admin", "analyst"), "run_checks": r in ("admin", "analyst")}
+            "triage": r in ("admin", "analyst"), "run_checks": r in ("admin", "analyst"),
+            "manage_org": r == "admin", "operate": bool(s.get("op"))}
 
 
 def visible(s: dict, endpoint_id) -> bool:
@@ -60,7 +73,8 @@ def require_endpoint(s: dict, endpoint_id) -> None:
 
 
 def scope_list(s: dict) -> list[str] | None:
-    """None = no restriction; else the visible endpoint ids (possibly empty) for `= ANY(%s::uuid[])`."""
+    """The visible endpoint ids (possibly empty) for `= ANY(%s::uuid[])`. A console session always has a scope (its
+    organisation); None only for internal callers that pass no session."""
     return None if s.get("scope") is None else sorted(s["scope"])
 
 

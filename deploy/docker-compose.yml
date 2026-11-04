@@ -54,6 +54,12 @@ services:
       PDP_OIDC_DEFAULT_ROLE: ${PDP_OIDC_DEFAULT_ROLE:-none}
       PDP_OIDC_LABEL: ${PDP_OIDC_LABEL:-Sign in with SSO}
       PDP_PASSWORD_LOGIN: ${PDP_PASSWORD_LOGIN:-enabled}
+      # hosted multi-tenant: client self sign-up (off | code | open), endpoint limit per new organisation
+      PDP_SIGNUP: ${PDP_SIGNUP:-off}
+      PDP_SIGNUP_CODE: ${PDP_SIGNUP_CODE:-}
+      PDP_ORG_MAX_ENDPOINTS: ${PDP_ORG_MAX_ENDPOINTS:-25}
+      PDP_INTERNAL_ORG_NAME: ${PDP_INTERNAL_ORG_NAME:-Internal}
+      PDP_SIGNUPS_PER_HOUR: ${PDP_SIGNUPS_PER_HOUR:-5}
       HTTPS_PROXY: ${PDP_HTTPS_PROXY:-}
       NO_PROXY: ${PDP_NO_PROXY:-kms,localhost,127.0.0.1}
     volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]

@@ -221,7 +221,7 @@ check(admin.call("POST", "/api/users", {"username": "x" + vname, "password": "vi
 viewer = Console()
 viewer.call("POST", "/api/login", {"username": vname, "password": "viewer-pass-123"})
 st, m = viewer.call("GET", "/api/me")
-check(st == 200 and m["role"] == "viewer" and m["can"] == {"manage_users": False, "manage_endpoints": False, "triage": False, "run_checks": False}
+check(st == 200 and m["role"] == "viewer" and m["can"] == {"manage_users": False, "manage_endpoints": False, "triage": False, "run_checks": False, "manage_org": False, "operate": False}
       and m["endpoints"] == [eid], "viewer: read-only permissions and endpoint scope in /api/me")
 st, ve = viewer.call("GET", "/api/endpoints")
 check(st == 200 and [e["id"] for e in ve["endpoints"]] == [eid], "a scoped user sees only their endpoints")

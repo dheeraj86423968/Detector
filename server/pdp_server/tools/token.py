@@ -29,9 +29,10 @@ def main():
         raise SystemExit(f"unknown config keys {sorted(bad)}")
     _validate_config(cfg)
     token = secrets.token_urlsafe(24)
-    with db.conn() as c:
-        db.q(c, "INSERT INTO enroll_tokens (token, name, created_by, expires_at, kind, dataset, config) VALUES (%s,%s,NULL,%s,%s,%s,%s)",
-             (token, a.name, datetime.now(timezone.utc) + timedelta(hours=a.hours), a.kind, a.dataset, json.dumps(cfg)))
+    from pdp_server.orgs import internal_org
+    with db.conn() as c:   # operator tool: tokens for the provider's own (internal) organisation
+        db.q(c, "INSERT INTO enroll_tokens (token, name, created_by, expires_at, kind, dataset, config, org_id) VALUES (%s,%s,NULL,%s,%s,%s,%s,%s)",
+             (token, a.name, datetime.now(timezone.utc) + timedelta(hours=a.hours), a.kind, a.dataset, json.dumps(cfg), internal_org(c)))
     fp = pki.ca_sha256()
     print(json.dumps({"token": token, "ca_sha256": fp, "enroll_command": f"python -m pdp_agent enroll {token} --ca-sha256 {fp}"}))
 

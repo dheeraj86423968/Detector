@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 import psycopg2.extras
 
 from . import auth, db, oidc, pki
-from .access import admin, can, require_endpoint, scope_sql, session, triager, visible
+from .access import admin, require_endpoint, scope_sql, session, triager, visible
 from .graphs import alert_graph, endpoint_timeline, incident_graph
 
 app = FastAPI(title="PDP", docs_url=None, redoc_url=None, openapi_url=None)
@@ -28,8 +28,10 @@ app = FastAPI(title="PDP", docs_url=None, redoc_url=None, openapi_url=None)
 def _include_console_routes():
     from .allowlist import router as allow_router
     from .console import router
+    from .orgs import router as org_router
     app.include_router(router)
     app.include_router(allow_router)
+    app.include_router(org_router)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")
@@ -63,6 +65,9 @@ def initialize():
 def _initialize():
     pki.ensure_pki(SERVER_HOSTNAMES)
     db.init_platform(os.path.join(os.path.dirname(__file__), "schema.sql"))
+    from . import orgs
+    with db.conn() as c:
+        orgs.migrate(c)
     from .allowlist import migrate
     with db.conn() as c:
         migrate(c)
@@ -72,8 +77,9 @@ def _initialize():
     with db.conn() as c:
         if not db.q(c, "SELECT 1 FROM users LIMIT 1"):
             pw = secrets.token_urlsafe(12)
-            created = db.q(c, "INSERT INTO users (username, password_hash, role) VALUES ('admin', %s, 'admin') ON CONFLICT (username) DO NOTHING RETURNING id",
-                           (auth.hash_password(pw),), one=True)
+            from .orgs import internal_org
+            created = db.q(c, "INSERT INTO users (username, password_hash, role, org_id, operator) VALUES ('admin', %s, 'admin', %s, true) "
+                              "ON CONFLICT (username) DO NOTHING RETURNING id", (auth.hash_password(pw), internal_org(c)), one=True)
             if not created:  # created concurrently (cannot happen under the lock, kept for safety)
                 return
             os.makedirs(DATA_DIR, exist_ok=True)
@@ -134,8 +140,11 @@ def enroll(req: EnrollReq):
         if tok.get("dataset"):
             cfg["dataset"], cfg["dataset_host"] = tok["dataset"], "postgres"
         cfg.update(tok.get("config") or {})
-        db.q(c, "INSERT INTO endpoints (id, name, hostname, os, arch, agent_version, phase, kind, config, cert_serial, enrolled_at) "
-                "VALUES (%s,%s,%s,%s,%s,%s,'baseline',%s,%s,%s,now())", (eid, tok["name"], req.hostname, req.os, req.arch, req.agent_version, kind, json.dumps(cfg), serial))
+        if not tok.get("org_id") or db.q(c, "SELECT 1 FROM orgs WHERE id=%s AND disabled", (tok["org_id"],), one=True):
+            raise HTTPException(403, "invalid or expired token")
+        db.q(c, "INSERT INTO endpoints (id, name, hostname, os, arch, agent_version, phase, kind, config, cert_serial, enrolled_at, org_id) "
+                "VALUES (%s,%s,%s,%s,%s,%s,'baseline',%s,%s,%s,now(),%s)",
+             (eid, tok["name"], req.hostname, req.os, req.arch, req.agent_version, kind, json.dumps(cfg), serial, tok["org_id"]))
         db.q(c, "UPDATE enroll_tokens SET used_by=%s WHERE token=%s", (eid, req.token))
     db.init_telemetry(eid)
     return {"ok": True, "endpoint_id": eid, "cert_pem": cert, "ca_pem": pki.ca_pem(), "bundle_signing_pub": pki.signing_public_pem(), "config": cfg}
@@ -304,8 +313,9 @@ def _set_session(response: Response, user_id: int, role: str) -> None:
 @app.get("/api/auth/config")
 def auth_config():
     """Public: which sign-in methods the login page offers."""
+    from .orgs import signup_mode
     return {"ok": True, "sso": oidc.enabled(), "sso_label": oidc.LABEL, "password": oidc.PASSWORD_LOGIN != "disabled",
-            "password_policy": oidc.PASSWORD_LOGIN}
+            "password_policy": oidc.PASSWORD_LOGIN, "signup": signup_mode()}
 
 
 @app.post("/api/login")
@@ -313,7 +323,10 @@ def login(req: Login, response: Response):
     # every HTTPException is raised after its transaction committed (db.conn() rolls back on exceptions)
     failure = None
     with db.conn() as c:
-        u = db.q(c, "SELECT * FROM users WHERE username=%s", (req.username,), one=True)
+        ident = (req.username or "").strip()
+        u = db.q(c, "SELECT u.*, o.disabled AS org_disabled FROM users u JOIN orgs o ON o.id=u.org_id WHERE u.username=%s", (ident,), one=True) or \
+            db.q(c, "SELECT u.*, o.disabled AS org_disabled FROM users u JOIN orgs o ON o.id=u.org_id "
+                    "WHERE u.auth='local' AND lower(u.email)=lower(%s)", (ident,), one=True)
         if u and u.get("locked_until") and u["locked_until"] > datetime.now(timezone.utc):
             failure = (429, "too many failed sign-ins; try again later")
         elif not u or u["auth"] != "local" or u["disabled"] or not auth.verify_password(req.password, u["password_hash"]):
@@ -321,6 +334,8 @@ def login(req: Login, response: Response):
                 db.q(c, "UPDATE users SET failed_logins = failed_logins + 1, locked_until = CASE WHEN failed_logins + 1 >= 5 "
                         "THEN now() + make_interval(secs => LEAST(900, 30 * power(2, failed_logins + 1 - 5))) END WHERE id=%s", (u["id"],))
             failure = (401, "bad credentials")
+        elif u["org_disabled"]:
+            failure = (403, "your organisation's access to PDP is suspended; contact your provider")
         elif not oidc.password_login_allowed(u["role"]):
             failure = (403, "password sign-in is disabled; use single sign-on")
         else:
@@ -387,9 +402,10 @@ def oidc_callback(request: Request, code: str | None = None, state: str | None =
             clash = db.q(c, "SELECT auth FROM users WHERE username=%s", (ident["username"],), one=True)
             if clash:   # never bind an IdP identity to an existing local account (or another IdP subject)
                 return _sso_error(f"the username {ident['username']} is already used by another PDP account; an admin must rename or delete it")
-            uid = db.q(c, "INSERT INTO users (username, password_hash, role, auth, oidc_issuer, oidc_sub, email, last_login) "
-                          "VALUES (%s,'!',%s,'oidc',%s,%s,%s,now()) RETURNING id",
-                       (ident["username"], ident["role"], ident["iss"], ident["sub"], ident["email"]), one=True)["id"]
+            from .orgs import internal_org
+            uid = db.q(c, "INSERT INTO users (username, password_hash, role, auth, oidc_issuer, oidc_sub, email, last_login, org_id) "
+                          "VALUES (%s,'!',%s,'oidc',%s,%s,%s,now(),%s) RETURNING id",
+                       (ident["username"], ident["role"], ident["iss"], ident["sub"], ident["email"], internal_org(c)), one=True)["id"]
     r = RedirectResponse("/#/endpoints", status_code=302)
     _set_session(r, uid, ident["role"])
     r.delete_cookie("pdp_oidc", path="/api/oidc")
@@ -411,13 +427,9 @@ def logout(request: Request, response: Response):
 
 @app.get("/api/me")
 def me(s=Depends(session)):
+    from .orgs import me_body
     with db.conn() as c:
-        u = db.q(c, "SELECT id, username, display_name, role, auth, email, endpoints FROM users WHERE id=%s", (s["u"],), one=True)
-    if not u:
-        raise HTTPException(401, "user no longer exists")
-    return {"ok": True, "role": u["role"], "username": u["username"], "display_name": u["display_name"] or u["username"],
-            "user_id": u["id"], "auth": u["auth"], "email": u["email"],
-            "endpoints": None if u["role"] == "admin" else u["endpoints"], "can": can(s)}
+        return me_body(c, s["u"])
 
 
 class PasswordChange(BaseModel):
@@ -449,15 +461,17 @@ def _user_out(r: dict, names: dict) -> dict:
 @app.get("/api/users")
 def list_users(s=Depends(admin)):
     with db.conn() as c:
-        rows = db.q(c, "SELECT id, username, display_name, role, auth, email, endpoints, disabled, created_at, last_login FROM users ORDER BY lower(coalesce(display_name, username))")
-        names = {str(r["id"]): r["name"] for r in db.q(c, "SELECT id, name FROM endpoints")}
+        rows = db.q(c, "SELECT id, username, display_name, role, auth, email, endpoints, disabled, created_at, last_login FROM users "
+                       "WHERE org_id=%s ORDER BY lower(coalesce(display_name, username))", (s["org"],))
+        names = {str(r["id"]): r["name"] for r in db.q(c, "SELECT id, name FROM endpoints WHERE org_id=%s", (s["org"],))}
     from .access import ROLE_TEXT
     return {"ok": True, "users": [_user_out(r, names) for r in rows],
             "roles": [{"id": k, "text": v} for k, v in ROLE_TEXT.items()],
             "sso": {"enabled": oidc.enabled(), "label": oidc.LABEL, "password_policy": oidc.PASSWORD_LOGIN}}
 
 
-def _check_endpoint_ids(c, ids) -> list[str] | None:
+def _check_endpoint_ids(c, ids, s: dict) -> list[str] | None:
+    """Validate a list of endpoint ids against the caller's scope (their organisation); None = all endpoints."""
     if ids is None:
         return None
     if not isinstance(ids, list) or not all(isinstance(x, str) for x in ids) or len(ids) > 10000:
@@ -466,7 +480,7 @@ def _check_endpoint_ids(c, ids) -> list[str] | None:
         ids = sorted({str(uuidlib.UUID(x)) for x in ids})
     except ValueError:
         raise HTTPException(400, "endpoints: not an endpoint id") from None
-    known = {str(r["id"]) for r in db.q(c, "SELECT id FROM endpoints WHERE id = ANY(%s::uuid[])", (ids,))}
+    known = set(ids) & set(s["scope"] or ())
     if set(ids) - known:
         raise HTTPException(400, f"unknown endpoints: {sorted(set(ids) - known)}")
     return ids
@@ -491,11 +505,14 @@ def create_user(req: NewUser, s=Depends(admin)):
     if len(req.password) < 10:
         raise HTTPException(400, "password must have at least 10 characters")
     with db.conn() as c:
-        eps = _check_endpoint_ids(c, req.endpoints)
-        row = db.q(c, "INSERT INTO users (username, password_hash, role, display_name, email, endpoints) VALUES (%s,%s,%s,%s,%s,%s) "
+        eps = _check_endpoint_ids(c, req.endpoints, s)
+        email = (req.email or "").strip().lower() or None
+        if email and db.q(c, "SELECT 1 FROM users WHERE lower(email)=%s OR lower(username)=%s", (email, email), one=True):
+            raise HTTPException(409, "a user with this email exists")
+        row = db.q(c, "INSERT INTO users (username, password_hash, role, display_name, email, endpoints, org_id) VALUES (%s,%s,%s,%s,%s,%s,%s) "
                       "ON CONFLICT (username) DO NOTHING RETURNING id",
                    (req.username, auth.hash_password(req.password), req.role, (req.display_name or "").strip() or None,
-                    (req.email or "").strip() or None, json.dumps(eps) if eps is not None else None), one=True)
+                    email, json.dumps(eps) if eps is not None else None, s["org"]), one=True)
     if not row:
         raise HTTPException(409, "a user with this username exists")
     return {"ok": True, "id": row["id"]}
@@ -510,7 +527,7 @@ def update_user(user_id: int, body: dict, s=Depends(admin)):
     if set(body) - allowed:
         raise HTTPException(400, f"unknown fields: {sorted(set(body) - allowed)}")
     with db.conn() as c:
-        u = db.q(c, "SELECT * FROM users WHERE id=%s", (user_id,), one=True)
+        u = db.q(c, "SELECT * FROM users WHERE id=%s AND org_id=%s", (user_id, s["org"]), one=True)
         if not u:
             raise HTTPException(404, "user not found")
         sets, params = [], []
@@ -523,9 +540,12 @@ def update_user(user_id: int, body: dict, s=Depends(admin)):
         if "display_name" in body:
             sets.append("display_name=%s"); params.append((str(body["display_name"] or "")[:128]).strip() or None)
         if "email" in body:
-            sets.append("email=%s"); params.append((str(body["email"] or "")[:254]).strip() or None)
+            em = (str(body["email"] or "")[:254]).strip().lower() or None
+            if em and db.q(c, "SELECT 1 FROM users WHERE (lower(email)=%s OR lower(username)=%s) AND id<>%s", (em, em, user_id), one=True):
+                raise HTTPException(409, "a user with this email exists")
+            sets.append("email=%s"); params.append(em)
         if "endpoints" in body:
-            eps = _check_endpoint_ids(c, body["endpoints"])
+            eps = _check_endpoint_ids(c, body["endpoints"], s)
             sets.append("endpoints=%s"); params.append(json.dumps(eps) if eps is not None else None)
         if "disabled" in body:
             if not isinstance(body["disabled"], bool):
@@ -542,15 +562,15 @@ def update_user(user_id: int, body: dict, s=Depends(admin)):
         if u["role"] == "admin" and not u["disabled"] and demote:
             if user_id == s["u"]:
                 raise HTTPException(400, "you cannot remove your own admin access")
-            if _enabled_admins(c) <= 1:
+            if _enabled_admins(c, s["org"]) <= 1:
                 raise HTTPException(400, "this is the last enabled admin")
         if sets:
             db.q(c, f"UPDATE users SET {', '.join(sets)} WHERE id=%s", (*params, user_id))
     return {"ok": True}
 
 
-def _enabled_admins(c) -> int:
-    return db.q(c, "SELECT count(*) AS n FROM users WHERE role='admin' AND NOT disabled", one=True)["n"]
+def _enabled_admins(c, org_id: str) -> int:
+    return db.q(c, "SELECT count(*) AS n FROM users WHERE role='admin' AND NOT disabled AND org_id=%s", (org_id,), one=True)["n"]
 
 
 @app.delete("/api/users/{user_id}")
@@ -558,12 +578,14 @@ def delete_user(user_id: int, s=Depends(admin)):
     if user_id == s["u"]:
         raise HTTPException(400, "you cannot delete yourself")
     with db.conn() as c:
-        u = db.q(c, "SELECT role, disabled FROM users WHERE id=%s", (user_id,), one=True)
+        u = db.q(c, "SELECT role, disabled FROM users WHERE id=%s AND org_id=%s", (user_id, s["org"]), one=True)
         if not u:
             raise HTTPException(404, "user not found")
-        if u["role"] == "admin" and not u["disabled"] and _enabled_admins(c) <= 1:
+        if u["role"] == "admin" and not u["disabled"] and _enabled_admins(c, s["org"]) <= 1:
             raise HTTPException(400, "this is the last enabled admin")
         db.q(c, "UPDATE enroll_tokens SET created_by=NULL WHERE created_by=%s", (user_id,))
+        db.q(c, "UPDATE invites SET created_by=NULL WHERE created_by=%s", (user_id,))
+        db.q(c, "UPDATE invites SET used_by=NULL WHERE used_by=%s", (user_id,))
         db.q(c, "DELETE FROM users WHERE id=%s", (user_id,))
     return {"ok": True}
 
@@ -591,14 +613,18 @@ class NewEndpoint(BaseModel):
 def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
     if req.kind not in ("live", "benchmark", "simulation"):
         raise HTTPException(400, "kind must be live, benchmark or simulation")
+    if req.kind != "live" and not s["op"]:
+        raise HTTPException(403, "only the platform operator can create benchmark or simulation endpoints")
     bad = set(req.config) - CONFIG_KEYS
     if bad:
         raise HTTPException(400, f"unknown config keys: {sorted(bad)}")
     _validate_config(req.config)
     token = secrets.token_urlsafe(24)
+    from .orgs import check_endpoint_limit
     with db.conn() as c:
-        db.q(c, "INSERT INTO enroll_tokens (token, name, created_by, expires_at, kind, dataset, config) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-             (token, req.name, s["u"], datetime.now(timezone.utc) + timedelta(hours=24), req.kind, req.dataset, json.dumps(req.config)))
+        check_endpoint_limit(c, s["org"])
+        db.q(c, "INSERT INTO enroll_tokens (token, name, created_by, expires_at, kind, dataset, config, org_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+             (token, req.name, s["u"], datetime.now(timezone.utc) + timedelta(hours=24), req.kind, req.dataset, json.dumps(req.config), s["org"]))
     fp = pki.ca_sha256()
     host = (request.headers.get("host") or "localhost").split(":")[0]
     server = f"https://{host}" + ("" if os.environ.get("PDP_CONSOLE_PORT", "443") == "443" else f":{os.environ['PDP_CONSOLE_PORT']}")
@@ -608,7 +634,8 @@ def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
               f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN={token} -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
               f"  -e PDP_SERVER_URL={server} -e PDP_AGENT_URL={agent} {image} run")
     return {"ok": True, "token": token, "expires_in_hours": 24, "ca_sha256": fp, "server_url": server, "agent_url": agent,
-            "install_command": f"sudo pdp-agent-install --server {server} --agent-url {agent} --token {token} --ca-sha256 {fp}",
+            "install_command": f"curl -fsSL {server}/install.sh | sudo bash -s -- --token {token}",
+            "package_command": f"sudo pdp-agent-install --server {server} --agent-url {agent} --token {token} --ca-sha256 {fp}",
             "docker_command": docker,
             "enroll_command": f"python -m pdp_agent enroll {token} --ca-sha256 {fp}"}
 
@@ -638,6 +665,7 @@ class ConfigPatch(BaseModel):
 def patch_config(endpoint_id: str, req: ConfigPatch, s=Depends(admin)):
     """Merge keys into the endpoint configuration (baseline_days, tz, retain_baseline_events, train.*); the agent
     follows the server's configuration on its next status poll."""
+    require_endpoint(s, endpoint_id)
     bad = set(req.config) - CONFIG_KEYS
     if bad:
         raise HTTPException(400, f"unknown config keys: {sorted(bad)}")
@@ -664,6 +692,7 @@ class ApprovalReq(BaseModel):
 def approve_executables(endpoint_id: str, req: ApprovalReq, s=Depends(admin)):
     """Layer-1 approvals (kept for older consoles and scripts): program entries of the allow list for this endpoint.
     Approving resolves the endpoint's open 'new program' alerts for these programs."""
+    require_endpoint(s, endpoint_id)
     from .allowlist import entries_for, mark_alerts
     items = [x.strip() for x in req.executables if x and x.strip()]
     _validate_config({"approved_executables": items})
@@ -674,8 +703,8 @@ def approve_executables(endpoint_id: str, req: ApprovalReq, s=Depends(admin)):
         for prog in items:
             have = [e for e in mine if e["value"] == prog]
             if req.approve and not have:
-                row = db.q(c, "INSERT INTO allowlist (kind, value, endpoint_ids, created_by) VALUES ('program', %s, %s, %s) RETURNING *",
-                           (prog, json.dumps([endpoint_id]), s["u"]), one=True)
+                row = db.q(c, "INSERT INTO allowlist (kind, value, endpoint_ids, created_by, org_id) VALUES ('program', %s, %s, %s, %s) RETURNING *",
+                           (prog, json.dumps([endpoint_id]), s["u"], s["org"]), one=True)
                 mark_alerts(c, row)
             elif not req.approve:
                 for e in have:
@@ -730,6 +759,7 @@ def sys_path_engine():
 def retire_endpoint(endpoint_id: str, s=Depends(admin)):
     """Permanently retire an endpoint: its certificate is no longer accepted and its raw telemetry is dropped.
     Alerts, windows and bundles are kept for the record."""
+    require_endpoint(s, endpoint_id)
     with db.conn() as c:
         row = db.q(c, "UPDATE endpoints SET phase='retired' WHERE id=%s RETURNING id", (endpoint_id,), one=True)
         if not row:
@@ -747,6 +777,7 @@ class AgentCommand(BaseModel):
 
 @app.post("/api/endpoints/{endpoint_id}/commands")
 def queue_command(endpoint_id: str, req: AgentCommand, s=Depends(admin)):
+    require_endpoint(s, endpoint_id)
     if req.command not in AGENT_COMMANDS:
         raise HTTPException(400, f"command must be one of {list(AGENT_COMMANDS)}")
     cid = pki.new_id()
@@ -759,6 +790,7 @@ def queue_command(endpoint_id: str, req: AgentCommand, s=Depends(admin)):
 
 @app.post("/api/endpoints/{endpoint_id}/retrain")
 def retrain(endpoint_id: str, s=Depends(admin)):
+    require_endpoint(s, endpoint_id)
     with db.conn() as c:
         ep = db.q(c, "SELECT phase FROM endpoints WHERE id=%s", (endpoint_id,), one=True)
         if not ep or ep["phase"] == "retired":
@@ -863,7 +895,8 @@ def get_incident(endpoint_id: str, s=Depends(session), focus_ns: int | None = No
 @app.get("/api/jobs")
 def list_jobs(s=Depends(admin)):
     with db.conn() as c:
-        rows = db.q(c, "SELECT j.*, e.name AS endpoint FROM jobs j LEFT JOIN endpoints e ON e.id=j.endpoint_id ORDER BY j.created_at DESC LIMIT 100")
+        rows = db.q(c, "SELECT j.*, e.name AS endpoint FROM jobs j JOIN endpoints e ON e.id=j.endpoint_id WHERE e.org_id=%s "
+                       "ORDER BY j.created_at DESC LIMIT 100", (s["org"],))
     return {"ok": True, "jobs": [dict(r, id=str(r["id"]), endpoint_id=str(r["endpoint_id"]) if r["endpoint_id"] else None) for r in rows]}
 
 

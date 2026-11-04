@@ -96,3 +96,23 @@ CREATE TABLE IF NOT EXISTS allowlist (
   rule TEXT, endpoint_ids JSONB, note TEXT, created_by INT REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ DEFAULT now());
 ALTER TABLE alerts ADD COLUMN IF NOT EXISTS allowed_by INT;
 CREATE INDEX IF NOT EXISTS alerts_allowed ON alerts (allowed_by) WHERE allowed_by IS NOT NULL;
+
+-- 0.5: organisations (hosted multi-tenant). Every user, endpoint, enrolment token and allow-list entry belongs to one
+-- organisation; existing rows are moved into the internal organisation by orgs.migrate().
+CREATE TABLE IF NOT EXISTS orgs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT now(),
+  disabled BOOLEAN NOT NULL DEFAULT false, max_endpoints INT NOT NULL DEFAULT 25, internal BOOLEAN NOT NULL DEFAULT false);
+CREATE UNIQUE INDEX IF NOT EXISTS orgs_internal ON orgs (internal) WHERE internal;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS org_id UUID REFERENCES orgs(id);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS operator BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE endpoints ADD COLUMN IF NOT EXISTS org_id UUID REFERENCES orgs(id);
+ALTER TABLE enroll_tokens ADD COLUMN IF NOT EXISTS org_id UUID REFERENCES orgs(id);
+ALTER TABLE allowlist ADD COLUMN IF NOT EXISTS org_id UUID REFERENCES orgs(id);
+CREATE INDEX IF NOT EXISTS endpoints_org ON endpoints (org_id);
+CREATE INDEX IF NOT EXISTS users_org ON users (org_id);
+CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users (lower(email)) WHERE email IS NOT NULL AND auth = 'local';
+CREATE TABLE IF NOT EXISTS invites (
+  id SERIAL PRIMARY KEY, token TEXT UNIQUE NOT NULL, org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  email TEXT, role TEXT NOT NULL CHECK (role IN ('admin','analyst','viewer')), endpoints JSONB,
+  created_by INT REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ, used_by INT REFERENCES users(id) ON DELETE SET NULL, revoked BOOLEAN NOT NULL DEFAULT false);
