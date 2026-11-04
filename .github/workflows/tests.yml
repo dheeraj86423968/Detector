@@ -1,0 +1,71 @@
+# Unit tests: on every push / pull request, and as the first stage of release.yml (workflow_call).
+# The unit tests are plain Python scripts (tests/unit/test_*.py) that exit non-zero on failure; they need the agent
+# image's Python deps (CPU torch + PyG), but no kernel, server or database.
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+    tags-ignore: ["**"]
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: python unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"   # the agent image's Python (Ubuntu 24.04)
+      - name: Install the agent runtime deps (CPU torch, as in deploy/docker/agent.Dockerfile)
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch==2.4.1+cpu --index-url https://download.pytorch.org/whl/cpu
+          pip install "torch-geometric==2.5.3" "numpy<2" "nltk==3.8.1" "cryptography==42.0.5"
+      - name: Run tests/unit/test_*.py
+        env:
+          NLTK_DATA: ${{ github.workspace }}/deploy/docker/nltk_data
+        run: |
+          export PYTHONPATH="$PWD/engine:$PWD/agent:$PWD/sim:$PWD/server"
+          fail=0
+          for t in tests/unit/test_*.py; do
+            log="$RUNNER_TEMP/$(basename "$t").log"
+            if python "$t" >"$log" 2>&1; then
+              echo "ok   $t: $(tail -n 1 "$log")"
+            else
+              echo "::error file=$t::$t failed"
+              tail -n 60 "$log"
+              fail=1
+            fi
+          done
+          exit "$fail"
+
+  desktop-pin:
+    name: desktop CA-pin self-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+      # pin.js has no dependencies: the self-test runs without npm install
+      - run: node desktop/scripts/pin-selftest.js
+
+  packaging-lint:
+    name: shellcheck packaging scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: shellcheck (preinstalled on ubuntu runners)
+        run: |
+          shellcheck -s sh deploy/packaging/agent/deb/* deploy/packaging/agent/rpm/*
+          shellcheck deploy/packaging/agent/pdp-agent-install deploy/packaging/agent/build.sh

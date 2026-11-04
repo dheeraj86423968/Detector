@@ -1,0 +1,55 @@
+.TH PDP-AGENT-INSTALL 8 "" "pdp-agent" "System Administration"
+.SH NAME
+pdp-agent-install \- configure, enrol and start the PDP endpoint agent
+.SH SYNOPSIS
+.B pdp-agent-install
+.B \-\-server
+.I URL
+.B \-\-ca\-sha256
+.I FINGERPRINT
+.RB [ \-\-token
+.IR TOKEN ]
+.RI [ options ]
+.SH DESCRIPTION
+Writes
+.I /etc/pdp/agent.json
+and
+.I /etc/pdp/agent.env
+(mode 0600: enrolment token, CA fingerprint and agent image reference), optionally loads
+.RB ( \-\-image\-tar )
+or pulls
+.RB ( \-\-pull )
+the agent container image, compares the fingerprint with the server's
+.I /dl/ca.pem
+and then enables and starts
+.BR pdp-agent.service ,
+which runs the agent image with docker.
+The agent enrols on first start with the one-time token; later starts reuse the identity in
+.IR /var/lib/pdp .
+.SH OPTIONS
+Run
+.B pdp-agent-install \-\-help
+for the full list:
+.BR \-\-agent\-url ,
+.BR \-\-image ,
+.BR \-\-image\-tar ,
+.BR \-\-pull ,
+.BR \-\-source ,
+.BR \-\-tz ,
+.BR \-\-no\-verify ,
+.BR \-\-no\-start ,
+.BR \-\-force .
+.SH FILES
+.TP
+.I /usr/lib/systemd/system/pdp-agent.service
+the service unit
+.TP
+.I /usr/share/pdp-agent/
+example configuration files
+.TP
+.I /var/lib/pdp/
+agent identity, spool and detection bundles (kept on package removal)
+.SH SEE ALSO
+.BR systemctl (1),
+.BR journalctl (1),
+.BR docker (1)
