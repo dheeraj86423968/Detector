@@ -51,6 +51,7 @@ def main():
         raise SystemExit(f"unknown source kind {src['kind']}")
     log(f"agent {cfg.source['kind']} starting")
     a.run(source)
+    sys.exit(a.exit_code)
 
 
 if __name__ == "__main__":

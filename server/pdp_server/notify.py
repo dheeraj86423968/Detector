@@ -298,13 +298,16 @@ def deliver_alerts(ch: dict, alerts: list[dict]) -> None:
 
 # ================================================================================================ what to send
 def org_endpoints(c, org_id) -> list[dict]:
-    return db.q(c, "SELECT id, name, hostname, phase, kind, last_seen, health FROM endpoints WHERE org_id=%s AND kind='live' "
+    return db.q(c, "SELECT id, name, hostname, phase, kind, last_seen, health, agent_version, current_bundle FROM endpoints WHERE org_id=%s AND kind='live' "
                    "AND phase <> 'retired'", (org_id,))
 
 
 def pending_messages(c, ch: dict, eps: list[dict], incidents: list[dict]) -> list[tuple[str, dict]]:
     """(key, message) the channel should receive now; keys already in notify_log are filtered by the caller."""
     events = set(ch["events"] or [])
+    from .updates import target_version
+    org = db.q(c, "SELECT agent_update FROM orgs WHERE id=%s", (ch["org_id"],), one=True)
+    target = target_version(org["agent_update"] if org else "auto")
     out = []
     if "incident" in events:
         floor = SEV_RANK.get(ch["min_severity"], 2)
@@ -326,15 +329,20 @@ def pending_messages(c, ch: dict, eps: list[dict], incidents: list[dict]) -> lis
                     out.append((f"online:{ep['id']}:{last_off['key'].rsplit(':', 1)[1]}",
                                 endpoint_message("agent_offline", ep, "agent is reporting again", "low")))
         if "agent_health" in events and ep["health"]:
-            hl = ep["health"]
-            lost = int(hl.get("collector_lost") or 0)
-            if lost >= 1000:
-                b = 10 ** int(math.log10(lost))
-                out.append((f"lost:{ep['id']}:{b}", endpoint_message("agent_health", ep, f"the collector lost {lost} kernel events (ring buffer full)", "medium")))
-            dropped = int(hl.get("spool_dropped_unuploaded") or 0) + int(hl.get("spool_dropped_unscored") or 0)
-            if dropped > 0:
-                b = 10 ** int(math.log10(dropped))
-                out.append((f"spooldrop:{ep['id']}:{b}", endpoint_message("agent_health", ep, f"the agent's local queue was full and dropped {dropped} events", "medium")))
+            from .health import problems
+            day = time.strftime("%Y-%m-%d", time.gmtime())
+            h = ep["health"]
+            for p in problems(ep, target):
+                k = p["key"]
+                if k == "collector_lost":
+                    k += f":{10 ** int(math.log10(max(1, int(h.get('collector_lost') or 1))))}"
+                elif k == "spool_dropped":
+                    n = int(h.get("spool_dropped_unuploaded") or 0) + int(h.get("spool_dropped_unscored") or 0)
+                    k += f":{10 ** int(math.log10(max(1, n)))}"
+                elif k in ("disk", "behind", "queue", "no_updater"):
+                    k += f":{day}"           # at most once a day while it lasts
+                out.append((f"health:{ep['id']}:{k}", endpoint_message("agent_health", ep, p["text"][0].lower() + p["text"][1:],
+                                                                       "high" if p["level"] == "error" else "medium")))
     return out
 
 

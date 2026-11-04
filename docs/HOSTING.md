@@ -41,6 +41,24 @@ endpoint-keyed route across organisations). The operator sees organisations and 
 - E-mail (verification, invite mails, password reset); per-organisation SSO; data retention settings per client.
 - Windows agent; the agent image is 1.9 GB (CPU PyTorch) and should be slimmed.
 
+## Agent updates
+Publishing a version (`deploy/publish-agent.sh X.Y.Z`) makes it the target of every organisation whose policy is
+"Automatic" (Console > Endpoints > Agent updates; also "Pinned to a version" or "Manual"):
+- **Staged:** per organisation one endpoint (the longest-enrolled online one) updates first; the rest follow once an
+  endpoint has run the version and reported for `PDP_UPDATE_CANARY_MIN` (30) minutes.
+- **How:** the agent sees `update` in its status, asks `POST /v1/endpoints/{id}/pull-token` for a 15-minute registry
+  credential, writes it for the host's updater and stops (exit 75). Before the next start, systemd runs
+  `/usr/local/lib/pdp/pdp-agent-update` as root: it pulls the image and switches `PDP_AGENT_IMAGE` in
+  `/etc/pdp/agent.env`; the start wrapper `pdp-agent-run` reads the image from there.
+- **Rollback:** the new agent confirms itself with its first successful heartbeat. Without that confirmation after
+  more than three starts (or 30 minutes), the updater goes back to the previous image and records the version as
+  failed; the agent reports it, the console shows it and the organisation's rollout of that version pauses.
+- **Existing installs** (before installer 0.6) get the updater once with
+  `curl -fsSL https://<server>/install.sh | sudo bash -s -- --upgrade` (no token; identity and data kept). Agents
+  without the updater only report that an update is available.
+- Health shown per endpoint and sent as `agent_health` notifications: collector or spool event loss, disk under 10%
+  free, detection falling behind (> 45 min), a failed update, a host that needs `--upgrade`.
+
 ## Notifications
 Each organisation's admins add channels under Console → Notifications; the `notifier` service (the only backend
 service with internet access) delivers them within ~10 seconds:

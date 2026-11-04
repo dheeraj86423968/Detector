@@ -198,6 +198,13 @@ exfiltration, tainted_modify, tainted_spawn`, or `learned` with a program as val
 and creates/removes `program` entries for that endpoint; `GET /api/endpoints/{id}` returns the effective
 `config.approved_executables`, `trusted_addresses`, `suppressed_detections`.
 
+## Agent updates (0.6)
+`GET /api/org/agent-updates` → `{policy: auto|manual|<version>, latest, target, held, staged, versions: {version: count},
+canary_minutes}`; `PATCH /api/org/agent-updates {agent_update}` (admins). Agent side: `status.update = {version, image,
+registry}` when the endpoint should update now; `POST /v1/endpoints/{id}/pull-token` → 15-minute registry credential.
+Endpoint overview `health` adds `disk_free_pct`, `disk_free_mb`, `spool_mb`, `entities`, `update {state, target,
+failed, updater}`; `issues` lists disk, event loss, falling behind, failed update, host needing `--upgrade`.
+
 ## Notifications (0.6, admins)
 `GET /api/notifications/channels` → `{channels: [{id, name, kind, target, has_secret, min_severity, events, every_alert,
 enabled, last_ok_at, last_error, last_error_at, ...}], email_available, notifier_running}` (secrets are never returned).

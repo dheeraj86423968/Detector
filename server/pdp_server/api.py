@@ -31,11 +31,13 @@ def _include_console_routes():
     from .orgs import router as org_router
     from .distrib import router as dist_router
     from .notify import router as notify_router
+    from .updates import router as updates_router
     app.include_router(dist_router)
     app.include_router(router)
     app.include_router(allow_router)
     app.include_router(org_router)
     app.include_router(notify_router)
+    app.include_router(updates_router)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")
@@ -215,9 +217,22 @@ def status(endpoint_id: str, ep=Depends(agent_endpoint)):
         cmds = db.q(c, "SELECT id, params FROM jobs WHERE endpoint_id=%s AND kind='command' AND state='queued' ORDER BY created_at", (endpoint_id,))
         from .allowlist import effective_config
         cfg = effective_config(c, endpoint_id, ep["config"])
+        from .updates import update_for
+        upd = update_for(c, ep)
     return {"ok": True, "phase": ep["phase"], "baseline_days_done": ep["baseline_days_done"], "config": cfg,
             "bundle": {"id": str(b["id"]), "sha256": b["sha256"]} if b else None,
-            "commands": [{**r["params"], "id": str(r["id"])} for r in cmds]}
+            "commands": [{**r["params"], "id": str(r["id"])} for r in cmds], "update": upd}
+
+
+@app.post("/v1/endpoints/{endpoint_id}/pull-token")
+def agent_pull_token(endpoint_id: str, ep=Depends(agent_endpoint)):
+    """A 15-minute registry credential for the update this endpoint is being offered."""
+    from .updates import pull_token, update_for
+    with db.conn() as c:
+        upd = update_for(c, ep)
+        if not upd:
+            raise HTTPException(409, "no update for this endpoint")
+        return {"ok": True, "user": "pdp", "token": pull_token(c, endpoint_id), **upd}
 
 
 class CommandAck(BaseModel):
@@ -283,12 +298,17 @@ class Heartbeat(BaseModel):
     spool_dropped_unscored: int | None = None     # events dropped by the spool size cap before local scoring
     spool_dropped_unuploaded: int | None = None   # ... before upload (lost for the baseline)
     entities: int | None = None           # entities held in the agent's registry (0.3.5+, after compaction)
+    disk_free_mb: float | None = None     # free space of the agent's data file system (0.3.8+)
+    disk_free_pct: float | None = None
+    update: dict | None = None            # {"state": none|offered|updating|trial|failed, "version", "failed": [...]} (0.3.8+)
 
 
 @app.post("/v1/endpoints/{endpoint_id}/heartbeat")
 def heartbeat(endpoint_id: str, hb: Heartbeat, ep=Depends(agent_endpoint)):
     with db.conn() as c:
-        db.q(c, "UPDATE endpoints SET agent_version=%s, health=%s WHERE id=%s", (hb.agent_version, json.dumps({**hb.dict(), "at": time.time()}), endpoint_id))
+        db.q(c, "UPDATE endpoints SET agent_version_since = CASE WHEN agent_version IS DISTINCT FROM %s OR agent_version_since IS NULL "
+                "THEN now() ELSE agent_version_since END, agent_version=%s, health=%s WHERE id=%s",
+             (hb.agent_version, hb.agent_version, json.dumps({**hb.dict(), "at": time.time()}), endpoint_id))
     return {"ok": True}
 
 

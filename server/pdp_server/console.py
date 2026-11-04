@@ -252,6 +252,7 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
         incs = incidents.list_incidents(c, None, endpoint_id)
         checks = _checks(c, endpoint_id)
         training = db.q(c, "SELECT state, created_at, started_at FROM jobs WHERE endpoint_id=%s AND kind='train' ORDER BY created_at DESC LIMIT 1", (endpoint_id,), one=True)
+        org = db.q(c, "SELECT agent_update FROM orgs WHERE id=%s", (row["org_id"],), one=True)
     need, done = _needed(row["config"]), int(row["baseline_days_done"])
     has_model = bundle is not None
     # ---- lifecycle
@@ -293,10 +294,11 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
     issues = []
     if not ep["online"] and row["phase"] != "retired" and row["kind"] == "live":
         issues.append("The agent is not reporting")
-    if (h.get("collector_lost") or 0) > 0:
-        issues.append(f"The collector dropped {h['collector_lost']} events since the agent started (ring buffer full)")
-    if (h.get("queue_depth") or 0) > 500_000:
-        issues.append(f"{h['queue_depth']} events are waiting to be processed")
+    from .health import problems
+    from .updates import target_version
+    tgt = target_version(org["agent_update"] if org else "auto")
+    probs = problems(row, tgt) if row["kind"] == "live" else []
+    issues += [p["text"] for p in probs]
     if learning and days and not any(d["events"] for d in days) and ep["online"]:
         issues.append("No events have been received yet")
     status = "error" if not ep["online"] and row["kind"] == "live" and row["phase"] != "retired" else "warning" if issues else "ok"
@@ -304,7 +306,9 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
               "collector": "eBPF (CO-RE)" if h.get("collector_lost") is not None else "Dataset replay" if row["kind"] == "benchmark"
                            else f"{(row['os'] or 'endpoint').capitalize()} agent {h.get('agent_version') or row['agent_version'] or ''}".strip(),
               "events_dropped": h.get("collector_lost"), "queue_depth": h.get("queue_depth"), "cpu_pct": h.get("cpu_pct"), "rss_mb": h.get("rss_mb"),
-              "events_24h": int(ev24) + int(w24), "status": status, "issues": issues}
+              "events_24h": int(ev24) + int(w24), "status": status, "issues": issues,
+              "disk_free_pct": h.get("disk_free_pct"), "disk_free_mb": h.get("disk_free_mb"), "spool_mb": h.get("spool_mb"),
+              "entities": h.get("entities"), "update": {**(h.get("update") or {}), "target": tgt}}
     # ---- detection
     week = time.time_ns() - 7 * 86400 * 10**9
     a7 = [a for a in alerts if a["window_start_ns"] >= week]

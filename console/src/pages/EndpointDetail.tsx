@@ -119,6 +119,17 @@ function Stepper({ steps }: { steps: LifecycleStep[] }) {
   );
 }
 
+function updateText(h: EndpointOverview["health"]) {
+  const u = h.update || {};
+  if (u.state === "updating") return `Updating to ${u.target || "a new version"}…`;
+  if (u.state === "trial") return "Checking the new version";
+  if (u.target && h.agent_version && u.target !== h.agent_version) {
+    if ((u.failed || []).includes(u.target)) return `${u.target} failed here, rolled back`;
+    return u.updater === false ? `${u.target} available (installer --upgrade needed)` : `${u.target} scheduled`;
+  }
+  return u.target ? "Up to date" : "Manual";
+}
+
 function HealthCard({ h }: { h: EndpointOverview["health"] }) {
   const tone = h.status === "ok" ? "ok" : h.status === "warning" ? "warn" : "bad";
   const head = h.status === "ok" ? "Agent healthy" : h.status === "warning" ? "Agent needs attention" : h.online ? "Agent has a problem" : "Agent is not reporting";
@@ -136,6 +147,9 @@ function HealthCard({ h }: { h: EndpointOverview["health"] }) {
         <div><dt>Events dropped</dt><dd className={cx((h.events_dropped || 0) > 0 && "warn-text")}>{h.events_dropped == null ? "—" : fmtNum(h.events_dropped)}</dd></div>
         <div><dt>Upload queue</dt><dd>{h.queue_depth == null ? "—" : fmtNum(h.queue_depth)}</dd></div>
         <div><dt>CPU / memory</dt><dd>{h.cpu_pct == null ? "—" : `${h.cpu_pct.toFixed(1)} %`} · {h.rss_mb == null ? "—" : `${Math.round(h.rss_mb)} MB`}</dd></div>
+        <div><dt>Disk free</dt><dd className={cx((h.disk_free_pct ?? 100) < 10 && "warn-text")}>{h.disk_free_pct == null ? "—" : `${h.disk_free_pct.toFixed(0)} % (${((h.disk_free_mb || 0) / 1024).toFixed(1)} GB)`}</dd></div>
+        <div><dt>Local data</dt><dd>{h.spool_mb == null ? "—" : `${Math.round(h.spool_mb)} MB`}{h.entities ? ` · ${fmtCompact(h.entities)} tracked entities` : ""}</dd></div>
+        <div><dt>Updates</dt><dd>{updateText(h)}</dd></div>
       </dl>
     </Card>
   );

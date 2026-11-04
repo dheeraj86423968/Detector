@@ -6,6 +6,7 @@
 # Checks the host, installs docker if it is missing (apt or dnf/yum), pulls the agent image from this server,
 # writes /etc/pdp/agent.json and /etc/pdp/agent.env, installs and starts pdp-agent.service and waits until the
 # endpoint has enrolled. Re-running it is safe. Remove the agent with:  ... | sudo bash -s -- --uninstall
+# Upgrade an existing install to this installer's service (self-updating agent):  ... | sudo bash -s -- --upgrade
 set -euo pipefail
 
 SERVER="__SERVER__"
@@ -16,6 +17,7 @@ ETC=${PDP_ETC_DIR:-/etc/pdp}
 DATA=${PDP_DATA_DIR:-/var/lib/pdp}
 UNIT=${PDP_UNIT:-pdp-agent}
 CONTAINER=${PDP_CONTAINER:-pdp-agent}
+LIB=${PDP_LIB_DIR:-/usr/local/lib/pdp}
 
 token="" source="ebpf" tz="UTC" install_docker=1 start=1 uninstall=0 purge=0 assume_yes=0
 
@@ -35,6 +37,8 @@ PDP agent installer for $SERVER
   --tz TZ              time zone for the agent's day boundaries (default UTC)
   --no-install-docker  fail instead of installing docker when it is missing
   --no-start           write the configuration and the service but do not start it
+  --upgrade            an enrolled host: install this version's service and updater, keep identity and data
+                       (no token needed; the agent then updates itself to the published version)
   --uninstall          stop and remove the agent (keeps $DATA unless --purge)
   --purge              with --uninstall: also delete $DATA (the endpoint must be enrolled again)
 EOF
@@ -48,6 +52,7 @@ while [ $# -gt 0 ]; do
     --no-install-docker) install_docker=0 ;;
     --no-start) start=0 ;;
     --uninstall) uninstall=1 ;;
+    --upgrade) [ -s "$DATA/pki/agent.pem" ] || die "--upgrade needs an enrolled agent ($DATA/pki/agent.pem); use --token to install" ;;
     --purge) purge=1 ;;
     -y|--yes) assume_yes=1 ;;
     -h|--help) usage; exit 0 ;;
@@ -65,6 +70,7 @@ if [ "$uninstall" -eq 1 ]; then
   systemctl disable --now "$UNIT.service" >/dev/null 2>&1 || true
   docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
   rm -f "/etc/systemd/system/$UNIT.service"
+  rm -rf "$LIB"
   systemctl daemon-reload
   systemctl reset-failed "$UNIT.service" >/dev/null 2>&1 || true
   rm -rf "$ETC"
@@ -136,6 +142,11 @@ ok "CA fingerprint $ca_sha (downloaded over verified HTTPS)"
 
 # ------------------------------------------------------------------------------------------------ image
 say "Downloading the agent ($IMAGE, about 2 GB the first time)"
+old_image=$(sed -n 's/^PDP_AGENT_IMAGE=//p' "$ETC/agent.env" 2>/dev/null | tail -1)
+if [ -z "$token" ] && ! docker image inspect "$IMAGE" >/dev/null 2>&1 && [ -n "$old_image" ] && docker image inspect "$old_image" >/dev/null 2>&1; then
+  ok "keeping $old_image for now; the agent updates itself to ${IMAGE##*:} through the updater"
+  IMAGE=$old_image
+fi
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   [ -n "$token" ] || die "the agent image is missing and no --token was given to download it"
   cfg=$(mktemp -d)
@@ -168,6 +179,61 @@ chmod 0644 "$ETC/agent.json"
   echo "PDP_AGENT_IMAGE=$IMAGE"
 } > "$ETC/agent.env"
 chmod 0600 "$ETC/agent.env"
+# the updater runs as root before every start: it carries out an update the agent asked for (pull with a 15-minute
+# credential from the server, switch the image) and rolls back if the new agent does not come up healthy
+install -d -m 0755 "$LIB"
+cat > "$LIB/pdp-agent-update" <<'UPD'
+#!/bin/sh
+# PDP agent updater: runs (as root) before each start of the agent service.
+ETC=${PDP_ETC_DIR:-/etc/pdp}; DATA=${PDP_DATA_DIR:-/var/lib/pdp}
+REQ=$DATA/update-request.env; TRIAL=$DATA/update-trial.env; OK=$DATA/update-ok; FAILED=$DATA/update-failed
+log() { echo "pdp-agent-update: $*"; }
+val() { sed -n "s/^$1=//p" "$2" 2>/dev/null | head -n1 | tr -cd 'A-Za-z0-9._:/@-'; }
+setimg() {
+  t=$(mktemp "$ETC/.agent.env.XXXXXX") || return 1
+  grep -v '^PDP_AGENT_IMAGE=' "$ETC/agent.env" > "$t"; echo "PDP_AGENT_IMAGE=$1" >> "$t"; chmod 0600 "$t"; mv "$t" "$ETC/agent.env"
+}
+cur=$(val PDP_AGENT_IMAGE "$ETC/agent.env")
+if [ -f "$TRIAL" ]; then
+  v=$(val VERSION "$TRIAL"); prev=$(val PREVIOUS "$TRIAL"); n=$(val STARTS "$TRIAL"); since=$(val SINCE "$TRIAL")
+  if [ -f "$OK" ] && grep -qx "$v" "$OK"; then
+    log "agent $v confirmed working; update complete"; rm -f "$TRIAL" "$OK"
+  else
+    n=$(( ${n:-0} + 1 )); age=$(( $(date +%s) - ${since:-0} ))
+    if [ "$n" -gt 3 ] || [ "$age" -gt 1800 ]; then
+      log "agent $v did not come up (start $n, ${age}s since the update); rolling back to $prev"
+      echo "$v" >> "$FAILED"; [ -n "$prev" ] && setimg "$prev"; rm -f "$TRIAL" "$OK"
+    else
+      sed -i "s/^STARTS=.*/STARTS=$n/" "$TRIAL"
+    fi
+  fi
+fi
+if [ -f "$REQ" ] && [ ! -f "$TRIAL" ]; then
+  v=$(val VERSION "$REQ"); img=$(val IMAGE "$REQ"); reg=$(val REGISTRY "$REQ"); tok=$(val TOKEN "$REQ"); rm -f "$REQ"
+  if [ -n "$img" ] && [ "$img" != "$cur" ]; then
+    d=$(mktemp -d)
+    if printf '%s' "$tok" | DOCKER_CONFIG=$d docker login -u pdp --password-stdin "$reg" >/dev/null 2>&1 \
+       && DOCKER_CONFIG=$d docker pull -q "$img" >/dev/null 2>&1; then
+      printf 'VERSION=%s\nPREVIOUS=%s\nSTARTS=0\nSINCE=%s\n' "$v" "$cur" "$(date +%s)" > "$TRIAL"
+      setimg "$img"; log "switched to $img (until the agent confirms it works)"
+    else
+      log "could not pull $img; staying on $cur (retried in an hour)"; touch "$DATA/update-backoff"
+    fi
+    rm -rf "$d"
+  fi
+fi
+exit 0
+UPD
+cat > "$LIB/pdp-agent-run" <<RUN
+#!/bin/sh
+# starts the agent container with the image named in $ETC/agent.env at this moment (the updater may just have
+# changed it; systemd's own EnvironmentFile was read before the updater ran)
+IMAGE=\$(sed -n 's/^PDP_AGENT_IMAGE=//p' "$ETC/agent.env" | tail -n1)
+exec /usr/bin/docker run --rm --name $CONTAINER --privileged --pid=host --network=host \\
+  -e PDP_ENROLL_TOKEN -e PDP_CA_SHA256 -e PDP_UPDATER=1 -e PDP_AGENT_CONFIG=/etc/pdp/agent.json \\
+  -v $ETC/agent.json:/etc/pdp/agent.json:ro -v $DATA:/var/lib/pdp "\$IMAGE" run
+RUN
+chmod 0755 "$LIB/pdp-agent-update" "$LIB/pdp-agent-run"
 cat > "/etc/systemd/system/$UNIT.service" <<EOF
 [Unit]
 Description=PDP provenance detection agent ($SERVER)
@@ -178,14 +244,13 @@ Wants=network-online.target
 [Service]
 Type=simple
 EnvironmentFile=$ETC/agent.env
+Environment=PDP_ETC_DIR=$ETC PDP_DATA_DIR=$DATA
 ExecStartPre=-/bin/sh -c 'docker rm -f $CONTAINER >/dev/null 2>&1 || true'
-ExecStart=/usr/bin/docker run --rm --name $CONTAINER --privileged --pid=host --network=host \\
-  -e PDP_ENROLL_TOKEN -e PDP_CA_SHA256 -e PDP_AGENT_CONFIG=/etc/pdp/agent.json \\
-  -v $ETC/agent.json:/etc/pdp/agent.json:ro -v $DATA:/var/lib/pdp \\
-  \${PDP_AGENT_IMAGE} run
+ExecStartPre=-$LIB/pdp-agent-update
+ExecStart=$LIB/pdp-agent-run
 ExecStop=/usr/bin/docker stop -t 30 $CONTAINER
 Restart=always
-SuccessExitStatus=143
+SuccessExitStatus=143 75
 RestartSec=10
 
 [Install]

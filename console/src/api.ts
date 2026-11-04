@@ -124,7 +124,9 @@ export type Check = { id: string; state: "queued" | "running" | "done" | "failed
   by_family: { family: string; label: string; attacks: number; detected: number }[]; verdict: "pass" | "warn" | "fail"; verdict_text: string };
 export type EndpointOverview = { ok: true; endpoint: Endpoint; lifecycle: LifecycleStep[];
   health: { online: boolean; last_seen: string | null; agent_version?: string | null; collector?: string | null; events_dropped?: number | null;
-    queue_depth?: number | null; cpu_pct?: number | null; rss_mb?: number | null; events_24h?: number | null; status: "ok" | "warning" | "error"; issues: string[] };
+    queue_depth?: number | null; cpu_pct?: number | null; rss_mb?: number | null; events_24h?: number | null; status: "ok" | "warning" | "error"; issues: string[];
+    disk_free_pct?: number | null; disk_free_mb?: number | null; spool_mb?: number | null; entities?: number | null;
+    update?: { state?: string; target?: string | null; failed?: string[]; updater?: boolean; version?: string } };
   detection: { incidents_open: number; incidents_total: number; alerts_7d: number; by_type_7d: Record<string, number>;
     triaged: { true_positive: number; false_positive: number; open: number }; per_day: { date: string; alerts: number; incidents: number }[] };
   check: Check | null; can_run_check: boolean; check_blocked_reason: string | null };

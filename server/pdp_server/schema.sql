@@ -131,3 +131,10 @@ CREATE TABLE IF NOT EXISTS notify_log (
   subject TEXT, state TEXT NOT NULL DEFAULT 'sent' CHECK (state IN ('sent','failed','suppressed','digest','queued')),
   detail TEXT, at TIMESTAMPTZ DEFAULT now(), UNIQUE (channel_id, key));
 CREATE INDEX IF NOT EXISTS notify_log_recent ON notify_log (channel_id, at);
+
+-- agent updates (0.6): per-organisation policy, staged rollout, short-lived registry pull tokens for agents
+ALTER TABLE orgs ADD COLUMN IF NOT EXISTS agent_update TEXT NOT NULL DEFAULT 'auto';
+ALTER TABLE endpoints ADD COLUMN IF NOT EXISTS agent_version_since TIMESTAMPTZ;
+CREATE TABLE IF NOT EXISTS pull_tokens (
+  token TEXT PRIMARY KEY, endpoint_id UUID NOT NULL REFERENCES endpoints(id) ON DELETE CASCADE,
+  expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ DEFAULT now());

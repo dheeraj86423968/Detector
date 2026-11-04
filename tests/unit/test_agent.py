@@ -7,7 +7,7 @@ import tempfile
 import time
 
 from pdp_engine.schema import Entity, Event
-from pdp_agent.agent import Agent, day_end_ns, day_of
+from pdp_agent.agent import VERSION as a_version, Agent, day_end_ns, day_of
 from pdp_agent.config import Config
 
 fails = 0
@@ -97,8 +97,33 @@ check(acks == [("c1", "ok"), ("c2", "unsupported")] and a.state.get("bundle_id")
 
 # 6. heartbeat carries the protocol's health fields
 h = a.health()
-check(set(h) == {"agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb", "spool_mb", "spool_dropped_unscored",
-                 "spool_dropped_unuploaded", "entities"} and h["rss_mb"] > 0, f"health {h}")
+check({"agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb", "spool_mb", "spool_dropped_unscored",
+       "spool_dropped_unuploaded", "entities", "update", "disk_free_mb", "disk_free_pct"} == set(h) and h["rss_mb"] > 0 and h["disk_free_mb"] > 0,
+      f"health {h}")
+
+# 7. updates: without the host updater only reported; with it: pull credential, request file, exit 75
+import os as _os
+class PullTransport(FakeTransport):
+    def request(self, method, path, body=None, **kw):
+        self.calls.append((method, path, body))
+        if path.endswith("/pull-token"):
+            return {"ok": True, "user": "pdp", "token": "tok123", "version": "9.9.9", "image": "srv.example/pdp/agent:9.9.9", "registry": "srv.example"}
+        return {"ok": True}
+offer = {"version": "9.9.9", "image": "srv.example/pdp/agent:9.9.9", "registry": "srv.example"}
+a.tr = PullTransport(); a.updater = False; a._update_offer = offer
+check(not a.request_update(offer) and a.update_health()["state"] == "available", "no updater on the host: the update is only reported")
+a.updater = True
+check(a.request_update(offer) and a.exit_code == 75 and a.stop, "with the updater: the agent asks for a credential and stops (exit 75)")
+req = open(_os.path.join(a.cfg.data_dir, "update-request.env")).read()
+check("IMAGE=srv.example/pdp/agent:9.9.9" in req and "TOKEN=tok123" in req and oct(_os.stat(_os.path.join(a.cfg.data_dir, "update-request.env")).st_mode)[-3:] == "600",
+      "update request written for the updater (mode 600)")
+check(a.update_health()["state"] == "updating", "health reports the update in progress")
+_os.remove(_os.path.join(a.cfg.data_dir, "update-request.env")); a.stop = False; a.exit_code = 0
+open(_os.path.join(a.cfg.data_dir, "update-failed"), "w").write("9.9.9\n")
+check(not a.request_update(offer) and a.update_health()["failed"] == ["9.9.9"], "a version the updater rolled back is not requested again")
+open(_os.path.join(a.cfg.data_dir, "update-trial.env"), "w").write("VERSION=x\n")
+a.confirm_update()
+check(open(_os.path.join(a.cfg.data_dir, "update-ok")).read().strip() == a_version, "after an update the first heartbeat confirms the new version")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

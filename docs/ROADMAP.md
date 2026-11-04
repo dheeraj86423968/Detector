@@ -59,10 +59,20 @@ hosted service). At most 20 messages per channel and hour plus one hourly digest
 (19), tests/e2e/notify_e2e.sh (27, against the live stack). Open: e-mail needs an SMTP relay configured on this
 server (PDP_SMTP_URL) - not set yet, so the console offers Slack/Teams/webhook/syslog only.
 
-### 4. Agent updates and health — status: todo
+### 4. Agent updates and health — status: done (agent 0.3.8, server 0.6, installer 0.6; 2026-11-04)
 No upgrade command (re-running the installer leaves a stray token). Done when: agents auto-update from our registry
 (org setting: auto / pinned version), rollout is staged, failed update rolls back; console shows agent health
 (collector lost, disk nearly full, behind on scoring, version) and it feeds item 3 notifications.
+
+Result: org policy auto / pinned / manual (Console > Endpoints > Agent updates); staged per organisation (one
+endpoint first, the rest after 30 min on the version); the agent gets a 15-minute pull credential and hands it to
+the host's updater (installed by install.sh, runs as root before each start), which pulls, switches and rolls
+back after repeated unconfirmed starts; a failed version pauses the organisation's rollout. `install.sh --upgrade`
+installs the updater on an enrolled host without a token. Health (disk, event loss, behind, failed update, needs
+--upgrade) on the endpoint page and as agent_health notifications. Verified on client-vm-02: 0.3.8 -> 0.3.9
+self-update via the registry (confirmed in 1 s), deliberately broken 0.3.10 rolled back after 4 starts, rollout
+held. tests/unit/test_updater.py (10), test_agent.py update checks. The L40S host keeps its hand-made unit
+(updated by hand); 0.3.9/0.3.10 were rollout test builds, 0.3.11 is the release.
 
 ### 5. Our own operations — status: todo
 Done when: staging stack; CI runs unit + stack_e2e (99) + tenancy_e2e (90) on every commit; scheduled backups of the

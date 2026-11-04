@@ -2,7 +2,8 @@
 
 GET /install.sh renders install.sh.tmpl for this server (its public address, agent port and the published agent
 image). The image lives in the stack's registry, which the gateway exposes read-only under /v2/; every request is
-first sent to /api/registry/auth, which admits Basic credentials `pdp:<enrolment token>` while the token is valid
+first sent to /api/registry/auth, which admits Basic credentials `pdp:<enrolment token>` (or an agent's 15-minute
+update pull token, updates.py) while the token is valid
 (24 hours, used or not, its organisation enabled) - so only someone who was just given a token can download the
 agent, and nothing is pushed from outside (pushes go to 127.0.0.1:5000 on the server, deploy/publish-agent.sh).
 """
@@ -60,7 +61,8 @@ def registry_auth(request: Request):
         raise HTTPException(401, "bad credentials")
     with db.conn() as c:
         ok = db.q(c, "SELECT 1 FROM enroll_tokens t JOIN orgs o ON o.id=t.org_id WHERE t.token=%s AND t.expires_at > now() AND NOT o.disabled",
-                  (token,), one=True)
+                  (token,), one=True) or db.q(c, "SELECT 1 FROM pull_tokens p JOIN endpoints e ON e.id=p.endpoint_id JOIN orgs o ON o.id=e.org_id "
+                                                 "WHERE p.token=%s AND p.expires_at > now() AND NOT o.disabled AND e.phase <> 'retired'", (token,), one=True)
     if not ok:
         raise HTTPException(401, "bad credentials")
     return Response(status_code=204)

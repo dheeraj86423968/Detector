@@ -12,6 +12,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import re
 import shutil
 import sys
 import tarfile
@@ -30,7 +31,7 @@ from .config import Config
 from .state import State
 from .transport import Transport, TransportError
 
-VERSION = "0.3.7"
+VERSION = "0.3.11"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -106,6 +107,11 @@ class Agent:
         # (uuid, rule) -> ts of alerts already sent in real time: not sent again with their window, nor after a
         # restart replays the open window
         self._early = {tuple(k[:2]): k[2] for k in (self.state.get("early_alerts") or [])}
+        self.exit_code = 0
+        # the host's updater (install.sh 0.6+) is present when the unit says so; without it the agent only reports
+        # that an update is available (older installs, hand-made units)
+        self.updater = os.environ.get("PDP_UPDATER") == "1"
+        self._update_offer: dict | None = None
 
     # ------------------------------------------------------------------ enrolment
     def enroll(self, token: str, ca_sha256: str | None = None, attempts: int = 30):
@@ -591,6 +597,9 @@ class Agent:
                             self.fetch_bundle(b["id"])
                     for cmd in st.get("commands", []):
                         self.handle_command(cmd)
+                    self._update_offer = st.get("update")
+                    if self._update_offer and self.request_update(self._update_offer):
+                        break
                     if self._offline_since:
                         log(f"server reachable again after {now - self._offline_since:.0f}s")
                         self._offline_since = 0
@@ -608,6 +617,7 @@ class Agent:
             if now - last_hb > self.cfg.heartbeat_interval:
                 try:
                     self.tr.request("POST", f"/v1/endpoints/{self.eid}/heartbeat", self.health())
+                    self.confirm_update()
                 except (TransportError, OSError) as e:
                     log(f"heartbeat failed: {e}")
                 last_hb = now
@@ -633,6 +643,69 @@ class Agent:
         if r["dropped_unscored"] or r["dropped_unuploaded"]:
             log(f"spool over its size cap: dropped {r['dropped_unscored']} events before local scoring and "
                 f"{r['dropped_unuploaded']} before upload")
+
+    # ------------------------------------------------------------------ updates
+    UPD_RE = re.compile(r"^[A-Za-z0-9._:/@-]{1,300}$")
+
+    def _upd(self, name: str) -> str:
+        return os.path.join(self.cfg.data_dir, name)
+
+    def failed_versions(self) -> list[str]:
+        try:
+            return sorted({x.strip() for x in open(self._upd("update-failed")) if x.strip()})
+        except OSError:
+            return []
+
+    def update_health(self) -> dict:
+        """What the console shows about updates: offered/updating/trial/failed."""
+        failed = self.failed_versions()
+        st = {"state": "none", "failed": failed, "updater": self.updater}
+        if os.path.exists(self._upd("update-request.env")):
+            st["state"] = "updating"
+        elif os.path.exists(self._upd("update-trial.env")):
+            st["state"] = "trial"
+        elif self._update_offer:
+            v = self._update_offer.get("version")
+            st["state"] = "failed" if v in failed else "offered" if self.updater else "available"
+            st["version"] = v
+        return st
+
+    def request_update(self, offer: dict) -> bool:
+        """Hand an update to the host's updater: a short-lived pull credential and the image, then stop (systemd
+        starts us again; the updater pulls and switches before the start). True when the agent is stopping."""
+        v = str(offer.get("version") or "")
+        if not self.updater or v == VERSION or v in self.failed_versions():
+            return False
+        try:     # the updater could not pull last time: try again after an hour, not on every status check
+            if time.time() - os.path.getmtime(self._upd("update-backoff")) < 3600:
+                return False
+        except OSError:
+            pass
+        try:
+            r = self.tr.request("POST", f"/v1/endpoints/{self.eid}/pull-token")
+        except (TransportError, OSError) as e:
+            log(f"update to {v}: no pull credential yet ({e})")
+            return False
+        vals = {"VERSION": v, "IMAGE": r.get("image", ""), "REGISTRY": r.get("registry", ""), "TOKEN": r.get("token", "")}
+        if not all(self.UPD_RE.match(x) for x in vals.values()):
+            log(f"update to {v}: refused, unexpected characters in the server's answer")
+            return False
+        tmp = self._upd("update-request.env.tmp")
+        with open(tmp, "w") as f:
+            f.write("".join(f"{k}={x}\n" for k, x in vals.items()))
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, self._upd("update-request.env"))
+        log(f"update to agent {v} requested ({vals['IMAGE']}); restarting through the updater")
+        self.exit_code = 75
+        self.stop = True
+        return True
+
+    def confirm_update(self) -> None:
+        """First successful heartbeat on a new version: tell the updater this version works (no rollback)."""
+        if os.path.exists(self._upd("update-trial.env")) and not os.path.exists(self._upd("update-ok")):
+            with open(self._upd("update-ok"), "w") as f:
+                f.write(VERSION + "\n")
+            log(f"agent {VERSION} confirmed working after the update")
 
     # ------------------------------------------------------------------ control
     def handle_command(self, cmd: dict):
@@ -670,7 +743,13 @@ class Agent:
         h = {"agent_version": VERSION, "queue_depth": int(q), "last_window_end_ns": int(self._last_window_end),
              "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1), "spool_mb": round(self.state.size_bytes() / 2**20, 1), "entities": len(self.reg),
              "spool_dropped_unscored": int(self.state.get("dropped_unscored", 0)),
-             "spool_dropped_unuploaded": int(self.state.get("dropped_unuploaded", 0))}
+             "spool_dropped_unuploaded": int(self.state.get("dropped_unuploaded", 0)), "update": self.update_health()}
+        try:
+            st = os.statvfs(self.cfg.data_dir)
+            h["disk_free_mb"] = round(st.f_bavail * st.f_frsize / 2**20, 1)
+            h["disk_free_pct"] = round(100.0 * st.f_bavail / max(st.f_blocks, 1), 1)
+        except OSError:
+            pass
         try:   # collector health: records the kernel dropped because the ring buffer was full (CO-RE eBPF)
             tr = getattr(getattr(self, "source", None), "_tracer", None)
             if tr is not None and getattr(tr, "stats", None) is not None and type(tr).__name__ == "CoreTracer":

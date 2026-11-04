@@ -4,6 +4,7 @@ import { Loader2, Plus, Search, Server } from "lucide-react";
 import { ApiError, Endpoint, EnrollToken, post, useApi, useCan } from "../api";
 import { fmtDateTime, fmtRel, plural } from "../format";
 import { Card, CopyField, Dialog, Empty, EndpointStateBadge, ErrorState, Field, Loading, PageHeader, Toggle } from "../ui";
+import { AgentUpdates } from "../updates";
 
 export default function Endpoints() {
   const can = useCan(); const nav = useNavigate();
@@ -29,6 +30,7 @@ export default function Endpoints() {
     <div className="page">
       <PageHeader title="Endpoints" subtitle={data ? `${plural(active, "endpoint")} · ${all.filter(e => e.state === "protected").length} protected` : undefined}
         actions={can.manage_endpoints && <button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add endpoint</button>} />
+      {active > 0 && <AgentUpdates />}
       <Card pad={false}>
         <div className="filters">
           <div className="search"><Search size={15} /><input placeholder="Search by name or host" value={q} onChange={e => setQ(e.target.value)} /></div>
