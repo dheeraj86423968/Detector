@@ -74,6 +74,9 @@ def parse_label(ntype: str, label: str | None, uuid: str, display: dict | None =
         return {"type": "network", "label": f"{addr}:{port}" if port else addr, "title": f"{addr} port {port}" if port else addr,
                 "details": {"Address": addr, "Port": port or "-", "Scope": "local network" if local else "external"}}
     path = body
+    if path in UNKNOWN or path == uuid:
+        return {"type": "file", "label": "unnamed file", "title": "File (path not recorded by the collector)",
+                "details": {"Path": "(not recorded by the collector)"}}
     return {"type": "file", "label": os.path.basename(path.rstrip("/")) or path, "title": path, "details": {"Path": path}}
 
 
@@ -120,8 +123,8 @@ def incident_status(alerts: list[dict]) -> str:
 
 def _actor_in(reason: str | None) -> str | None:
     """Rule reasons start with the acting program: "/opt/venv/bin/python, which read sensitive data, ..." """
-    m = re.match(r"^\s*([^,]+?), which", reason or "")
-    return os.path.basename(m.group(1)) if m and m.group(1) not in UNKNOWN else None
+    m = re.match(r"^\s*([^,(]+?)(?:, which| \(loaded from)", reason or "")
+    return os.path.basename(m.group(1).strip()) if m and m.group(1).strip() not in UNKNOWN else None
 
 
 def _ip_in(reason: str | None) -> str | None:
