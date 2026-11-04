@@ -1,103 +1,282 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ago, api, Alert, Endpoint, fmtTs, isStale, LAYER_NAME, useMe, WindowRow } from "../api";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronRight, FlaskConical, Loader2, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
+import { Check as CheckT, EndpointConfigResp, EndpointOverview, IncidentSummary, LifecycleStep, post, useApi, useCan } from "../api";
+import { DailyBars } from "../chart";
+import { DETECTION, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtRel, plural } from "../format";
+import { IncidentTable } from "../incidents";
+import { Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, PageHeader, Tabs, Toggle, useToast } from "../ui";
+
+type Tab = "overview" | "incidents" | "settings";
 
 export default function EndpointDetail() {
   const { id } = useParams();
-  const me = useMe(); const admin = me?.role === "admin";
-  const [d, setD] = useState<any>(null); const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [msg, setMsg] = useState<{ text: string; err?: boolean } | null>(null); const [newProg, setNewProg] = useState("");
-  const load = () => { api(`/api/endpoints/${id}`).then(setD); api(`/api/alerts?endpoint_id=${id}&limit=50`).then(r => setAlerts(r.alerts)); };
-  useEffect(() => { load(); const t = setInterval(load, 20000); return () => clearInterval(t); }, [id]);
-  if (!d) return <p className="muted">Loading…</p>;
-  const ep: Endpoint = d.endpoint; const h = ep.health; const retired = ep.phase === "retired";
-  // run an action, report the server's error (FastAPI {detail}) instead of failing silently
-  const act = async (fn: () => Promise<any>, ok: string) => { setMsg(null); try { await fn(); setMsg({ text: ok }); load(); } catch (e: any) { setMsg({ text: e.message, err: true }); } };
-  const post = (path: string, body?: any) => api(`/api/endpoints/${id}/${path}`, { method: "POST", body: body ? JSON.stringify(body) : undefined });
-  const retire = () => { if (confirm(`Permanently retire ${ep.name}? Its agent will no longer be accepted and its raw telemetry is dropped. This cannot be undone.`)) act(() => post("retire"), "endpoint retired"); };
-  const rows = (d.timeline as WindowRow[]).map(w => ({ t: fmtTs(w.start_ns).slice(5, 16), fused: +w.max_fused.toFixed(2), d1: +w.max_r1.toFixed(2), d2: +w.max_r2.toFixed(2), alerts: w.alerts }));
-  const agree = d.timeline.filter((w: WindowRow) => w.max_r1 > 1 && w.max_r2 > 1).length;
-  const only1 = d.timeline.filter((w: WindowRow) => w.max_r1 > 1 && w.max_r2 <= 1).length;
-  const only2 = d.timeline.filter((w: WindowRow) => w.max_r2 > 1 && w.max_r1 <= 1).length;
-  const totalAlerts = d.timeline.reduce((s: number, w: WindowRow) => s + w.alerts, 0);
+  const can = useCan();
+  const [sp, setSp] = useSearchParams();
+  const tab = (["incidents", "settings"].includes(sp.get("tab") || "") ? sp.get("tab") : "overview") as Tab;
+  const [fast, setFast] = useState(false);
+  const ov = useApi<EndpointOverview>(`/api/endpoints/${id}/overview`, fast ? 4000 : 30000);
+  const running = !!ov.data?.check && ["queued", "running"].includes(ov.data.check.state);
+  useEffect(() => { setFast(running); }, [running]);
+
+  if (ov.loading && !ov.data) return <div className="page"><PageHeader title="Endpoint" crumbs={<Crumbs />} /><Loading block /></div>;
+  if (ov.error && !ov.data) return <div className="page"><PageHeader title="Endpoint" crumbs={<Crumbs />} /><ErrorState error={ov.error.status === 404 ? "This endpoint does not exist or you do not have access to it." : ov.error} onRetry={ov.reload} /></div>;
+  const d = ov.data!; const ep = d.endpoint;
+  const retired = ep.state === "retired";
   return (
-    <div>
-      <div className="row between">
-        <h1 style={{ margin: 0 }}>{ep.name} <span className={`pill ${ep.phase}`}>{ep.phase}</span></h1>
-        <div className="row">
-          {admin && !retired && <button className="ghost" onClick={() => act(() => post("commands", { command: "refetch_bundle" }), "re-fetch requested; the agent re-downloads and re-verifies its bundle on its next poll")}>Re-fetch bundle</button>}
-          {admin && !retired && <button className="ghost danger" onClick={retire}>Retire endpoint</button>}
-          {totalAlerts > 0 && <Link className="btn primary-link" to={`/incident/${id}`}>View detected attack →</Link>}
-        </div>
-      </div>
-      {msg && <p className={msg.err ? "err" : "ok"}>{msg.text}</p>}
-      <div className="kpis">
-        <div className="kpi"><div className="v mono">{h?.agent_version ?? "–"}</div><div className="l">agent version</div></div>
-        <div className="kpi"><div className="v">{h ? h.queue_depth : "–"}</div><div className="l">upload queue depth</div></div>
-        <div className="kpi"><div className="v">{h?.cpu_pct != null ? `${h.cpu_pct.toFixed(1)}%` : "–"}</div><div className="l">agent CPU</div></div>
-        <div className="kpi"><div className="v">{h?.rss_mb != null ? `${h.rss_mb.toFixed(0)} MB` : "–"}</div><div className="l">agent RSS</div></div>
-        {h?.collector_lost != null && <div className={`kpi ${h.collector_lost > 0 ? "warn" : ""}`} title="events the kernel dropped because the collector's ring buffer was full (since the agent started); raise source.ring_pages if this grows"><div className="v">{h.collector_lost}</div><div className="l">events dropped in-kernel</div></div>}
-        <div className={`kpi ${isStale(h) && !retired ? "bad" : ""}`}><div className="v">{h ? ago(h.at) : "never"}</div><div className="l">since last heartbeat{isStale(h) && !retired ? " (stale)" : ""}</div></div>
-        <div className="kpi"><div className="v mono" style={{ fontSize: 14 }}>{h?.last_window_end_ns ? fmtTs(h.last_window_end_ns) : "–"}</div><div className="l">last window shipped</div></div>
-      </div>
-      <div className="kpis">
-        <div className="kpi"><div className="v">{d.timeline.length}</div><div className="l">windows scored</div></div>
-        <div className="kpi"><div className="v">{d.timeline.reduce((s: number, w: WindowRow) => s + w.alerts, 0)}</div><div className="l">alerted nodes</div></div>
-        <div className="kpi"><div className="v">{agree}</div><div className="l">windows both detectors elevated</div></div>
-        <div className="kpi"><div className="v">{only1} / {only2}</div><div className="l">only detector-1 / only detector-2</div></div>
-        <div className="kpi"><div className="v">{ep.baseline_days_done}</div><div className="l">baseline days</div></div>
-      </div>
-      <div className="card">
-        <h2>Fused anomaly score per window (1.0 = alert threshold)</h2>
-        <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={rows}><CartesianGrid stroke="#263040" /><XAxis dataKey="t" tick={{ fontSize: 10 }} minTickGap={40} /><YAxis /><Tooltip />
-            <ReferenceLine y={1} stroke="#ffb454" strokeDasharray="4 4" /><Area dataKey="fused" stroke="#4cc2ff" fill="#4cc2ff33" isAnimationActive={false} /></AreaChart>
-        </ResponsiveContainer>
-        <h2>Detector agreement (normalised scores: score / own threshold)</h2>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={rows}><CartesianGrid stroke="#263040" /><XAxis dataKey="t" tick={{ fontSize: 10 }} minTickGap={40} /><YAxis /><Tooltip /><Legend />
-            <ReferenceLine y={1} stroke="#ffb454" strokeDasharray="4 4" /><Line dataKey="d1" name="detector-1" stroke="#5fd38d" dot={false} isAnimationActive={false} /><Line dataKey="d2" name="detector-2" stroke="#ff6b6b" dot={false} isAnimationActive={false} /></LineChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="grid2">
-        <div className="card">
-          <h2>Recent alerts</h2>
-          <table><thead><tr><th>Window</th><th>Detection</th><th>Entity</th><th>Fused</th><th>Status</th></tr></thead>
-            <tbody>{alerts.map(a => <tr key={a.id}><td className="mono">{fmtTs(a.window_start_ns)}</td><td><span className={`pill layer-${a.layer || "learned"}`}>{LAYER_NAME[a.layer || "learned"]}</span></td><td><Link to={`/alerts/${a.id}`}>{a.label.slice(0, 60)}</Link></td><td className="score">{a.fused.toFixed(2)}</td><td><span className="pill">{a.status}</span></td></tr>)}</tbody></table>
-        </div>
-        <div className="card">
-          <h2>Jobs</h2>
-          <table><thead><tr><th>Kind</th><th>State</th><th>Created</th><th>Error</th></tr></thead>
-            <tbody>{d.jobs.map((j: any) => <tr key={j.id}><td>{j.kind} <span className="muted mono">{JSON.stringify(j.params)}</span></td><td><span className={`pill ${j.state}`}>{j.state}</span></td><td className="muted">{new Date(j.created_at).toLocaleString()}</td><td className="err">{j.error}</td></tr>)}</tbody></table>
-          <p><button className="ghost" disabled={retired} onClick={() => act(() => post("retrain"), "retrain queued")}>Retrain detectors</button></p>
-          <h2>Alert sensitivity (false-positive budget)</h2>
-          <p className="muted">Validation-max is the strictest threshold. A percentile budget trades a small, bounded false-positive rate for recall of attacks the baseline never quite covered.</p>
-          <p>
-            <select value={ep.config?.fp_budget ?? ""} disabled={retired} onChange={e => { const v = e.target.value || null; act(() => post("config", { config: { fp_budget: v } }), `sensitivity set to ${v ? v + "th percentile" : "validation-max"}`); }}>
-              <option value="">validation-max (default)</option>
-              <option value="99">99th percentile</option>
-              <option value="99.9">99.9th percentile</option>
-              <option value="99.99">99.99th percentile</option>
-            </select>
-            <span className="muted"> applied on the agent's next poll</span>
-          </p>
-          <h2>Detection layers</h2>
-          <p className="muted">Layer 1 alerts on programs that never ran during the baseline; approve a program to stop its alerts (applied on the
-            agent's next poll, no retraining). Layer 3 (learned) alerts on its own at most this many times a day, highest scores first.</p>
-          <p>Learned-only alerts per day <input type="number" min={0} style={{ width: 80 }} disabled={retired || !admin} defaultValue={ep.config?.learned_daily_budget ?? 20}
-            onBlur={e => { const v = parseInt(e.target.value, 10); if (!isNaN(v) && v !== (ep.config?.learned_daily_budget ?? 20)) act(() => post("config", { config: { learned_daily_budget: v } }), `learned daily budget set to ${v}`); }} /></p>
-          <p><label><input type="checkbox" disabled={retired || !admin} checked={ep.config?.learned_alerts ?? true}
-            onChange={e => act(() => post("config", { config: { learned_alerts: e.target.checked } }), e.target.checked ? "learned-layer alerts on" : "learned layer set to ranking only")} />
-            {" "}Learned layer raises alerts (off = it only ranks; alerts come from layers 1-2)</label></p>
-          <p className="muted sm">Approved programs ({(ep.config?.approved_executables || []).length})</p>
-          <div className="mono sm">{(ep.config?.approved_executables || []).map((x: string) => <div key={x}>{x} {admin && !retired && <button className="ghost" onClick={() => act(() => post("approved-executables", { executables: [x], approve: false }), `${x} revoked`)}>revoke</button>}</div>)}</div>
-          {admin && !retired && <p><input placeholder="/opt/app/bin/tool" value={newProg} onChange={e => setNewProg(e.target.value)} />
-            <button className="ghost" disabled={!newProg.trim()} onClick={() => act(() => post("approved-executables", { executables: [newProg.trim()], approve: true }).then(() => setNewProg("")), `${newProg.trim()} approved`)}>Approve program</button></p>}
-          <h2>Baseline days</h2>
-          <p className="mono">{d.baseline_days.map((b: any) => `${b.date}${b.complete ? "✓" : "…"}`).join("  ")}</p>
-        </div>
-      </div>
+    <div className="page">
+      <PageHeader crumbs={<Crumbs name={ep.name} />}
+        title={<span className="ep-title">{ep.name}<EndpointStateBadge state={ep.state} text={ep.state_text} /></span>}
+        subtitle={<div className="inc-meta">
+          {ep.state_text && (!/^(offline|retired|protected)\b/i.test(ep.state_text) || /\d/.test(ep.state_text)) && <span className="meta-item">{ep.state_text}</span>}
+          <span className="meta-item muted">{ep.hostname}{ep.os ? ` · ${ep.os === "linux" ? "Linux" : ep.os}` : ""}</span>
+          {ep.agent_version && <span className="meta-item muted">Agent {ep.agent_version}</span>}
+          <span className="meta-item muted">Last seen {fmtRel(ep.last_seen)}</span>
+        </div>} />
+      <Tabs value={tab} onChange={v => setSp(v === "overview" ? {} : { tab: v }, { replace: true })} tabs={[
+        { id: "overview", label: "Overview" }, { id: "incidents", label: "Incidents", count: d.detection.incidents_total },
+        ...(can.manage_endpoints && !retired ? [{ id: "settings" as Tab, label: "Settings" }] : []),
+      ]} />
+      {tab === "overview" && <OverviewTab d={d} reload={ov.reload} />}
+      {tab === "incidents" && <IncidentsTab id={id!} />}
+      {tab === "settings" && can.manage_endpoints && <SettingsTab id={id!} name={ep.name} />}
     </div>
   );
 }
+
+function Crumbs({ name }: { name?: string }) {
+  return <><Link to="/endpoints"><ArrowLeft size={14} />Endpoints</Link>{name && <><ChevronRight size={14} className="muted" /><span>{name}</span></>}</>;
+}
+
+// ---------------------------------------------------------------- overview
+
+const STEP_TITLE: Record<string, string> = { enrolled: "Enrolled", baseline: "Learning baseline", model: "Model trained", protecting: "Protecting" };
+
+function OverviewTab({ d, reload }: { d: EndpointOverview; reload: () => void }) {
+  const base = d.lifecycle.find(s => s.step === "baseline");
+  const days = base?.days || [];
+  return (
+    <>
+      <Card title="Is detection working on this endpoint?" subtitle="PDP learns what is normal on each endpoint, trains a model on it, then alerts on what departs from it.">
+        <Stepper steps={d.lifecycle} />
+        {days.length > 0 && <div className="baseline-days">
+          <div className="sub-title">Activity recorded per baseline day</div>
+          <DailyBars data={days.map(x => ({ date: x.date, value: x.events }))} unit={["event", "events"]} height={110} tick={fmtCompact} />
+        </div>}
+      </Card>
+      <div className="grid grid-2">
+        <HealthCard h={d.health} />
+        <DetectionCard d={d} />
+      </div>
+      <CheckCard d={d} reload={reload} />
+    </>
+  );
+}
+
+function Stepper({ steps }: { steps: LifecycleStep[] }) {
+  return (
+    <ol className="stepper">
+      {steps.map((s, i) => (
+        <li key={s.step} className={cx("step", `s-${s.status}`)}>
+          <div className="step-mark">{s.status === "done" ? <Check size={14} strokeWidth={3} /> : s.status === "active" ? (s.step === "protecting" ? <ShieldCheck size={14} /> : <Loader2 size={14} className="spin-slow" />) : <span>{i + 1}</span>}</div>
+          <div className="step-body">
+            <div className="step-title">{STEP_TITLE[s.step] || s.step}</div>
+            <div className="step-text">{s.text}</div>
+            {s.step === "baseline" && s.needed ? (
+              <div className="step-progress">
+                <div className="bar"><span style={{ width: `${Math.min(100, (100 * (s.done || 0)) / s.needed)}%` }} /></div>
+                <span>{s.status === "done" ? `${s.needed} of ${s.needed} days` : `${s.done || 0} of ${s.needed} days complete`}</span>
+              </div>
+            ) : null}
+            {s.step === "model" && s.details && Object.keys(s.details).length > 0 && s.status === "done" && (
+              <div className="step-facts">
+                {s.details.known_programs != null && <span>{plural(s.details.known_programs, "known program")}</span>}
+                {s.details.trusted_addresses != null && <span>{plural(s.details.trusted_addresses, "trusted address", "trusted addresses")}</span>}
+                {s.details.benign_rules != null && s.details.benign_rules > 0 && <span>{plural(s.details.benign_rules, "benign pattern")}</span>}
+              </div>
+            )}
+            {s.at && <div className="step-at" title={fmtDateTime(s.at, true)}>{fmtDate(s.at)}</div>}
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function HealthCard({ h }: { h: EndpointOverview["health"] }) {
+  const tone = h.status === "ok" ? "ok" : h.status === "warning" ? "warn" : "bad";
+  const head = h.status === "ok" ? "Agent healthy" : h.status === "warning" ? "Agent needs attention" : h.online ? "Agent has a problem" : "Agent is not reporting";
+  return (
+    <Card title="Agent health">
+      <div className={cx("health-head", `tone-${tone}`)}>
+        {h.status === "ok" ? <CheckCircle2 size={18} /> : h.status === "warning" ? <AlertTriangle size={18} /> : <XCircle size={18} />}
+        <div><div className="health-title">{head}</div><div className="muted sm">Last report {fmtRel(h.last_seen)}</div></div>
+      </div>
+      {h.issues.filter(x => x.toLowerCase() !== head.toLowerCase()).length > 0 && <ul className="issues">{h.issues.filter(x => x.toLowerCase() !== head.toLowerCase()).map(x => <li key={x}>{x}</li>)}</ul>}
+      <dl className="facts">
+        <div><dt>Collector</dt><dd>{h.collector || "—"}</dd></div>
+        <div><dt>Agent version</dt><dd className="mono">{h.agent_version || "—"}</dd></div>
+        <div><dt>Events, last 24 h</dt><dd>{fmtCompact(h.events_24h)}</dd></div>
+        <div><dt>Events dropped</dt><dd className={cx((h.events_dropped || 0) > 0 && "warn-text")}>{h.events_dropped == null ? "—" : fmtNum(h.events_dropped)}</dd></div>
+        <div><dt>Upload queue</dt><dd>{h.queue_depth == null ? "—" : fmtNum(h.queue_depth)}</dd></div>
+        <div><dt>CPU / memory</dt><dd>{h.cpu_pct == null ? "—" : `${h.cpu_pct.toFixed(1)} %`} · {h.rss_mb == null ? "—" : `${Math.round(h.rss_mb)} MB`}</dd></div>
+      </dl>
+    </Card>
+  );
+}
+
+function DetectionCard({ d }: { d: EndpointOverview }) {
+  const x = d.detection;
+  const types = (["rules", "novelty", "corroborated", "learned"] as const).map(t => [t, x.by_type_7d[t] || 0] as const);
+  const learning = d.endpoint.state === "learning" || d.endpoint.state === "training";
+  return (
+    <Card title="Detections" actions={<Link className="card-link" to={`?tab=incidents`}>Incidents <ChevronRight size={14} /></Link>}>
+      <div className="det-top">
+        <div><div className="big-num sm">{x.incidents_open}</div><div className="muted sm">open incidents</div></div>
+        <div><div className="big-num sm">{x.incidents_total}</div><div className="muted sm">incidents in total</div></div>
+        <div><div className="big-num sm">{x.alerts_7d}</div><div className="muted sm">alerts, last 7 days</div></div>
+      </div>
+      {learning && x.incidents_total === 0 ? <div className="note">Detection starts once the baseline is complete and the model is trained.</div> : <>
+        <div className="sub-title">Alerts in the last 7 days, by kind</div>
+        <ul className="type-list">{types.map(([t, n]) => (
+          <li key={t} className={cx(n === 0 && "zero")}><DetectionTag type={t} /><span className="type-desc">{DETECTION[t].describe}</span><b>{n}</b></li>
+        ))}</ul>
+        <div className="sub-title">Review outcomes (all alerts)</div>
+        <div className="triage-sum">
+          <span><b>{fmtNum(x.triaged.true_positive)}</b> confirmed threats</span>
+          <span><b>{fmtNum(x.triaged.false_positive)}</b> false alarms</span>
+          <span><b>{fmtNum(x.triaged.open)}</b> awaiting review</span>
+        </div>
+      </>}
+    </Card>
+  );
+}
+
+function CheckCard({ d, reload }: { d: EndpointOverview; reload: () => void }) {
+  const can = useCan(); const toast = useToast();
+  const hist = useApi<{ checks: CheckT[] }>(`/api/endpoints/${d.endpoint.id}/checks`);
+  const [busy, setBusy] = useState(false);
+  const c = d.check;
+  const running = !!c && (c.state === "queued" || c.state === "running");
+  useEffect(() => { if (!running) hist.reload(); }, [running]); // eslint-disable-line react-hooks/exhaustive-deps
+  const run = async () => {
+    setBusy(true);
+    try { await post(`/api/endpoints/${d.endpoint.id}/checks`, {}); toast("Detection check started"); reload(); hist.reload(); }
+    catch (e: any) { toast(e.message, "err"); }
+    setBusy(false);
+  };
+  const allowed = can.run_checks && d.can_run_check && !running && d.endpoint.state !== "retired";
+  const blocked = !can.run_checks ? "Your role cannot run detection checks." : d.check_blocked_reason ? `Not available: ${d.check_blocked_reason}.` : running ? "A check is already running." : null;
+  const past = (hist.data?.checks || []).filter(h => h.id !== c?.id || !running);
+  return (
+    <Card title="Detection check" subtitle="Replays realistic simulated attacks into this endpoint's own recorded activity and checks that its model catches them. Nothing runs on the host."
+      actions={can.run_checks && d.endpoint.state !== "retired" && <button className="btn primary" disabled={!allowed || busy} onClick={run} title={blocked || undefined}>
+        {busy || running ? <Loader2 size={15} className="spin" /> : <FlaskConical size={15} />}{running ? "Check running…" : "Run detection check"}</button>}>
+      {!c ? (
+        <Empty icon={<FlaskConical size={22} />} title="No detection check yet"
+          text={d.check_blocked_reason ? `A check can run once the model is trained — ${d.check_blocked_reason}.` : "Run a check to see which attack types this endpoint's model detects."} />
+      ) : running ? (
+        <div className="verdict v-running"><Loader2 size={20} className="spin" /><div><div className="verdict-title">{c.state === "queued" ? "Check queued" : "Check running"}</div><div className="muted sm">Started {fmtRel(c.created_at)}. This usually takes a few minutes.</div></div></div>
+      ) : c.state === "failed" ? (
+        <div className="verdict v-fail"><XCircle size={20} /><div><div className="verdict-title">The check could not complete</div><div className="muted sm">{c.verdict_text || "Try again later."} · {fmtDateTime(c.created_at)}</div></div></div>
+      ) : <>
+        <div className={cx("verdict", `v-${c.verdict}`)}>
+          {c.verdict === "pass" ? <ShieldCheck size={22} /> : c.verdict === "warn" ? <AlertTriangle size={22} /> : <XCircle size={22} />}
+          <div><div className="verdict-title">{c.verdict_text}</div><div className="muted sm">Checked {fmtRel(c.finished_at || c.created_at)} · {fmtDateTime(c.finished_at || c.created_at)}</div></div>
+          <div className="verdict-num"><b>{c.detected}</b>/{c.attacks}<span>detected</span></div>
+        </div>
+        {c.by_family.length > 0 && <div className="families">
+          {c.by_family.map(f => {
+            const ok = f.detected >= f.attacks;
+            return (
+              <div key={f.family} className="family">
+                <span className={cx("fam-icon", ok ? "ok" : f.detected ? "warn" : "bad")}>{ok ? <Check size={13} strokeWidth={3} /> : f.detected ? <AlertTriangle size={13} /> : <XCircle size={13} />}</span>
+                <span className="fam-label" title={f.label}>{f.label}</span>
+                <span className="fam-bar"><span className={ok ? "ok" : "warn"} style={{ width: `${(100 * f.detected) / Math.max(1, f.attacks)}%` }} /></span>
+                <span className="fam-n">{f.detected} of {f.attacks}</span>
+              </div>
+            );
+          })}
+        </div>}
+      </>}
+      {blocked && !allowed && !running && can.run_checks && d.check_blocked_reason && c && <div className="note">{blocked}</div>}
+      {past.length > 1 && <details className="history">
+        <summary>Earlier checks ({past.length - (c && !running ? 1 : 0)})</summary>
+        <table className="table compact">
+          <thead><tr><th>Date</th><th>Simulated attacks detected</th><th>False alarms on clean data</th><th>Result</th></tr></thead>
+          <tbody>{past.filter(h => h.id !== c?.id).map(h => (
+            <tr key={h.id}><td>{fmtDateTime(h.created_at)}</td><td>{h.state === "done" ? `${h.detected} of ${h.attacks}` : h.state}</td><td>{h.state === "done" ? h.false_alarms_on_clean_data : "—"}</td>
+              <td>{h.state === "done" ? <span className={cx("verdict-pill", `v-${h.verdict}`)}>{h.verdict === "pass" ? "Pass" : h.verdict === "warn" ? "Partial" : "Fail"}</span> : <span className="muted">{h.state}</span>}</td></tr>
+          ))}</tbody>
+        </table>
+      </details>}
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------- incidents
+
+function IncidentsTab({ id }: { id: string }) {
+  const { data, error, loading, reload } = useApi<{ incidents: IncidentSummary[] }>(`/api/incidents?endpoint_id=${id}&status=all&limit=500`, 30000);
+  return (
+    <Card pad={false}>
+      {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :
+        !data!.incidents.length ? <Empty icon={<ShieldCheck size={22} />} title="No incidents on this endpoint" text="Incidents appear here when the endpoint's detection finds something." /> :
+          <IncidentTable rows={data!.incidents} showEndpoint={false} />}
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------- settings (admin)
+
+function SettingsTab({ id, name }: { id: string; name: string }) {
+  const toast = useToast();
+  const { data, error, loading, reload } = useApi<EndpointConfigResp>(`/api/endpoints/${id}`);
+  const [prog, setProg] = useState(""); const [budget, setBudget] = useState<string>(""); const [retire, setRetire] = useState(false);
+  const cfg = data?.endpoint.config || {};
+  useEffect(() => { if (data) setBudget(String(cfg.learned_daily_budget ?? 20)); }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (loading && !data) return <Loading block />;
+  if (error && !data) return <ErrorState error={error} onRetry={reload} />;
+  const approved: string[] = cfg.approved_executables || [];
+  const act = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast(ok); reload(); } catch (e: any) { toast(e.message, "err"); } };
+  const setApproved = (x: string, approve: boolean) => act(() => post(`/api/endpoints/${id}/approved-executables`, { executables: [x], approve }), approve ? `${x} approved` : `Approval of ${x} revoked`);
+  const learnedOn = cfg.learned_alerts ?? true;
+  return (
+    <div className="settings">
+      <Card title="Approved programs" subtitle="Programs that never ran during the baseline raise a “New program” alert. Approve the ones you trust; this takes effect on the agent's next check-in without retraining.">
+        <form className="inline-form" onSubmit={e => { e.preventDefault(); if (prog.trim()) setApproved(prog.trim(), true).then(() => setProg("")); }}>
+          <input className="mono" placeholder="/opt/app/bin/tool" value={prog} onChange={e => setProg(e.target.value)} aria-label="Program path" />
+          <button className="btn" disabled={!prog.trim().startsWith("/")}><Plus size={15} />Approve program</button>
+        </form>
+        {approved.length === 0 ? <div className="muted sm pad-y">No programs approved yet.</div> : (
+          <ul className="prog-list">{approved.map(x => (
+            <li key={x}><span className="mono ellipsis" title={x}>{x}</span><button className="btn sm ghost" onClick={() => setApproved(x, false)}><Trash2 size={14} />Revoke</button></li>
+          ))}</ul>
+        )}
+      </Card>
+      <Card title="Unusual-behaviour alerts" subtitle="Besides new programs and suspicious data flows, the learned model can raise alerts on its own for behaviour unlike the baseline.">
+        <div className="setting-row">
+          <div><div className="setting-name">Raise unusual-behaviour alerts</div><div className="muted sm">When off, the model only adds context to the other detections.</div></div>
+          <Toggle checked={learnedOn} label="Raise unusual-behaviour alerts" onChange={v => act(() => post(`/api/endpoints/${id}/config`, { config: { learned_alerts: v } }), v ? "Unusual-behaviour alerts turned on" : "Unusual-behaviour alerts turned off")} />
+        </div>
+        <div className="setting-row">
+          <div><div className="setting-name">Daily limit</div><div className="muted sm">At most this many unusual-behaviour alerts per day; the most unusual come first.</div></div>
+          <form className="inline-form" onSubmit={e => { e.preventDefault(); const v = parseInt(budget, 10); if (!isNaN(v) && v >= 0) act(() => post(`/api/endpoints/${id}/config`, { config: { learned_daily_budget: v } }), `Daily limit set to ${v}`); }}>
+            <input type="number" min={0} max={10000} value={budget} disabled={!learnedOn} onChange={e => setBudget(e.target.value)} style={{ width: 96 }} aria-label="Daily limit" />
+            <button className="btn" disabled={!learnedOn || budget === String(cfg.learned_daily_budget ?? 20)}>Save</button>
+          </form>
+        </div>
+      </Card>
+      <Card title="Retire endpoint" className="danger-card">
+        <div className="setting-row">
+          <div><div className="setting-name">Retire {name}</div><div className="muted sm">The agent is no longer accepted and the endpoint's raw activity is deleted. This cannot be undone.</div></div>
+          <button className="btn danger" onClick={() => setRetire(true)}>Retire endpoint</button>
+        </div>
+      </Card>
+      {retire && <Confirm danger title={`Retire ${name}?`} confirmLabel="Retire endpoint" onClose={() => setRetire(false)}
+        text={<p>The agent on <b>{name}</b> will no longer be accepted and its raw activity is deleted. This cannot be undone.</p>}
+        onConfirm={async () => { await post(`/api/endpoints/${id}/retire`); toast(`${name} retired`); window.location.hash = `#/endpoints/${id}`; window.location.reload(); }} />}
+    </div>
+  );
+}
+
