@@ -1,0 +1,161 @@
+{
+ "validation_day": "2018-04-09",
+ "attacks": 140,
+ "candidates": [
+  {
+   "weights": [
+    1.0,
+    0.0
+   ],
+   "threshold": 1.0,
+   "detection_rate": 0.3571,
+   "median_margin": 0.6217,
+   "by_family": {
+    "web_backdoor": 0.95,
+    "browser_dropper": 0.9,
+    "lotl_recon": 0.0,
+    "priv_esc_lateral": 0.0,
+    "exfiltration": 0.0,
+    "ransomware": 0.65,
+    "script_c2": 0.0
+   }
+  },
+  {
+   "weights": [
+    3.0,
+    1.0
+   ],
+   "threshold": 0.7763881608843803,
+   "detection_rate": 0.4571,
+   "median_margin": 0.9056,
+   "by_family": {
+    "web_backdoor": 1.0,
+    "browser_dropper": 1.0,
+    "lotl_recon": 0.1,
+    "priv_esc_lateral": 0.0,
+    "exfiltration": 0.0,
+    "ransomware": 1.0,
+    "script_c2": 0.1
+   }
+  },
+  {
+   "weights": [
+    2.0,
+    1.0
+   ],
+   "threshold": 0.7850367228190104,
+   "detection_rate": 0.4786,
+   "median_margin": 0.9123,
+   "by_family": {
+    "web_backdoor": 1.0,
+    "browser_dropper": 1.0,
+    "lotl_recon": 0.1,
+    "priv_esc_lateral": 0.15,
+    "exfiltration": 0.0,
+    "ransomware": 1.0,
+    "script_c2": 0.1
+   }
+  },
+  {
+   "weights": [
+    1.0,
+    1.0
+   ],
+   "threshold": 0.8387775421142578,
+   "detection_rate": 0.4857,
+   "median_margin": 0.9134,
+   "by_family": {
+    "web_backdoor": 1.0,
+    "browser_dropper": 1.0,
+    "lotl_recon": 0.1,
+    "priv_esc_lateral": 0.15,
+    "exfiltration": 0.05,
+    "ransomware": 1.0,
+    "script_c2": 0.1
+   }
+  },
+  {
+   "weights": [
+    1.0,
+    2.0
+   ],
+   "threshold": 0.8925183614095052,
+   "detection_rate": 0.4857,
+   "median_margin": 0.9334,
+   "by_family": {
+    "web_backdoor": 1.0,
+    "browser_dropper": 1.0,
+    "lotl_recon": 0.1,
+    "priv_esc_lateral": 0.15,
+    "exfiltration": 0.05,
+    "ransomware": 1.0,
+    "script_c2": 0.1
+   }
+  },
+  {
+   "weights": [
+    1.0,
+    3.0
+   ],
+   "threshold": 0.9193887710571289,
+   "detection_rate": 0.4857,
+   "median_margin": 0.957,
+   "by_family": {
+    "web_backdoor": 1.0,
+    "browser_dropper": 1.0,
+    "lotl_recon": 0.1,
+    "priv_esc_lateral": 0.15,
+    "exfiltration": 0.05,
+    "ransomware": 1.0,
+    "script_c2": 0.1
+   }
+  },
+  {
+   "weights": [
+    0.0,
+    1.0
+   ],
+   "threshold": 1.0,
+   "detection_rate": 0.5571,
+   "median_margin": 1.0509,
+   "by_family": {
+    "web_backdoor": 1.0,
+    "browser_dropper": 1.0,
+    "lotl_recon": 0.25,
+    "priv_esc_lateral": 0.3,
+    "exfiltration": 0.25,
+    "ransomware": 1.0,
+    "script_c2": 0.1
+   },
+   "percentiles": {
+    "99": 0.1823737846314906,
+    "99.9": 0.39973965287208557,
+    "99.99": 0.8998297787725735
+   }
+  }
+ ],
+ "chosen": {
+  "weights": [
+   0.0,
+   1.0
+  ],
+  "threshold": 1.0,
+  "detection_rate": 0.5571,
+  "median_margin": 1.0509,
+  "by_family": {
+   "web_backdoor": 1.0,
+   "browser_dropper": 1.0,
+   "lotl_recon": 0.25,
+   "priv_esc_lateral": 0.3,
+   "exfiltration": 0.25,
+   "ransomware": 1.0,
+   "script_c2": 0.1
+  },
+  "percentiles": {
+   "99": 0.1823737846314906,
+   "99.9": 0.39973965287208557,
+   "99.99": 0.8998297787725735
+  }
+ },
+ "bundle": "763575a2-3a34-4097-b411-4706290951f3"
+}

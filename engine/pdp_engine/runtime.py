@@ -1,0 +1,291 @@
+"""Endpoint runtime: scores fused windows with a bundle and produces alerts with graph context.
+
+Stateful across windows (registry growth, TGN neighbour state, information-flow tags), CPU-only by default.
+
+Alerting (bundles with layers.json, 0.3+; docs/DETECTION_LAYERS.md):
+  layer 1  novelty     a process runs a program that never ran during the baseline (and was not approved since)
+  layer 2  rules       information-flow alarms (untrusted exec, exfiltration, untrusted-code network); the
+                       dependency-prone rules (tainted spawn / modify) are evidence and alert only when corroborated
+  layer 3  learned     the fused detector score ranks everything; on its own it alerts
+             - "corroborated": a node marked by an evidence rule, or next to a layer-1/2 alert in the same window,
+               whose score is above the validation-day percentile `corroboration_percentile`, and
+             - "learned": a node above the fusion threshold, at most `daily_budget` per day (highest score first),
+           so a learned-model false-positive storm is bounded by construction.
+Older bundles (no layers.json) alert exactly as before: fused score above the fusion threshold.
+"""
+from __future__ import annotations
+
+import json
+import os
+from dataclasses import dataclass, field
+
+import numpy as np
+import torch
+
+from .bundle import load_state_dict, verify_digests
+from .featurizer import Word2VecFeaturizer
+from .layers import EVIDENCE_RULES, DeterministicLayers, Hit
+from .models import DEG_DIM, OrthrusModel, TGNState, VeloxModel, make_tgn_batch, window_degrees
+from .schema import EDGE_TYPES, Registry
+from .scoring import Calibration, FusionCalibration, above, aggregate_weights, fill_missing, node_scores
+from .windows import Window, batches
+
+
+@dataclass
+class WindowResult:
+    start_ns: int
+    end_ns: int
+    num_edges: int
+    node_ids: np.ndarray           # nodes seen in the window
+    fused: np.ndarray              # fused score / fusion threshold per node (> 1 + ALERT_MARGIN = alert)
+    r1: np.ndarray                 # detector-1 ratio
+    r2: np.ndarray                 # detector-2 mean ratio over seeds
+    alerts: np.ndarray             # alerted node ids (all layers)
+    edge_loss: dict = field(default_factory=dict)   # optional per-edge losses for context (detector-1)
+    reasons: dict = field(default_factory=dict)     # node id -> [{"layer", "rule", "detail", ...}] for alerted nodes
+    hits: list = field(default_factory=list)        # layer 1/2 hits of this window (pdp_engine.layers.Hit)
+
+    def layer_of(self, n: int) -> str:
+        """Primary layer of an alerted node: novelty > rules > corroborated > learned."""
+        rs = self.reasons.get(int(n)) or [{"layer": "learned"}]
+        order = {"novelty": 0, "rules": 1, "corroborated": 2, "learned": 3}
+        return min((r["layer"] for r in rs), key=lambda x: order.get(x, 9))
+
+    def summary(self) -> dict:
+        by = {}
+        for n in self.alerts.tolist():
+            k = self.layer_of(n)
+            by[k] = by.get(k, 0) + 1
+        return {"start_ns": self.start_ns, "end_ns": self.end_ns, "edges": self.num_edges, "nodes": int(len(self.node_ids)),
+                "alerts": int(len(self.alerts)), "max_fused": float(self.fused.max()) if len(self.fused) else 0.0,
+                "max_r1": float(self.r1.max()) if len(self.r1) else 0.0, "max_r2": float(self.r2.max()) if len(self.r2) else 0.0,
+                "alerts_by_layer": by}
+
+
+class Runtime:
+    @property
+    def daily_budget(self) -> int:
+        return self._daily_budget
+
+    @daily_budget.setter
+    def daily_budget(self, v: int):
+        self._daily_budget = int(v)
+        if getattr(self, "policy", None) is not None:
+            self.policy.daily_budget = int(v)
+
+    def __init__(self, bundle_dir: str, registry: Registry, device: str = "cpu", fp_budget: str | None = None,
+                 feat_device: str | None = None, approved_executables=None, daily_budget: int | None = None,
+                 layers: bool = True):
+        verify_digests(bundle_dir)
+        self.m = json.load(open(os.path.join(bundle_dir, "manifest.json")))
+        self.dev = torch.device(device)
+        # the node-feature matrix can live on a different device than the models; keeping it on CPU while the
+        # models run on the GPU spares ~N*(emb+3)*4 bytes of GPU memory (large registries OOM'd otherwise)
+        self.featdev = torch.device(feat_device) if feat_device else self.dev
+        self.reg = registry
+        self.feat = Word2VecFeaturizer.load(os.path.join(bundle_dir, "featurizer"))
+        d1, d2 = self.m["detectors"]["detector-1"], self.m["detectors"]["detector-2"]
+        self.deg1 = bool(d1.get("degree_features", False))
+        self.velox = []
+        for k in range(int(d1.get("seeds", 0)) or 1):
+            v = VeloxModel(d1["in_dim"], d1["out_dim"]).to(self.dev).eval()
+            f = os.path.join(bundle_dir, f"detector-1-s{k}.npz")
+            v.load_state_dict(load_state_dict(f if os.path.exists(f) else os.path.join(bundle_dir, "detector-1.npz")))
+            self.velox.append(v)
+        self.orthrus = []
+        for k in range(d2["seeds"]):
+            m = OrthrusModel(d2["in_dim"], hid_dim=d2["hid_dim"], out_dim=d2["out_dim"], dropout=d2["dropout"]).to(self.dev).eval()
+            m.load_state_dict(load_state_dict(os.path.join(bundle_dir, f"detector-2-s{k}.npz")))
+            self.orthrus.append(m)
+        cal = self.m["calibration"]
+        key = "threshold" if fp_budget is None else None
+        pick = (lambda c: c["threshold"]) if fp_budget is None else (lambda c: c["percentiles"][fp_budget])
+        self.cal1 = [Calibration(pick(c), c["percentiles"]) for c in (cal.get("detector-1-seeds") or [cal["detector-1"]])]
+        self.cal2 = [Calibration(pick(c), c["percentiles"]) for c in cal["detector-2"]]
+        agg = cal.get("detector-2-aggregate")   # label-free seed weights (older bundles: plain mean)
+        self.agg2 = np.asarray(agg["weights"] if agg else aggregate_weights("mean", [0.0] * len(self.cal2)), dtype=np.float64)
+        self.fcal = FusionCalibration(tuple(cal["fusion"]["weights"]), pick(cal["fusion"]), cal["fusion"]["percentiles"])
+        # deterministic layers + learned alerting policy (absent in pre-0.3 bundles)
+        self.layers = DeterministicLayers.load(bundle_dir, self.m["num_nodes"], set(approved_executables or ())) if layers else None
+        pol = self.m.get("learned_policy") or {}
+        self.daily_budget = int(daily_budget if daily_budget is not None else pol.get("daily_budget", 20))
+        cp = pol.get("corroboration_percentile", "99.9")
+        self.corroboration = float(cal["fusion"]["percentiles"].get(cp, self.fcal.threshold)) / self.fcal.threshold
+        ev = (self.layers.spec.get("config", {}).get("evidence_rules", EVIDENCE_RULES) if self.layers is not None else ())
+        self.policy = AlertPolicy(self.layers, self.daily_budget, self.corroboration, cp, ev) if self.layers is not None else None
+        # node features for the baseline registry + TGN state continuing from the end of the validation day
+        self.N = self.m["num_nodes"]
+        feat_dim = d1["in_dim"] - (DEG_DIM if self.deg1 else 0)   # node features; detector-1 adds the window degrees
+        self.x = torch.zeros((max(self.N, len(registry)), feat_dim), dtype=torch.float32, device=self.featdev)
+        self._featurize(range(len(registry)))
+        z = np.load(os.path.join(bundle_dir, "tgn_state.npz"), allow_pickle=False)
+        self._tgn_init = {"neighbors": torch.from_numpy(z["neighbors"]), "e_id": torch.from_numpy(z["e_id"]),
+                          "cur_e_id": int(z["cur_e_id"]), "etype": torch.from_numpy(z["etype"]), "n": int(z["n"])}
+        self._neighbor_size = d2["neighbor_size"]
+        self._tgn_init_val = None
+        pv = os.path.join(bundle_dir, "tgn_state_val_start.npz")
+        if os.path.exists(pv):   # state at the start of the validation day (for simulations on that day)
+            zv = np.load(pv, allow_pickle=False)
+            self._tgn_init_val = {"neighbors": torch.from_numpy(zv["neighbors"]), "e_id": torch.from_numpy(zv["e_id"]),
+                                  "cur_e_id": int(zv["cur_e_id"]), "etype": torch.from_numpy(zv["etype"]), "n": int(zv["n"])}
+        self._load_tgn(max(self.N, len(registry)))
+        self.N0 = self.x.shape[0]   # base feature rows (bundle registry) kept across reset()
+
+    def _load_tgn(self, n: int, at: str = "end"):
+        init = self._tgn_init_val if (at == "validation" and self._tgn_init_val is not None) else self._tgn_init
+        self.state = TGNState(n, self._neighbor_size, self.dev)
+        self.state.load_state({k: (v.clone() if torch.is_tensor(v) else v) for k, v in init.items()})
+
+    @property
+    def has_validation_state(self) -> bool:
+        return self._tgn_init_val is not None
+
+    def reset(self, registry: Registry | None = None, at: str = "end"):
+        """Return to a bundle state ("end": neighbours at the end of the validation day, as deployed; "validation":
+        at its start, to replay the validation day itself) and drop features of entities registered since loading;
+        used by the simulator to score independent passes."""
+        if registry is not None:
+            self.reg = registry
+        self.x = self.x[: self.N0].clone()
+        self._load_tgn(self.N0, at)
+        if self.layers is not None:
+            self.layers.reset()
+            self.policy.reset()
+        self.grow()
+
+    def set_learned_alerts(self, on: bool) -> None:
+        """False: layer 3 only ranks; alerts come from layers 1-2 alone (deterministic mode)."""
+        if self.policy is not None:
+            self.policy.learned_alerts = bool(on)
+
+    def set_approved_executables(self, approved) -> None:
+        """Programs approved from the console since the bundle was built (layer 1 stops alerting on them)."""
+        if self.layers is not None:
+            self.layers.set_approved(approved)
+
+    def _featurize(self, ids):
+        """Features for registry rows `ids` (label cache inside the featuriser: many entities share a label)."""
+        ids = list(ids)
+        if not ids:
+            return
+        labels, types = self.reg.labels(), self.reg.types()
+        chunk = 50_000
+        for a in range(0, len(ids), chunk):
+            part = ids[a: a + chunk]
+            f = self.feat.features([labels[i] for i in part], [types[i] for i in part])
+            self.x[torch.as_tensor(part, device=self.featdev)] = torch.from_numpy(f).to(self.featdev)
+
+    def grow(self):
+        """Call after new entities were added to the registry."""
+        n = len(self.reg)
+        if n > self.x.shape[0]:
+            new = torch.zeros((n, self.x.shape[1]), dtype=torch.float32, device=self.featdev)
+            new[: self.x.shape[0]] = self.x
+            old = self.x.shape[0]
+            self.x = new
+            self._featurize(range(old, n))
+            self.state.grow(n)
+
+    @torch.no_grad()
+    def score(self, w: Window, keep_edge_losses: bool = False) -> WindowResult:
+        self.grow()
+        n = self.x.shape[0]
+        src, dst, et = (torch.from_numpy(a).to(self.dev) for a in (w.src, w.dst, w.etype))
+        x = self.x
+        def xg(idx):   # gather features for a batch to the compute device (features may live on CPU)
+            return x[idx.to(self.featdev)].to(self.dev)
+        if self.deg1:
+            dgs, dgd = window_degrees(src, dst, et)
+        l1s = []
+        for v in self.velox:
+            parts = []
+            for a, b in batches(w):
+                xs, xd = xg(src[a:b]), xg(dst[a:b])
+                if self.deg1:
+                    xs, xd = torch.cat([xs, dgs[a:b]], 1), torch.cat([xd, dgd[a:b]], 1)
+                parts.append(v.losses(xs, xd, et[a:b]))
+            l1s.append(torch.cat(parts).cpu().numpy())
+        l2 = [[] for _ in self.orthrus]
+        for a, b in batches(w):
+            tb = make_tgn_batch(src[a:b], dst[a:b], x, self.state)
+            for k, m in enumerate(self.orthrus):
+                l2[k].append(m.losses(tb, et[a:b]).cpu().numpy())
+            self.state.insert(src[a:b], dst[a:b], et[a:b])
+        ids = w.nodes()
+        r1 = np.mean([fill_missing(c.ratio(node_scores(n, w.src, w.dst, l)[ids])) for c, l in zip(self.cal1, l1s)], axis=0)
+        s2 = [node_scores(n, w.src, w.dst, np.concatenate(l)) for l in l2]
+        r2 = np.average([fill_missing(c.ratio(s[ids])) for c, s in zip(self.cal2, s2)], axis=0, weights=self.agg2)
+        fused = self.fcal.fuse(r1, r2) / self.fcal.threshold   # ratio units like r1/r2: > 1 = above the threshold
+        if self.layers is None:
+            alerts, reasons, hits = ids[above(fused)], {}, []
+        else:
+            alerts, reasons, hits = self._alert_policy(w, ids, fused)
+        res = WindowResult(w.start_ns, w.end_ns, w.num_edges, ids, fused, r1, r2, alerts, reasons=reasons, hits=hits)
+        if keep_edge_losses:
+            res.edge_loss = {"detector-1": np.mean(l1s, axis=0), "detector-2": np.mean([np.concatenate(l) for l in l2], axis=0)}
+        return res
+
+    def _alert_policy(self, w: Window, ids: np.ndarray, fused: np.ndarray):
+        return self.policy.apply(w, self.reg, ids, fused)
+
+
+class AlertPolicy:
+    """How the layers' outputs become alerts (one call per window, in stream order; state = the daily budget)."""
+
+    def __init__(self, layers: DeterministicLayers, daily_budget: int, corroboration: float, corroboration_label: str = "99.9",
+                 evidence_rules=EVIDENCE_RULES):
+        self.layers, self.daily_budget, self.corroboration = layers, int(daily_budget), float(corroboration)
+        self.learned_alerts = True        # False: the learned layer only ranks (no corroborated / learned alerts)
+        self.label = corroboration_label
+        self.evidence_rules = set(evidence_rules or ())
+        self.reset()
+
+    def reset(self):
+        self._day, self._day_learned = None, 0
+
+    def apply(self, w: Window, reg: Registry, ids: np.ndarray, fused: np.ndarray):
+        hits: list[Hit] = self.layers.process(w, reg, ids)
+        pos = {int(n): i for i, n in enumerate(ids.tolist())}
+        reasons: dict[int, list[dict]] = {}
+        evidence: dict[int, list[dict]] = {}
+        for h in hits:
+            dest = evidence if h.rule in self.evidence_rules else reasons
+            for k, n in enumerate(h.nodes):
+                dest.setdefault(int(n), []).append({"layer": h.layer, "rule": h.rule, "detail": h.detail, "key": h.key,
+                                                    "value": h.value, "ts_ns": h.ts, "role": "actor" if k == 0 else "object"})
+        det = [n for n in reasons if n in pos]
+        if not self.learned_alerts:
+            return np.array(sorted(reasons), dtype=np.int64), reasons, hits
+        # evidence rules: alert when the learned score corroborates them
+        for n, ev in evidence.items():
+            if n in reasons or n not in pos:
+                continue
+            f = float(fused[pos[n]])
+            if f > self.corroboration:
+                reasons[n] = [{"layer": "corroborated", "rule": ev[0]["rule"], "value": round(f, 3), "key": ev[0]["key"],
+                               "detail": f"{ev[0]['detail']}; learned score {f:.2f} corroborates"}] + [dict(x, layer="evidence") for x in ev]
+        # corroborated: window neighbours of deterministic alerts with a high learned score
+        if det:
+            dset = np.array(det, dtype=np.int64)
+            m = np.isin(w.src, dset) | np.isin(w.dst, dset)
+            nb = np.setdiff1d(np.unique(np.concatenate([w.src[m], w.dst[m]])), dset)
+            for n in nb.tolist():
+                if n in reasons:
+                    continue
+                f = float(fused[pos[n]])
+                if f > self.corroboration:
+                    reasons[n] = [{"layer": "corroborated", "rule": "learned_near_alert", "value": round(f, 3),
+                                   "detail": f"learned score {f:.2f} (above the validation {self.label}th percentile) next to a layer-1/2 alert"}]
+        # learned-only: above the fusion threshold, within the daily budget, highest first
+        day = int(w.start_ns // 86_400_000_000_000)
+        if day != self._day:
+            self._day, self._day_learned = day, 0
+        cand = [i for i in np.where(above(fused))[0].tolist() if int(ids[i]) not in reasons]
+        cand.sort(key=lambda i: -float(fused[i]))
+        room = max(0, self.daily_budget - self._day_learned)
+        for i in cand[:room]:
+            reasons[int(ids[i])] = [{"layer": "learned", "rule": "learned_score", "value": round(float(fused[i]), 3),
+                                     "detail": f"learned score {float(fused[i]):.2f}x the benign maximum"}]
+        self._day_learned += min(room, len(cand))
+        alerts = np.array(sorted(reasons), dtype=np.int64)
+        return alerts, reasons, hits

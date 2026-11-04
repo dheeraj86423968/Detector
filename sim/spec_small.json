@@ -1,0 +1,2 @@
+{"days": ["2018-04-10"], "runs": 8, "attacks_per_pass": 2, "families": ["web_backdoor", "lotl_recon", "ransomware", "transplant:CADETS_E3_Nginx_Backdoor_13"],
+ "evasion_levels": ["none", "high"], "seed": 7, "horizon_windows": 6, "transplant_dir": "/home/platform/sim/attacks"}

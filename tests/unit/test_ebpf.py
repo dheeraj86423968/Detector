@@ -1,0 +1,113 @@
+"""Unit tests for the eBPF collector's record -> event mapping (no kernel/bcc needed), and for the kernel program
+text generation. Run: PYTHONPATH=engine:agent python tests/unit/test_ebpf.py
+"""
+import socket
+import sys
+
+from pdp_agent.sources.ebpf import (ACCEPT, CONNECT, DUP, EXEC, EXEC_ARGV, EXIT, FORK, OPEN, RECV, SEND, STRLEN,
+                                    EbpfNormaliser, Rec, program)
+from pdp_agent.sources.strace_src import StraceNormaliser
+
+fails = 0
+
+
+def check(cond, msg):
+    global fails
+    print(("PASS " if cond else "FAIL ") + msg)
+    fails += 0 if cond else 1
+
+
+n = EbpfNormaliser("boot", proc="/nonexistent")   # no /proc lookups in tests
+
+
+def feed(*recs):
+    out = []
+    for r in recs:
+        out.extend((ev.op, ents[0].ntype, ents[1].ntype, ents[0].label, ents[1].label, ev.ts_ns) for ents, ev in n.decode(r))
+    return out
+
+
+def argv(*a):
+    blob = b"\0".join(x.encode() for x in a) + b"\0"
+    return Rec(EXEC_ARGV, 100, ts_ns=1001, aux=0, ret=len(blob), raw=blob)
+
+
+# exec: filename record + argv chunk -> EXECUTE + CLONE, label = exe + argv
+e = feed(Rec(EXEC, 100, ts_ns=1000, s="/usr/bin/curl"), argv("curl", "-s", "http://x"))
+check(any(o == "EXECUTE" and s == "file" and d == "subject" and dl == "subject /usr/bin/curl curl -s http://x" for o, s, d, sl, dl, _ in e),
+      "exec -> EXECUTE file->process with label 'exe argv'")
+check(any(o == "CLONE" for o, *_ in e) and all(t == 1000 for *_, t in e), "exec also emits CLONE; timestamp of the exec record")
+# an exec whose argv chunk never arrives is flushed by the next record of that pid
+e = feed(Rec(EXEC, 100, ts_ns=2000, s="/bin/true"), Rec(OPEN, 100, ts_ns=2001, s="/etc/hosts", flags=0, ret=3))
+check([o for o, *_ in e][:2] == ["EXECUTE", "CLONE"] and "OPEN" in [o for o, *_ in e], "exec without argv chunk flushed by the next record")
+# long argv split over two chunks
+blob = (b"a" * 300 + b"\0" + b"b" * 400 + b"\0")
+e = feed(Rec(EXEC, 100, ts_ns=3000, s="/bin/x"), Rec(EXEC_ARGV, 100, aux=0, ret=STRLEN, raw=blob[:STRLEN]),
+         Rec(EXEC_ARGV, 100, aux=1, ret=len(blob) - STRLEN, raw=blob[STRLEN:]))
+lab = next(dl for o, s, d, sl, dl, _ in e if o == "EXECUTE")
+check(lab == "subject /bin/x " + "a" * 256 + " " + "b" * 256, "argv over two chunks, each argument truncated to 256 like strace -s 256")
+
+# open: read-only, write, read-write, O_CREAT alone is not a write (same rule as strace/auditd)
+check([o for o, *_ in feed(Rec(OPEN, 100, s="/etc/passwd", flags=0, ret=3))] == ["OPEN", "READ"], "O_RDONLY -> OPEN + READ")
+check([o for o, *_ in feed(Rec(OPEN, 100, s="/tmp/o", flags=0o1 | 0o100 | 0o1000, ret=3))] == ["OPEN", "WRITE"], "O_WRONLY|O_CREAT|O_TRUNC -> OPEN + WRITE")
+check([o for o, *_ in feed(Rec(OPEN, 100, s="/tmp/o", flags=0o2, ret=3))] == ["OPEN", "READ", "WRITE"], "O_RDWR -> OPEN + READ + WRITE")
+check([o for o, *_ in feed(Rec(OPEN, 100, s="/tmp/o", flags=0o100, ret=3))] == ["OPEN", "READ"], "O_RDONLY|O_CREAT -> no WRITE")
+e = feed(Rec(OPEN, 100, s="/a/./b/../c", flags=0, ret=3))
+check(e[0][3] == "file /a/c", "absolute paths are normalised")
+e = feed(Rec(OPEN, 100, s="rel.txt", flags=0, ret=3))
+check(e[0][3] == "file rel.txt", "relative path without a resolvable cwd is kept as given")
+
+# fd-relative open through a dup'ed directory fd (grep -r / fts): open dir -> fd 3, dup 3 -> 4, openat(4, "a.c")
+feed(Rec(OPEN, 300, s="/srv/data", flags=0o200000, ret=3), Rec(DUP, 300, aux=3, ret=4))
+e = feed(Rec(OPEN, 300, s="a.c", flags=0, dirfd=4, ret=5))
+check(e[0][3] == "file /srv/data/a.c", f"open relative to a dup'ed directory fd resolves ({e[0][3]})")
+
+# sockets: IPv4, IPv6, msg variants, inbound direction
+a4 = socket.inet_aton("9.9.9.9") + b"\0" * 12
+e = feed(Rec(CONNECT, 100, family=socket.AF_INET, port=443, addr=a4))
+check(len(e) == 1 and e[0][0] == "CONNECT" and e[0][2] == "netflow" and e[0][4] == "netflow 9.9.9.9 443", "connect IPv4 -> CONNECT process->netflow")
+a6 = socket.inet_pton(socket.AF_INET6, "2001:db8::1")
+e = feed(Rec(SEND, 100, family=socket.AF_INET6, port=53, addr=a6, aux=1))
+check(e[0][0] == "SENDMSG" and e[0][4] == "netflow 2001:db8::1 53", "sendmsg IPv6 -> SENDMSG")
+e = feed(Rec(RECV, 100, family=socket.AF_INET, port=53, addr=a4, aux=0))
+check(e[0][0] == "RECVFROM" and e[0][1] == "netflow" and e[0][2] == "subject", "recvfrom -> RECVFROM socket->process")
+e = feed(Rec(ACCEPT, 100, family=socket.AF_INET, port=5555, addr=a4))
+check(e[0][0] == "RECVFROM" and e[0][1] == "netflow", "accept -> RECVFROM socket->process")
+check(feed(Rec(CONNECT, 100, family=socket.AF_UNIX)) == [], "non-inet socket ignored")
+
+# fork / exit: child inherits the parent's label; a reused pid after exit is a new process
+e = feed(Rec(FORK, 100, aux=200))
+check(len(e) == 1 and e[0][0] == "CLONE" and e[0][1] == e[0][2] == "subject", "fork -> CLONE parent->child")
+u1 = n.procs.current[200].uuid
+feed(Rec(EXIT, 200))
+feed(Rec(OPEN, 200, s="/etc/hosts", flags=0, ret=3))
+check(n.procs.current[200].uuid != u1, "exit: a reused pid gets a new process identity")
+
+# event ids are zero-padded so that their order equals emission order
+ids = [ev.event_uuid for r in (Rec(OPEN, 100, s="/x", flags=2, ret=3),) for _, ev in n.decode(r)]
+check(ids == sorted(ids) and all(len(i.split(":")[1]) == 10 for i in ids), "event ids sortable in emission order")
+
+# identical semantics to the strace collector for the same syscalls
+st = StraceNormaliser("r")
+sl = [(10, '1.000000 execve("/usr/bin/curl", ["curl", "-s", "http://x"], 0x1 /* 7 vars */) = 0'),
+      (10, '1.000100 openat(AT_FDCWD</root>, "/etc/passwd", O_RDONLY) = 3</etc/passwd>'),
+      (10, '1.000200 openat(AT_FDCWD</root>, "/tmp/o", O_WRONLY|O_CREAT|O_TRUNC, 0644) = 4</tmp/o>'),
+      (10, '1.000300 connect(3<socket>, {sa_family=AF_INET, sin_port=htons(443), sin_addr=inet_addr("9.9.9.9")}, 16) = 0'),
+      (10, '1.000400 clone(child_stack=NULL, flags=CLONE_VM|CLONE_THREAD|CLONE_SIGHAND) = 11'),
+      (11, '1.000500 openat(AT_FDCWD</root>, "/etc/hosts", O_RDONLY) = 5</etc/hosts>')]
+s_ev = [(e.op, ents[0].label, ents[1].label) for pid, l in sl for ents, e in st.feed(pid, l)]
+b = EbpfNormaliser("r", proc="/nonexistent")
+recs = [Rec(EXEC, 10, s="/usr/bin/curl"), Rec(EXEC_ARGV, 10, aux=0, ret=17, raw=b"curl\0-s\0http://x\0"),
+        Rec(OPEN, 10, s="/etc/passwd", flags=0, ret=3), Rec(OPEN, 10, s="/tmp/o", flags=0o1101, ret=4),
+        Rec(CONNECT, 10, family=socket.AF_INET, port=443, addr=a4), Rec(OPEN, 10, s="/etc/hosts", flags=0, ret=5)]
+b_ev = [(e.op, ents[0].label, ents[1].label) for r in recs for ents, e in b.decode(r)]
+check(s_ev == b_ev, f"eBPF and strace produce identical (op, src label, dst label) streams ({len(b_ev)} events; thread syscalls attributed to the process)")
+
+# kernel program text for both architectures
+for arch in ("x86_64", "aarch64"):
+    t = program(1234, 1024, arch)
+    check("#define SYS_openat" in t and "#define REG_ARG4" in t and "__SELF_PID__" not in t and "/*__SYSCALLS__*/" not in t,
+          f"kernel program generated for {arch}")
+
+print("FAILURES:", fails)
+sys.exit(1 if fails else 0)

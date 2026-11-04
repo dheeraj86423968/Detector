@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>PDP Console — server settings</title>
+<style>
+  :root { color-scheme: dark; }
+  body { background: #0e141b; color: #cdd6e0; font: 14px system-ui, sans-serif; margin: 0; padding: 40px; }
+  .card { max-width: 560px; margin: 40px auto; background: #141c26; border: 1px solid #263040; border-radius: 10px; padding: 28px; }
+  h1 { font-size: 18px; margin: 0 0 4px; } p.muted { color: #7f8c9b; }
+  label { display: block; margin: 16px 0 4px; } input { width: 100%; padding: 9px; background: #0e141b; border: 1px solid #2a3647; color: #cdd6e0; border-radius: 6px; box-sizing: border-box; }
+  button { margin-top: 20px; padding: 9px 18px; background: #2d6cdf; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
+  code { color: #8fb4ff; } ul.muted { color: #7f8c9b; padding-left: 20px; } li { margin: 4px 0; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Server connection</h1>
+    <p class="muted">Point the console at your on-premises PDP gateway.</p>
+    <label>Gateway URL</label>
+    <input id="url" placeholder="https://pdp.example.com" />
+    <p class="muted">The console port of the gateway (443 by default), not the agent port 8443.</p>
+    <label>CA fingerprint (optional, recommended)</label>
+    <input id="fp" placeholder="hex sha256 of the CA certificate DER, or sha256/BASE64 SPKI pin" />
+    <p class="muted">Pin the gateway CA so the app trusts only your server. Accepted formats:</p>
+    <ul class="muted">
+      <li>the hex <code>sha256</code> of the CA certificate DER, upper or lower case, colons allowed
+        (<code>AB:CD:…</code> as printed by <code>openssl x509 -fingerprint -sha256</code>). The console shows it as
+        <b>CA fingerprint</b> (<code>ca_sha256</code>) when you create an enrolment token; or compute it with
+        <code>openssl x509 -in ca.pem -outform der | sha256sum</code> (<code>ca.pem</code> is served at <code>/dl/ca.pem</code>);</li>
+      <li>an <code>sha256/&lt;base64&gt;</code> pin of the CA's (or the server certificate's) SubjectPublicKeyInfo.</li>
+    </ul>
+    <p class="muted">The server certificate must be signed by the pinned CA and valid for the gateway hostname. Leave blank to trust only localhost.</p>
+    <button id="save">Save and connect</button>
+  </div>
+  <script>
+    (async () => {
+      const c = await window.pdp.getConfig();
+      document.getElementById("url").value = c.serverUrl || "";
+      document.getElementById("fp").value = c.caFingerprint || "";
+      document.getElementById("save").onclick = () =>
+        window.pdp.saveConfig({ serverUrl: document.getElementById("url").value.trim(), caFingerprint: document.getElementById("fp").value.trim() });
+    })();
+  </script>
+</body>
+</html>

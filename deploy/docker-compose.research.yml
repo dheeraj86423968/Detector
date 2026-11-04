@@ -1,0 +1,45 @@
+# Overlay: benchmark endpoints that replay a DARPA TC database through the real agent path (enrol, upload, bundle,
+# local detection, report). The research Postgres container must be reachable on the external `shared_network`.
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml -f deploy/docker-compose.research.yml \
+#     --env-file deploy/.env up -d agent-bench
+services:
+  worker-train:              # held-out days for simulation campaigns are replayed from the research database
+    networks: [ backend, research ]
+  agent-bench:
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["agent", "run"]
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+    volumes:
+      - pdp_bench_agent:/var/lib/pdp
+      - ./bench/agent.json:/etc/pdp/agent.json:ro
+    networks: [ edge, research ]
+    depends_on: [ gateway ]
+    deploy:                  # benchmark endpoints detect on the GPU (bench/agent.json "device": "cuda")
+      resources:
+        reservations:
+          devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]
+
+  agent-bench-theia:         # second benchmark endpoint (THEIA E3); both fit together on the 46 GB L40S
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["agent", "run"]
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+    volumes:
+      - pdp_bench_agent_theia:/var/lib/pdp
+      - ./bench/agent-theia.json:/etc/pdp/agent.json:ro
+    networks: [ edge, research ]
+    depends_on: [ gateway ]
+    deploy:
+      resources:
+        reservations:
+          devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]
+
+networks:
+  research:
+    external: true
+    name: shared_network
+
+volumes:
+  pdp_bench_agent: {}
+  pdp_bench_agent_theia: {}

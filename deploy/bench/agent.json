@@ -1,0 +1,29 @@
+{
+  "server_url": "https://gateway",
+  "agent_url": "https://gateway:8443",
+  "data_dir": "/var/lib/pdp",
+  "pki_dir": "/var/lib/pdp/pki",
+  "day_tz": "US/Eastern",
+  "status_interval": 10,
+  "source": {
+    "kind": "db-replay",
+    "database": "cadets_e3",
+    "host": "postgres",
+    "days": [
+      "2018-04-02",
+      "2018-04-03",
+      "2018-04-04",
+      "2018-04-05",
+      "2018-04-07",
+      "2018-04-08",
+      "2018-04-09",
+      "2018-04-10",
+      "2018-04-06",
+      "2018-04-11",
+      "2018-04-12",
+      "2018-04-13"
+    ]
+  },
+  "device": "cuda",
+  "feat_device": "cuda"
+}

@@ -1,0 +1,13 @@
+{
+  "server_url": "https://gateway",
+  "agent_url": "https://gateway:8443",
+  "data_dir": "/var/lib/pdp",
+  "pki_dir": "/var/lib/pdp/pki",
+  "day_tz": "UTC",
+  "status_interval": 10,
+  "device": "cpu",
+  "source": {"kind": "sandbox", "baseline_days": 3, "sessions_per_day": 5, "scale": 3,
+             "base_date": "2025-01-01", "python": "python",
+             "benign": ["build", "web", "admin", "user"],
+             "test_days": [{"benign": ["build", "web", "user"], "attacks": ["dropper", "backdoor", "exfil", "lotl"]}]}
+}

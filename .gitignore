@@ -1,0 +1,18 @@
+# secrets and local state
+deploy/.env
+*.pem
+*.key
+# build output
+console/node_modules/
+console/dist/
+console/tsconfig.tsbuildinfo
+desktop/node_modules/
+desktop/dist/
+dist/
+build/
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.venv/

@@ -1,0 +1,86 @@
+# Overlay: live benchmark endpoints that need no external data (see docs/SANDBOX.md):
+#   agent-sandbox        live sandbox, strace collector      (profile sandbox)
+#   agent-sandbox-ebpf   live sandbox, eBPF collector        (profile sandbox-ebpf)
+#   agent-suite          eBPF sandbox + randomised client attack suite  (profile suite)
+#   agent-ebpf-host      this host itself, eBPF, production  (profile ebpf-host)
+# DARPA database replays are in docker-compose.research.yml (needs the research Postgres on `shared_network`).
+services:
+  agent-sandbox:            # phase 5: a live endpoint whose telemetry is real kernel syscalls (strace collector),
+    image: pdp/agent:${PDP_VERSION:-dev}    # the SLIM endpoint runtime (1.7 GB CPU image), not the training image
+    build: { context: .., dockerfile: deploy/docker/agent.Dockerfile }
+    command: ["run"]                        # the slim entrypoint enrols from PDP_ENROLL_TOKEN then runs
+    cap_add: [ SYS_PTRACE ]
+    security_opt: [ "seccomp=unconfined" ]
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+      PDP_ENROLL_TOKEN: ${PDP_SANDBOX_TOKEN:-}
+      PDP_CA_SHA256: ${PDP_CA_SHA256:-}
+    volumes:
+      - pdp_sandbox_agent:/var/lib/pdp
+      - ./bench/agent-sandbox.json:/etc/pdp/agent.json:ro
+    networks: [ edge ]
+    depends_on: [ gateway ]
+    profiles: [ sandbox ]
+
+  agent-sandbox-ebpf:       # the same live sandbox, captured with the production eBPF collector instead of strace
+    image: pdp/agent:${PDP_VERSION:-dev}
+    build: { context: .., dockerfile: deploy/docker/agent.Dockerfile }
+    command: ["run"]
+    <<: &ebpf-privileges     # bcc needs BPF/perf privileges, tracefs, the host kernel headers and the host pid namespace
+      privileged: true
+      pid: host
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+      PDP_ENROLL_TOKEN: ${PDP_SANDBOX_EBPF_TOKEN:-}
+      PDP_CA_SHA256: ${PDP_CA_SHA256:-}
+    volumes:
+      - pdp_sandbox_ebpf_agent:/var/lib/pdp
+      - ./bench/agent-sandbox-ebpf.json:/etc/pdp/agent.json:ro
+      - /lib/modules:/lib/modules:ro
+      - /usr/src:/usr/src:ro
+      - /sys/kernel/tracing:/sys/kernel/tracing
+    networks: [ edge ]
+    depends_on: [ gateway ]
+    profiles: [ sandbox-ebpf ]
+
+  agent-suite:              # live eBPF sandbox whose test days run randomised client-suite campaigns (sim/pdp_sim/suite)
+    image: pdp/agent:${PDP_VERSION:-dev}
+    command: ["run"]
+    <<: *ebpf-privileges
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+      PDP_ENROLL_TOKEN: ${PDP_SUITE_TOKEN:-}
+      PDP_CA_SHA256: ${PDP_CA_SHA256:-}
+    volumes:
+      - pdp_suite_agent:/var/lib/pdp
+      - ./bench/agent-suite.json:/etc/pdp/agent.json:ro
+      - /lib/modules:/lib/modules:ro
+      - /usr/src:/usr/src:ro
+    networks: [ edge ]
+    depends_on: [ gateway ]
+    profiles: [ suite ]
+
+  agent-ebpf-host:          # a real endpoint: this host itself, every process, eBPF collector (production config)
+    image: pdp/agent:${PDP_VERSION:-dev}
+    command: ["run"]
+    <<: *ebpf-privileges
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+      PDP_ENROLL_TOKEN: ${PDP_HOST_TOKEN:-}
+      PDP_CA_SHA256: ${PDP_CA_SHA256:-}
+    volumes:
+      - pdp_host_agent:/var/lib/pdp
+      - ./bench/agent-ebpf-host.json:/etc/pdp/agent.json:ro
+      - /lib/modules:/lib/modules:ro
+      - /usr/src:/usr/src:ro
+      - /sys/kernel/tracing:/sys/kernel/tracing
+    networks: [ edge ]
+    depends_on: [ gateway ]
+    restart: unless-stopped
+    profiles: [ ebpf-host ]
+
+volumes:
+  pdp_sandbox_agent: {}
+  pdp_sandbox_ebpf_agent: {}
+  pdp_host_agent: {}
+  pdp_suite_agent: {}

@@ -1,0 +1,97 @@
+name: pdp
+# Server stack. Bring up with ./deploy/bringup.sh (generates PDP_DB_PASSWORD into deploy/.env on first run).
+x-db-env: &db-env
+  PDP_DB_PASSWORD: ${PDP_DB_PASSWORD:?set PDP_DB_PASSWORD in deploy/.env (deploy/bringup.sh generates one)}
+
+services:
+  platform-db:
+    image: postgres:17
+    environment: { POSTGRES_USER: pdp, POSTGRES_PASSWORD: "${PDP_DB_PASSWORD:?set PDP_DB_PASSWORD}", POSTGRES_DB: platform }
+    volumes: [ pdp_platform_db:/var/lib/postgresql/data ]
+    networks: [ backend ]
+    restart: unless-stopped
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U pdp -d platform"], interval: 5s, timeout: 5s, retries: 10 }
+
+  telemetry-db:
+    image: postgres:17
+    environment: { POSTGRES_USER: pdp, POSTGRES_PASSWORD: "${PDP_DB_PASSWORD:?set PDP_DB_PASSWORD}", POSTGRES_DB: telemetry }
+    command: ["postgres", "-c", "shared_buffers=${PDP_TELEMETRY_SHARED_BUFFERS:-4GB}", "-c", "max_wal_size=8GB", "-c", "work_mem=64MB",
+              "-c", "maintenance_work_mem=1GB", "-c", "effective_cache_size=16GB", "-c", "synchronous_commit=off"]
+    shm_size: 4g
+    volumes: [ pdp_telemetry_db:/var/lib/postgresql/data ]
+    networks: [ backend ]
+    restart: unless-stopped
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U pdp -d telemetry"], interval: 5s, timeout: 5s, retries: 10 }
+
+  api:
+    image: pdp/server:${PDP_VERSION:-dev}
+    build: { context: .., dockerfile: deploy/docker/server.Dockerfile }
+    environment:
+      <<: *db-env
+      PDP_HOSTNAMES: ${PDP_HOSTNAMES:-localhost,gateway}
+      PDP_API_WORKERS: ${PDP_API_WORKERS:-4}
+    volumes: [ pdp_data:/data, pdp_pki:/pki ]
+    networks: [ backend ]
+    restart: unless-stopped
+    depends_on: { platform-db: { condition: service_healthy }, telemetry-db: { condition: service_healthy } }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz', timeout=5).status == 200 else 1)"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 20s
+
+  worker-ingest:
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["worker", "--kinds", "ingest"]
+    environment: { <<: *db-env }
+    volumes: [ pdp_data:/data, pdp_pki:/pki ]
+    networks: [ backend ]
+    restart: unless-stopped
+    depends_on: { api: { condition: service_healthy } }
+
+  worker-train:
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["worker", "--kinds", "train,sim", "--device", "${PDP_TRAIN_DEVICE:-cpu}"]
+    environment: { <<: *db-env }
+    shm_size: 8g
+    volumes: [ pdp_data:/data, pdp_pki:/pki ]
+    networks: [ backend ]
+    restart: unless-stopped
+    depends_on: { api: { condition: service_healthy } }
+
+  gateway:
+    image: nginx:1.27-alpine
+    ports: [ "${PDP_CONSOLE_PORT:-443}:443", "${PDP_AGENT_PORT:-8443}:8443" ]
+    volumes:
+      - ./nginx/gateway.conf:/etc/nginx/conf.d/default.conf:ro
+      - pdp_pki:/pki:ro
+      - ../console/dist:/console:ro
+    networks: [ backend, edge ]
+    restart: unless-stopped
+    depends_on: { api: { condition: service_healthy } }
+
+  exporter:                  # alert export to the SOC (syslog CEF / webhook); the only backend service with egress
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["exporter"]
+    environment:
+      <<: *db-env
+      PDP_EXPORT_SYSLOG: ${PDP_EXPORT_SYSLOG:-}
+      PDP_EXPORT_WEBHOOK: ${PDP_EXPORT_WEBHOOK:-}
+      PDP_EXPORT_WEBHOOK_TOKEN: ${PDP_EXPORT_WEBHOOK_TOKEN:-}
+      PDP_EXPORT_FROM: ${PDP_EXPORT_FROM:-now}
+      PDP_CONSOLE_URL: ${PDP_CONSOLE_URL:-https://localhost}
+    networks: [ backend, edge ]
+    restart: unless-stopped
+    depends_on: { api: { condition: service_healthy } }
+    profiles: [ export ]
+
+networks:
+  backend: { internal: true }     # no internet egress for api/workers/databases
+  edge: {}
+
+volumes:
+  pdp_platform_db: {}
+  pdp_telemetry_db: {}
+  pdp_data: {}
+  pdp_pki: {}

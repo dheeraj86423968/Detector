@@ -1,0 +1,11 @@
+# Overlay: GPU for the training / simulation worker.
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml --env-file deploy/.env up -d
+services:
+  worker-train:
+    command: ["worker", "--kinds", "train,sim", "--device", "cuda"]
+    environment:
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]

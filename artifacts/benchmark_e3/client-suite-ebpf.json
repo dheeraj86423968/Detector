@@ -1,0 +1,1053 @@
+{
+ "endpoint": "9f6fce20-f3b0-4139-a754-b3ca1f4b6e54",
+ "scenario_runs": 64,
+ "detected": 43,
+ "detection_rate": 0.672,
+ "detection_rate_ci95": [
+  0.55,
+  0.774
+ ],
+ "by_scenario": {
+  "credential_access": {
+   "detected": 3,
+   "runs": 4,
+   "rate": 0.75
+  },
+  "cryptominer": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "discovery": {
+   "detected": 3,
+   "runs": 4,
+   "rate": 0.75
+  },
+  "drop_and_execute": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "exfil_dns_tunnel": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "ingress_tool_transfer": {
+   "detected": 0,
+   "runs": 4,
+   "rate": 0.0
+  },
+  "interpreter_beacon": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "lateral_movement": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "masquerade_and_cleanup": {
+   "detected": 3,
+   "runs": 4,
+   "rate": 0.75
+  },
+  "persistence_cron": {
+   "detected": 0,
+   "runs": 4,
+   "rate": 0.0
+  },
+  "persistence_ssh_key": {
+   "detected": 1,
+   "runs": 4,
+   "rate": 0.25
+  },
+  "privesc_discovery": {
+   "detected": 0,
+   "runs": 4,
+   "rate": 0.0
+  },
+  "ransomware": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "reverse_shell": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "staged_exfiltration": {
+   "detected": 3,
+   "runs": 4,
+   "rate": 0.75
+  },
+  "web_shell": {
+   "detected": 2,
+   "runs": 4,
+   "rate": 0.5
+  }
+ },
+ "by_tactic": {
+  "collection/exfiltration": {
+   "detected": 3,
+   "runs": 4,
+   "rate": 0.75
+  },
+  "command-and-control": {
+   "detected": 4,
+   "runs": 8,
+   "rate": 0.5
+  },
+  "credential-access": {
+   "detected": 3,
+   "runs": 4,
+   "rate": 0.75
+  },
+  "defense-evasion": {
+   "detected": 3,
+   "runs": 4,
+   "rate": 0.75
+  },
+  "discovery": {
+   "detected": 3,
+   "runs": 4,
+   "rate": 0.75
+  },
+  "execution": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "execution/c2": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "exfiltration": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "impact": {
+   "detected": 8,
+   "runs": 8,
+   "rate": 1.0
+  },
+  "initial-access/persistence": {
+   "detected": 2,
+   "runs": 4,
+   "rate": 0.5
+  },
+  "lateral-movement": {
+   "detected": 4,
+   "runs": 4,
+   "rate": 1.0
+  },
+  "persistence": {
+   "detected": 1,
+   "runs": 8,
+   "rate": 0.12
+  },
+  "privilege-escalation": {
+   "detected": 0,
+   "runs": 4,
+   "rate": 0.0
+  }
+ },
+ "false_positive_nodes": 15,
+ "false_positive_labels": [
+  "file /bin/cat",
+  "file /bin/hostname",
+  "file /bin/ls",
+  "file /bin/ps",
+  "file /bin/uname",
+  "file /usr/bin/env",
+  "file /usr/bin/head",
+  "file /usr/bin/hostname",
+  "file /usr/bin/id",
+  "file /usr/bin/ps",
+  "file /usr/bin/uname",
+  "file /usr/bin/w",
+  "file /usr/bin/whoami",
+  "subject /usr/bin/env env",
+  "subject /usr/bin/w w"
+ ],
+ "context_alerts": 46,
+ "context_nodes": 43,
+ "context_labels": [
+  "file /bin/chmod",
+  "file /bin/cp",
+  "file /bin/gzip",
+  "file /bin/sh",
+  "file /bin/tar",
+  "file /usr/bin/find",
+  "file /usr/bin/ls",
+  "file /usr/bin/rm",
+  "subject /bin/cat /bin/cat /etc/hosts",
+  "subject /bin/cat /bin/cat /proc/cpuinfo",
+  "subject /bin/cat /bin/cat /proc/net/tcp",
+  "subject /bin/cat /bin/cat /proc/version",
+  "subject /bin/hostname /bin/hostname",
+  "subject /bin/ls /bin/ls -la /home",
+  "subject /bin/ps /bin/ps -ef"
+ ],
+ "runs": [
+  {
+   "scenario": "exfil_dns_tunnel",
+   "tactic": "exfiltration",
+   "techniques": [
+    "T1048.003",
+    "T1071.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-4-suite-exfil_dns_tunnel/.local/bin/resolvc",
+    "netflow 198.51.100.131 53",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-4-suite-exfil_dns_tunnel/.local/bin/reso"
+   ],
+   "max_fused": 2.29
+  },
+  {
+   "scenario": "credential_access",
+   "tactic": "credential-access",
+   "techniques": [
+    "T1003.008",
+    "T1552.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one credential_access --root /var/lib",
+    "subject /usr/bin/find /usr/bin/find /var/lib/pdp/sandbox/d1736035200000000000-5-suite-cred"
+   ],
+   "max_fused": 1.71
+  },
+  {
+   "scenario": "masquerade_and_cleanup",
+   "tactic": "defense-evasion",
+   "techniques": [
+    "T1036.005",
+    "T1070.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerade_and_cleanup/var/tmp/udev",
+    "subject /bin/cp /bin/cp /bin/sh /var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquera",
+    "subject /bin/sh /bin/sh -c : > /var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerad",
+    "subject /usr/bin/rm rm -f /var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerade_and",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerade_and_cleanup/var/tmp/u"
+   ],
+   "max_fused": 3.28
+  },
+  {
+   "scenario": "discovery",
+   "tactic": "discovery",
+   "techniques": [
+    "T1082",
+    "T1033",
+    "T1057",
+    "T1049"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one discovery --root /var/lib/pdp/san"
+   ],
+   "max_fused": 1.0
+  },
+  {
+   "scenario": "ransomware",
+   "tactic": "impact",
+   "techniques": [
+    "T1486",
+    "T1083"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware/.local/bin/kworker-x",
+    "file /var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware/tmp/kworker",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware/.local/bin/kworker-x ",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware/tmp/kworker /bin/sh /"
+   ],
+   "max_fused": 3.36
+  },
+  {
+   "scenario": "web_shell",
+   "tactic": "initial-access/persistence",
+   "techniques": [
+    "T1190",
+    "T1505.003",
+    "T1059.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one web_shell --root /var/lib/pdp/san"
+   ],
+   "max_fused": 1.0
+  },
+  {
+   "scenario": "staged_exfiltration",
+   "tactic": "collection/exfiltration",
+   "techniques": [
+    "T1005",
+    "T1074.001",
+    "T1560.001",
+    "T1041"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /bin/gzip /bin/gzip -f /var/lib/pdp/sandbox/d1736035200000000000-11-suite-staged_e",
+    "subject /bin/tar /bin/tar cf /var/lib/pdp/sandbox/d1736035200000000000-11-suite-staged_exf",
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one staged_exfiltration --root /var/l"
+   ],
+   "max_fused": 1.91
+  },
+  {
+   "scenario": "reverse_shell",
+   "tactic": "execution/c2",
+   "techniques": [
+    "T1059.004",
+    "T1071"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-12-suite-reverse_shell/.local/bin/bash",
+    "netflow 198.51.100.213 53",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-12-suite-reverse_shell/.local/bin/bash /"
+   ],
+   "max_fused": 2.03
+  },
+  {
+   "scenario": "ingress_tool_transfer",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1105"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "masquerade_and_cleanup",
+   "tactic": "defense-evasion",
+   "techniques": [
+    "T1036.005",
+    "T1070.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-14-suite-masquerade_and_cleanup/.cache/udev",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-14-suite-masquerade_and_cleanup/.cache/u"
+   ],
+   "max_fused": 3.3
+  },
+  {
+   "scenario": "persistence_cron",
+   "tactic": "persistence",
+   "techniques": [
+    "T1053.003"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "persistence_ssh_key",
+   "tactic": "persistence",
+   "techniques": [
+    "T1098.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /bin/chmod /bin/chmod 600 /var/lib/pdp/sandbox/d1736035200000000000-18-suite-persi"
+   ],
+   "max_fused": 1.8
+  },
+  {
+   "scenario": "interpreter_beacon",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1059.006",
+    "T1071.001",
+    "T1029"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-19-suite-interpreter_beacon/.local/bin/cron",
+    "netflow 198.51.100.195 443",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-19-suite-interpreter_beacon/.local/bin/c"
+   ],
+   "max_fused": 1.93
+  },
+  {
+   "scenario": "drop_and_execute",
+   "tactic": "execution",
+   "techniques": [
+    "T1105",
+    "T1204.002",
+    "T1059.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-21-suite-drop_and_execute/.local/bin/kworke",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-21-suite-drop_and_execute/.local/bin/kwo"
+   ],
+   "max_fused": 3.41
+  },
+  {
+   "scenario": "exfil_dns_tunnel",
+   "tactic": "exfiltration",
+   "techniques": [
+    "T1048.003",
+    "T1071.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-23-suite-exfil_dns_tunnel/.local/bin/v3lr32",
+    "netflow 192.0.2.9 53",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-23-suite-exfil_dns_tunnel/.local/bin/v3l"
+   ],
+   "max_fused": 2.29
+  },
+  {
+   "scenario": "discovery",
+   "tactic": "discovery",
+   "techniques": [
+    "T1082",
+    "T1033",
+    "T1057",
+    "T1049"
+   ],
+   "detected": true,
+   "indicators": [
+    "netflow 203.0.113.107 41752",
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one discovery --root /var/lib/pdp/san"
+   ],
+   "max_fused": 1.02
+  },
+  {
+   "scenario": "privesc_discovery",
+   "tactic": "privilege-escalation",
+   "techniques": [
+    "T1548.001"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "persistence_ssh_key",
+   "tactic": "persistence",
+   "techniques": [
+    "T1098.004"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "lateral_movement",
+   "tactic": "lateral-movement",
+   "techniques": [
+    "T1021.004",
+    "T1570"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /bin/cp /bin/cp /bin/ls /var/lib/pdp/sandbox/d1736035200000000000-28-suite-lateral"
+   ],
+   "max_fused": 9.72
+  },
+  {
+   "scenario": "web_shell",
+   "tactic": "initial-access/persistence",
+   "techniques": [
+    "T1190",
+    "T1505.003",
+    "T1059.004"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "persistence_cron",
+   "tactic": "persistence",
+   "techniques": [
+    "T1053.003"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "lateral_movement",
+   "tactic": "lateral-movement",
+   "techniques": [
+    "T1021.004",
+    "T1570"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /bin/cp /bin/cp /bin/ls /var/lib/pdp/sandbox/d1736035200000000000-31-suite-lateral"
+   ],
+   "max_fused": 8.51
+  },
+  {
+   "scenario": "drop_and_execute",
+   "tactic": "execution",
+   "techniques": [
+    "T1105",
+    "T1204.002",
+    "T1059.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-32-suite-drop_and_execute/.X11-unix/dbus-he",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-32-suite-drop_and_execute/.X11-unix/dbus"
+   ],
+   "max_fused": 3.37
+  },
+  {
+   "scenario": "interpreter_beacon",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1059.006",
+    "T1071.001",
+    "T1029"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-34-suite-interpreter_beacon/.local/bin/udev",
+    "netflow 203.0.113.192 443",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-34-suite-interpreter_beacon/.local/bin/u"
+   ],
+   "max_fused": 2.92
+  },
+  {
+   "scenario": "credential_access",
+   "tactic": "credential-access",
+   "techniques": [
+    "T1003.008",
+    "T1552.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one credential_access --root /var/lib"
+   ],
+   "max_fused": 1.0
+  },
+  {
+   "scenario": "ingress_tool_transfer",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1105"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "cryptominer",
+   "tactic": "impact",
+   "techniques": [
+    "T1496"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-38-suite-cryptominer/.local/bin/kswapd0",
+    "netflow 192.0.2.153 5555",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-38-suite-cryptominer/.local/bin/kswapd0 "
+   ],
+   "max_fused": 1.96
+  },
+  {
+   "scenario": "staged_exfiltration",
+   "tactic": "collection/exfiltration",
+   "techniques": [
+    "T1005",
+    "T1074.001",
+    "T1560.001",
+    "T1041"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one staged_exfiltration --root /var/l"
+   ],
+   "max_fused": 1.0
+  },
+  {
+   "scenario": "privesc_discovery",
+   "tactic": "privilege-escalation",
+   "techniques": [
+    "T1548.001"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "cryptominer",
+   "tactic": "impact",
+   "techniques": [
+    "T1496"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-42-suite-cryptominer/.local/bin/kdevtmpfsi",
+    "netflow 198.51.100.155 3333",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-42-suite-cryptominer/.local/bin/kdevtmpf"
+   ],
+   "max_fused": 1.96
+  },
+  {
+   "scenario": "reverse_shell",
+   "tactic": "execution/c2",
+   "techniques": [
+    "T1059.004",
+    "T1071"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-43-suite-reverse_shell/.local/bin/bash",
+    "netflow 192.0.2.123 53",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-43-suite-reverse_shell/.local/bin/bash /"
+   ],
+   "max_fused": 1.95
+  },
+  {
+   "scenario": "ransomware",
+   "tactic": "impact",
+   "techniques": [
+    "T1486",
+    "T1083"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware/.local/bin/kworker-x",
+    "file /var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware/tmp/kworker",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware/.local/bin/kworker-x",
+    "subject /var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware/tmp/kworker /bin/sh "
+   ],
+   "max_fused": 3.36
+  },
+  {
+   "scenario": "web_shell",
+   "tactic": "initial-access/persistence",
+   "techniques": [
+    "T1190",
+    "T1505.003",
+    "T1059.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one web_shell --root /var/lib/pdp/san"
+   ],
+   "max_fused": 1.0
+  },
+  {
+   "scenario": "credential_access",
+   "tactic": "credential-access",
+   "techniques": [
+    "T1003.008",
+    "T1552.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one credential_access --root /var/lib"
+   ],
+   "max_fused": 1.0
+  },
+  {
+   "scenario": "exfil_dns_tunnel",
+   "tactic": "exfiltration",
+   "techniques": [
+    "T1048.003",
+    "T1071.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-4-suite-exfil_dns_tunnel/.local/bin/dnsd",
+    "netflow 203.0.113.80 53",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-4-suite-exfil_dns_tunnel/.local/bin/dnsd"
+   ],
+   "max_fused": 2.29
+  },
+  {
+   "scenario": "ingress_tool_transfer",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1105"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "discovery",
+   "tactic": "discovery",
+   "techniques": [
+    "T1082",
+    "T1033",
+    "T1057",
+    "T1049"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one discovery --root /var/lib/pdp/san"
+   ],
+   "max_fused": 1.0
+  },
+  {
+   "scenario": "privesc_discovery",
+   "tactic": "privilege-escalation",
+   "techniques": [
+    "T1548.001"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "discovery",
+   "tactic": "discovery",
+   "techniques": [
+    "T1082",
+    "T1033",
+    "T1057",
+    "T1049"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "reverse_shell",
+   "tactic": "execution/c2",
+   "techniques": [
+    "T1059.004",
+    "T1071"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-10-suite-reverse_shell/.local/bin/python3",
+    "netflow 192.0.2.148 8443",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-10-suite-reverse_shell/.local/bin/python"
+   ],
+   "max_fused": 1.99
+  },
+  {
+   "scenario": "drop_and_execute",
+   "tactic": "execution",
+   "techniques": [
+    "T1105",
+    "T1204.002",
+    "T1059.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-12-suite-drop_and_execute/tmp/.fa6maw",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-12-suite-drop_and_execute/tmp/.fa6maw /b"
+   ],
+   "max_fused": 3.37
+  },
+  {
+   "scenario": "masquerade_and_cleanup",
+   "tactic": "defense-evasion",
+   "techniques": [
+    "T1036.005",
+    "T1070.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-14-suite-masquerade_and_cleanup/dev/shm/sys",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-14-suite-masquerade_and_cleanup/dev/shm/"
+   ],
+   "max_fused": 3.27
+  },
+  {
+   "scenario": "lateral_movement",
+   "tactic": "lateral-movement",
+   "techniques": [
+    "T1021.004",
+    "T1570"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /bin/cp /bin/cp /bin/ls /var/lib/pdp/sandbox/d1736121600000000000-15-suite-lateral"
+   ],
+   "max_fused": 7.25
+  },
+  {
+   "scenario": "persistence_cron",
+   "tactic": "persistence",
+   "techniques": [
+    "T1053.003"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "cryptominer",
+   "tactic": "impact",
+   "techniques": [
+    "T1496"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-18-suite-cryptominer/.local/bin/xmrig",
+    "netflow 198.51.100.38 5555",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-18-suite-cryptominer/.local/bin/xmrig /v"
+   ],
+   "max_fused": 1.96
+  },
+  {
+   "scenario": "lateral_movement",
+   "tactic": "lateral-movement",
+   "techniques": [
+    "T1021.004",
+    "T1570"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /bin/cp /bin/cp /bin/ls /var/lib/pdp/sandbox/d1736121600000000000-19-suite-lateral"
+   ],
+   "max_fused": 5.92
+  },
+  {
+   "scenario": "drop_and_execute",
+   "tactic": "execution",
+   "techniques": [
+    "T1105",
+    "T1204.002",
+    "T1059.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-20-suite-drop_and_execute/.local/bin/kthrea",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-20-suite-drop_and_execute/.local/bin/kth"
+   ],
+   "max_fused": 3.41
+  },
+  {
+   "scenario": "persistence_cron",
+   "tactic": "persistence",
+   "techniques": [
+    "T1053.003"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "persistence_ssh_key",
+   "tactic": "persistence",
+   "techniques": [
+    "T1098.004"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "credential_access",
+   "tactic": "credential-access",
+   "techniques": [
+    "T1003.008",
+    "T1552.004"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "interpreter_beacon",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1059.006",
+    "T1071.001",
+    "T1029"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-27-suite-interpreter_beacon/.local/bin/dbus",
+    "netflow 198.51.100.195 443",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-27-suite-interpreter_beacon/.local/bin/d"
+   ],
+   "max_fused": 1.93
+  },
+  {
+   "scenario": "staged_exfiltration",
+   "tactic": "collection/exfiltration",
+   "techniques": [
+    "T1005",
+    "T1074.001",
+    "T1560.001",
+    "T1041"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "staged_exfiltration",
+   "tactic": "collection/exfiltration",
+   "techniques": [
+    "T1005",
+    "T1074.001",
+    "T1560.001",
+    "T1041"
+   ],
+   "detected": true,
+   "indicators": [
+    "subject /opt/venv/bin/python python -m pdp_sim.suite one staged_exfiltration --root /var/l"
+   ],
+   "max_fused": 1.0
+  },
+  {
+   "scenario": "ransomware",
+   "tactic": "impact",
+   "techniques": [
+    "T1486",
+    "T1083"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware/.local/bin/kthreadd2-x",
+    "file /var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware/tmp/kthreadd2",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware/.local/bin/kthreadd2",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware/tmp/kthreadd2 /bin/s"
+   ],
+   "max_fused": 3.36
+  },
+  {
+   "scenario": "cryptominer",
+   "tactic": "impact",
+   "techniques": [
+    "T1496"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-32-suite-cryptominer/.local/bin/xmrig",
+    "netflow 192.0.2.106 4444",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-32-suite-cryptominer/.local/bin/xmrig /v"
+   ],
+   "max_fused": 1.96
+  },
+  {
+   "scenario": "ransomware",
+   "tactic": "impact",
+   "techniques": [
+    "T1486",
+    "T1083"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware/.local/bin/polkit-auth",
+    "file /var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware/.local/bin/polkit-auth-",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware/.local/bin/polkit-au"
+   ],
+   "max_fused": 3.42
+  },
+  {
+   "scenario": "ingress_tool_transfer",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1105"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "persistence_ssh_key",
+   "tactic": "persistence",
+   "techniques": [
+    "T1098.004"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "interpreter_beacon",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1059.006",
+    "T1071.001",
+    "T1029"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-39-suite-interpreter_beacon/.local/bin/kthr",
+    "netflow 192.0.2.163 1337",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-39-suite-interpreter_beacon/.local/bin/k"
+   ],
+   "max_fused": 1.93
+  },
+  {
+   "scenario": "privesc_discovery",
+   "tactic": "privilege-escalation",
+   "techniques": [
+    "T1548.001"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "reverse_shell",
+   "tactic": "execution/c2",
+   "techniques": [
+    "T1059.004",
+    "T1071"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-42-suite-reverse_shell/.local/bin/python3",
+    "netflow 198.51.100.177 1337",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-42-suite-reverse_shell/.local/bin/python"
+   ],
+   "max_fused": 1.96
+  },
+  {
+   "scenario": "web_shell",
+   "tactic": "initial-access/persistence",
+   "techniques": [
+    "T1190",
+    "T1505.003",
+    "T1059.004"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  },
+  {
+   "scenario": "exfil_dns_tunnel",
+   "tactic": "exfiltration",
+   "techniques": [
+    "T1048.003",
+    "T1071.004"
+   ],
+   "detected": true,
+   "indicators": [
+    "file /var/lib/pdp/sandbox/d1736121600000000000-45-suite-exfil_dns_tunnel/.local/bin/dnsd",
+    "netflow 198.51.100.220 53",
+    "subject /var/lib/pdp/sandbox/d1736121600000000000-45-suite-exfil_dns_tunnel/.local/bin/dns"
+   ],
+   "max_fused": 2.29
+  },
+  {
+   "scenario": "masquerade_and_cleanup",
+   "tactic": "defense-evasion",
+   "techniques": [
+    "T1036.005",
+    "T1070.004"
+   ],
+   "detected": false,
+   "indicators": [],
+   "max_fused": 0.0
+  }
+ ]
+}

@@ -1,0 +1,1214 @@
+{
+ "endpoint": "5eafc637-14c7-4074-b4d3-4e611dea925e",
+ "dataset": "CADETS_E3",
+ "test_days": [
+  "2018-04-06",
+  "2018-04-11",
+  "2018-04-12",
+  "2018-04-13"
+ ],
+ "gt_nodes_total": 72,
+ "agent_windows": {
+  "n": 334,
+  "alerts": 0
+ },
+ "agent_scoring_bundle": "6c72298b-bf39-4504-be4d-b191ccbc47ff",
+ "runs": [
+  {
+   "bundle": "1f7e7bc3-732b-404b-ae72-936543523164",
+   "train": {
+    "mode": "mean",
+    "weights": [
+     0.2,
+     0.2,
+     0.2,
+     0.2,
+     0.2
+    ],
+    "val_loss": [
+     0.49416675815286276,
+     0.4874658147338816,
+     0.4837453815929382,
+     0.4965143855923356,
+     0.4811800097909566
+    ]
+   },
+   "test_nodes": 281585,
+   "gt_nodes_in_test": 68,
+   "fused (learned ranker)": {
+    "TP": 0,
+    "FP": 1,
+    "FN": 68,
+    "TN": 281516,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": -0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.316
+   },
+   "detector-1 alone": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.128
+   },
+   "detector-2 alone": {
+    "TP": 15,
+    "FP": 1,
+    "FN": 53,
+    "TN": 281516,
+    "precision": 0.938,
+    "recall": 0.221,
+    "MCC": 0.455,
+    "attacks_detected": "2/3",
+    "ADP": 0.966
+   },
+   "either detector (post-hoc)": {
+    "TP": 15,
+    "FP": 1,
+    "FN": 53,
+    "TN": 281516,
+    "precision": 0.938,
+    "recall": 0.221,
+    "MCC": 0.455,
+    "attacks_detected": "2/3",
+    "ADP": 0.939
+   },
+   "both detectors (post-hoc)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.255
+   },
+   "layer 1: novelty": {
+    "TP": 13,
+    "FP": 41,
+    "FN": 55,
+    "TN": 281476,
+    "precision": 0.241,
+    "recall": 0.191,
+    "MCC": 0.214,
+    "attacks_detected": "3/3"
+   },
+   "layer 2: rules": {
+    "TP": 29,
+    "FP": 1,
+    "FN": 39,
+    "TN": 281516,
+    "precision": 0.967,
+    "recall": 0.426,
+    "MCC": 0.642,
+    "attacks_detected": "3/3"
+   },
+   "layers 1+2 (deterministic)": {
+    "TP": 29,
+    "FP": 42,
+    "FN": 39,
+    "TN": 281475,
+    "precision": 0.408,
+    "recall": 0.426,
+    "MCC": 0.417,
+    "attacks_detected": "3/3"
+   },
+   "layer 3 alone (budgeted)": {
+    "TP": 3,
+    "FP": 20,
+    "FN": 65,
+    "TN": 281497,
+    "precision": 0.13,
+    "recall": 0.044,
+    "MCC": 0.076,
+    "attacks_detected": "3/3"
+   },
+   "layered product": {
+    "TP": 32,
+    "FP": 62,
+    "FN": 36,
+    "TN": 281455,
+    "precision": 0.34,
+    "recall": 0.471,
+    "MCC": 0.4,
+    "attacks_detected": "3/3",
+    "ADP": 1.0,
+    "by_layer": {
+     "novelty": {
+      "alerts": 54,
+      "TP": 13
+     },
+     "rules": {
+      "alerts": 30,
+      "TP": 29
+     },
+     "corroborated": {
+      "alerts": 22,
+      "TP": 3
+     },
+     "learned": {
+      "alerts": 1,
+      "TP": 0
+     }
+    }
+   },
+   "layer 2: rules (pre-registered: all rules alarm)": {
+    "TP": 32,
+    "FP": 15,
+    "FN": 36,
+    "TN": 281502,
+    "precision": 0.681,
+    "recall": 0.471,
+    "MCC": 0.566,
+    "attacks_detected": "3/3"
+   },
+   "layered product (pre-registered policy)": {
+    "TP": 36,
+    "FP": 78,
+    "FN": 32,
+    "TN": 281439,
+    "precision": 0.316,
+    "recall": 0.529,
+    "MCC": 0.409,
+    "attacks_detected": "3/3",
+    "ADP": 0.982
+   }
+  },
+  {
+   "bundle": "f62ccd3e-7368-425d-9152-b4c3ccf5cecd",
+   "train": {
+    "mode": "mean",
+    "weights": [
+     0.2,
+     0.2,
+     0.2,
+     0.2,
+     0.2
+    ],
+    "val_loss": [
+     0.4878717122864785,
+     0.48849882080587703,
+     0.48635906194760203,
+     0.49896954991431297,
+     0.48448193380594834
+    ]
+   },
+   "test_nodes": 281585,
+   "gt_nodes_in_test": 68,
+   "fused (learned ranker)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.263
+   },
+   "detector-1 alone": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.107
+   },
+   "detector-2 alone": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.817
+   },
+   "either detector (post-hoc)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.577
+   },
+   "both detectors (post-hoc)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.333
+   },
+   "layer 1: novelty": {
+    "TP": 13,
+    "FP": 41,
+    "FN": 55,
+    "TN": 281476,
+    "precision": 0.241,
+    "recall": 0.191,
+    "MCC": 0.214,
+    "attacks_detected": "3/3"
+   },
+   "layer 2: rules": {
+    "TP": 29,
+    "FP": 1,
+    "FN": 39,
+    "TN": 281516,
+    "precision": 0.967,
+    "recall": 0.426,
+    "MCC": 0.642,
+    "attacks_detected": "3/3"
+   },
+   "layers 1+2 (deterministic)": {
+    "TP": 29,
+    "FP": 42,
+    "FN": 39,
+    "TN": 281475,
+    "precision": 0.408,
+    "recall": 0.426,
+    "MCC": 0.417,
+    "attacks_detected": "3/3"
+   },
+   "layer 3 alone (budgeted)": {
+    "TP": 3,
+    "FP": 16,
+    "FN": 65,
+    "TN": 281501,
+    "precision": 0.158,
+    "recall": 0.044,
+    "MCC": 0.083,
+    "attacks_detected": "3/3"
+   },
+   "layered product": {
+    "TP": 32,
+    "FP": 58,
+    "FN": 36,
+    "TN": 281459,
+    "precision": 0.356,
+    "recall": 0.471,
+    "MCC": 0.409,
+    "attacks_detected": "3/3",
+    "ADP": 0.977,
+    "by_layer": {
+     "novelty": {
+      "alerts": 54,
+      "TP": 13
+     },
+     "rules": {
+      "alerts": 30,
+      "TP": 29
+     },
+     "corroborated": {
+      "alerts": 19,
+      "TP": 3
+     },
+     "learned": {
+      "alerts": 0,
+      "TP": 0
+     }
+    }
+   },
+   "layer 2: rules (pre-registered: all rules alarm)": {
+    "TP": 32,
+    "FP": 15,
+    "FN": 36,
+    "TN": 281502,
+    "precision": 0.681,
+    "recall": 0.471,
+    "MCC": 0.566,
+    "attacks_detected": "3/3"
+   },
+   "layered product (pre-registered policy)": {
+    "TP": 36,
+    "FP": 74,
+    "FN": 32,
+    "TN": 281443,
+    "precision": 0.327,
+    "recall": 0.529,
+    "MCC": 0.416,
+    "attacks_detected": "3/3",
+    "ADP": 0.982
+   }
+  },
+  {
+   "bundle": "80f17a6c-f4b5-4905-8b5d-7c7567df00d7",
+   "train": {
+    "mode": "mean",
+    "weights": [
+     0.2,
+     0.2,
+     0.2,
+     0.2,
+     0.2
+    ],
+    "val_loss": [
+     0.4926633253466779,
+     0.49138438807904544,
+     0.48947000366453713,
+     0.4990725889539209,
+     0.4832277001356786
+    ]
+   },
+   "test_nodes": 281585,
+   "gt_nodes_in_test": 68,
+   "fused (learned ranker)": {
+    "TP": 0,
+    "FP": 2,
+    "FN": 68,
+    "TN": 281515,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": -0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.389
+   },
+   "detector-1 alone": {
+    "TP": 0,
+    "FP": 3,
+    "FN": 68,
+    "TN": 281514,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": -0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.115
+   },
+   "detector-2 alone": {
+    "TP": 19,
+    "FP": 3,
+    "FN": 49,
+    "TN": 281514,
+    "precision": 0.864,
+    "recall": 0.279,
+    "MCC": 0.491,
+    "attacks_detected": "3/3",
+    "ADP": 1.0
+   },
+   "either detector (post-hoc)": {
+    "TP": 19,
+    "FP": 6,
+    "FN": 49,
+    "TN": 281511,
+    "precision": 0.76,
+    "recall": 0.279,
+    "MCC": 0.461,
+    "attacks_detected": "3/3",
+    "ADP": 1.0
+   },
+   "both detectors (post-hoc)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.394
+   },
+   "layer 1: novelty": {
+    "TP": 13,
+    "FP": 41,
+    "FN": 55,
+    "TN": 281476,
+    "precision": 0.241,
+    "recall": 0.191,
+    "MCC": 0.214,
+    "attacks_detected": "3/3"
+   },
+   "layer 2: rules": {
+    "TP": 29,
+    "FP": 1,
+    "FN": 39,
+    "TN": 281516,
+    "precision": 0.967,
+    "recall": 0.426,
+    "MCC": 0.642,
+    "attacks_detected": "3/3"
+   },
+   "layers 1+2 (deterministic)": {
+    "TP": 29,
+    "FP": 42,
+    "FN": 39,
+    "TN": 281475,
+    "precision": 0.408,
+    "recall": 0.426,
+    "MCC": 0.417,
+    "attacks_detected": "3/3"
+   },
+   "layer 3 alone (budgeted)": {
+    "TP": 3,
+    "FP": 18,
+    "FN": 65,
+    "TN": 281499,
+    "precision": 0.143,
+    "recall": 0.044,
+    "MCC": 0.079,
+    "attacks_detected": "3/3"
+   },
+   "layered product": {
+    "TP": 32,
+    "FP": 60,
+    "FN": 36,
+    "TN": 281457,
+    "precision": 0.348,
+    "recall": 0.471,
+    "MCC": 0.404,
+    "attacks_detected": "3/3",
+    "ADP": 0.989,
+    "by_layer": {
+     "novelty": {
+      "alerts": 54,
+      "TP": 13
+     },
+     "rules": {
+      "alerts": 30,
+      "TP": 29
+     },
+     "corroborated": {
+      "alerts": 19,
+      "TP": 3
+     },
+     "learned": {
+      "alerts": 2,
+      "TP": 0
+     }
+    }
+   },
+   "layer 2: rules (pre-registered: all rules alarm)": {
+    "TP": 32,
+    "FP": 15,
+    "FN": 36,
+    "TN": 281502,
+    "precision": 0.681,
+    "recall": 0.471,
+    "MCC": 0.566,
+    "attacks_detected": "3/3"
+   },
+   "layered product (pre-registered policy)": {
+    "TP": 36,
+    "FP": 96,
+    "FN": 32,
+    "TN": 281421,
+    "precision": 0.273,
+    "recall": 0.529,
+    "MCC": 0.38,
+    "attacks_detected": "3/3",
+    "ADP": 0.991
+   }
+  },
+  {
+   "bundle": "3bb8fc61-1297-4b39-bad6-737bf57535e6",
+   "train": {
+    "mode": "mean",
+    "weights": [
+     0.2,
+     0.2,
+     0.2,
+     0.2,
+     0.2
+    ],
+    "val_loss": [
+     0.48631733325318693,
+     0.48755681365584486,
+     0.48616160298933664,
+     0.4930216994830936,
+     0.5044551610617649
+    ]
+   },
+   "test_nodes": 281585,
+   "gt_nodes_in_test": 68,
+   "fused (learned ranker)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.167
+   },
+   "detector-1 alone": {
+    "TP": 0,
+    "FP": 2,
+    "FN": 68,
+    "TN": 281515,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": -0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.045
+   },
+   "detector-2 alone": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.788
+   },
+   "either detector (post-hoc)": {
+    "TP": 0,
+    "FP": 2,
+    "FN": 68,
+    "TN": 281515,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": -0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.23
+   },
+   "both detectors (post-hoc)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.734
+   },
+   "layer 1: novelty": {
+    "TP": 13,
+    "FP": 41,
+    "FN": 55,
+    "TN": 281476,
+    "precision": 0.241,
+    "recall": 0.191,
+    "MCC": 0.214,
+    "attacks_detected": "3/3"
+   },
+   "layer 2: rules": {
+    "TP": 29,
+    "FP": 1,
+    "FN": 39,
+    "TN": 281516,
+    "precision": 0.967,
+    "recall": 0.426,
+    "MCC": 0.642,
+    "attacks_detected": "3/3"
+   },
+   "layers 1+2 (deterministic)": {
+    "TP": 29,
+    "FP": 42,
+    "FN": 39,
+    "TN": 281475,
+    "precision": 0.408,
+    "recall": 0.426,
+    "MCC": 0.417,
+    "attacks_detected": "3/3"
+   },
+   "layer 3 alone (budgeted)": {
+    "TP": 2,
+    "FP": 5,
+    "FN": 66,
+    "TN": 281512,
+    "precision": 0.286,
+    "recall": 0.029,
+    "MCC": 0.092,
+    "attacks_detected": "2/3"
+   },
+   "layered product": {
+    "TP": 31,
+    "FP": 47,
+    "FN": 37,
+    "TN": 281470,
+    "precision": 0.397,
+    "recall": 0.456,
+    "MCC": 0.426,
+    "attacks_detected": "3/3",
+    "ADP": 0.983,
+    "by_layer": {
+     "novelty": {
+      "alerts": 54,
+      "TP": 13
+     },
+     "rules": {
+      "alerts": 30,
+      "TP": 29
+     },
+     "corroborated": {
+      "alerts": 7,
+      "TP": 2
+     },
+     "learned": {
+      "alerts": 0,
+      "TP": 0
+     }
+    }
+   },
+   "layer 2: rules (pre-registered: all rules alarm)": {
+    "TP": 32,
+    "FP": 15,
+    "FN": 36,
+    "TN": 281502,
+    "precision": 0.681,
+    "recall": 0.471,
+    "MCC": 0.566,
+    "attacks_detected": "3/3"
+   },
+   "layered product (pre-registered policy)": {
+    "TP": 34,
+    "FP": 60,
+    "FN": 34,
+    "TN": 281457,
+    "precision": 0.362,
+    "recall": 0.5,
+    "MCC": 0.425,
+    "attacks_detected": "3/3",
+    "ADP": 0.989
+   }
+  },
+  {
+   "bundle": "6e1ee3ca-1db4-4a8d-aaec-0b1aa1cfd88e",
+   "train": {
+    "mode": "mean",
+    "weights": [
+     0.2,
+     0.2,
+     0.2,
+     0.2,
+     0.2
+    ],
+    "val_loss": [
+     0.4864834210215162,
+     0.49800178047602456,
+     0.48644095328068865,
+     0.4956312273031916,
+     0.49067731503116474
+    ]
+   },
+   "test_nodes": 281585,
+   "gt_nodes_in_test": 68,
+   "fused (learned ranker)": {
+    "TP": 0,
+    "FP": 1,
+    "FN": 68,
+    "TN": 281516,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": -0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.385
+   },
+   "detector-1 alone": {
+    "TP": 0,
+    "FP": 1,
+    "FN": 68,
+    "TN": 281516,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": -0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.2
+   },
+   "detector-2 alone": {
+    "TP": 6,
+    "FP": 6,
+    "FN": 62,
+    "TN": 281511,
+    "precision": 0.5,
+    "recall": 0.088,
+    "MCC": 0.21,
+    "attacks_detected": "3/3",
+    "ADP": 1.0
+   },
+   "either detector (post-hoc)": {
+    "TP": 6,
+    "FP": 7,
+    "FN": 62,
+    "TN": 281510,
+    "precision": 0.462,
+    "recall": 0.088,
+    "MCC": 0.202,
+    "attacks_detected": "3/3",
+    "ADP": 1.0
+   },
+   "both detectors (post-hoc)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.498
+   },
+   "layer 1: novelty": {
+    "TP": 13,
+    "FP": 41,
+    "FN": 55,
+    "TN": 281476,
+    "precision": 0.241,
+    "recall": 0.191,
+    "MCC": 0.214,
+    "attacks_detected": "3/3"
+   },
+   "layer 2: rules": {
+    "TP": 29,
+    "FP": 1,
+    "FN": 39,
+    "TN": 281516,
+    "precision": 0.967,
+    "recall": 0.426,
+    "MCC": 0.642,
+    "attacks_detected": "3/3"
+   },
+   "layers 1+2 (deterministic)": {
+    "TP": 29,
+    "FP": 42,
+    "FN": 39,
+    "TN": 281475,
+    "precision": 0.408,
+    "recall": 0.426,
+    "MCC": 0.417,
+    "attacks_detected": "3/3"
+   },
+   "layer 3 alone (budgeted)": {
+    "TP": 3,
+    "FP": 20,
+    "FN": 65,
+    "TN": 281497,
+    "precision": 0.13,
+    "recall": 0.044,
+    "MCC": 0.076,
+    "attacks_detected": "3/3"
+   },
+   "layered product": {
+    "TP": 32,
+    "FP": 62,
+    "FN": 36,
+    "TN": 281455,
+    "precision": 0.34,
+    "recall": 0.471,
+    "MCC": 0.4,
+    "attacks_detected": "3/3",
+    "ADP": 1.0,
+    "by_layer": {
+     "novelty": {
+      "alerts": 54,
+      "TP": 13
+     },
+     "rules": {
+      "alerts": 30,
+      "TP": 29
+     },
+     "corroborated": {
+      "alerts": 22,
+      "TP": 3
+     },
+     "learned": {
+      "alerts": 1,
+      "TP": 0
+     }
+    }
+   },
+   "layer 2: rules (pre-registered: all rules alarm)": {
+    "TP": 32,
+    "FP": 15,
+    "FN": 36,
+    "TN": 281502,
+    "precision": 0.681,
+    "recall": 0.471,
+    "MCC": 0.566,
+    "attacks_detected": "3/3"
+   },
+   "layered product (pre-registered policy)": {
+    "TP": 37,
+    "FP": 100,
+    "FN": 31,
+    "TN": 281417,
+    "precision": 0.27,
+    "recall": 0.544,
+    "MCC": 0.383,
+    "attacks_detected": "3/3",
+    "ADP": 1.0
+   }
+  }
+ ],
+ "summary": {
+  "fused (learned ranker)": {
+   "ADP": {
+    "mean": 0.304,
+    "min": 0.167,
+    "max": 0.389
+   },
+   "precision": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "recall": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "MCC": {
+    "mean": 0.0,
+    "min": -0.0,
+    "max": -0.0
+   },
+   "TP": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "FP": {
+    "mean": 0.8,
+    "min": 0.0,
+    "max": 2.0
+   }
+  },
+  "detector-1 alone": {
+   "ADP": {
+    "mean": 0.119,
+    "min": 0.045,
+    "max": 0.2
+   },
+   "precision": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "recall": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "MCC": {
+    "mean": 0.0,
+    "min": -0.0,
+    "max": -0.0
+   },
+   "TP": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "FP": {
+    "mean": 1.2,
+    "min": 0.0,
+    "max": 3.0
+   }
+  },
+  "detector-2 alone": {
+   "ADP": {
+    "mean": 0.914,
+    "min": 0.788,
+    "max": 1.0
+   },
+   "precision": {
+    "mean": 0.46,
+    "min": 0.0,
+    "max": 0.938
+   },
+   "recall": {
+    "mean": 0.118,
+    "min": 0.0,
+    "max": 0.279
+   },
+   "MCC": {
+    "mean": 0.231,
+    "min": 0.0,
+    "max": 0.491
+   },
+   "TP": {
+    "mean": 8.0,
+    "min": 0.0,
+    "max": 19.0
+   },
+   "FP": {
+    "mean": 2.0,
+    "min": 0.0,
+    "max": 6.0
+   }
+  },
+  "either detector (post-hoc)": {
+   "ADP": {
+    "mean": 0.749,
+    "min": 0.23,
+    "max": 1.0
+   },
+   "precision": {
+    "mean": 0.432,
+    "min": 0.0,
+    "max": 0.938
+   },
+   "recall": {
+    "mean": 0.118,
+    "min": 0.0,
+    "max": 0.279
+   },
+   "MCC": {
+    "mean": 0.224,
+    "min": -0.0,
+    "max": 0.461
+   },
+   "TP": {
+    "mean": 8.0,
+    "min": 0.0,
+    "max": 19.0
+   },
+   "FP": {
+    "mean": 3.2,
+    "min": 0.0,
+    "max": 7.0
+   }
+  },
+  "both detectors (post-hoc)": {
+   "ADP": {
+    "mean": 0.443,
+    "min": 0.255,
+    "max": 0.734
+   },
+   "precision": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "recall": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "MCC": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "TP": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "FP": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   }
+  },
+  "layer 1: novelty": {
+   "precision": {
+    "mean": 0.241,
+    "min": 0.241,
+    "max": 0.241
+   },
+   "recall": {
+    "mean": 0.191,
+    "min": 0.191,
+    "max": 0.191
+   },
+   "MCC": {
+    "mean": 0.214,
+    "min": 0.214,
+    "max": 0.214
+   },
+   "TP": {
+    "mean": 13.0,
+    "min": 13.0,
+    "max": 13.0
+   },
+   "FP": {
+    "mean": 41.0,
+    "min": 41.0,
+    "max": 41.0
+   }
+  },
+  "layer 2: rules": {
+   "precision": {
+    "mean": 0.967,
+    "min": 0.967,
+    "max": 0.967
+   },
+   "recall": {
+    "mean": 0.426,
+    "min": 0.426,
+    "max": 0.426
+   },
+   "MCC": {
+    "mean": 0.642,
+    "min": 0.642,
+    "max": 0.642
+   },
+   "TP": {
+    "mean": 29.0,
+    "min": 29.0,
+    "max": 29.0
+   },
+   "FP": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0
+   }
+  },
+  "layers 1+2 (deterministic)": {
+   "precision": {
+    "mean": 0.408,
+    "min": 0.408,
+    "max": 0.408
+   },
+   "recall": {
+    "mean": 0.426,
+    "min": 0.426,
+    "max": 0.426
+   },
+   "MCC": {
+    "mean": 0.417,
+    "min": 0.417,
+    "max": 0.417
+   },
+   "TP": {
+    "mean": 29.0,
+    "min": 29.0,
+    "max": 29.0
+   },
+   "FP": {
+    "mean": 42.0,
+    "min": 42.0,
+    "max": 42.0
+   }
+  },
+  "layer 3 alone (budgeted)": {
+   "precision": {
+    "mean": 0.169,
+    "min": 0.13,
+    "max": 0.286
+   },
+   "recall": {
+    "mean": 0.041,
+    "min": 0.029,
+    "max": 0.044
+   },
+   "MCC": {
+    "mean": 0.081,
+    "min": 0.076,
+    "max": 0.092
+   },
+   "TP": {
+    "mean": 2.8,
+    "min": 2.0,
+    "max": 3.0
+   },
+   "FP": {
+    "mean": 15.8,
+    "min": 5.0,
+    "max": 20.0
+   }
+  },
+  "layered product": {
+   "ADP": {
+    "mean": 0.99,
+    "min": 0.977,
+    "max": 1.0
+   },
+   "precision": {
+    "mean": 0.356,
+    "min": 0.34,
+    "max": 0.397
+   },
+   "recall": {
+    "mean": 0.468,
+    "min": 0.456,
+    "max": 0.471
+   },
+   "MCC": {
+    "mean": 0.408,
+    "min": 0.4,
+    "max": 0.426
+   },
+   "TP": {
+    "mean": 31.8,
+    "min": 31.0,
+    "max": 32.0
+   },
+   "FP": {
+    "mean": 57.8,
+    "min": 47.0,
+    "max": 62.0
+   }
+  },
+  "layer 2: rules (pre-registered: all rules alarm)": {
+   "precision": {
+    "mean": 0.681,
+    "min": 0.681,
+    "max": 0.681
+   },
+   "recall": {
+    "mean": 0.471,
+    "min": 0.471,
+    "max": 0.471
+   },
+   "MCC": {
+    "mean": 0.566,
+    "min": 0.566,
+    "max": 0.566
+   },
+   "TP": {
+    "mean": 32.0,
+    "min": 32.0,
+    "max": 32.0
+   },
+   "FP": {
+    "mean": 15.0,
+    "min": 15.0,
+    "max": 15.0
+   }
+  },
+  "layered product (pre-registered policy)": {
+   "ADP": {
+    "mean": 0.989,
+    "min": 0.982,
+    "max": 1.0
+   },
+   "precision": {
+    "mean": 0.31,
+    "min": 0.27,
+    "max": 0.362
+   },
+   "recall": {
+    "mean": 0.526,
+    "min": 0.5,
+    "max": 0.544
+   },
+   "MCC": {
+    "mean": 0.403,
+    "min": 0.38,
+    "max": 0.425
+   },
+   "TP": {
+    "mean": 35.8,
+    "min": 34.0,
+    "max": 37.0
+   },
+   "FP": {
+    "mean": 81.6,
+    "min": 60.0,
+    "max": 100.0
+   }
+  }
+ }
+}

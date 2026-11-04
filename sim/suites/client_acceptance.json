@@ -1,0 +1,25 @@
+{
+  "days": [
+    "validation"
+  ],
+  "runs": 210,
+  "attacks_per_pass": 3,
+  "families": [
+    "web_backdoor",
+    "browser_dropper",
+    "lotl_recon",
+    "priv_esc_lateral",
+    "exfiltration",
+    "ransomware",
+    "script_c2"
+  ],
+  "evasion_levels": [
+    "none",
+    "low",
+    "medium",
+    "high",
+    "extreme",
+    "stealth"
+  ],
+  "horizon_windows": 8
+}

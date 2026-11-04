@@ -1,0 +1,102 @@
+{
+ "endpoint": "5eafc637-14c7-4074-b4d3-4e611dea925e",
+ "dataset": "CADETS_E3",
+ "test_days": [
+  "2018-04-06",
+  "2018-04-11",
+  "2018-04-12",
+  "2018-04-13"
+ ],
+ "gt_nodes_total": 72,
+ "agent_windows": {
+  "n": 334,
+  "alerts": 0
+ },
+ "agent_scoring_bundle": "6c72298b-bf39-4504-be4d-b191ccbc47ff",
+ "runs": [
+  {
+   "bundle": "6c72298b-bf39-4504-be4d-b191ccbc47ff",
+   "train": {
+    "mode": "best_val_loss",
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "val_loss": [
+     0.48819288865321503,
+     0.4976547962834533,
+     0.48012724559216563
+    ]
+   },
+   "test_nodes": 281585,
+   "gt_nodes_in_test": 68,
+   "fused (product)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.07
+   },
+   "detector-1 alone": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.004
+   },
+   "detector-2 alone": {
+    "TP": 19,
+    "FP": 16,
+    "FN": 49,
+    "TN": 281501,
+    "precision": 0.543,
+    "recall": 0.279,
+    "MCC": 0.389,
+    "attacks_detected": "3/3",
+    "ADP": 0.833
+   },
+   "either detector (post-hoc)": {
+    "TP": 19,
+    "FP": 16,
+    "FN": 49,
+    "TN": 281501,
+    "precision": 0.543,
+    "recall": 0.279,
+    "MCC": 0.389,
+    "attacks_detected": "3/3",
+    "ADP": 0.833
+   },
+   "both detectors (post-hoc)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "ADP": 0.046
+   },
+   "reported alerts (agent)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 68,
+    "TN": 281517,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/3",
+    "alerted_nodes_outside_rescored_set": 0
+   }
+  }
+ ]
+}
