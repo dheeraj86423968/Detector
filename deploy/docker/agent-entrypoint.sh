@@ -5,10 +5,8 @@ set -e
 # PDP_CA_SHA256 pins the server CA fingerprint shown in the console when the token was created.
 # Optionally drop privileges to the unprivileged pdp user (PDP_RUN_USER=pdp) when the collector does not need them.
 [ -d /var/lib/pdp ] && chown -R pdp:pdp /var/lib/pdp 2>/dev/null || true
-# bcc reads tracepoint formats from tracefs: mount it when the container was started without the bind mount
-if [ -d /sys/kernel/tracing ] && [ ! -e /sys/kernel/tracing/events ]; then
-  mount -t tracefs nodev /sys/kernel/tracing 2>/dev/null || true
-fi
+# The eBPF collector (libbpf CO-RE, raw tracepoints) needs no tracefs, kernel headers or compiler: only BTF
+# (/sys/kernel/btf/vmlinux, visible through the container's /sys), BPF privileges and the host pid namespace.
 RUN="python -m pdp_agent"
 AS=""
 [ "$PDP_RUN_USER" = "pdp" ] && AS="gosu pdp"

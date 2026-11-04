@@ -26,7 +26,8 @@ services:
     image: pdp/agent:${PDP_VERSION:-dev}
     build: { context: .., dockerfile: deploy/docker/agent.Dockerfile }
     command: ["run"]
-    <<: &ebpf-privileges     # bcc needs BPF/perf privileges, tracefs, the host kernel headers and the host pid namespace
+    <<: &ebpf-privileges     # the CO-RE collector needs BPF privileges, the kernel BTF (in /sys) and the host pid namespace;
+                             # no kernel headers, compiler or tracefs
       privileged: true
       pid: host
     environment:
@@ -36,9 +37,6 @@ services:
     volumes:
       - pdp_sandbox_ebpf_agent:/var/lib/pdp
       - ./bench/agent-sandbox-ebpf.json:/etc/pdp/agent.json:ro
-      - /lib/modules:/lib/modules:ro
-      - /usr/src:/usr/src:ro
-      - /sys/kernel/tracing:/sys/kernel/tracing
     networks: [ edge ]
     depends_on: [ gateway ]
     profiles: [ sandbox-ebpf ]
@@ -54,8 +52,6 @@ services:
     volumes:
       - pdp_suite_agent:/var/lib/pdp
       - ./bench/agent-suite.json:/etc/pdp/agent.json:ro
-      - /lib/modules:/lib/modules:ro
-      - /usr/src:/usr/src:ro
     networks: [ edge ]
     depends_on: [ gateway ]
     profiles: [ suite ]
@@ -71,9 +67,6 @@ services:
     volumes:
       - pdp_host_agent:/var/lib/pdp
       - ./bench/agent-ebpf-host.json:/etc/pdp/agent.json:ro
-      - /lib/modules:/lib/modules:ro
-      - /usr/src:/usr/src:ro
-      - /sys/kernel/tracing:/sys/kernel/tracing
     networks: [ edge ]
     depends_on: [ gateway ]
     restart: unless-stopped

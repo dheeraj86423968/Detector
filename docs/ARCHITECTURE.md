@@ -99,7 +99,7 @@ created from the console (`POST /api/sim/campaigns`), executed as `sim` jobs by 
   first `baseline_days + 1` days completed (completion order); the chronologically last of them is the validation
   day. Replays may stream days out of order, so days are completed only by the source's declaration unless the
   source is a chronological live collector.
-* Live collectors (`agent/pdp_agent/sources`): `ebpf` (bcc tracepoints, the production Linux collector), `strace_src`
+* Live collectors (`agent/pdp_agent/sources`): `ebpf` (libbpf CO-RE raw tracepoints, the production Linux collector; bcc engine as fallback), `strace_src`
   (ptrace, the portable fallback where eBPF/audit are unavailable, e.g. the WSL2 kernel), `auditd` (kernel audit log),
   `windows_etw` (Windows ETW), and `db-replay`/`sandbox` for benchmarks. All emit the same normalised Entity/Event
   stream with one syscall set (execve/open/connect/clone family; file reads and writes are inferred from the open
@@ -169,4 +169,4 @@ Moved to the GPU host (NVIDIA L40S 46 GB, Ubuntu 26.04, kernel 7.0). Changes thi
 
 Still open (need hardware or data that is not on this host): Windows ETW on a Windows host; desktop installers on
 per-OS CI runners; DARPA TC benchmark replays and parity tests (need the research Postgres and PIDSMaker artifacts);
-SSO/OIDC; libbpf CO-RE packaging of the eBPF program (bcc needs the host's kernel headers at start-up).
+SSO/OIDC. (Done since: libbpf CO-RE packaging of the eBPF program, 2026-11-04 - endpoints need BTF, no kernel headers.)

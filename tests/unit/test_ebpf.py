@@ -1,5 +1,5 @@
 """Unit tests for the eBPF collector's record -> event mapping (no kernel/bcc needed), and for the kernel program
-text generation. Run: PYTHONPATH=engine:agent python tests/unit/test_ebpf.py
+text generation and the CO-RE loader stream parser. Run: PYTHONPATH=engine:agent python tests/unit/test_ebpf.py
 """
 import socket
 import sys
@@ -108,6 +108,52 @@ for arch in ("x86_64", "aarch64"):
     t = program(1234, 1024, arch)
     check("#define SYS_openat" in t and "#define REG_ARG4" in t and "__SELF_PID__" not in t and "/*__SYSCALLS__*/" not in t,
           f"kernel program generated for {arch}")
+
+# ---- CO-RE engine: the loader's raw record stream -> Rec, identical to what the bcc engine builds ----
+import os
+import re
+import struct
+
+from pdp_agent.sources.ebpf import _ARCH, REC, STATS, STREAM_HEADER, STREAM_MAGIC, parse_records, sock_ip
+
+check(REC.size == 576 and STREAM_HEADER.size == 16, "record = 576 bytes (struct event_t), stream header = 16 bytes")
+
+
+def raw(kind, pid, ts=0, tid=0, aux=0, ret=0, flags=0, dirfd=0, family=0, port=0, addr=b"", s=b""):
+    return REC.pack(ts, kind, pid, tid, aux, ret, flags, dirfd, family, port, addr.ljust(16, b"\0"), s.ljust(STRLEN, b"\0"))
+
+
+blob = b"curl\0-s\0http://x\0"
+stream = (raw(EXEC, 10, ts=5, tid=11, s=b"/usr/bin/curl") + raw(EXEC_ARGV, 10, ts=6, aux=0, ret=len(blob), s=blob)
+          + raw(OPEN, 10, ret=3, flags=0o1101, dirfd=-100, s=b"/tmp/o")
+          + raw(CONNECT, 10, family=socket.AF_INET, port=socket.htons(443), addr=socket.inet_aton("9.9.9.9"))
+          + raw(STATS, 1, ret=7) + raw(FORK, 10, aux=12)[:100])                  # a partial record at the end
+recs, used, lost = parse_records(stream, mono_to_wall=1000)
+check(used == 5 * 576 and lost == 7 and [r.kind for r in recs] == [EXEC, EXEC_ARGV, OPEN, CONNECT],
+      "parse_records: complete records only, STATS consumed as the lost count, partial tail left")
+check(recs[0].s == "/usr/bin/curl" and recs[0].ts_ns == 1005 and recs[0].tid == 11, "exec record: filename, monotonic->wall ts")
+check(recs[1].raw == blob and recs[1].s == "curl", "argv chunk: raw keeps the NUL-separated bytes (length = ret)")
+check(recs[2].dirfd == -100 and recs[2].flags == 0o1101 and recs[2].ret == 3, "open record: signed dirfd, flags, fd")
+check(recs[3].port == 443 and sock_ip(recs[3].family, recs[3].addr) == "9.9.9.9", "socket record: port to host order, address")
+hand = [Rec(EXEC, 10, s="/usr/bin/curl"), Rec(EXEC_ARGV, 10, aux=0, ret=len(blob), raw=blob),
+        Rec(OPEN, 10, s="/tmp/o", flags=0o1101, ret=3), Rec(CONNECT, 10, family=socket.AF_INET, port=443, addr=a4)]
+n1, n2 = EbpfNormaliser("r", proc="/nonexistent"), EbpfNormaliser("r", proc="/nonexistent")
+e1 = [(e.op, en[0].ntype, en[1].ntype, en[0].label, en[1].label) for r in recs for en, e in n1.decode(r)]
+e2 = [(e.op, en[0].ntype, en[1].ntype, en[0].label, en[1].label) for r in hand for en, e in n2.decode(r)]
+check(e1 == e2 and len(e1) == 5, f"parsed CO-RE records decode to the same events as hand-built Recs ({len(e1)} events)")
+
+# the C sources stay in sync with the Python side (record kinds, syscall numbers, header magic)
+bpf_dir = os.path.join(os.path.dirname(__file__), "..", "..", "agent", "bpf")
+hdr = open(os.path.join(bpf_dir, "pdp_ebpf.h")).read()
+kinds = {k: int(v) for k, v in re.findall(r"#define K_(\w+)\s+(\d+)", hdr)}
+check(kinds == {"EXEC_ARG": EXEC, "EXEC_ARGV": EXEC_ARGV, "OPEN": OPEN, "CONNECT": CONNECT, "SEND": SEND, "RECV": RECV,
+                "ACCEPT": ACCEPT, "FORK": FORK, "EXIT": EXIT, "DUP": DUP, "STATS": STATS}, "record kinds match pdp_ebpf.h")
+check(f"#define STRLEN    {STRLEN}" in hdr and '"PDPEBPF\\0"' in hdr and STREAM_MAGIC == b"PDPEBPF\0", "STRLEN and stream magic match")
+src = open(os.path.join(bpf_dir, "pdp_ebpf.bpf.c")).read()
+for arch, tag in (("x86_64", "__TARGET_ARCH_x86"), ("aarch64", "__TARGET_ARCH_arm64")):
+    block = src.split(tag, 1)[1].split("#el", 1)[0]
+    nrs = {k: (-1 if v == "NO_SYSCALL" else int(v)) for k, v in re.findall(r"#define SYS_(\w+) (\w+)", block)}
+    check(nrs == _ARCH[arch][0], f"CO-RE syscall numbers for {arch} match the bcc program's")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

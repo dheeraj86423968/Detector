@@ -56,7 +56,7 @@ All emit the same normalised event stream (`source.kind` in the agent config):
 
 | kind | where | notes |
 |---|---|---|
-| `ebpf` | production Linux (kernel >= 5.8, headers) | bcc, ring buffer, raw syscall tracepoints; verified against strace on kernel 7.0 |
+| `ebpf` | production Linux (kernel >= 5.8 with BTF; no headers) | libbpf CO-RE (bcc fallback), ring buffer, raw syscall tracepoints; verified against strace and bcc on kernel 7.0 |
 | `strace` | where eBPF/audit are unavailable (WSL2, locked-down containers) | ptrace, higher overhead |
 | `auditd` | hosts that already run auditd | kernel audit log |
 | `etw` | Windows | pywintrace; mapping unit-tested, needs validation on a Windows host |

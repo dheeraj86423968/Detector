@@ -16,8 +16,8 @@ A production **eBPF** (libbpf CO-RE) collector is the intended high-volume front
 stream. Requirements: `strace` on the host and `CAP_SYS_PTRACE`.
 
 Sources: `kind: "strace"` (trace one command) or `kind: "sandbox"` (the scheduled benign+attack scenario driver).
-The sandbox captures each session with strace (default) or with the production eBPF collector (`"collector": "ebpf"`,
-compose service `agent-sandbox-ebpf`): one kernel program for all sessions, events filtered to the workload's process
+The sandbox captures each session with strace (default) or with the production eBPF collector (`"collector": "ebpf"`, optional
+`"engine": "core"` (default) or `"bcc"`, compose service `agent-sandbox-ebpf`): one kernel program for all sessions, events filtered to the workload's process
 tree.
 
 ## Scenarios
