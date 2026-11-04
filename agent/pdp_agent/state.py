@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS days (day TEXT PRIMARY KEY, completed INTEGER DEFAULT
 CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY, ts_ns INTEGER NOT NULL, src INTEGER NOT NULL, op INTEGER NOT NULL, dst INTEGER NOT NULL, eid TEXT NOT NULL, day INTEGER NOT NULL, uploaded INTEGER NOT NULL DEFAULT 0, scored INTEGER NOT NULL DEFAULT 0);
 CREATE INDEX IF NOT EXISTS events_upload ON events(day, id) WHERE uploaded=0;
 CREATE INDEX IF NOT EXISTS events_score ON events(ts_ns, id) WHERE scored=0;
+CREATE TABLE IF NOT EXISTS observables (kind TEXT NOT NULL, a TEXT NOT NULL, b TEXT NOT NULL, first_ns INTEGER NOT NULL,
+  last_ns INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (kind, a, b)) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS observables_last ON observables(last_ns);
 """
 WAL_LIMIT = 64 << 20          # the WAL is truncated back to this size after a checkpoint
 
@@ -314,6 +317,31 @@ class State:
         self.c.execute("DROP TABLE spool")
         self._vacuum()
         return n
+
+    # activity index (threat hunting): programs run, addresses contacted, files written - de-duplicated
+    def add_observables(self, rows: dict) -> None:
+        """rows: (kind, a, b) -> [first_ns, last_ns, n]"""
+        if rows:
+            self._tx(lambda: self.c.executemany(
+                "INSERT INTO observables (kind, a, b, first_ns, last_ns, n) VALUES (?,?,?,?,?,?) ON CONFLICT (kind, a, b) DO UPDATE SET "
+                "first_ns=min(first_ns, excluded.first_ns), last_ns=max(last_ns, excluded.last_ns), n=n + excluded.n",
+                [(k[0], k[1], k[2], v[0], v[1], v[2]) for k, v in rows.items()]))
+
+    def prune_observables(self, keep_days: float = 30, max_rows: int = 300_000) -> int:
+        cut = int((time.time() - keep_days * 86400) * 1e9)
+        n = self._tx(lambda: self.c.execute("DELETE FROM observables WHERE last_ns < ?", (cut,)).rowcount)
+        total = self.c.execute("SELECT count(*) FROM observables").fetchone()[0]
+        if total > max_rows:
+            n += self._tx(lambda: self.c.execute("DELETE FROM observables WHERE (kind, a, b) IN (SELECT kind, a, b FROM observables ORDER BY last_ns LIMIT ?)",
+                                                 (total - max_rows,)).rowcount)
+        return n
+
+    def hunt(self, q: str, kind: str | None = None, limit: int = 200) -> list[dict]:
+        like = "%" + q.lower().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        rows = self.c.execute("SELECT kind, a, b, first_ns, last_ns, n FROM observables WHERE (? IS NULL OR kind = ?) "
+                              "AND (lower(a) LIKE ? ESCAPE '\\' OR lower(b) LIKE ? ESCAPE '\\') "
+                              "ORDER BY last_ns DESC LIMIT ?", (kind, kind, like, like, limit)).fetchall()
+        return [{"kind": k, "program": a, "object": b, "first_ns": f, "last_ns": l, "count": n} for k, a, b, f, l, n in rows]
 
     # days
     def days(self) -> list[tuple]:

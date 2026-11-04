@@ -27,7 +27,7 @@ ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
     PATH=/opt/venv/bin:$PATH \
     PDP_EBPF_LOADER=/opt/pdp/bin/pdp-ebpf
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-venv strace gosu ca-certificates tzdata coreutils tar \
+      python3 python3-venv strace gosu ca-certificates tzdata coreutils tar nftables \
     && rm -rf /var/lib/apt/lists/*
 # CPU PyTorch wheel and the few inference deps. No PyG: the one PyG layer the detectors use has a pure-torch copy
 # (pdp_engine/tconv.py, checked against PyG by tests/unit/test_tconv.py), which keeps SciPy, scikit-learn, NetworkX

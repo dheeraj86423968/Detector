@@ -275,6 +275,7 @@ def _org_out(c, org_id: str) -> dict:
     o = db.q(c, "SELECT * FROM orgs WHERE id=%s", (org_id,), one=True)
     return {"id": str(o["id"]), "name": o["name"], "created_at": o["created_at"], "max_endpoints": o["max_endpoints"],
             "retention_days": o.get("retention_days"), "require_mfa": bool(o.get("require_mfa")),
+            "response_actions": bool(o.get("response_actions")),
             "sso": _sso_out(o.get("sso")),
             "endpoints": db.q(c, "SELECT count(*) AS n FROM endpoints WHERE org_id=%s AND phase<>'retired'", (org_id,), one=True)["n"],
             "endpoint_usage": endpoint_usage(c, org_id),
@@ -293,6 +294,7 @@ class OrgPatch(BaseModel):
     name: str | None = Field(default=None, max_length=200)
     retention_days: int | None = None
     require_mfa: bool | None = None
+    response_actions: bool | None = None
 
 
 def _sso_out(sso: dict | None) -> dict | None:
@@ -312,6 +314,8 @@ def patch_org(req: OrgPatch, s=Depends(admin)):
         sets.append("retention_days=%s"); vals.append(req.retention_days)
     if req.require_mfa is not None:
         sets.append("require_mfa=%s"); vals.append(req.require_mfa)
+    if req.response_actions is not None:
+        sets.append("response_actions=%s"); vals.append(req.response_actions)
     with db.conn() as c:
         if sets:
             db.q(c, f"UPDATE orgs SET {', '.join(sets)} WHERE id=%s", (*vals, s["org"]))

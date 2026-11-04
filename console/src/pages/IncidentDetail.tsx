@@ -7,6 +7,7 @@ import { detection, fmtDateTime, fmtRel, fmtSpan, fmtTime, plural, reasonText, s
 import { AttackGraph } from "../graph/AttackGraph";
 import type { VNode } from "../graph/model";
 import { TriageCard } from "../triage";
+import { StopProcessButton, useResponse } from "../respond";
 import { Card, Chip, cx, DetectionTag, Empty, ErrorState, Loading, Mid, NodeIcon, PageHeader, PathText, SeverityBadge, ShowMore, StatusBadge, useShowMore, useToast } from "../ui";
 
 const ACTIONS: { status: IncidentStatus; label: string; icon: JSX.Element; tone?: string; done: string }[] = [
@@ -29,6 +30,7 @@ export default function IncidentDetail() {
   const [busy, setBusy] = useState<string | null>(null);
   const [allow, setAllow] = useState<{ alertId?: number | null; preset?: AllowOption[]; subject: string } | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const respond = useResponse();
   const graphRef = useRef<HTMLDivElement>(null);
   const onSelect = useCallback((nid: string | null, node: VNode | null) => setSel(nid && node ? { id: nid, node } : null), []);
   const focusNode = (nid: string, scroll = false) => {
@@ -149,7 +151,7 @@ export default function IncidentDetail() {
       <Card title="Alerts in this incident" subtitle="Each alert is one detection on one process, file or network peer." pad={false}>
         <div className="table-wrap">
           <table className="table clickable">
-            <thead><tr><th style={{ width: 96 }}>Time</th><th style={{ width: 186 }}>Detection</th><th style={{ width: "28%" }}>Entity</th><th>Why it was flagged</th><th style={{ width: 120 }}>Status</th>{can.manage_endpoints && <th style={{ width: 118 }}></th>}</tr></thead>
+            <thead><tr><th style={{ width: 96 }}>Time</th><th style={{ width: 186 }}>Detection</th><th style={{ width: "28%" }}>Entity</th><th>Why it was flagged</th><th style={{ width: 120 }}>Status</th>{can.manage_endpoints && <th style={{ width: respond ? 196 : 118 }}></th>}</tr></thead>
             <tbody>{alertRows.visible.map(a => {
               const n = nodeMap.get(a.node);
               return (
@@ -161,7 +163,7 @@ export default function IncidentDetail() {
                       : <div className="muted mono sm ellipsis" title={a.title}>{shortCmd(a.title)}</div>)}</td>
                   <td className="reason"><PathText text={reasonText(a.type, a.reason)} /></td>
                   <td><StatusBadge status={a.status} /></td>
-                  {can.manage_endpoints && <td className="row-actions"><button className="btn sm" title="Add this activity to the allow list" onClick={e => { e.stopPropagation(); setAllow({ alertId: a.id, subject: n?.type === "process" && n.details?.Program && !n.details.Program.startsWith("(") ? n.details.Program : a.title || a.label }); }}><ShieldCheck size={14} />Allow…</button></td>}
+                  {can.manage_endpoints && <td className="row-actions">{respond && (n?.type || "process") === "process" && <StopProcessButton endpointId={inc.endpoint_id} nodeUuid={a.node} label={a.label} />}<button className="btn sm" title="Add this activity to the allow list" onClick={e => { e.stopPropagation(); setAllow({ alertId: a.id, subject: n?.type === "process" && n.details?.Program && !n.details.Program.startsWith("(") ? n.details.Program : a.title || a.label }); }}><ShieldCheck size={14} />Allow…</button></td>}
                 </tr>
               );
             })}</tbody>

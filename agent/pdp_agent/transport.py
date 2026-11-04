@@ -22,7 +22,13 @@ class Transport:
             self.ctx.load_cert_chain(cert_path, key_path)
         self.timeout = timeout
 
+    # set while the endpoint is isolated: the server's addresses resolved before isolation (DNS is blocked then);
+    # TLS still verifies the server's name
+    pinned: list[str] | None = None
+
     def _conn(self):
+        if self.pinned:
+            return _PinnedHTTPS(self.host, self.port, self.pinned, context=self.ctx, timeout=self.timeout)
         return http.client.HTTPSConnection(self.host, self.port, context=self.ctx, timeout=self.timeout)
 
     def request(self, method: str, path: str, body=None, headers: dict | None = None, raw: bool = False, attempts: int = 6):
@@ -103,6 +109,23 @@ class Transport:
         if batch_id:
             h["X-Batch-Id"] = batch_id
         return self.request("POST", path, body=body, headers=h)
+
+
+class _PinnedHTTPS(http.client.HTTPSConnection):
+    def __init__(self, host, port, addrs, **kw):
+        super().__init__(host, port, **kw)
+        self._addrs = addrs
+
+    def connect(self):
+        err = None
+        for a in self._addrs:
+            try:
+                sock = socket.create_connection((a, self.port), self.timeout)
+                self.sock = self._context.wrap_socket(sock, server_hostname=self.host)
+                return
+            except OSError as e:
+                err = e
+        raise err or OSError("no pinned address")
 
 
 class TransportError(RuntimeError):

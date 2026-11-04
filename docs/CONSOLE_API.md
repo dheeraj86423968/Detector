@@ -218,6 +218,20 @@ failed, updater}`; `issues` lists disk, event loss, falling behind, failed updat
 - `POST /api/incidents/{id}/assign {user_id|null}`, `POST /api/incidents/{id}/notes {text}`; incident detail adds
   `assignee`, `history`, `assignable`; `GET /api/incidents?assignee=me|none`. `GET /api/reports/weekly`.
 
+## Response actions (0.6, admins, opt-in)
+`PATCH /api/org {response_actions: true}`; `POST /api/endpoints/{id}/respond {action: kill_process|isolate|release,
+node_uuid (kill_process: a process an alert of this endpoint was raised on)}` → `{id}`;
+`GET /api/endpoints/{id}/commands/{id}` → `{state, result}` (the agent acts within its next status poll). Health
+adds `isolated`. Agents 0.3.15+.
+
+## Threat hunting (0.6)
+`POST /api/hunts {q (2-200 characters), kind: exec|net|write|null}` (admins, analysts) → `{id, endpoints, skipped}`:
+sent as a `hunt` command to every endpoint of the organisation that reported within a day and runs agent 0.3.17+
+(older ones are counted in `skipped`). `GET /api/hunts` → the last 30 with `asked`, `answered`, `matches`;
+`GET /api/hunts/{id}` → per endpoint `{answered, at, rows: [{kind, program, object, first_ns, last_ns, count}]}`
+(endpoints with matches first). The search is a case-insensitive substring match over the program and the object
+(command line, `ip:port`, file path) in each agent's local activity index (30 days, de-duplicated).
+
 ## Notifications (0.6, admins)
 `GET /api/notifications/channels` → `{channels: [{id, name, kind, target, has_secret, min_severity, events, every_alert,
 enabled, last_ok_at, last_error, last_error_at, ...}], email_available, notifier_running}` (secrets are never returned).

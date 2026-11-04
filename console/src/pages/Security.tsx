@@ -29,6 +29,11 @@ export default function Security() {
             Require two-factor sign-in for password accounts</label>
           <p className="muted sm">Users without it are asked to set it up at their next sign-in. Single sign-on accounts use your identity provider's.</p>
         </Card>
+        <Card title="Response actions">
+          <label className="inline-toggle"><Toggle checked={!!(o as any).response_actions} onChange={v => patch({ response_actions: v }, v ? "Response actions on" : "Response actions off")} label="Allow response actions" />
+            Let administrators stop processes and isolate endpoints</label>
+          <p className="muted sm">Off by default. Each action is confirmed, carried out by the endpoint's agent (0.3.15+) and recorded in the activity log.</p>
+        </Card>
         <Card title="Data retention">
           <Field label="Keep alerts, incidents and the activity log for" hint="30 to 3650 days; older data is deleted every night.">
             <div className="row-gap"><input type="number" min={30} max={3650} value={ret} onChange={e => setRet(e.target.value ? Number(e.target.value) : "")} style={{ width: 110 }} /> days

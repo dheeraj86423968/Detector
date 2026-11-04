@@ -60,6 +60,13 @@ Commands are delivered in the `status` response: `"commands": [{"id": "...", "co
 command is not delivered again. The alert threshold mode (`fp_budget`) travels in `config`, not as a command.
 The bundle manifest carries `window_ns`; the agent builds detection windows of that length.
 
+Response commands (0.3.15+): `kill_process {pid, uuid, label}`, `isolate`, `release`; results start with `ok:` on success.
+Hunting (0.3.17+): `hunt {hunt_id, q, kind, limit}` - the agent searches its activity index (programs run with their
+command line, `ip:port` contacted in either direction, files written outside /proc, /sys, /dev; first / last seen and
+a count per distinct entry; 30 days, at most 300k entries) and answers with
+`POST /v1/endpoints/{id}/hunts/{hunt_id}` (gzip NDJSON rows `{kind, program, object, first_ns, last_ns, count}`, or
+one row `{"none": true}`), then acknowledges the command. Only endpoints the hunt was sent to can answer.
+
 ## Console API (session cookie, roles admin|analyst)
 `/api/login`, `/api/logout`, `/api/me`, `/api/me/password`, `/api/users` (admin: list / create / delete),
 `/api/endpoints` (admin POST: enrolment token + `ca_sha256` + `enroll_command`), `/api/endpoints/{id}` (timeline,

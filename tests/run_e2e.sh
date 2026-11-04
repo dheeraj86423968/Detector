@@ -1,6 +1,7 @@
 #!/bin/bash
 # End-to-end suites against the staging stack (deploy/staging.sh up first):
-#   tests/run_e2e.sh      stack_e2e (console + agent protocol), tenancy_e2e (organisation isolation), notify_e2e
+#   tests/run_e2e.sh      stack_e2e (console + agent protocol), tenancy_e2e (organisation isolation), notify_e2e,
+#                         hunt_e2e (threat hunting across organisations)
 set -uo pipefail
 cd "$(dirname "$0")/.."
 [ -f deploy/staging.env ] || { echo "no staging stack: deploy/staging.sh up" >&2; exit 2; }
@@ -24,4 +25,6 @@ log=$(mktemp)
 if PDP_E2E_STACK=staging tests/e2e/notify_e2e.sh >"$log" 2>&1; then echo "ok   notify_e2e: $(grep -c '^PASS' "$log") checks"
 else echo "FAIL notify_e2e"; grep -E '^FAIL|Traceback|rror' "$log" | head -20; fail=1; fi
 rm -f "$log"
+sleep 61
+suite hunt_e2e pdp/server:dev tests/e2e/hunt_e2e.py
 exit $fail

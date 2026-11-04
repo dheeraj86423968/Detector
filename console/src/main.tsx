@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Building2, KeyRound, LayoutDashboard, ListChecks, LogOut, Server, ShieldAlert, UserCog, Users } from "lucide-react";
+import { Bell, Building2, KeyRound, LayoutDashboard, ListChecks, LogOut, Search, Server, ShieldAlert, UserCog, Users } from "lucide-react";
 import "@fontsource-variable/inter";
 import "./styles.css";
 import { api, Me, MeContext, MeReloadContext, Overview, post, useApi } from "./api";
@@ -20,6 +20,7 @@ import Account from "./pages/Account";
 import Notifications from "./pages/Notifications";
 import WeeklyReport from "./pages/WeeklyReport";
 import Security from "./pages/Security";
+import Hunt from "./pages/Hunt";
 import { Logo } from "./pages/Login";
 
 // the incident page carries the graph libraries; load it on demand
@@ -57,6 +58,7 @@ function Shell() {
               <NavLink to="/overview"><LayoutDashboard size={18} />Overview</NavLink>
               <NavLink to="/incidents"><ShieldAlert size={18} />Incidents{open ? <span className="nav-count">{open > 999 ? "999+" : open}</span> : null}</NavLink>
               <NavLink to="/endpoints"><Server size={18} />Endpoints</NavLink>
+              <NavLink to="/hunt"><Search size={18} />Search activity</NavLink>
               <NavLink to="/allowlist"><ListChecks size={18} />Allow list</NavLink>
               {team && <NavLink to="/team"><Users size={18} />Team</NavLink>}
               {me?.can?.manage_org && <NavLink to="/settings/notifications"><Bell size={18} />Notifications</NavLink>}
@@ -98,6 +100,7 @@ function App() {
             <Route path="/incidents/:id" element={<IncidentDetail />} />
             <Route path="/endpoints" element={<Endpoints />} />
             <Route path="/endpoints/:id" element={<EndpointDetail />} />
+            <Route path="/hunt" element={<Hunt />} />
             <Route path="/allowlist" element={<AllowList />} />
             <Route path="/team" element={<Team />} />
             <Route path="/operator" element={<Operator />} />

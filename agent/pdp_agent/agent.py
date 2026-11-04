@@ -31,7 +31,7 @@ from .config import Config
 from .state import State
 from .transport import Transport, TransportError
 
-VERSION = "0.3.14"
+VERSION = "0.3.18"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -68,6 +68,35 @@ def _norm_fp(fp: str) -> str:
     return fp.replace(":", "").strip().lower()
 
 
+_SKIP_WRITE = ("/proc/", "/sys/", "/dev/")
+
+
+def _observable(src, op: str, dst):
+    """(kind, program, object) for the activity index: programs run, addresses contacted (both directions), files
+    written; None for everything else."""
+    def prog(e):
+        parts = e.label.split(" ")
+        return parts[1] if len(parts) > 1 and parts[1] != "None" else (parts[2] if len(parts) > 2 else None)
+    if op == "EXECUTE" and dst.ntype == "subject":
+        p = prog(dst)
+        parts = dst.label.split(" ", 2)
+        cmd = parts[2][:160] if len(parts) > 2 and parts[2] != "None" else ""
+        return ("exec", p, cmd) if p else None
+    if op in ("CONNECT", "SENDTO", "SENDMSG") and src.ntype == "subject" and dst.ntype == "netflow":
+        p, a = prog(src), dst.label.split(" ", 1)[1].replace(" ", ":") if " " in dst.label else None
+        return ("net", p, a) if p and a else None
+    if op in ("RECVFROM", "RECVMSG") and dst.ntype == "subject" and src.ntype == "netflow":
+        p, a = prog(dst), src.label.split(" ", 1)[1].replace(" ", ":") if " " in src.label else None
+        return ("net", p, a) if p and a else None
+    if op == "WRITE" and src.ntype == "subject" and dst.ntype == "file":
+        path = dst.label[5:] if dst.label.startswith("file ") else dst.label
+        if path.startswith(_SKIP_WRITE) or path in ("None", ""):
+            return None
+        p = prog(src)
+        return ("write", p, path) if p else None
+    return None
+
+
 def log(msg):
     print(time.strftime("%Y-%m-%d %H:%M:%S"), "-", msg, flush=True)
 
@@ -102,6 +131,8 @@ class Agent:
         self._max_id = 0                     # highest spool id handed out
         self._open_ids: list[int] = []       # spool ids in the open window: marked scored once their window is
         self._last_compact = time.time()     # scored (on restart they are replayed into a fresh builder)
+        self._obs: dict = {}                 # activity index, flushed to disk once a minute
+        self._obs_flush = time.time()
         self._slice: list[tuple] = []        # events pushed since the rules last ran (real-time rules)
         self._win_hits: list = []            # rule hits of the open window, handed to score() when it closes
         # (uuid, rule) -> ts of alerts already sent in real time: not sent again with their window, nor after a
@@ -177,7 +208,16 @@ class Agent:
         """items: iterable of (entities, Event). Registers entities and spools events. Returns count."""
         ents, evs, n = [], [], 0
         tz = self.tz
+        obs = self._obs
         for entities, ev in items:
+            if len(entities) == 2:                 # activity index for hunting
+                k = _observable(entities[0], ev.op, entities[1])
+                if k is not None:
+                    v = obs.get(k)
+                    if v is None:
+                        obs[k] = [ev.ts_ns, ev.ts_ns, 1]
+                    else:
+                        v[1] = max(v[1], ev.ts_ns); v[2] += 1
             for e in entities:
                 if self.reg.get(e.uuid) is None:   # in memory without display data (that goes to disk with `ents`)
                     ents.append((e, self.reg.gid(self._register(e))))
@@ -578,6 +618,10 @@ class Agent:
                 if self.builder.pending:
                     log(f"resumed open window with {self.builder.pending} buffered events")
             self.state.set("window_builder", None)
+        if self.state.get("isolated"):         # isolation survives an agent restart (DNS may already be blocked:
+            if self.tr is not None and self.state.get("isolated_addrs"):        # the saved server addresses first)
+                self.tr.pinned = list(self.state.get("isolated_addrs"))
+            log(f"response: re-applying network isolation: {self.isolate()}")
         last_hb, last_status, last_purge = 0, 0, time.time()
         self._offline_since = 0
         for batch in source.batches(lambda: self.stop):   # source yields lists of (entities, Event); empty list = idle tick
@@ -627,6 +671,15 @@ class Agent:
                 self.purge_spool()
                 last_purge = now
             self.maybe_compact(now)
+            if now - self._obs_flush > 60:
+                self._obs_flush = now
+                try:
+                    self.state.add_observables(self._obs)
+                    if int(now) % 3600 < 60:
+                        self.state.prune_observables()
+                except Exception as e:  # noqa - the index is best effort
+                    log(f"activity index: {e}")
+                self._obs = {}
             if now - last_hb > self.cfg.heartbeat_interval:
                 try:
                     self.tr.request("POST", f"/v1/endpoints/{self.eid}/heartbeat", self.health())
@@ -675,8 +728,8 @@ class Agent:
         st = {"state": "none", "failed": failed, "updater": self.updater}
         if os.path.exists(self._upd("update-request.env")):
             st["state"] = "updating"
-        elif os.path.exists(self._upd("update-trial.env")):
-            st["state"] = "trial"
+        elif os.path.exists(self._upd("update-trial.env")) and not self._confirmed():
+            st["state"] = "trial"         # (the host updater clears the trial files only at the next start)
         elif self._update_offer:
             v = self._update_offer.get("version")
             st["state"] = "failed" if v in failed else "offered" if self.updater else "available"
@@ -713,6 +766,13 @@ class Agent:
         self.stop = True
         return True
 
+    def _confirmed(self) -> bool:
+        try:
+            with open(self._upd("update-ok")) as f:
+                return f.read().strip() == VERSION
+        except OSError:
+            return False
+
     def confirm_update(self) -> None:
         """First successful heartbeat on a new version: tell the updater this version works (no rollback)."""
         if os.path.exists(self._upd("update-trial.env")) and not os.path.exists(self._upd("update-ok")):
@@ -728,6 +788,17 @@ class Agent:
         try:
             if "fp_budget" in cmd:
                 self._apply_fp_budget(cmd["fp_budget"])
+            elif cmd.get("command") == "kill_process":
+                result = self.kill_process(int(cmd["pid"]), str(cmd.get("uuid") or ""), str(cmd.get("label") or ""))
+            elif cmd.get("command") == "isolate":
+                result = self.isolate()
+            elif cmd.get("command") == "release":
+                result = self.release()
+            elif cmd.get("command") == "hunt":
+                self.state.add_observables(self._obs); self._obs = {}
+                rows = self.state.hunt(str(cmd.get("q") or ""), cmd.get("kind") or None, int(cmd.get("limit") or 200))
+                self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/hunts/{cmd['hunt_id']}", rows or [{"none": True}])
+                result = f"ok: {len(rows)} matches"
             elif cmd.get("command") == "refetch_bundle":
                 bid = self.state.get("bundle_id")
                 self.state.set("bundle_id", None)
@@ -740,6 +811,99 @@ class Agent:
         log(f"command {cid} {cmd}: {result}")
         if cid:
             self.tr.request("POST", f"/v1/endpoints/{self.eid}/commands/{cid}/ack", {"result": result})
+
+    # ------------------------------------------------------------------ response actions
+    def kill_process(self, pid: int, uuid: str, label: str) -> str:
+        """Stop the process an alert was raised on - only if the pid still is that process (the collector's table
+        maps it to the same identity; a pid reused by another program is never touched)."""
+        import signal
+        if pid <= 1 or pid == os.getpid():
+            return "refused: protected process"
+        procs = getattr(getattr(self, "source", None), "procs", None)
+        cur = getattr(procs, "current", {}).get(pid) if procs is not None else None
+        if procs is not None and (cur is None or cur.uuid != uuid):
+            return "not stopped: that process has already ended (its pid is free or used by another program now)"
+        exe = label.split(" ")[1] if label.startswith("subject ") and len(label.split(" ")) > 1 else None
+        try:
+            real = os.readlink(f"/proc/{pid}/exe")
+        except OSError:
+            return "not stopped: the process has already ended"
+        if exe and exe not in ("None", real) and os.path.basename(exe) != os.path.basename(real):
+            return f"not stopped: pid {pid} now runs {real}, not {exe}"
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            return "not stopped: the process has already ended"
+        log(f"response: stopped pid {pid} ({real})")
+        return f"ok: stopped pid {pid} ({real})"
+
+    def _server_addrs(self) -> tuple[list[str], list[int]]:
+        import socket
+        from urllib.parse import urlparse
+        addrs, ports = set(), set()
+        for url in {self.cfg.agent_url, self.cfg.server_url}:
+            u = urlparse(url)
+            ports.add(u.port or 443)
+            try:
+                for info in socket.getaddrinfo(u.hostname, None):
+                    addrs.add(info[4][0])
+            except OSError:
+                if not self.state.get("isolated_addrs"):
+                    raise
+        addrs |= set(self.state.get("isolated_addrs") or []) if not addrs else set()
+        return sorted(addrs), sorted(ports | {443})
+
+    def isolate(self) -> str:
+        """Network isolation: everything dropped except loopback, established connections, the PDP server on its
+        ports and DNS to the host's own resolvers (the agent must still reach the server to be released). Re-applied
+        when the agent starts while isolated."""
+        import subprocess
+        try:
+            addrs, ports = self._server_addrs()
+        except OSError as e:
+            return f"not isolated: cannot resolve the server ({e})"
+        # no DNS while isolated (a resolver is a way out): the agent connects to the addresses resolved now
+        srv4 = ", ".join(a for a in addrs if ":" not in a); srv6 = ", ".join(a for a in addrs if ":" in a)
+        pl = ", ".join(str(p) for p in ports)
+        out_rules = []
+        if srv4: out_rules.append(f"ip daddr {{ {srv4} }} tcp dport {{ {pl} }} accept")
+        if srv6: out_rules.append(f"ip6 daddr {{ {srv6} }} tcp dport {{ {pl} }} accept")
+        ruleset = ("table inet pdp_isolate\ndelete table inet pdp_isolate\ntable inet pdp_isolate {\n"
+                   "  chain input { type filter hook input priority -200; policy drop; iif \"lo\" accept; ct state established,related accept; }\n"
+                   "  chain forward { type filter hook forward priority -200; policy drop; ct state established,related accept; }\n"
+                   "  chain output { type filter hook output priority -200; policy drop; oif \"lo\" accept; ct state established,related accept; "
+                   + " ".join(r + ";" for r in out_rules) + " }\n}\n")
+        r = subprocess.run(["nft", "-f", "-"], input=ruleset, capture_output=True, text=True)
+        if r.returncode != 0:
+            return f"not isolated: nft failed: {r.stderr.strip()[:300]}"
+        self.state.set("isolated", True)
+        self.state.set("isolated_addrs", addrs)
+        if self.tr is not None:
+            self.tr.pinned = addrs
+        log(f"response: endpoint isolated (only the server {addrs} on ports {ports} is reachable)")
+        return f"ok: isolated; only the PDP server ({', '.join(addrs)}) is reachable; check: {self._isolation_check(addrs, ports)}"
+
+    @staticmethod
+    def _isolation_check(addrs, ports) -> str:
+        """Self-test right after isolating: an outside address must be unreachable, the server reachable."""
+        import socket
+        def can(host, port):
+            try:
+                socket.create_connection((host, port), timeout=3).close(); return True
+            except OSError:
+                return False
+        outside = can("1.1.1.1", 443) or can("8.8.8.8", 53)
+        server = any(can(a, p) for a in addrs for p in ports)
+        return ("outside blocked" if not outside else "OUTSIDE STILL REACHABLE") + ", " + ("server reachable" if server else "SERVER UNREACHABLE")
+
+    def release(self) -> str:
+        import subprocess
+        subprocess.run(["nft", "delete", "table", "inet", "pdp_isolate"], capture_output=True, text=True)
+        self.state.set("isolated", False)
+        if self.tr is not None:
+            self.tr.pinned = None
+        log("response: network isolation released")
+        return "ok: released"
 
     def health(self) -> dict:
         now, t = time.time(), os.times()
@@ -756,7 +920,8 @@ class Agent:
         h = {"agent_version": VERSION, "queue_depth": int(q), "last_window_end_ns": int(self._last_window_end),
              "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1), "spool_mb": round(self.state.size_bytes() / 2**20, 1), "entities": len(self.reg),
              "spool_dropped_unscored": int(self.state.get("dropped_unscored", 0)),
-             "spool_dropped_unuploaded": int(self.state.get("dropped_unuploaded", 0)), "update": self.update_health()}
+             "spool_dropped_unuploaded": int(self.state.get("dropped_unuploaded", 0)), "update": self.update_health(),
+             "isolated": bool(self.state.get("isolated", False))}
         try:
             st = os.statvfs(self.cfg.data_dir)
             h["disk_free_mb"] = round(st.f_bavail * st.f_frsize / 2**20, 1)

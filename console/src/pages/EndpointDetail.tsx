@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronRight, FlaskConic
 import { AllowEntry, AllowListResp, Check as CheckT, del, EndpointConfigResp, EndpointOverview, IncidentSummary, LifecycleStep, post, useApi, useCan } from "../api";
 import { AddAllowDialog, allowedText } from "../allowlist";
 import { AppliesTo } from "./AllowList";
+import { IsolationCard, useResponse } from "../respond";
 import { DailyBars } from "../chart";
 import { DETECTION, fmtBytes, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtRel, plural } from "../format";
 import { IncidentTable } from "../incidents";
@@ -57,6 +58,7 @@ const STEP_TITLE_PENDING: Record<string, string> = { baseline: "Learn baseline",
 const STEP_TITLE_ACTIVE: Record<string, string> = { model: "Training model" };
 
 function OverviewTab({ d, reload }: { d: EndpointOverview; reload: () => void }) {
+  const respond = useResponse();
   const base = d.lifecycle.find(s => s.step === "baseline");
   const days = baselineSlots(base);
   return (
@@ -69,6 +71,7 @@ function OverviewTab({ d, reload }: { d: EndpointOverview; reload: () => void })
         </div>}
       </Card>
       {(d as any).learning && <LearningCard l={(d as any).learning} />}
+      {respond && d.endpoint.state !== "retired" && <IsolationCard endpointId={d.endpoint.id} isolated={!!(d.health as any).isolated} reload={reload} />}
       <div className="grid grid-2">
         <HealthCard h={d.health} />
         <DetectionCard d={d} />

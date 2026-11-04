@@ -167,3 +167,14 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS recovery_codes JSONB;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_last BIGINT;
+
+-- response actions (opt-in per organisation): stop a process, isolate an endpoint
+ALTER TABLE orgs ADD COLUMN IF NOT EXISTS response_actions BOOLEAN NOT NULL DEFAULT false;
+
+-- threat hunting (0.6): a search sent to an organisation's agents (their local activity index) and their answers
+CREATE TABLE IF NOT EXISTS hunts (
+  id UUID PRIMARY KEY, org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE, q TEXT NOT NULL, kind TEXT,
+  created_by INT REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ DEFAULT now(), endpoints JSONB NOT NULL DEFAULT '[]');
+CREATE TABLE IF NOT EXISTS hunt_results (
+  hunt_id UUID NOT NULL REFERENCES hunts(id) ON DELETE CASCADE, endpoint_id UUID NOT NULL REFERENCES endpoints(id) ON DELETE CASCADE,
+  rows JSONB NOT NULL, at TIMESTAMPTZ DEFAULT now(), PRIMARY KEY (hunt_id, endpoint_id));

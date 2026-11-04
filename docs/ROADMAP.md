@@ -159,7 +159,20 @@ password changes (sessions are signed cookies valid 12 h); the API reaches ident
 proxy (profile "sso"), whose allow list must list the providers' hosts.
 
 ## Later
-- Response actions (opt-in kill process / network isolate).
-- Search past activity (threat hunting over recorded provenance).
+- Response actions (opt-in kill process / network isolate). — done (server 0.6, agent 0.3.16; 2026-11-04): off per
+  organisation until an admin turns it on (Security page). "Stop" on a process alert: the agent stops it only if the
+  pid still is the alerted process (collector identity + executable; a reused pid is refused). "Isolate endpoint":
+  nftables drops everything except the PDP server's addresses (resolved before isolating; no DNS while isolated, the
+  agent connects to the pinned addresses with TLS verified against the server name), re-applied after agent
+  restarts, with a self-check in the result; "Release" removes it. Verified on client-vm-02: a stale identity was
+  refused, the live process stopped; isolation blocked new SSH and outside traffic while the agent kept reporting;
+  release restored access. Every action is in the audit log and the command history.
+- Search past activity (threat hunting over recorded provenance). — done (server 0.6, agent 0.3.17; 2026-11-04):
+  "Search activity" in the console asks every reporting agent of the organisation; each keeps a local, de-duplicated
+  30-day index (programs run with command line, addresses contacted, files written; first / last seen, count; capped at
+  300k entries) and answers within its next status poll. The server keeps raw events only until they are windowed
+  and protected endpoints upload none, so the endpoints are the store. Verified on client-vm-02: a marker file write, curl's connection to 172.66.147.243:443
+  and the command lines were found within seconds; 183 index entries after 5 minutes. Staging e2e (hunt_e2e) 16/16:
+  version gate, isolation between organisations, answers only from asked endpoints, viewers read-only.
 - Kubernetes DaemonSet install, ARM64, kernels without BTF. (Windows parked.)
 - Measured detection coverage against the harmless attack suite, tracked per release.

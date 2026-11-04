@@ -8,7 +8,8 @@
 #   deploy/staging.sh down      stop (data kept)        deploy/staging.sh destroy   stop and delete all its data
 #   deploy/staging.sh env       print the settings tests need (ports, admin password, network)
 set -euo pipefail
-cd "$(dirname "$0")"
+SELF=$(readlink -f "$0")
+cd "$(dirname "$SELF")"
 ENV=staging.env
 if [ ! -f "$ENV" ]; then
   umask 077
@@ -43,7 +44,7 @@ case "${1:-status}" in
       $DC exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=3)" >/dev/null 2>&1 && break
       sleep 2
     done
-    "$0" status ;;
+    "$SELF" status ;;
   status)
     $DC ps --format '{{.Name}} {{.Status}}'
     set -a; . "./$ENV"; set +a

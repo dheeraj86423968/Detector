@@ -37,6 +37,8 @@ def _include_console_routes():
     from .audit import router as audit_router
     from .mfa import router as mfa_router
     from .sso import router as sso_router
+    from .respond import router as respond_router
+    from .hunt import router as hunt_router, agent_router as hunt_agent_router
     app.include_router(dist_router)
     app.include_router(router)
     app.include_router(allow_router)
@@ -48,6 +50,9 @@ def _include_console_routes():
     app.include_router(audit_router)
     app.include_router(mfa_router)
     app.include_router(sso_router)
+    app.include_router(respond_router)
+    app.include_router(hunt_router)
+    hunt_agent_router(app, agent_endpoint, ndjson_rows)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")
@@ -263,7 +268,7 @@ class CommandAck(BaseModel):
 def ack_command(endpoint_id: str, command_id: str, req: CommandAck, ep=Depends(agent_endpoint)):
     with db.conn() as c:
         db.q(c, "UPDATE jobs SET state=%s, result=%s, finished_at=now() WHERE id=%s AND endpoint_id=%s AND kind='command'",
-             ("done" if req.result == "ok" else "failed", req.result[:500], command_id, endpoint_id))
+             ("done" if req.result == "ok" or req.result.startswith("ok:") else "failed", req.result[:500], command_id, endpoint_id))
     return {"ok": True}
 
 
@@ -318,6 +323,7 @@ class Heartbeat(BaseModel):
     spool_dropped_unscored: int | None = None     # events dropped by the spool size cap before local scoring
     spool_dropped_unuploaded: int | None = None   # ... before upload (lost for the baseline)
     entities: int | None = None           # entities held in the agent's registry (0.3.5+, after compaction)
+    isolated: bool | None = None          # network isolation in force (response action, 0.3.15+)
     disk_free_mb: float | None = None     # free space of the agent's data file system (0.3.8+)
     disk_free_pct: float | None = None
     update: dict | None = None            # {"state": none|offered|updating|trial|failed, "version", "failed": [...]} (0.3.8+)
