@@ -59,13 +59,20 @@ st3 = State(os.path.join(tmp, "c", "state.sqlite"))
 pad = "x" * 200
 st3.add_events([(now + i, 0, "OPEN", 1, f"{pad}{i}", DAY) for i in range(20000)])
 st3.mark_events_uploaded([r[0] for r in st3.pending_events(DAY, 10000)])
-size = st3.size_bytes()
-r = st3.purge([DAY], scoring=True, max_bytes=size // 2)
-check(9000 <= r["dropped_unscored"] <= 13000 and r["dropped_unuploaded"] == 0 and st3.size_bytes() <= size // 2, f"cap drops uploaded rows first ({r}, {st3.size_bytes()} <= {size // 2})")
+size = st3.events_bytes()
+r = st3.purge([DAY], scoring=True, max_bytes=int(size * 0.55))     # half the rows are uploaded (indexes shrink a bit less)
+check(9000 <= r["dropped_unscored"] <= 13000 and r["dropped_unuploaded"] == 0 and st3.events_bytes() <= size * 0.55, f"cap drops uploaded rows first ({r}, {st3.events_bytes()} <= {int(size * 0.55)})")
 r = st3.purge([DAY], scoring=True, max_bytes=size // 6)
-check(0 < r["dropped_unuploaded"] < 10000 and st3.size_bytes() <= size // 6 and st3.get("dropped_unuploaded") == r["dropped_unuploaded"],
+check(0 < r["dropped_unuploaded"] < 10000 and st3.events_bytes() <= size // 6 and st3.get("dropped_unuploaded") == r["dropped_unuploaded"],
       f"then the oldest un-uploaded rows, counted in kv ({r})")
 first = st3.pending_events(DAY, 1)[0][5]
+# the cap counts the event spool only: a large entity registry in the same file never makes it drop events
+st6 = State(os.path.join(tmp, "f", "state.sqlite"))
+st6.add_entities([(Entity(f"big{i}", "file", "file /" + "y" * 400 + str(i), {"pid": i}), i) for i in range(20000)])
+st6.add_events([(now + i, 0, "OPEN", 1, f"ev{i}", DAY) for i in range(2000)])
+r6 = st6.purge([DAY], scoring=True, max_bytes=st6.events_bytes() * 4)
+check(st6.size_bytes() > 4 * st6.events_bytes() and r6["dropped_unscored"] == r6["dropped_unuploaded"] == 0 and st6.unuploaded_count() == 2000,
+      f"a large entity registry does not make the cap drop events (file {st6.size_bytes() >> 10} KB, events {st6.events_bytes() >> 10} KB)")
 check(first.endswith(str(19999 - st3.unuploaded_count() + 1)), f"the newest rows survive ({first[-6:]})")
 
 # 4. migration of a 0.3.3 spool (uuid strings, finished rows kept for two days)

@@ -34,7 +34,7 @@ from .config import Config
 from .state import State, disk_full
 from .transport import Transport, TransportError
 
-VERSION = "0.3.20"
+VERSION = "0.3.21"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -140,7 +140,7 @@ class Agent:
         self._cursor: tuple | None = None    # (ts_ns, id) of the last spooled event handed to the window builder
         self._max_id = 0                     # highest spool id handed out
         self._open_ids: list[int] = []       # spool ids in the open window: marked scored once their window is
-        self._last_compact = time.time()     # scored (on restart they are replayed into a fresh builder)
+        self._last_compact = time.time() - float(cfg.compact_interval_s) + 600   # first check 10 min after start; scored (on restart they are replayed into a fresh builder)
         self._obs: dict = {}                 # activity index, flushed to disk once a minute
         self._obs_flush = time.time()
         self._slice: list[tuple] = []        # events pushed since the rules last ran (real-time rules)
@@ -324,7 +324,9 @@ class Agent:
             if i is not None:
                 extra.add(i)
         keep = self.runtime.compaction_keep(time.time_ns(), int(float(self.cfg.entity_max_age_h) * 3600e9), extra)
-        if keep.sum() > n * 0.8:
+        kept = int(keep.sum())
+        if n - kept < min(0.2 * n, 200_000):    # too little to gain for the renumbering (memory grows ~2 KB per entity)
+            log(f"registry: {n} entities, {kept} still needed; compaction skipped (too few to drop)")
             return
         old2new = self.runtime.compact(keep)
         self.builder.remap(old2new)
@@ -1080,7 +1082,7 @@ class Agent:
         # (rows of the open window stay unscored until it closes, so they are in unscored_count already)
         q = self.state.unscored_count() if self.runtime is not None else self.state.unuploaded_count()
         h = {"agent_version": VERSION, "queue_depth": int(q), "last_window_end_ns": int(self._last_window_end),
-             "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1), "spool_mb": round(self.state.size_bytes() / 2**20, 1), "entities": len(self.reg),
+             "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1), "spool_mb": round(self.state.events_bytes() / 2**20, 1), "entities": len(self.reg),
              "spool_dropped_unscored": int(self.state.get("dropped_unscored", 0)),
              "spool_dropped_unuploaded": int(self.state.get("dropped_unuploaded", 0)), "update": self.update_health(),
              "disk_full_dropped": self._dropped_disk_full, "disk_full": bool(self._disk_full_since),

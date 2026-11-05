@@ -257,9 +257,22 @@ class State:
             wal = 0
         return (pc - fl) * ps + wal
 
+    def events_bytes(self) -> int:
+        """Bytes the event spool takes: the events table and its indexes (sqlite's dbstat; without it, an estimate
+        from the row count). The cap applies to this, not to the whole file: on a busy host the entity registry is
+        most of the file (1.3 GB of entities next to 2 MB of events on the L40S host), and counting it made the cap
+        delete every new event, every minute (6.4 M events lost before upload, agent <= 0.3.20)."""
+        try:
+            r = self.c.execute("SELECT sum(pgsize - unused) FROM dbstat('main', 1) WHERE name IN "
+                               "(SELECT name FROM sqlite_master WHERE tbl_name='events')").fetchone()[0]
+            return int(r or 0)
+        except sqlite3.OperationalError:
+            return int(self.c.execute("SELECT count(*) FROM events").fetchone()[0]) * 120
+
     def purge(self, baseline_days: list[str], scoring: bool, unscored_max_age_s: float = 6 * 3600,
               max_bytes: int = 1 << 30) -> dict:
-        """Delete finished rows and keep the spool under `max_bytes`. Returns counts of what was removed.
+        """Delete finished rows and keep the event spool (events_bytes) under `max_bytes`. Returns counts of what was
+        removed.
 
         finished    scored, and uploaded unless its day is not a baseline day (only the baseline leaves the host)
         trained_on  no model loaded yet: baseline rows already uploaded and older than `unscored_max_age_s` are not
@@ -278,7 +291,7 @@ class State:
             f"DELETE FROM events WHERE scored=1 AND (uploaded=1 OR NOT {inb})", (*base,)).rowcount)
         target = int(max_bytes * 0.9)          # once over the cap, go 10% below it (no drop on every cycle)
         for key, cond in (("dropped_unscored", f"(uploaded=1 OR NOT {inb})"), ("dropped_unuploaded", "1")):
-            while (size := self.size_bytes()) > max_bytes or (out[key] and size > target):
+            while (size := self.events_bytes()) > max_bytes or (out[key] and size > target):
                 total = self.c.execute("SELECT count(*) FROM events").fetchone()[0]
                 if not total:
                     break
