@@ -2,6 +2,7 @@
 # Staging: a second, independent copy of the server stack on this host for release checks, restore tests and load
 # tests. Own compose project (pdp-staging), volumes, network, secrets and ports; CPU training; no public hostname
 # (self-signed console certificate), open sign-up, a known first admin password (deploy/staging.env, mode 600).
+# Its ports listen on 127.0.0.1 only: from elsewhere use an SSH tunnel (ssh -L 9445:127.0.0.1:9445 this-host).
 #
 #   deploy/staging.sh up        build nothing, start/refresh staging with the current local images
 #   deploy/staging.sh status    containers and the console / agent URLs
@@ -31,14 +32,24 @@ PDP_API_REPLICAS=2
 PDP_TRAIN_DEVICE=cpu
 PDP_NOTIFY_ALLOW_PRIVATE=0
 PDP_INTERNAL_ORG_NAME=Staging
+PDP_CONSOLE_DIST=../console/dist-next
+PDP_HTTPS_PROXY=http://egress:3128
+PDP_BIND=127.0.0.1:
 EOV
   echo "generated $ENV"
 fi
 mkdir -p nginx/public-staging
+# staging serves the console build under test (console: npx vite build --outDir dist-next); production serves
+# console/dist, updated only when production's API is rolled (docs/OPERATIONS.md), so it never runs ahead of its API
+grep -q '^PDP_CONSOLE_DIST=' "$ENV" || echo 'PDP_CONSOLE_DIST=../console/dist-next' >> "$ENV"
+grep -q '^PDP_BIND=' "$ENV" || echo 'PDP_BIND=127.0.0.1:' >> "$ENV"     # open sign-up + known admin: never public
+grep -q '^PDP_HTTPS_PROXY=' "$ENV" || echo 'PDP_HTTPS_PROXY=http://egress:3128' >> "$ENV"     # SSO + domain proof via egress
+[ -f ../console/dist-next/index.html ] || { mkdir -p ../console/dist-next && cp -a ../console/dist/. ../console/dist-next/; }
 DC="docker compose -p pdp-staging --env-file $ENV -f docker-compose.yml"
 case "${1:-status}" in
   up)
     $DC up -d platform-db telemetry-db
+    $DC --profile sso up -d egress
     $DC up -d api worker-ingest worker-train gateway registry notifier
     for i in $(seq 1 60); do
       $DC exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=3)" >/dev/null 2>&1 && break

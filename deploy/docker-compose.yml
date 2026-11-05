@@ -70,6 +70,7 @@ services:
       PDP_PUBLIC_HOSTNAME: ${PDP_PUBLIC_HOSTNAME:-}
       HTTPS_PROXY: ${PDP_HTTPS_PROXY:-}
       NO_PROXY: ${PDP_NO_PROXY:-kms,localhost,127.0.0.1}
+      PDP_DOH_URL: ${PDP_DOH_URL:-https://cloudflare-dns.com/dns-query}   # SSO domain proof (DNS TXT over HTTPS)
     volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro",
                "./btf:/btf:ro" ]          # BTF files for endpoint kernels without their own (operator-stocked; may be empty)
     networks: [ backend ]
@@ -106,7 +107,9 @@ services:
 
   gateway:
     image: nginx:1.27-alpine
-    ports: [ "${PDP_HTTP_PORT:-80}:80", "${PDP_CONSOLE_PORT:-443}:443", "${PDP_AGENT_PORT:-8443}:8443" ]
+    # PDP_BIND: empty = all addresses (production: clients need the console and agent ports); "127.0.0.1:" = this
+    # host only (staging: reach it through an SSH tunnel)
+    ports: [ "${PDP_BIND:-}${PDP_HTTP_PORT:-80}:80", "${PDP_BIND:-}${PDP_CONSOLE_PORT:-443}:443", "${PDP_BIND:-}${PDP_AGENT_PORT:-8443}:8443" ]
     volumes:
       - ./nginx/gateway.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/console.conf:/etc/nginx/snippets/console.conf:ro
@@ -114,7 +117,7 @@ services:
       - pdp_acme:/etc/letsencrypt:ro
       - pdp_acme_web:/acme:ro
       - pdp_pki:/pki:ro
-      - ../console/dist:/console:ro
+      - ${PDP_CONSOLE_DIST:-../console/dist}:/console:ro   # staging: ../console/dist-next (built ahead of production)
     networks: [ backend, edge ]
     restart: unless-stopped
     depends_on: { api: { condition: service_healthy } }
@@ -188,8 +191,10 @@ services:
     image: pdp/server:${PDP_VERSION:-dev}
     command: ["python", "-m", "pdp_server.egress"]
     environment:
+      <<: *db-env                # reads the organisations' own identity providers (orgs.sso) to allow them
       PDP_EGRESS_ALLOW: ${PDP_EGRESS_ALLOW:-}
       PDP_OIDC_ISSUER: ${PDP_OIDC_ISSUER:-}
+      PDP_DOH_URL: ${PDP_DOH_URL:-https://cloudflare-dns.com/dns-query}
     networks: [ backend, edge ]
     restart: unless-stopped
     profiles: [ sso ]

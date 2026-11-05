@@ -310,8 +310,17 @@ PDP_HTTPS_PROXY=http://egress:3128      # the api reaches the IdP only through i
   audience, expiry and nonce checks. State, nonce and the PKCE verifier live in a signed 10-minute cookie, so a
   callback URL cannot be replayed.
 * Logout also ends the IdP session (RP-initiated logout) when the IdP supports it.
-* The backend network has no internet route. The `egress` service (profile `sso`) is an allow-listed CONNECT proxy
-  that relays only to the issuer's host (`PDP_EGRESS_ALLOW` to override); TLS stays end to end.
+* The backend network has no internet route. The `egress` service (profile `sso`) is an allow-listed CONNECT proxy;
+  TLS stays end to end. It allows the issuer's host (`PDP_EGRESS_ALLOW` to override), the Google and Microsoft
+  sign-in hosts, the DNS-over-HTTPS resolver (`PDP_DOH_URL`, default Cloudflare) and - re-read from the database
+  every minute - each organisation's own OIDC provider (issuer, token and key hosts), those only on public
+  addresses and connected to the address that was checked.
+* Per-organisation SSO (hosted service) needs the same two settings (`COMPOSE_PROFILES=...,sso`,
+  `PDP_HTTPS_PROXY=http://egress:3128`). An organisation's domain signs in only after it is proven: a DNS TXT
+  record the console shows (Security > Single sign-on > Check DNS), or the operator's confirmation (Organisations
+  page menu) after checking ownership another way.
+* Sessions end when the password changes (by the user, an admin or `tools/reset_password`) and on "Sign out
+  everywhere else" (Account page).
 * Test: `tests/e2e/sso/run_sso_e2e.sh` runs a throwaway Keycloak realm and a real browser through 21 checks
   (roles, refusal, account takeover, replay, role changes, logout).
 

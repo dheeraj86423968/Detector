@@ -213,7 +213,14 @@ failed, updater}`; `issues` lists disk, event loss, falling behind, failed updat
 - `PATCH /api/org {retention_days (30-3650), require_mfa}`; `GET /api/org` returns them and `sso` (without secret).
 - `PUT /api/org/sso {provider: google|microsoft|oidc, tenant?, issuer?, client_id, client_secret?, domains,
   default_role: viewer|analyst, admin_emails, enabled}`, `DELETE /api/org/sso`; sign-in: `GET /api/sso/start?email=`
-  → provider → `GET /api/sso/callback`. `/api/auth/config` adds `org_sso`.
+  → provider → `GET /api/sso/callback`. `/api/auth/config` adds `org_sso`. `sso.proof` lists each domain
+  `{domain, verified_at|null, record_name, record_value}`: a domain signs in only once proven.
+  `POST /api/org/sso/verify` looks up the TXT records (`_pdp-verification.<domain>` = `pdp-verification=<token>`)
+  → `{sso, errors: {domain: why}}`. While unproven, other organisations may list the domain too; once proven,
+  `PUT` by another organisation answers 409.
+- Sessions: `POST /api/me/password` ends the user's other sessions (this one gets a new cookie); so does an admin
+  setting a user's password (`PATCH /api/users/{id} {password}`) and `tools/reset_password`.
+  `POST /api/me/sessions/end` signs out everywhere else. An ended session answers 401.
 - `GET /api/audit?limit=` (admins): `{entries: [{at, who, action, target, status, ip}]}`.
 - `POST /api/incidents/{id}/assign {user_id|null}`, `POST /api/incidents/{id}/notes {text}`; incident detail adds
   `assignee`, `history`, `assignable`; `GET /api/incidents?assignee=me|none`. `GET /api/reports/weekly`.
@@ -299,7 +306,9 @@ pulls the agent from `<host>`'s read-only registry, writes the configuration, st
 
 ### Operator
 - `GET /api/operator/orgs` -> `{ok, signup: {mode, code|null}, orgs: [{id, name, created_at, disabled, max_endpoints,
-  users, endpoints, endpoints_online, alerts_7d, last_activity|null}]}`
+  users, endpoints, endpoints_online, alerts_7d, last_activity|null, sso_domains|null, sso_verified: {domain: at}}]}`
+- `POST /api/operator/orgs/{id}/sso/confirm {domain}` -> `{ok}`: the operator confirms a listed SSO domain checked
+  by other means (409 when another organisation proved it).
 - `PATCH /api/operator/orgs/{id}` `{disabled?: bool, max_endpoints?: int}` -> `{ok, org}`. A disabled organisation's
   users cannot sign in; its agents keep running.
 - `DELETE /api/operator/orgs/{id}` -> `{ok, endpoints_deleted}`: offboards a client - deletes the organisation and

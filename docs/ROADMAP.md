@@ -154,9 +154,12 @@ organisation; domains unique across organisations, public mail domains refused. 
 (method, route, ids, result, IP; no request bodies) and every sign-in, per organisation (Security page). Data
 retention per organisation (30-3650 days, default 365), applied nightly. Tests: tests/unit/test_login_security.py
 (22), tests/e2e/security_e2e.py (27) and retention_check.py on staging.
-Open: proving domain ownership (DNS TXT) before an organisation's SSO is used; revoking existing sessions when a
-password changes (sessions are signed cookies valid 12 h); the API reaches identity providers only through the egress
-proxy (profile "sso"), whose allow list must list the providers' hosts.
+Follow-up (2026-11-05): a domain signs in with SSO only after DNS TXT proof (or the operator's confirmation); an
+unproven claim blocks no one. Sessions carry a generation: a password change or reset, or "Sign out everywhere
+else", ends the other sessions. The egress proxy allows Google, Microsoft, the DNS-over-HTTPS resolver and each
+organisation's own provider automatically (public addresses only). Staging listens on localhost only. Checked on
+staging through the real proxy (DoH lookup, a custom provider allowed within seconds, an internal address refused);
+security_e2e now 45 checks. Production needs `COMPOSE_PROFILES=kms,sso` and `PDP_HTTPS_PROXY` for any SSO.
 
 ## Later
 - Response actions (opt-in kill process / network isolate). — done (server 0.6, agent 0.3.16; 2026-11-04): off per

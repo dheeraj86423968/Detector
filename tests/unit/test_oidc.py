@@ -165,6 +165,29 @@ check("200" in res["allowed"] and "hello world" in res["allowed"], "egress relay
 check("403" in res["refused"], "egress refuses CONNECT to other hosts")
 check("405" in res["get"], "egress refuses plain HTTP proxying")
 
+# per-organisation providers: built-ins and the resolver are static; org issuers only on public addresses
+st_allow = egress.static_allow()
+check({("accounts.google.com", 443), ("login.microsoftonline.com", 443), ("cloudflare-dns.com", 443)} <= st_allow,
+      "Google, Microsoft and the DNS-over-HTTPS resolver are always allowed")
+real_pa, real_dh = egress.public_addrs, egress._discovery_hosts
+egress.public_addrs = lambda h, p: {"idp.okta.example": ["93.184.215.14"], "jwks.okta.example": ["93.184.215.15"]}.get(h, [])
+egress._discovery_hosts = lambda iss: {("idp.okta.example", 443), ("jwks.okta.example", 443)} if "okta" in iss else set()
+pol = egress.Policy(set(st_allow), issuers=lambda: ["https://idp.okta.example/oauth2/default", "https://evil.internal/realm"])
+check(pol.decide("accounts.google.com", 443) == [], "static host: connect by name")
+check(pol.decide("idp.okta.example", 443) == ["93.184.215.14"] and pol.decide("jwks.okta.example", 443) == ["93.184.215.15"],
+      "an organisation's own provider (issuer and key hosts) is allowed, pinned to the checked address")
+check(pol.decide("evil.internal", 443) is None and pol.decide("example.org", 443) is None, "internal or unlisted hosts refused")
+egress.public_addrs = lambda h, p: []           # the org's issuer now resolves to an internal address (DNS rebinding)
+check(pol.decide("idp.okta.example", 443) is None, "a listed org provider resolving to an internal address is refused")
+egress.public_addrs, egress._discovery_hosts = real_pa, real_dh
+check(egress.public_addrs("127.0.0.1", 443) == [] and egress.public_addrs("10.1.2.3", 443) == [], "loopback and private addresses are not public")
+check(egress._discovery_hosts("https://127.0.0.1/realm") == set() and egress._discovery_hosts("http://idp.example.com") == set(),
+      "issuers on internal addresses or without https are never allowed")
+pol2 = egress.Policy(set(), issuers=lambda: (_ for _ in ()).throw(RuntimeError("db down")))
+pol2.dynamic = {("kept.example", 443)}
+pol2.refresh()
+check(pol2.dynamic == {("kept.example", 443)}, "database unavailable: the last list is kept")
+
 # ---------------------------------------------------------------- KMS mode: private key never readable
 os.environ["PDP_KMS"] = "transit"
 import importlib  # noqa: E402

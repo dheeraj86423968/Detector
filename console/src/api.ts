@@ -102,7 +102,8 @@ export type PublicInvite = { ok: true; organisation: string; role: Role; email: 
 export type SignupBody = { organisation: string; name: string; email: string; password: string; code?: string };
 export type AcceptInviteBody = { name: string; email?: string; password: string };
 export type OperatorOrg = { id: number | string; name: string; created_at: string; disabled: boolean; max_endpoints: number;
-  users: number; endpoints: number; endpoints_online: number; alerts_7d: number; last_activity: string | null };
+  users: number; endpoints: number; endpoints_online: number; alerts_7d: number; last_activity: string | null;
+  sso_domains: string[] | null; sso_verified: Record<string, string> };
 export type OperatorOrgsResp = { ok: true; signup: { mode: SignupMode; code: string | null }; orgs: OperatorOrg[] };
 
 /** Client-side checks shared by sign-up and invite acceptance (the server checks again). */

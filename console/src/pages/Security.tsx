@@ -5,7 +5,8 @@ import { fmtDateTime, fmtRel } from "../format";
 import { Card, Field, Loading, PageHeader, Toggle, useToast } from "../ui";
 
 type Org = { retention_days: number; require_mfa: boolean; sso: null | { provider: string; tenant?: string; issuer?: string; client_id: string;
-  has_secret: boolean; domains: string[]; default_role: string; admin_emails: string[]; enabled: boolean } };
+  has_secret: boolean; domains: string[]; default_role: string; admin_emails: string[]; enabled: boolean;
+  proof?: { domain: string; verified_at: string | null; record_name: string; record_value: string }[] } };
 type Entry = { id: number; at: string; who: string | null; action: string; target: string | null; status: number | null; ip: string | null };
 
 export default function Security() {
@@ -69,6 +70,16 @@ function SSOCard({ sso, reload }: { sso: Org["sso"]; reload: () => void }) {
     } catch (e: any) { setErr(e.message); }
   };
   const callback = `${window.location.origin}/api/sso/callback`;
+  const [checking, setChecking] = useState(false); const [proofErr, setProofErr] = useState<Record<string, string>>({});
+  const verify = async () => {
+    setChecking(true); setProofErr({});
+    try {
+      const r = await api<{ errors: Record<string, string> }>("/api/org/sso/verify", { method: "POST" });
+      setProofErr(r.errors || {}); if (!Object.keys(r.errors || {}).length) toast("Domain ownership proven"); reload();
+    } catch (e: any) { setErr(e.message); }
+    setChecking(false);
+  };
+  const pending = (sso?.proof || []).filter(p => !p.verified_at);
   return (
     <Card title={<><KeyRound size={16} /> Single sign-on</>} subtitle={sso?.enabled ? `On for ${sso.domains.join(", ")}` : "Your team signs in with its Google Workspace or Microsoft account"}>
       <div className="form">
@@ -83,6 +94,23 @@ function SSOCard({ sso, reload }: { sso: Org["sso"]; reload: () => void }) {
         <Field label="Administrators (emails)" hint="These people get the admin role on their first sign-in."><input value={f.admin_emails} onChange={e => setF({ ...f, admin_emails: e.target.value })} /></Field>
         <label className="inline-toggle"><Toggle checked={f.enabled} onChange={v => setF({ ...f, enabled: v })} label="Enabled" />Enabled</label>
         <p className="muted sm">Register this redirect address at your provider: <code className="code-inline">{callback}</code></p>
+        {sso?.proof && sso.proof.length > 0 && (
+          <div>
+            <h4>Domain ownership</h4>
+            <p className="muted sm">A domain signs in with single sign-on only after you prove you own it: add this TXT record at your DNS provider, then check.</p>
+            <table className="table">
+              <thead><tr><th>Domain</th><th>Status</th><th>TXT record</th></tr></thead>
+              <tbody>{sso.proof.map(p => (
+                <tr key={p.domain}><td>{p.domain}</td>
+                  <td>{p.verified_at ? <span className="pill ok">Proven</span> : <span className="pill info">Waiting for proof</span>}
+                    {proofErr[p.domain] && <div className="muted sm">{proofErr[p.domain]}</div>}</td>
+                  <td>{p.verified_at ? <span className="muted sm">{fmtDateTime(p.verified_at.slice(0, 20))}</span>
+                    : <><div className="sm">Name <code className="code-inline">{p.record_name}</code></div><div className="sm">Value <code className="code-inline">{p.record_value}</code></div></>}</td></tr>
+              ))}</tbody>
+            </table>
+            {pending.length > 0 && <button className="btn" onClick={verify} disabled={checking}>{checking ? "Checking DNS..." : "Check DNS"}</button>}
+          </div>
+        )}
         {err && <div className="err">{err}</div>}
         <div className="row-gap"><button className="btn primary" onClick={save}><ShieldCheck size={15} />Save</button>
           {sso && <button className="btn ghost" onClick={async () => { await del("/api/org/sso"); toast("Single sign-on removed"); reload(); }}>Remove</button>}</div>

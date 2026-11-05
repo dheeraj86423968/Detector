@@ -11,7 +11,7 @@ Scope:   the organisation's endpoints, narrowed by users.endpoints (NULL = all o
 """
 from __future__ import annotations
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Request, Response
 
 from . import auth, db
 
@@ -25,23 +25,40 @@ MFA_SETUP_PATHS = {"/api/me", "/api/me/mfa/setup", "/api/me/mfa/enable", "/api/l
 
 
 def session(request: Request) -> dict:
-    """Valid session cookie AND the user still exists and is enabled: deleting or disabling a user, or changing
-    their role or endpoint access, takes effect on the next request. Role and scope come from the database."""
+    """Valid session cookie AND the user still exists and is enabled AND the cookie is of the user's current session
+    generation: deleting or disabling a user, changing their role or endpoint access, and changing or resetting their
+    password (which ends their other sessions) take effect on the next request. Role and scope come from the database."""
     s = auth.read_session(request.cookies.get("pdp_session"))
     if not s:
         raise HTTPException(401, "not authenticated")
     with db.conn() as c:
-        u = db.q(c, "SELECT u.role, u.auth, u.disabled, u.endpoints, u.org_id, u.operator, u.totp_enabled, o.require_mfa, "
+        u = db.q(c, "SELECT u.role, u.auth, u.disabled, u.endpoints, u.org_id, u.operator, u.totp_enabled, u.session_gen, o.require_mfa, "
                     "o.disabled AS org_disabled, o.name AS org_name "
                     "FROM users u JOIN orgs o ON o.id = u.org_id WHERE u.id=%s", (s["u"],), one=True)
         if not u or u["disabled"] or u["org_disabled"]:
             raise HTTPException(401, "user no longer exists or is disabled")
+        if int(s.get("g", 0)) != u["session_gen"]:
+            raise HTTPException(401, "this session was ended (password changed or signed out everywhere); sign in again")
         if u["require_mfa"] and u["auth"] == "local" and not u["totp_enabled"] and request.url.path not in MFA_SETUP_PATHS:
             raise HTTPException(403, "your organisation requires two-factor sign-in: set it up under Account first")
         org_eps = {str(r["id"]) for r in db.q(c, "SELECT id FROM endpoints WHERE org_id=%s", (u["org_id"],))}
     scope = org_eps if u["role"] == "admin" or u["endpoints"] is None else org_eps & {str(x) for x in u["endpoints"]}
     return {**s, "r": u["role"], "a": u["auth"], "scope": scope, "org": str(u["org_id"]), "org_name": u["org_name"],
             "op": bool(u["operator"])}
+
+
+def set_session(response: Response, user_id: int, role: str) -> None:
+    """Sign the user in on this response with a session of their current generation."""
+    with db.conn() as c:
+        g = db.q(c, "SELECT session_gen FROM users WHERE id=%s", (user_id,), one=True)
+    response.set_cookie("pdp_session", auth.make_session(user_id, role, g["session_gen"] if g else 0), httponly=True, secure=True,
+                        samesite="strict", max_age=auth.SESSION_TTL, path="/")
+
+
+def end_sessions(c, user_id: int) -> None:
+    """End every session of this user (password change or reset, sign out everywhere). Call inside the transaction
+    that makes the change; sign the acting user in again with set_session() afterwards if they keep working."""
+    db.q(c, "UPDATE users SET session_gen = session_gen + 1 WHERE id=%s", (user_id,))
 
 
 def admin(s=Depends(session)) -> dict:

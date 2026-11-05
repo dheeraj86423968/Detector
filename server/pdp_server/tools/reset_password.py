@@ -25,7 +25,7 @@ def main():
         u = db.q(c, "SELECT id FROM users WHERE lower(username)=lower(%s)", (a.username,), one=True)
         if not u:
             raise SystemExit(f"no user {a.username!r}")
-        db.q(c, "UPDATE users SET password_hash=%s, failed_logins=0, locked_until=NULL WHERE id=%s", (auth.hash_password(pw), u["id"]))
+        db.q(c, "UPDATE users SET password_hash=%s, failed_logins=0, locked_until=NULL, session_gen=session_gen+1 WHERE id=%s", (auth.hash_password(pw), u["id"]))
     print(f"password of {a.username} reset" + ("" if a.stdin else f"; new password: {pw}"))
 
 

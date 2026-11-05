@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 import psycopg2.extras
 
 from . import auth, db, oidc, pki
-from .access import admin, require_endpoint, scope_sql, session, triager, visible
+from .access import admin, end_sessions, require_endpoint, scope_sql, session, set_session, triager, visible
 from .graphs import alert_graph, endpoint_timeline, incident_graph
 
 app = FastAPI(title="PDP", docs_url=None, redoc_url=None, openapi_url=None)
@@ -385,8 +385,7 @@ class Login(BaseModel):
 
 
 def _set_session(response: Response, user_id: int, role: str) -> None:
-    response.set_cookie("pdp_session", auth.make_session(user_id, role), httponly=True, secure=True, samesite="strict",
-                        max_age=auth.SESSION_TTL, path="/")
+    set_session(response, user_id, role)
 
 
 @app.get("/api/auth/config")
@@ -526,7 +525,8 @@ class PasswordChange(BaseModel):
 
 
 @app.post("/api/me/password")
-def change_password(req: PasswordChange, s=Depends(session)):
+def change_password(req: PasswordChange, response: Response, s=Depends(session)):
+    """Ends the user's other sessions (every browser signed in before); this one continues with a new cookie."""
     if s["a"] != "local":
         raise HTTPException(400, "this account signs in with single sign-on; its password is managed by the identity provider")
     if len(req.new_password) < 10:
@@ -536,6 +536,17 @@ def change_password(req: PasswordChange, s=Depends(session)):
         if not u or not auth.verify_password(req.old_password, u["password_hash"]):
             raise HTTPException(400, "current password is wrong")
         db.q(c, "UPDATE users SET password_hash=%s WHERE id=%s", (auth.hash_password(req.new_password), s["u"]))
+        end_sessions(c, s["u"])
+    _set_session(response, s["u"], s["r"])
+    return {"ok": True}
+
+
+@app.post("/api/me/sessions/end")
+def end_other_sessions(response: Response, s=Depends(session)):
+    """Sign out everywhere else: ends every other session of this user (a lost laptop, a shared computer)."""
+    with db.conn() as c:
+        end_sessions(c, s["u"])
+    _set_session(response, s["u"], s["r"])
     return {"ok": True}
 
 
@@ -646,6 +657,7 @@ def update_user(user_id: int, body: dict, s=Depends(admin)):
                 raise HTTPException(400, "password must have at least 10 characters")
             sets.append("password_hash=%s"); params.append(auth.hash_password(body["password"]))
             sets.append("failed_logins=0"); sets.append("locked_until=NULL")
+            sets.append("session_gen = session_gen + 1")         # the user's open sessions end with the old password
         demote = body.get("role", u["role"]) != "admin" or body.get("disabled", u["disabled"])
         if u["role"] == "admin" and not u["disabled"] and demote:
             if user_id == s["u"]:

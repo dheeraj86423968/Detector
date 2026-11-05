@@ -6,7 +6,17 @@ What we (the operator) run next to the product itself: a staging stack, tests, b
 `deploy/staging.sh up` starts a second, independent copy of the stack on the same host (compose project
 `pdp-staging`: own volumes, network, database passwords and ports - console 9445, agent 9446; CPU training; open
 sign-up; a known first admin password in `deploy/staging.env`). Use it for every release before production:
-`deploy/staging.sh up` (current local images), `tests/run_e2e.sh`, then roll production. `deploy/staging.sh destroy`
+`deploy/staging.sh up` (current local images), `tests/run_e2e.sh`, then roll production.
+Staging listens on 127.0.0.1 only (open sign-up, known admin password): reach it with an SSH tunnel. It serves the
+console build under test from `console/dist-next` (build with `npx vite build --outDir dist-next`); production serves
+`console/dist`, copied over only when production's API is rolled, so production's console never runs ahead of its
+API:
+
+```
+deploy/rollout.sh api                                         # after building pdp/server:dev and testing on staging
+rsync -a --delete console/dist-next/ console/dist/            # the console for that API (in place: the gateway mounts it)
+deploy/publish-agent.sh <agent version>                       # when the release has a new agent
+``` `deploy/staging.sh destroy`
 deletes its data. It never shares data or keys with production (a restore rehearsal copies production into it;
 destroy it afterwards).
 

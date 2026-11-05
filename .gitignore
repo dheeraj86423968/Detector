@@ -5,6 +5,7 @@ deploy/.env
 # build output
 console/node_modules/
 console/dist/
+console/dist-next/
 console/tsconfig.tsbuildinfo
 desktop/node_modules/
 desktop/dist/

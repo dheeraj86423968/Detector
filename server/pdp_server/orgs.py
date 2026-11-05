@@ -88,8 +88,8 @@ def me_body(c, uid: int) -> dict:
 
 
 def _sign_in(response: Response, uid: int, role: str) -> None:
-    response.set_cookie("pdp_session", auth.make_session(uid, role), httponly=True, secure=True, samesite="strict",
-                        max_age=auth.SESSION_TTL, path="/")
+    from .access import set_session
+    set_session(response, uid, role)
 
 
 def _email(v: str | None) -> str:
@@ -301,7 +301,11 @@ class OrgPatch(BaseModel):
 def _sso_out(sso: dict | None) -> dict | None:
     if not sso:
         return None
-    return {k: v for k, v in sso.items() if k != "client_secret"} | {"has_secret": bool(sso.get("client_secret"))}
+    from .sso import proof_record
+    ver = sso.get("verified") or {}
+    proof = [{"domain": d, "verified_at": ver.get(d), "record_name": proof_record(sso, d)[0], "record_value": proof_record(sso, d)[1]}
+             for d in sso.get("domains") or []]
+    return {k: v for k, v in sso.items() if k not in ("client_secret", "token", "verified")} | {"has_secret": bool(sso.get("client_secret")), "proof": proof}
 
 
 @router.patch("/api/org")
@@ -353,7 +357,8 @@ def operator_orgs(s=Depends(operator)):
                    (SELECT count(*) FROM alerts a JOIN endpoints e ON e.id=a.endpoint_id WHERE e.org_id=o.id
                       AND a.created_at > now() - interval '7 days') AS alerts_7d,
                    GREATEST((SELECT max(last_seen) FROM endpoints e WHERE e.org_id=o.id),
-                            (SELECT max(last_login) FROM users u WHERE u.org_id=o.id)) AS last_activity
+                            (SELECT max(last_login) FROM users u WHERE u.org_id=o.id)) AS last_activity,
+                   o.sso->'domains' AS sso_domains, coalesce(o.sso->'verified', '{}'::jsonb) AS sso_verified
             FROM orgs o ORDER BY o.internal DESC, o.created_at""")
     return {"ok": True, "signup": {"mode": signup_mode(), "code": SIGNUP_CODE if signup_mode() == "code" else None},
             "orgs": [{**r, "id": str(r["id"])} for r in rows]}
@@ -378,6 +383,27 @@ def operator_patch(org_id: str, req: OrgAdmin, s=Depends(operator)):
             db.q(c, "UPDATE orgs SET max_endpoints=%s WHERE id=%s", (req.max_endpoints, o["id"]))
         r = db.q(c, "SELECT id, name, created_at, disabled, max_endpoints FROM orgs WHERE id=%s", (o["id"],), one=True)
     return {"ok": True, "org": {**r, "id": str(r["id"])}}
+
+
+class DomainConfirm(BaseModel):
+    domain: str = Field(min_length=3, max_length=253)
+
+
+@router.post("/api/operator/orgs/{org_id}/sso/confirm")
+def operator_confirm_domain(org_id: str, req: DomainConfirm, s=Depends(operator)):
+    """The operator confirms an organisation owns an SSO domain by other means than DNS (a signed order, a call
+    to the client's IT); recorded in the audit log like every operator change."""
+    d = req.domain.strip().lower()
+    with db.conn() as c:
+        o = db.q(c, "SELECT id, sso FROM orgs WHERE id::text=%s", (org_id,), one=True)
+        if not o or not o["sso"] or d not in (o["sso"].get("domains") or []):
+            raise HTTPException(404, "this organisation has not listed that domain for single sign-on")
+        if db.q(c, "SELECT 1 FROM orgs WHERE id<>%s AND sso->'verified' ? %s", (o["id"], d), one=True):
+            raise HTTPException(409, "another organisation has already proven this domain")
+        stamp = {d: time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()) + " (operator)"}
+        db.q(c, "UPDATE orgs SET sso = jsonb_set(sso, '{verified}', coalesce(sso->'verified', '{}'::jsonb) || %s::jsonb) WHERE id=%s",
+             (json.dumps(stamp), o["id"]))
+    return {"ok": True}
 
 
 @router.delete("/api/operator/orgs/{org_id}")

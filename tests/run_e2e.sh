@@ -1,7 +1,8 @@
 #!/bin/bash
 # End-to-end suites against the staging stack (deploy/staging.sh up first):
 #   tests/run_e2e.sh      stack_e2e (console + agent protocol), tenancy_e2e (organisation isolation), notify_e2e,
-#                         hunt_e2e (threat hunting across organisations), k8s_e2e (Kubernetes cluster tokens)
+#                         hunt_e2e (threat hunting across organisations), k8s_e2e (Kubernetes cluster tokens),
+#                         security_e2e (two-factor, audit log, SSO domain proof, sessions ended on password change)
 set -uo pipefail
 cd "$(dirname "$0")/.."
 [ -f deploy/staging.env ] || { echo "no staging stack: deploy/staging.sh up" >&2; exit 2; }
@@ -31,4 +32,6 @@ sleep 61
 mkdir -p deploy/btf/.e2e/x86_64 && printf '\x9f\xeb\x01\x00pdp-e2e' > deploy/btf/.e2e/x86_64/0.0.0-pdp-e2e.btf   # BTF fixture
 PDP_E2E_BTF_FIXTURE=1 suite k8s_e2e pdp/server:dev tests/e2e/k8s_e2e.py
 rm -rf deploy/btf/.e2e
+sleep 61
+suite security_e2e pdp/server:dev tests/e2e/security_e2e.py
 exit $fail

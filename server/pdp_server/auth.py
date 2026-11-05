@@ -37,8 +37,10 @@ def verify_password(pw: str, stored: str) -> bool:
         return False
 
 
-def make_session(user_id: int, role: str) -> str:
-    payload = base64.urlsafe_b64encode(json.dumps({"u": user_id, "r": role, "exp": int(time.time()) + SESSION_TTL}).encode()).decode()
+def make_session(user_id: int, role: str, gen: int = 0) -> str:
+    """`gen` is the user's session generation (users.session_gen): bumping it (password change or reset, "sign out
+    everywhere") ends every session issued before - access.session() compares it on each request."""
+    payload = base64.urlsafe_b64encode(json.dumps({"u": user_id, "r": role, "g": gen, "exp": int(time.time()) + SESSION_TTL}).encode()).decode()
     sig = hmac.new(_secret(), payload.encode(), hashlib.sha256).hexdigest()
     return payload + "." + sig
 

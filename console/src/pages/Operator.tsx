@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Loader2, Lock, Search, UserPlus } from "lucide-react";
-import { OperatorOrg, OperatorOrgsResp, patch, useApi, useCan, useMe } from "../api";
+import { OperatorOrg, OperatorOrgsResp, patch, post, useApi, useCan, useMe } from "../api";
 import { fmtDate, fmtDateTime, fmtRel, plural } from "../format";
 import { Card, Confirm, CopyField, cx, Dialog, Empty, ErrorState, Field, Loading, Menu, PageHeader, useToast } from "../ui";
 
@@ -16,6 +16,7 @@ export default function Operator() {
   const { data, error, loading, reload } = useApi<OperatorOrgsResp>(allowed ? "/api/operator/orgs" : null, 60000);
   const [q, setQ] = useState("");
   const [toggling, setToggling] = useState<OperatorOrg | null>(null); const [limiting, setLimiting] = useState<OperatorOrg | null>(null);
+  const [confirming, setConfirming] = useState<{ org: OperatorOrg; domain: string } | null>(null);
   const rows = useMemo(() => {
     const t = q.trim().toLowerCase();
     return (data?.orgs || []).filter(o => !t || o.name.toLowerCase().includes(t))
@@ -61,6 +62,8 @@ export default function Operator() {
                     <tr key={o.id} className={cx(o.disabled && "row-muted")}>
                       <td className="cell-main">
                         <div className="row-title plain wrap2" title={o.name}>{o.name}{own && <span className="muted"> (yours)</span>}</div>
+                        {(o.sso_domains || []).length > 0 && <div className="sm muted">Single sign-on: {(o.sso_domains || []).map((d, i) => (
+                          <span key={d}>{i > 0 && ", "}{d} {o.sso_verified?.[d] ? "(proven)" : <b className="warn-text">(waiting for proof)</b>}</span>))}</div>}
                       </td>
                       <td className="hide-narrow" title={fmtDateTime(o.created_at, true)}>{fmtDate(o.created_at)}</td>
                       <td className="num">{o.users.toLocaleString()}</td>
@@ -74,6 +77,7 @@ export default function Operator() {
                       <td className="row-actions">
                         {can.operate && <Menu items={[
                           { label: "Change endpoint limit", onClick: () => setLimiting(o) },
+                          ...(o.sso_domains || []).filter(d => !o.sso_verified?.[d]).map(d => ({ label: `Confirm they own ${d}`, onClick: () => setConfirming({ org: o, domain: d }) })),
                           o.disabled ? { label: "Enable", onClick: () => setToggling(o) }
                             : { label: "Disable", danger: true, onClick: () => setToggling(o), disabled: own, title: own ? "You cannot disable your own organisation" : undefined },
                         ]} />}
@@ -93,6 +97,10 @@ export default function Operator() {
           text={<><p>Its {plural(toggling.users, "user")} can no longer sign in to the console.</p><p>Its agents keep running and its data is kept. You can enable it again at any time.</p></>}
           onConfirm={async () => { await patch(`/api/operator/orgs/${toggling.id}`, { disabled: true }); toast(`${toggling.name} disabled`); reload(); }} />)}
       {limiting && <LimitDialog org={limiting} onClose={() => setLimiting(null)} onDone={reload} />}
+      {confirming && <Confirm title={`Confirm ${confirming.org.name} owns ${confirming.domain}?`} confirmLabel="Confirm ownership" onClose={() => setConfirming(null)}
+        text={<><p>Only do this when you have checked ownership another way, for example with the client's IT team. The client can prove it themselves with a DNS record instead.</p>
+          <p>Everyone with an address in {confirming.domain} can then sign in to {confirming.org.name} through its identity provider.</p></>}
+        onConfirm={async () => { await post(`/api/operator/orgs/${confirming.org.id}/sso/confirm`, { domain: confirming.domain }); toast(`${confirming.domain} confirmed`); reload(); }} />}
       <CoverageCard />
     </div>
   );

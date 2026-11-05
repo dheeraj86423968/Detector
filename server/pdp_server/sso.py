@@ -8,12 +8,15 @@ ID token (signature against the provider's JWKS, issuer, audience, expiry, nonce
 of the organisation's domains, and signs the user in to that organisation only: an existing account with that email,
 else a new one with the organisation's default role (admin for the listed admin emails).
 
-Domains are unique across organisations and public mail providers cannot be claimed. Proof of domain ownership
-(DNS TXT) is not implemented yet - the operator should check new SSO domains (Operator page lists them).
+Domain ownership: a domain signs in with SSO only after the organisation proved it owns it - a DNS TXT record
+`_pdp-verification.<domain>` = `pdp-verification=<the organisation's token>` (POST /api/org/sso/verify looks it up
+over DNS-over-HTTPS), or the platform operator confirmed it by other means. Public mail providers cannot be claimed.
+An unproven claim blocks nobody: several organisations may list a domain while it is unproven, the first to prove
+it gets it, and a proven domain can no longer be listed by another organisation.
 
-The API reaches the providers through the egress proxy (compose profile "sso"); its allow list must contain the
-providers' hosts: Google accounts.google.com, oauth2.googleapis.com, www.googleapis.com, openidconnect.googleapis.com;
-Microsoft login.microsoftonline.com; other providers their issuer host.
+The API reaches the providers and the DNS-over-HTTPS resolver through the egress proxy (compose profile "sso"),
+which allows them automatically (egress.py: built-in Google / Microsoft hosts, the resolver, and the issuer hosts
+of the organisations' own OIDC providers, never internal addresses).
 """
 from __future__ import annotations
 
@@ -21,6 +24,7 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import re
 import secrets
 import threading
@@ -41,6 +45,33 @@ PUBLIC_DOMAINS = {"gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "
 DOMAIN_RE = re.compile(r"^(?=.{3,253}$)([a-z0-9-]{1,63}\.)+[a-z]{2,63}$")
 _lock = threading.Lock()
 _cache: dict[str, tuple[float, dict]] = {}
+DOH_URL = os.environ.get("PDP_DOH_URL", "https://cloudflare-dns.com/dns-query")   # DNS-over-HTTPS (JSON API)
+RECORD_PREFIX = "_pdp-verification."
+
+
+def proof_record(cfg: dict, domain: str) -> tuple[str, str]:
+    """The DNS TXT record (name, value) that proves this organisation owns `domain`."""
+    return RECORD_PREFIX + domain, f"pdp-verification={cfg.get('token', '')}"
+
+
+def txt_records(name: str) -> list[str]:
+    """TXT values of `name` via DNS-over-HTTPS (the API has no direct DNS route out). Long values split into several
+    strings are joined."""
+    try:
+        d = _http(f"{DOH_URL}?name={urllib.parse.quote(name)}&type=TXT", headers={"Accept": "application/dns-json"})
+    except OIDCError as e:
+        raise OIDCError(f"DNS lookup failed: {str(e).replace('identity provider unreachable', 'resolver unreachable')}") from None
+    if d.get("Status") not in (0, 3):                       # 0 NOERROR, 3 NXDOMAIN (no record yet)
+        raise OIDCError(f"DNS lookup of {name} failed (DNS status {d.get('Status')})")
+    out = []
+    for a in d.get("Answer") or []:
+        if a.get("type") == 16:
+            out.append(re.sub(r'"\s*"', "", str(a.get("data", ""))).strip().strip('"'))
+    return out
+
+
+def proven(cfg: dict | None) -> set[str]:
+    return set(((cfg or {}).get("verified") or {}).keys()) & set((cfg or {}).get("domains") or [])
 
 
 def issuer_of(cfg: dict) -> str:
@@ -111,9 +142,10 @@ def email_of(claims: dict, provider: str) -> str | None:
     return str(e).strip().lower()
 
 
-def org_for_domain(c, domain: str) -> dict | None:
+def org_for_domain(c, domain: str, proven_only: bool = True) -> dict | None:
     return db.q(c, "SELECT id, name, sso FROM orgs WHERE NOT disabled AND sso IS NOT NULL AND (sso->>'enabled')::boolean "
-                   "AND sso->'domains' ? %s", (domain.lower(),), one=True)
+                   "AND sso->'domains' ? %s" + (" AND sso->'verified' ? %s" if proven_only else "") + " LIMIT 1",
+                (domain.lower(), domain.lower()) if proven_only else (domain.lower(),), one=True)
 
 
 def _base(request: Request) -> str:
@@ -129,6 +161,9 @@ def sso_start(email: str, request: Request):
         raise HTTPException(400, "enter your work email address")
     with db.conn() as c:
         org = org_for_domain(c, email.rsplit("@", 1)[1])
+        pending = not org and org_for_domain(c, email.rsplit("@", 1)[1], proven_only=False)
+    if pending:
+        raise HTTPException(404, "single sign-on for this email domain is waiting for proof of domain ownership; sign in with your password")
     if not org:
         raise HTTPException(404, "no single sign-on is set up for this email domain; sign in with your password")
     cfg = org["sso"]
@@ -161,7 +196,7 @@ def finish(cfg: dict, org_id: str, code: str, st: dict) -> dict:
     claims = verify_jwt(tok["id_token"], jwk_lookup(iss))
     validate(claims, iss, cfg["client_id"], st["n"])
     email = email_of(claims, cfg.get("provider", "oidc"))
-    if not email or email.rsplit("@", 1)[1] not in set(cfg.get("domains") or []):
+    if not email or email.rsplit("@", 1)[1] not in proven(cfg):
         raise OIDCError("your account's email is not in a domain this organisation signs in with")
     return {"iss": iss, "sub": str(claims["sub"]), "email": email, "name": claims.get("name") or email}
 
@@ -237,18 +272,51 @@ def set_sso(req: SSOConfig, s=Depends(admin)):
     if req.provider == "oidc" and not (req.issuer or "").startswith("https://"):
         raise HTTPException(400, "enter the provider's issuer URL (https://...)")
     with db.conn() as c:
-        taken = db.q(c, "SELECT name FROM orgs WHERE id<>%s AND sso IS NOT NULL AND sso->'domains' ?| %s", (s["org"], doms), one=True)
+        taken = db.q(c, "SELECT name FROM orgs WHERE id<>%s AND sso IS NOT NULL AND sso->'verified' ?| %s", (s["org"], doms), one=True)
         if taken:
             raise HTTPException(409, "one of these domains is already used by another organisation")
         old = db.q(c, "SELECT sso FROM orgs WHERE id=%s", (s["org"],), one=True)["sso"] or {}
         cfg = {"provider": req.provider, "tenant": req.tenant, "issuer": req.issuer if req.provider == "oidc" else None, "client_id": req.client_id,
                "client_secret": req.client_secret or old.get("client_secret"), "domains": doms, "default_role": req.default_role,
-               "admin_emails": sorted({e.strip().lower() for e in req.admin_emails if "@" in e}), "enabled": req.enabled}
+               "admin_emails": sorted({e.strip().lower() for e in req.admin_emails if "@" in e}), "enabled": req.enabled,
+               "token": old.get("token") or secrets.token_urlsafe(24),
+               "verified": {d: t for d, t in (old.get("verified") or {}).items() if d in doms}}
         if not cfg["client_secret"]:
             raise HTTPException(400, "enter the client secret")
         db.q(c, "UPDATE orgs SET sso=%s WHERE id=%s", (json.dumps(cfg), s["org"]))
     from .orgs import _sso_out
     return {"ok": True, "sso": _sso_out(cfg)}
+
+
+@router.post("/api/org/sso/verify")
+def verify_domains(s=Depends(admin)):
+    """Look up each unproven domain's TXT record and record the ones that carry this organisation's token."""
+    with db.conn() as c:
+        cfg = (db.q(c, "SELECT sso FROM orgs WHERE id=%s", (s["org"],), one=True) or {}).get("sso")
+    if not cfg:
+        raise HTTPException(404, "set up single sign-on first")
+    results, newly = {}, {}
+    for d in cfg.get("domains") or []:
+        if d in proven(cfg):
+            continue
+        name, value = proof_record(cfg, d)
+        try:
+            found = value in txt_records(name)
+            results[d] = None if found else f"no TXT record {name} with the value {value} yet (DNS changes can take a while to appear)"
+            if found:
+                newly[d] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        except OIDCError as e:
+            results[d] = str(e)[:300]
+    if newly:
+        with db.conn() as c:
+            other = db.q(c, "SELECT name FROM orgs WHERE id<>%s AND sso IS NOT NULL AND sso->'verified' ?| %s", (s["org"], list(newly)), one=True)
+            if other:
+                raise HTTPException(409, "one of these domains was proven by another organisation")
+            db.q(c, "UPDATE orgs SET sso = jsonb_set(sso, '{verified}', coalesce(sso->'verified', '{}'::jsonb) || %s::jsonb) WHERE id=%s",
+                 (json.dumps(newly), s["org"]))
+            cfg = db.q(c, "SELECT sso FROM orgs WHERE id=%s", (s["org"],), one=True)["sso"]
+    from .orgs import _sso_out
+    return {"ok": True, "sso": _sso_out(cfg), "errors": {d: e for d, e in results.items() if e}}
 
 
 @router.delete("/api/org/sso")

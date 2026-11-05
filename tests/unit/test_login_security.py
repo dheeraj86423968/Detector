@@ -59,7 +59,8 @@ def jwt(claims):
     return f"{h}.{p_}.{b64(sig)}"
 
 
-cfg = {"provider": "oidc", "issuer": ISS, "client_id": "pdp", "client_secret": "s", "domains": ["corp.example"], "default_role": "viewer"}
+cfg = {"provider": "oidc", "issuer": ISS, "client_id": "pdp", "client_secret": "s", "domains": ["corp.example"], "default_role": "viewer",
+       "token": "tok123", "verified": {"corp.example": "2026-11-05T00:00:00Z"}}
 calls = []
 
 
@@ -105,6 +106,30 @@ try:
 except OIDCError:
     forged = True
 check(forged, "forged signature refused")
+# ---- domain ownership proof
+unproven = {**cfg, "verified": {}}
+st = {"s": "x", "n": "n1", "v": "verifier", "r": "https://pdp/api/sso/callback"}
+try:
+    sso.finish(unproven, "org", "code", st); took = True
+except OIDCError:
+    took = False
+check(not took, "a listed but unproven domain cannot sign in")
+check(sso.proof_record(cfg, "corp.example") == ("_pdp-verification.corp.example", "pdp-verification=tok123"), "proof record name and value")
+check(sso.proven({**cfg, "domains": ["corp.example", "b.example"], "verified": {"corp.example": "t", "gone.example": "t"}}) == {"corp.example"},
+      "proven = verified domains still listed")
+real_http = sso._http
+sso._http = lambda url, data=None, headers=None: {"Status": 0, "Answer": [
+    {"type": 16, "data": '"pdp-verification=" "tok123"'}, {"type": 16, "data": '"v=spf1 -all"'}, {"type": 5, "data": "x.example."}]}
+check(sso.txt_records("_pdp-verification.corp.example") == ["pdp-verification=tok123", "v=spf1 -all"], "TXT over DNS-over-HTTPS: split strings joined, other types ignored")
+sso._http = lambda url, data=None, headers=None: {"Status": 3}
+check(sso.txt_records("_pdp-verification.none.example") == [], "no record (NXDOMAIN) = empty")
+sso._http = lambda url, data=None, headers=None: {"Status": 2}
+try:
+    sso.txt_records("x.example"); raised = False
+except OIDCError:
+    raised = True
+check(raised, "resolver failure (SERVFAIL) is an error, not 'no record'")
+sso._http = real_http
 check(bool(sso.DOMAIN_RE.match("corp.example")) and not sso.DOMAIN_RE.match("corp") and "gmail.com" in sso.PUBLIC_DOMAINS, "domain rules")
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

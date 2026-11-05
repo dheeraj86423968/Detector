@@ -167,6 +167,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS recovery_codes JSONB;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_last BIGINT;
+-- session generation: sessions carry it; a password change or reset (or "sign out everywhere") increments it
+ALTER TABLE users ADD COLUMN IF NOT EXISTS session_gen INT NOT NULL DEFAULT 0;
 
 -- response actions (opt-in per organisation): stop a process, isolate an endpoint
 ALTER TABLE orgs ADD COLUMN IF NOT EXISTS response_actions BOOLEAN NOT NULL DEFAULT false;

@@ -13,7 +13,7 @@ export default function Account() {
     if (f.next.length < 10) return setErr("The new password must be at least 10 characters.");
     if (f.next !== f.repeat) return setErr("The new passwords do not match.");
     setBusy(true);
-    try { await post("/api/me/password", { old_password: f.old, new_password: f.next }); toast("Password changed"); setF({ old: "", next: "", repeat: "" }); }
+    try { await post("/api/me/password", { old_password: f.old, new_password: f.next }); toast("Password changed; your other sessions were signed out"); setF({ old: "", next: "", repeat: "" }); }
     catch (ex: any) { setErr(ex.message); }
     setBusy(false);
   };
@@ -47,7 +47,25 @@ export default function Account() {
           </form>
         </Card>
       )}
+      <Sessions />
     </div>
+  );
+}
+
+function Sessions() {
+  const toast = useToast(); const [busy, setBusy] = useState(false); const [err, setErr] = useState("");
+  const end = async () => {
+    setErr(""); setBusy(true);
+    try { await post("/api/me/sessions/end"); toast("Signed out everywhere else"); }
+    catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+  return (
+    <Card title="Sessions">
+      <p className="muted">Signed in on a computer you no longer use, or lost a device? End every other session of your account; this browser stays signed in. Changing your password does this too.</p>
+      {err && <div className="err">{err}</div>}
+      <div><button className="btn" onClick={end} disabled={busy}>{busy && <Loader2 size={14} className="spin" />}Sign out everywhere else</button></div>
+    </Card>
   );
 }
 
