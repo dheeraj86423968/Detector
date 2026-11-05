@@ -1,7 +1,8 @@
 # DARPA OpTC benchmark (hosts 201, 501, 051) — full product cycle
 
-Status: prepared 2026-11-05 (code, configuration, published numbers); runs once the data is loaded. Results: section
-"Results" below, raw JSON in `artifacts/benchmark_optc/`.
+Status: run 0 (the deployed bundle of each host) done on 2026-11-05 on the L40S host; four more seeded runs per host
+in progress (`train_variants`, then `darpa_eval --bundles all`). Results: section "Results" below, raw JSON in
+`artifacts/benchmark_optc/`.
 
 ## Data
 
@@ -95,4 +96,86 @@ The same paper's Table 4 confirms the E3 numbers in `BENCHMARK_E3.md` (rechecked
 
 ## Results
 
-(pending: filled from `darpa_eval` once the runs finish)
+### Run 0 (the bundle each endpoint trained and deployed)
+
+Full product cycle per host: 4 baseline days replayed and uploaded (2.6-4.6 M events a day), trained on the GPU
+worker (h201 and h501 at 08:30-10:00, h051 at 12:23-13:07 after a GPU out-of-memory failure, below), signed bundle,
+then the agent replayed and scored the 3 test days locally (245 windows of 15 minutes; data ends 2019-09-25 14:38).
+Evaluated on 1.44-1.49 M test nodes per host. Precision, recall and MCC at each detector's own alert threshold (no
+test data used); ADP threshold-free.
+
+| host (attack nodes) | view | TP | FP | precision | recall | MCC | ADP | attack found |
+|---|---|---|---|---|---|---|---|---|
+| H201 (2,905) | detector-1 alone (Velox-style) | 0 | 2 | 0.00 | 0.000 | 0.00 | 0.25 | no |
+| | detector-2 alone (Orthrus-style) | 0 | 0 | - | 0.000 | 0.00 | 0.11 | no |
+| | learned fusion | 0 | 4 | 0.00 | 0.000 | 0.00 | 0.17 | no |
+| | layers 1+2 (novelty + rules) | 6 | 274 | 0.02 | 0.002 | 0.01 | - | yes |
+| | **layered product** | 8 | 345 | 0.02 | 0.003 | 0.01 | 1.00 | yes |
+| | **alerts the agent reported** | 8 | 353 | 0.02 | 0.003 | 0.01 | - | yes |
+| H501 (749) | detector-1 alone | 0 | 0 | - | 0.000 | 0.00 | 0.02 | no |
+| | detector-2 alone | 0 | 0 | - | 0.000 | 0.00 | 0.10 | no |
+| | learned fusion | 0 | 10 | 0.00 | 0.000 | 0.00 | 0.02 | no |
+| | layers 1+2 | 13 | 76 | 0.15 | 0.017 | 0.05 | - | yes |
+| | **layered product** | 19 | 195 | 0.09 | 0.025 | 0.05 | 0.40 | yes |
+| | **alerts the agent reported** | 18 | 196 | 0.08 | 0.024 | 0.05 | - | yes |
+| H051 (114) | detector-1 alone | 2 | 6 | 0.25 | 0.018 | 0.07 | 0.33 | yes |
+| | detector-2 alone | 0 | 4 | 0.00 | 0.000 | 0.00 | 0.43 | no |
+| | learned fusion | 2 | 7 | 0.22 | 0.018 | 0.06 | 0.33 | yes |
+| | layers 1+2 | 71 | 86 | 0.45 | 0.623 | 0.53 | - | yes |
+| | **layered product** | 78 | 145 | 0.35 | 0.684 | 0.49 | 0.88 | yes |
+| | **alerts the agent reported** | 78 | 149 | 0.34 | 0.684 | 0.49 | - | yes |
+
+"Alerts the agent reported" is what a customer would have seen; it matches the server-side re-score of the same
+bundle within a few alerts (the agent's own alert stream). The pre-registered policy (every rule alarms) gives the
+same result on H051 and more false alarms on H201 (10 TP / 549 FP) and H501 (23 / 461).
+
+What fired (alerts on the test days, by layer and rule, attack vs benign node):
+
+* **Exfiltration rule** (data flowing out to a destination not seen in the baseline): OS-independent, so it
+  carries over to Windows despite the Linux-oriented rule set. H051: 40 attack nodes (the C2 flows, e.g.
+  `53.192.68.50:8080`) vs 26 benign; H501: 6 vs 13 (PowerShell); H201: 6 vs 4 (Firefox).
+* **Novel executable**: the attacker's dropped binaries (`Windows/Temp/rad0F93B.tmp/...` on H051, 31 attack nodes;
+  `Users/sysadmin/Downloads/fileTransfer1...` on H501, 7). Most of its false alarms are Windows pseudo-processes
+  without an image path (`MemCompression`, `Idle`, app containers): 270 of H201's 345 false alarms. A Windows agent
+  would need these on its built-in allow-list.
+* **Learned layer**: weak on OpTC in this product configuration. Alone it finds the attack only on H051 (2 TP);
+  corroborated alerts (learned score next to a deterministic alert) add 4-7 attack nodes per host.
+
+### Comparison with Bilot et al. (Table 6)
+
+| host | published: range over Velox / Orthrus / Kairos (mean of 5 runs; best run's TP / FP) | this product, run 0 |
+|---|---|---|
+| H051 | ADP 0.50-0.68; precision 0.08-0.14 mean, best run 1 TP / 1-4 FP | layered: ADP 0.88, precision 0.35, **78 TP** / 145 FP, MCC 0.49; detector-1 alone 2 TP / 6 FP (precision 0.25, ADP 0.33) |
+| H201 | ADP 0.48-0.90; precision 0.14-0.38 mean, best run 1 TP / 0-3 FP | layered: ADP 1.00 (attack ranked first), precision 0.02, 8 TP / 345 FP; learned alone misses (ADP 0.11-0.25) |
+| H501 | ADP 0.25-0.39; precision 0.11-0.13 mean, best run 1 TP / 4 FP | layered: ADP 0.40, precision 0.09, 19 TP / 195 FP; learned alone misses (ADP 0.02-0.10) |
+
+Reading it honestly:
+
+* The **layered product detects the attack on all three hosts** in one run, with many more attack nodes than any
+  published system (8-78 TP vs 1). Its ADP is at or above the best published mean of Velox, Orthrus and Kairos on every host (1.00 vs 0.90
+  on H201, 0.88 vs 0.68 on H051, 0.40 vs 0.39 on H501; Flash on H201 and Magic on H501 reach ADP 1.00 but with
+  precision 0.00, flagging 239 k and 260 k benign nodes).
+* Its **precision is lower on H201 and H501** (0.02 and 0.09 against published means of 0.14-0.38): 145-353 false
+  alarms over three days, most from the novelty layer's Windows pseudo-processes (fixable with a Windows allow-list)
+  and corroborated learned alerts. On H051 it is higher (0.35 vs 0.14).
+* The **learned detectors alone are below the published Velox and Orthrus** on H201 and H501 (they miss the
+  attack at their thresholds; ADP 0.02-0.25 against 0.25-0.90). Differences from PIDSMaker: one shared 256-d
+  word2vec instead of per-system featurisation, the product's 15-minute windows and its ensemble of 3 + 5 seeds, and
+  OpTC's TERMINATE / RENAME / DELETE mapped differently (Data). The published per-host tuning was used for learning
+  rate and dimensions only.
+* One run so far; Bilot et al. report the mean of five. The variance runs will replace the "run 0" column with
+  mean / min / best.
+
+### Problems found while running it
+
+* **GPU out of memory** (h051's first training, 10:08): the benchmark agents score on the same GPU and kept 30 GB
+  and 14 GB cached after finishing. The training worker now re-queues a GPU-out-of-memory job (3 retries, 10 minutes
+  apart) instead of failing it for good; benchmark agents are stopped once they have scored their test days.
+* **Host out of memory** (12:21): the kernel killed the host's own production agent (largest process) while three
+  replay agents, a CPU evaluation and a test VM ran next to the databases. Now: 16 GB swap, databases protected
+  from the OOM killer, benchmark and evaluation containers capped and killed first; evaluations run on the GPU, one
+  at a time (`bench-eval` service, 2-3 minutes per host instead of 30+ on the CPU).
+* **Retention deleted the replayed windows**: window summaries aged by their event time (2019), so the daily
+  retention pass removed them. Retention now counts from when the server received them; `darpa_eval` infers the
+  scoring bundle from the first test-day alert when the window records are missing (all three hosts here; every
+  host had a single bundle, so the inference is exact).
