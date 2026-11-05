@@ -150,6 +150,25 @@ check(len(reported) >= 2 and b.state.unscored_count() < open_rows + len(part3),
       f"after the restart the replayed and new events are scored ({len(reported)} windows)")
 check(all(b.reg.get(ev.src) is not None and b.reg.get(ev.dst) is not None for _, ev in part3), "new entities registered after the restart")
 
+# entity ages survive a model upgrade and a restart (a load used to make every entity "seen now", so on a host
+# that restarts or gets a new early model within 6 h compaction never ran)
+old_t = now - 7 * 60 * MIN
+b.runtime.last_seen[:] = old_t
+had = b.reg.gid_array()[:min(len(b.runtime.last_seen), len(b.reg))].tolist()   # entities the model held an age for
+b._load_bundle("b1", bdir)                       # a model upgrade: same agent, new runtime
+check(len(had) > 100 and all(b.runtime.last_seen[b.reg.local(g)] == old_t for g in had),
+      f"entity ages carried over a model upgrade ({len(had)})")
+b._save_seen()
+gseen = b.reg.gid_array()[:3].tolist()
+del b
+b = new_agent()
+b._load_bundle("b1", bdir)                       # a restart: ages from disk
+check(all(b.runtime.last_seen[b.reg.local(g)] == old_t for g in gseen if b.reg.local(g) is not None) and len(gseen) == 3,
+      "entity ages restored from disk after a restart")
+keep = b.runtime.compaction_keep(time.time_ns(), 6 * 3600 * 10**9)
+held = int(b.runtime.last_seen[:len(b.reg)].__ge__(time.time_ns() - 6 * 3600 * 10**9).sum())
+check(held < len(b.reg) // 10, f"so after a restart old entities count as old for compaction ({held} of {len(b.reg)} recent)")
+
 # disk pruning (final model): entities after the baseline that are not live are deleted, ids never reused
 b.cfg.prune_entities_always = True
 b.upload_baseline(); b.purge_spool()

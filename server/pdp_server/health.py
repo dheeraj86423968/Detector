@@ -24,9 +24,15 @@ def problems(row: dict, target_version: str | None = None) -> list[dict]:
     if behind > 0:
         out.append({"key": "collector_behind", "level": "warning",
                     "text": f"The agent fell behind reading events and dropped {behind:,} in the last hour (sustained heavy activity)"})
-    dropped = int(h.get("spool_dropped_unuploaded") or 0) + int(h.get("spool_dropped_unscored") or 0)
+    if "spool_dropped_unuploaded_1h" in h:          # agents >= 0.3.22: the last hour; older ones only running totals
+        dropped = int(h.get("spool_dropped_unuploaded_1h") or 0) + int(h.get("spool_dropped_unscored_1h") or 0)
+        when = " in the last hour"
+    else:
+        dropped = int(h.get("spool_dropped_unuploaded") or 0) + int(h.get("spool_dropped_unscored") or 0)
+        when = " since it was installed"
     if dropped:
-        out.append({"key": "spool_dropped", "level": "warning", "text": f"The agent's local queue reached its size limit and dropped {dropped} events"})
+        out.append({"key": "spool_dropped", "level": "warning",
+                    "text": f"The agent's local queue reached its size limit and dropped {dropped:,} events{when}"})
     if h.get("disk_full") or h.get("disk_full_dropped"):
         out.append({"key": "disk_full", "level": "error" if h.get("disk_full") else "warning",
                     "text": (f"The disk holding the agent's data is full: activity cannot be stored "

@@ -98,7 +98,7 @@ check(acks == [("c1", "ok"), ("c2", "unsupported")] and a.state.get("bundle_id")
 # 6. heartbeat carries the protocol's health fields
 h = a.health()
 check({"agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb", "spool_mb", "spool_dropped_unscored",
-       "spool_dropped_unuploaded", "entities", "update", "disk_free_mb", "disk_free_pct", "isolated", "disk_full", "disk_full_dropped",
+       "spool_dropped_unuploaded", "entities", "update", "disk_free_mb", "disk_free_pct", "isolated", "disk_full", "disk_full_dropped", "spool_dropped_unscored_1h", "spool_dropped_unuploaded_1h",
        "data_mb"} == set(h) and h["rss_mb"] > 0 and h["disk_free_mb"] > 0 and h["data_mb"]["total"] >= h["data_mb"]["database"] > 0,
       f"health {h}")
 try:                       # the server stores only the heartbeat fields its model declares: every one the agent sends

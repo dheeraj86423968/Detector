@@ -34,7 +34,7 @@ from .config import Config
 from .state import State, disk_full
 from .transport import Transport, TransportError
 
-VERSION = "0.3.21"
+VERSION = "0.3.22"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -314,6 +314,7 @@ class Agent:
         if self.runtime is None or now - self._last_compact < float(self.cfg.compact_interval_s):
             return
         self._last_compact = now
+        self._save_seen()
         n = len(self.reg)
         if n < int(self.cfg.compact_min_entities):
             return
@@ -475,8 +476,58 @@ class Agent:
                 os.unlink(tmp)
         self._load_bundle(bundle_id, os.path.join(dest, "bundle"))
 
+    # ------------------------------------------------------------------ entity ages (compaction)
+    # A model load used to give every entity "last seen = now", so after each restart or model upgrade (early
+    # models: 1 h, 6 h, daily) nothing looked old enough to drop for 6 h: on a busy host compaction never ran (L40S
+    # host: 3.1 M entities, 7.8 GB). The real times are carried over a model upgrade and kept on disk for restarts.
+    def _seen_path(self) -> str:
+        return os.path.join(self.cfg.data_dir, "entity_seen.npy")
+
+    def _seen_now(self):
+        """(global ids, last seen ns) of the entities the running model holds, or None."""
+        rt = getattr(self, "runtime", None)
+        if rt is None or getattr(rt, "last_seen", None) is None:
+            return None
+        n = min(len(rt.last_seen), len(self.reg))
+        return self.reg.gid_array()[:n], np.asarray(rt.last_seen[:n], dtype=np.int64)
+
+    def _save_seen(self) -> None:
+        cur = self._seen_now()
+        if cur is None:
+            return
+        try:
+            tmp = self._seen_path() + ".tmp.npy"
+            np.save(tmp, np.stack(cur))
+            os.replace(tmp, self._seen_path())
+        except OSError as e:
+            log(f"could not save entity ages: {e}")
+
+    def _restore_seen(self, carried) -> int:
+        """Give the freshly loaded model the entities' real last-seen times (from the previous model, else from
+        disk); entities without one keep "seen at load". Returns how many were restored."""
+        if carried is None:
+            try:
+                a = np.load(self._seen_path())
+                carried = (a[0], a[1])
+            except (OSError, ValueError, IndexError):
+                return 0
+        g, t = carried
+        rt = self.runtime
+        n = min(len(rt.last_seen), len(self.reg))
+        if not n or not len(g):
+            return 0
+        pos_g = self.reg.gid_array()[:n]
+        order = np.argsort(pos_g, kind="stable")
+        sg = pos_g[order]
+        i = np.searchsorted(sg, g)
+        ok = i < n
+        ok[ok] = sg[i[ok]] == g[ok]
+        rt.last_seen[order[i[ok]]] = np.minimum(rt.last_seen[order[i[ok]]], t[ok])
+        return int(ok.sum())
+
     def _load_bundle(self, bundle_id: str, bdir: str):
         verify_signature(bdir, open(self.cfg.signing_pub, "rb").read())
+        carried = self._seen_now()             # the running model's entity ages, kept over the upgrade
         device = getattr(self.cfg, "device", "cpu")
         feat_device = getattr(self.cfg, "feat_device", None) or ("cpu" if device == "cuda" else device)
         cfg = self.state.get("config") or {}
@@ -484,6 +535,9 @@ class Agent:
         self.runtime = Runtime(bdir, self.reg, device=device, fp_budget=self.state.get("fp_budget"), feat_device=feat_device,
                                approved_executables=cfg.get("approved_executables"), daily_budget=cfg.get("learned_daily_budget"),
                                keep_reset_state=False, ensure_entities=self._ensure_gids, seen_at_load_ns=time.time_ns())
+        restored = self._restore_seen(carried)
+        if restored:
+            log(f"entity ages restored for {restored} of {len(self.reg)} entities")
         self.runtime.set_learned_alerts(bool(cfg.get("learned_alerts", True)))
         wns = int(self.runtime.m.get("window_ns") or 0)
         if wns and wns != self.builder.window_ns and not self.builder.pending:   # windows as long as the bundle was trained on
@@ -800,6 +854,17 @@ class Agent:
                 if e.errno != errno.ENOSPC:
                     raise
                 self._disk_full(e)
+        self._save_seen()                      # stopping (update, shutdown): entity ages survive the restart
+
+    def _spool_drops_1h(self) -> dict:
+        """Spool drops over the last hour (the kv counters are running totals since install)."""
+        now = time.time()
+        cur = (int(self.state.get("dropped_unscored", 0)), int(self.state.get("dropped_unuploaded", 0)))
+        hist = self.__dict__.setdefault("_drop_hist", [])
+        hist.append((now, *cur))
+        while len(hist) > 1 and hist[1][0] <= now - 3600:
+            hist.pop(0)
+        return {"spool_dropped_unscored_1h": cur[0] - hist[0][1], "spool_dropped_unuploaded_1h": cur[1] - hist[0][2]}
 
     def data_usage(self) -> dict:
         """What the agent keeps on this host, in MB: the local database (event spool, entity registry, activity
@@ -1087,6 +1152,7 @@ class Agent:
              "spool_dropped_unuploaded": int(self.state.get("dropped_unuploaded", 0)), "update": self.update_health(),
              "disk_full_dropped": self._dropped_disk_full, "disk_full": bool(self._disk_full_since),
              "data_mb": self.data_usage(),
+             **self._spool_drops_1h(),
              "isolated": bool(self.state.get("isolated", False))}
         try:
             st = os.statvfs(self.cfg.data_dir)

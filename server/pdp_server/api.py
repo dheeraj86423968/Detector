@@ -357,7 +357,9 @@ class Heartbeat(BaseModel):
     collector_behind_1h: int | None = None
     disk_full: bool | None = None         # the data disk is full now (0.3.20+)
     disk_full_dropped: int | None = None  # events that could not be stored because of it, since the agent started
-    data_mb: dict | None = None           # the agent's disk use by kind (0.3.20+): spool, index, models, logs, images
+    data_mb: dict | None = None           # the agent's disk use by kind (0.3.20+): database, models, total
+    spool_dropped_unscored_1h: int | None = None     # the spool drops over the last hour (0.3.22+)
+    spool_dropped_unuploaded_1h: int | None = None
 
 
 @app.post("/v1/endpoints/{endpoint_id}/heartbeat")
