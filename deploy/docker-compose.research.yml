@@ -35,6 +35,51 @@ services:
         reservations:
           devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]
 
+  agent-bench-optc-h201:      # DARPA OpTC host 201 (Windows; docs/BENCHMARK_OPTC.md)
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["agent", "run"]
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+    volumes:
+      - pdp_bench_agent_optc_h201:/var/lib/pdp
+      - ./bench/agent-optc-h201.json:/etc/pdp/agent.json:ro
+    networks: [ edge, research ]
+    depends_on: [ gateway ]
+    deploy:
+      resources:
+        reservations:
+          devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]
+
+  agent-bench-optc-h501:      # DARPA OpTC host 501 (Windows; docs/BENCHMARK_OPTC.md)
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["agent", "run"]
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+    volumes:
+      - pdp_bench_agent_optc_h501:/var/lib/pdp
+      - ./bench/agent-optc-h501.json:/etc/pdp/agent.json:ro
+    networks: [ edge, research ]
+    depends_on: [ gateway ]
+    deploy:
+      resources:
+        reservations:
+          devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]
+
+  agent-bench-optc-h051:      # DARPA OpTC host 051 (Windows; docs/BENCHMARK_OPTC.md)
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["agent", "run"]
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+    volumes:
+      - pdp_bench_agent_optc_h051:/var/lib/pdp
+      - ./bench/agent-optc-h051.json:/etc/pdp/agent.json:ro
+    networks: [ edge, research ]
+    depends_on: [ gateway ]
+    deploy:
+      resources:
+        reservations:
+          devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]
+
 networks:
   research:
     external: true
@@ -43,3 +88,6 @@ networks:
 volumes:
   pdp_bench_agent: {}
   pdp_bench_agent_theia: {}
+  pdp_bench_agent_optc_h201: {}
+  pdp_bench_agent_optc_h501: {}
+  pdp_bench_agent_optc_h051: {}

@@ -1,0 +1,24 @@
+{
+  "server_url": "https://gateway",
+  "agent_url": "https://gateway:8443",
+  "data_dir": "/var/lib/pdp",
+  "pki_dir": "/var/lib/pdp/pki",
+  "day_tz": "US/Eastern",
+  "status_interval": 10,
+  "device": "cuda",
+  "source": {
+    "kind": "db-replay",
+    "database": "optc_051",
+    "host": "postgres",
+    "days": [
+      "2019-09-19",
+      "2019-09-20",
+      "2019-09-21",
+      "2019-09-22",
+      "2019-09-23",
+      "2019-09-24",
+      "2019-09-25"
+    ]
+  },
+  "feat_device": "cuda"
+}

@@ -33,6 +33,10 @@ DATASETS = {
                   "gt": ["E3-CADETS/node_Nginx_Backdoor_06.csv", "E3-CADETS/node_Nginx_Backdoor_12.csv", "E3-CADETS/node_Nginx_Backdoor_13.csv"]},
     "THEIA_E3": {"database": "theia_e3", "test": ["2018-04-10", "2018-04-12", "2018-04-13"],
                  "gt": ["E3-THEIA/node_Browser_Extension_Drakon_Dropper.csv", "E3-THEIA/node_Firefox_Backdoor_Drakon_In_Memory.csv"]},
+    # DARPA OpTC (Windows), PIDSMaker's split: train 2019-09-19..21, validation 09-22, test 09-23..25; one attack per host
+    "OPTC_H201": {"database": "optc_201", "test": ["2019-09-23", "2019-09-24", "2019-09-25"], "gt": ["h201/node_h201_0923.csv"]},
+    "OPTC_H501": {"database": "optc_501", "test": ["2019-09-23", "2019-09-24", "2019-09-25"], "gt": ["h501/node_h501_0924.csv"]},
+    "OPTC_H051": {"database": "optc_051", "test": ["2019-09-23", "2019-09-24", "2019-09-25"], "gt": ["h051/node_h051_0925.csv"]},
 }
 
 
