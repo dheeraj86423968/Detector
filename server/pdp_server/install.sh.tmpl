@@ -292,6 +292,13 @@ if [ -f "$TRIAL" ]; then
     fi
   fi
 fi
+# no update on trial: earlier agent images (our repository only) are removed, so updates do not pile up on disk
+cur=$(val PDP_AGENT_IMAGE "$ETC/agent.env")          # again: a rollback above may just have changed it
+if [ ! -f "$TRIAL" ] && [ -n "$cur" ]; then
+  for img in $(docker images --format '{{.Repository}}:{{.Tag}}' "${cur%:*}" 2>/dev/null); do
+    if [ "$img" != "$cur" ] && docker rmi "$img" >/dev/null 2>&1; then log "removed the earlier agent image $img"; fi
+  done
+fi
 if [ -f "$REQ" ] && [ ! -f "$TRIAL" ]; then
   v=$(val VERSION "$REQ"); img=$(val IMAGE "$REQ"); reg=$(val REGISTRY "$REQ"); tok=$(val TOKEN "$REQ"); rm -f "$REQ"
   if [ -n "$img" ] && [ "$img" != "$cur" ]; then
@@ -313,7 +320,9 @@ cat > "$LIB/pdp-agent-run" <<RUN
 # starts the agent container with the image named in $ETC/agent.env at this moment (the updater may just have
 # changed it; systemd's own EnvironmentFile was read before the updater ran)
 IMAGE=\$(sed -n 's/^PDP_AGENT_IMAGE=//p' "$ETC/agent.env" | tail -n1)
-exec /usr/bin/docker run --rm --name $CONTAINER --privileged --pid=host --network=host \\
+# --log-driver none: the output goes to the journal through this service (journalctl -u pdp-agent), which rotates
+# it; docker keeps no second, unbounded copy on disk
+exec /usr/bin/docker run --rm --name $CONTAINER --privileged --pid=host --network=host --log-driver none \\
   -e PDP_ENROLL_TOKEN -e PDP_CA_SHA256 -e PDP_UPDATER=1 -e PDP_AGENT_CONFIG=/etc/pdp/agent.json \\
   -v $ETC/agent.json:/etc/pdp/agent.json:ro -v $DATA:/var/lib/pdp "\$IMAGE" run
 RUN

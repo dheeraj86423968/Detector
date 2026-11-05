@@ -181,7 +181,9 @@ function HealthCard({ h }: { h: EndpointOverview["health"] }) {
         <div><dt>Upload queue</dt><dd>{h.queue_depth == null ? "—" : fmtNum(h.queue_depth)}</dd></div>
         <div><dt>CPU / memory</dt><dd>{h.cpu_pct == null ? "—" : `${h.cpu_pct.toFixed(1)} %`} · {h.rss_mb == null ? "—" : `${Math.round(h.rss_mb)} MB`}</dd></div>
         <div><dt>Disk free</dt><dd className={cx((h.disk_free_pct ?? 100) < 10 && "warn-text")}>{h.disk_free_pct == null ? "—" : `${h.disk_free_pct.toFixed(0)} % (${((h.disk_free_mb || 0) / 1024).toFixed(1)} GB)`}</dd></div>
-        <div><dt>Local data</dt><dd>{h.spool_mb == null ? "—" : `${Math.round(h.spool_mb)} MB`}{h.entities ? ` · ${fmtCompact(h.entities)} tracked entities` : ""}</dd></div>
+        <div><dt>Disk used by the agent</dt><dd title="Local database (events waiting to be sent or scored, the entity registry, the activity index) and the detection model">{(h as any).data_mb
+          ? `${fmtNum(Math.round((h as any).data_mb.total))} MB (database ${fmtNum(Math.round((h as any).data_mb.database))} MB, model ${fmtNum(Math.round((h as any).data_mb.models))} MB)`
+          : h.spool_mb == null ? "—" : `${Math.round(h.spool_mb)} MB`}{h.entities ? ` · ${fmtCompact(h.entities)} tracked entities` : ""}</dd></div>
         <div><dt>Updates</dt><dd>{updateText(h)}</dd></div>
       </dl>
     </Card>

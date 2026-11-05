@@ -130,5 +130,18 @@ check(torch.equal(X[idx], plain[idx]) and X.shape == (35, 4) and X.rows == 5, f"
 X.resize(10)
 check(X.shape == (10, 4) and torch.equal(X[torch.arange(10)], plain[:10]), "truncate keeps the base rows")
 
+# after the final model: baseline processes and connections nobody holds are deleted, baseline files stay (the rules
+# tell pre-existing files by global id), held ones and post-baseline rows are untouched, ids are never reused
+st5 = State(os.path.join(tmp, "e", "state.sqlite"))
+kinds = ["subject", "file", "netflow"]
+st5.add_entities([(Entity(f"e{i}", kinds[i % 3], f"{kinds[i % 3]} /x/{i}", {"pid": i}), i) for i in range(3000)])
+n_pre = 2400
+held = {3, 4, 5, 2500}
+gone = st5.prune_baseline_transients(held, n_pre)
+left = dict(st5.c.execute("SELECT dense_id - 1, ntype FROM entities").fetchall())
+check(gone == 1600 - 2 and all(left.get(g) == "file" for g in range(1, n_pre, 3)), f"baseline processes/connections deleted ({gone}), files kept")
+check(3 in left and 5 in left and all(g in left for g in range(n_pre, 3000)), "held entities and post-baseline rows kept")
+check(st5.next_gid() == 3000, "global ids are not reused after pruning")
+
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

@@ -9,13 +9,16 @@ Phases (mirrors the server's view):
 """
 from __future__ import annotations
 
+import errno
 import io
 import json
 import os
 import re
 import shutil
+import sqlite3
 import sys
 import tarfile
+import threading
 import time
 import uuid as uuidlib
 from datetime import datetime, timezone
@@ -28,10 +31,10 @@ from pdp_engine.schema import EDGE_TYPE_ID, EDGE_TYPES, NO_DISPLAY, Entity, Even
 from pdp_engine.windows import Window, WindowBuilder
 
 from .config import Config
-from .state import State
+from .state import State, disk_full
 from .transport import Transport, TransportError
 
-VERSION = "0.3.19"
+VERSION = "0.3.20"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -123,6 +126,13 @@ class Agent:
         self.builder = WindowBuilder()
         self.tr: Transport | None = None
         self.stop = False
+        self._ents_retry: list = []            # full disk (see _commit)
+        self._dropped_disk_full = 0
+        self._disk_full_since = 0
+        self._disk_full_logged = 0
+        self._offline_since = 0                 # offline mode (see _went_offline); set up again by run()
+        self._reachable = threading.Event()
+        self._unreported = []
         # wall-clock sources complete a day once it is over; replays/sandbox declare their days (set again in run())
         self.chronological = cfg.source.get("kind") in ("auditd", "ebpf", "strace", "etw")
         self._cpu0 = (time.time(), os.times())
@@ -201,7 +211,44 @@ class Agent:
         self.eid = self.state.get("endpoint_id")
         if not self.eid:
             raise RuntimeError("not enrolled")
-        self.tr = Transport(self.cfg.agent_url, self.cfg.server_ca, self.cfg.cert_path, self.cfg.key_path)
+        # one attempt per call with a short connect timeout: the main loop retries on its own (offline mode below), so
+        # a lost network never holds collection and local detection
+        self.tr = Transport(self.cfg.agent_url, self.cfg.server_ca, self.cfg.cert_path, self.cfg.key_path,
+                            timeout=60, connect_timeout=10, attempts=1)
+
+    # ------------------------------------------------------------------ offline mode
+    # After a failed server call the loop stops calling the server (each call could otherwise wait for a timeout);
+    # a background probe (GET /healthz on the agent port, no side effects) checks every 10 s and lets the loop
+    # resume as soon as the server answers. Collection, the spool, local detection and alerting never wait.
+    def _went_offline(self, now: float, e: Exception) -> None:
+        if not self._offline_since:
+            self._offline_since = now
+            log(f"server unreachable, continuing offline (collection and local detection go on): {e}")
+        self._reachable.clear()
+
+    def _online(self) -> bool:
+        return not self._offline_since or self._reachable.is_set()
+
+    def _probe(self) -> None:
+        while not self.stop:
+            if self._offline_since and not self._reachable.is_set():
+                try:
+                    self.tr.request("GET", "/healthz")
+                    self._reachable.set()
+                except TransportError as e:
+                    if 400 <= e.status < 500:            # the server answered
+                        self._reachable.set()
+                except Exception:  # noqa - still offline
+                    pass
+            time.sleep(10)
+
+    def _save_unreported(self) -> None:
+        """Alerts and window summaries not yet delivered survive a restart or power cut (real-time alerts are
+        marked as sent when queued, so losing the queue would lose them for good)."""
+        try:
+            self.state.set("unreported", self._unreported[-500:])
+        except Exception as e:  # noqa - best effort
+            log(f"could not save the pending alerts: {e}")
 
     # ------------------------------------------------------------------ collection
     def ingest(self, items) -> int:
@@ -291,6 +338,9 @@ class Agent:
             live = set(self.reg.gid_array().tolist()) | self.state.spool_gids()
             pruned = self.state.prune_entities(live, int(self.runtime.N), self.next_gid,
                                                require_uploaded=self.state.get("phase") != "protected")
+            if not self.state.get("baseline_transients_pruned"):   # once: baseline processes and connections
+                pruned += self.state.prune_baseline_transients(live, int(self.runtime.N))
+                self.state.set("baseline_transients_pruned", True)
         log(f"registry compacted: {n} -> {len(self.reg)} entities in {time.time() - t0:.1f}s"
             + (f"; {pruned} entity records deleted from disk" if pruned else ""))
 
@@ -308,15 +358,54 @@ class Agent:
         return (self.state.get("config") or {}).get("tz") or self.cfg.day_tz
 
     def _commit(self, ents, evs):
-        if ents:
-            self.state.add_entities(ents)
-        if evs:
-            self.state.add_events(evs)
-            for d in dict.fromkeys(e[5] for e in evs):   # order of first appearance (a set's order is random per process)
-                self.state.touch_day(d)
+        # entities that could not be stored (full disk) are in the in-memory registry already: they are stored first
+        # next time, so no stored event ever refers to an entity missing on disk; events that cannot be stored are
+        # dropped and counted
+        ents = self._ents_retry + ents if self._ents_retry else ents
+        stored = False
+        try:
+            if ents:
+                self.state.add_entities(ents)
+            stored = True
+            self._ents_retry = []
+            if evs:
+                self.state.add_events(evs)
+                for d in dict.fromkeys(e[5] for e in evs):   # order of first appearance (a set's order is random per process)
+                    self.state.touch_day(d)
+        except sqlite3.OperationalError as e:
+            if not disk_full(e):
+                raise
+            if not stored:
+                self._ents_retry = list(ents)
+            self._dropped_disk_full += len(evs)
+            self._disk_full(e)
+            return
+        if self._disk_full_since:
+            log(f"disk space available again after {time.time() - self._disk_full_since:.0f}s; "
+                f"{self._dropped_disk_full} events could not be stored meanwhile")
+            self._disk_full_since = 0
+
+    def _disk_full(self, e: Exception) -> None:
+        now = time.time()
+        if not self._disk_full_since:
+            self._disk_full_since = now
+            self._disk_full_logged = 0
+        if now - self._disk_full_logged > 300:
+            self._disk_full_logged = now
+            log(f"the disk holding {self.cfg.data_dir} is full ({e}): events are dropped until there is space "
+                f"({self._dropped_disk_full} so far); detection of what is in memory, alerts and the heartbeat go on")
+            try:                                 # free what the server already has (sqlite reuses the pages)
+                n = self.state.free_uploaded()
+                if n:
+                    log(f"freed {n} already uploaded events from the local spool")
+            except Exception:  # noqa - may itself fail on a full disk
+                pass
 
     # ------------------------------------------------------------------ baseline upload
-    def upload_baseline(self):
+    def upload_baseline(self, budget_s: float = 20.0):
+        """Uploads what is pending, for at most about `budget_s` per call: after a long outage the backlog goes up
+        over several loop turns while collection keeps up (the loop calls this every status interval)."""
+        t_end = time.time() + budget_s
         pend = self.state.pending_entities()
         while pend:
             # the agent's dense id travels with each entity: the server builds its registry in exactly this order, so
@@ -330,6 +419,8 @@ class Agent:
         for i, (day, completed, reported) in enumerate(days):
             rows = self.state.pending_events(day)
             while rows:
+                if time.time() > t_end:
+                    return                          # the rest next turn
                 bid = f"{day}-{rows[0][0]}-{rows[-1][0]}"
                 uid = self._uuids({r[2] for r in rows} | {r[4] for r in rows})
                 self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/events", [{"ts_ns": r[1], "src": uid[r[2]], "op": r[3], "dst": uid[r[4]], "event_uuid": r[5]} for r in rows], batch_id=bid)
@@ -535,6 +626,7 @@ class Agent:
         self._save_early()
         self._unreported = getattr(self, "_unreported", [])
         self._unreported.append(([], alerts))
+        self._save_unreported()
         log(f"real-time: {len(alerts)} rule alerts ({', '.join(sorted({a['rule'] for a in alerts}))})")
 
     def _save_early(self):
@@ -594,6 +686,9 @@ class Agent:
                                "layer": layer, "rule": main.get("rule"), "reason": main.get("detail"), "reasons": rs})
         if wins or alerts:
             self._unreported.append((wins, alerts))
+            self._save_unreported()
+        if not self._online():
+            return                                  # delivered when the server is back (kept on disk meanwhile)
         try:
             while self._unreported:
                 w0, a0 = self._unreported[0]
@@ -603,8 +698,10 @@ class Agent:
                     self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/alerts", a0)
                     log(f"reported {len(a0)} alerts in {len(w0)} windows")
                 self._unreported.pop(0)
+                self._save_unreported()
         except (TransportError, OSError) as e:
             log(f"report deferred ({len(self._unreported)} batches pending): {e}")
+            self._went_offline(time.time(), e)
 
     # ------------------------------------------------------------------ main loop
     def run(self, source):
@@ -624,69 +721,97 @@ class Agent:
             log(f"response: re-applying network isolation: {self.isolate()}")
         last_hb, last_status, last_purge = 0, 0, time.time()
         self._offline_since = 0
+        self._reachable = threading.Event()
+        self._unreported = [tuple(x) for x in (self.state.get("unreported") or [])] + getattr(self, "_unreported", [])
+        if self._unreported:
+            log(f"{len(self._unreported)} alert/window batches from before the restart are waiting to be delivered")
+        threading.Thread(target=self._probe, daemon=True, name="pdp-probe").start()
         for batch in source.batches(lambda: self.stop):   # source yields lists of (entities, Event); empty list = idle tick
-            if batch:
-                self.ingest(batch)
-            now = time.time()
-            if now - last_status > self.cfg.status_interval:
-                # Server contact is best-effort: collection, spooling and local detection continue while the
-                # server is unreachable, and uploads resume from the sqlite spool on the next successful contact.
-                try:
-                    st = self.tr.request("GET", f"/v1/endpoints/{self.eid}/status")
-                    phase = st["phase"]; self.state.set("phase", phase)
-                    if isinstance(st.get("config"), dict):      # the server owns the endpoint configuration
-                        self.state.set("config", st["config"])
-                        self._apply_fp_budget(st["config"].get("fp_budget"))
-                        self._apply_layer_config(st["config"])
-                    if phase == "baseline" or (phase == "protected" and (st.get("config") or {}).get("refresh_days")):
-                        self.upload_baseline()     # keeps learning, also while an early model detects; fresh days later
-                    if phase in ("baseline", "protected"):
-                        b = st.get("bundle")       # while learning: an early model (server 0.5), replaced as it improves
-                        if b and b["id"] != self.state.get("bundle_id") and b["id"] != getattr(self, "_bad_bundle", None):
-                            try:
-                                self.fetch_bundle(b["id"])
-                            except (TransportError, OSError):
-                                raise
-                            except Exception as e:  # noqa - a model this agent cannot use must not stop it
-                                self._bad_bundle = b["id"]
-                                log(f"bundle {b['id']} could not be loaded ({type(e).__name__}: {e}); keeping the current model")
-                                if self.runtime is None:          # it was released for the new one: load it again
-                                    self.load_local_bundle()
-                    for cmd in st.get("commands", []):
-                        self.handle_command(cmd)
-                    self._update_offer = st.get("update")
-                    if self._update_offer and self.request_update(self._update_offer):
-                        break
-                    if self._offline_since:
-                        log(f"server reachable again after {now - self._offline_since:.0f}s")
-                        self._offline_since = 0
-                except (TransportError, OSError) as e:
-                    if not self._offline_since:
-                        self._offline_since = now
-                        log(f"server unreachable, continuing offline: {e}")
-                last_status = now
-            if self.runtime is not None:
-                self.score_backlog()
-            if now - last_purge > 60:   # spool hygiene: finished rows go, the size cap is enforced
-                self.purge_spool()
-                last_purge = now
-            self.maybe_compact(now)
-            if now - self._obs_flush > 60:
-                self._obs_flush = now
-                try:
-                    self.state.add_observables(self._obs)
-                    if int(now) % 3600 < 60:
-                        self.state.prune_observables()
-                except Exception as e:  # noqa - the index is best effort
-                    log(f"activity index: {e}")
-                self._obs = {}
-            if now - last_hb > self.cfg.heartbeat_interval:
-                try:
-                    self.tr.request("POST", f"/v1/endpoints/{self.eid}/heartbeat", self.health())
-                    self.confirm_update()
-                except (TransportError, OSError) as e:
-                    log(f"heartbeat failed: {e}")
-                last_hb = now
+            try:
+                if batch:
+                    self.ingest(batch)
+                now = time.time()
+                if now - last_status > self.cfg.status_interval and self._online():
+                    # Server contact is best-effort: collection, spooling and local detection continue while the
+                    # server is unreachable, and uploads resume from the sqlite spool on the next successful contact.
+                    try:
+                        st = self.tr.request("GET", f"/v1/endpoints/{self.eid}/status")
+                        phase = st["phase"]; self.state.set("phase", phase)
+                        if isinstance(st.get("config"), dict):      # the server owns the endpoint configuration
+                            self.state.set("config", st["config"])
+                            self._apply_fp_budget(st["config"].get("fp_budget"))
+                            self._apply_layer_config(st["config"])
+                        if self._offline_since:
+                            log(f"server reachable again after {now - self._offline_since:.0f}s; catching up")
+                            self._offline_since = 0
+                        if phase == "baseline" or (phase == "protected" and (st.get("config") or {}).get("refresh_days")):
+                            self.upload_baseline()     # keeps learning, also while an early model detects; fresh days later
+                        if phase in ("baseline", "protected"):
+                            b = st.get("bundle")       # while learning: an early model (server 0.5), replaced as it improves
+                            if b and b["id"] != self.state.get("bundle_id") and b["id"] != getattr(self, "_bad_bundle", None):
+                                try:
+                                    self.fetch_bundle(b["id"])
+                                except (TransportError, OSError):
+                                    raise
+                                except Exception as e:  # noqa - a model this agent cannot use must not stop it
+                                    self._bad_bundle = b["id"]
+                                    log(f"bundle {b['id']} could not be loaded ({type(e).__name__}: {e}); keeping the current model")
+                                    if self.runtime is None:          # it was released for the new one: load it again
+                                        self.load_local_bundle()
+                        for cmd in st.get("commands", []):
+                            self.handle_command(cmd)
+                        self._update_offer = st.get("update")
+                        if self._update_offer and self.request_update(self._update_offer):
+                            break
+                        if self._unreported:
+                            self.report([])            # alerts held while offline
+                    except (TransportError, OSError) as e:
+                        self._went_offline(now, e)
+                    last_status = now
+                if self.runtime is not None:
+                    self.score_backlog()
+                if now - last_purge > 60:   # spool hygiene: finished rows go, the size cap is enforced
+                    self.purge_spool()
+                    last_purge = now
+                self.maybe_compact(now)
+                if now - self._obs_flush > 60:
+                    self._obs_flush = now
+                    try:
+                        self.state.add_observables(self._obs)
+                        if int(now) % 3600 < 60:
+                            self.state.prune_observables()
+                    except Exception as e:  # noqa - the index is best effort
+                        log(f"activity index: {e}")
+                    self._obs = {}
+                if now - last_hb > self.cfg.heartbeat_interval and self._online():
+                    try:
+                        self.tr.request("POST", f"/v1/endpoints/{self.eid}/heartbeat", self.health())
+                        self.confirm_update()
+                    except (TransportError, OSError) as e:
+                        self._went_offline(now, e)
+                    last_hb = now
+            except sqlite3.OperationalError as e:      # a full disk must not stop the agent (crash loop): it keeps
+                if not disk_full(e):                   # running, drops what it cannot store (counted, in the heartbeat)
+                    raise                               # and continues by itself once there is space again
+                self._disk_full(e)
+            except OSError as e:
+                if e.errno != errno.ENOSPC:
+                    raise
+                self._disk_full(e)
+
+    def data_usage(self) -> dict:
+        """What the agent keeps on this host, in MB: the local database (event spool, entity registry, activity
+        index) and the detection model. Reported in the heartbeat so the console shows the agent's footprint."""
+        def size(p):
+            try:
+                return os.path.getsize(p)
+            except OSError:
+                return 0
+        db = sum(size(os.path.join(self.cfg.data_dir, f)) for f in ("state.sqlite", "state.sqlite-wal", "state.sqlite-shm"))
+        models = 0
+        for root, _d, files in os.walk(os.path.join(self.cfg.data_dir, "bundles")):
+            models += sum(size(os.path.join(root, f)) for f in files)
+        return {"database": round(db / 1e6, 1), "models": round(models / 1e6, 1), "total": round((db + models) / 1e6, 1)}
 
     def spool_max_bytes(self) -> int:
         """Configured cap (server config, else agent config), never more than 10% of the data file system."""
@@ -958,6 +1083,8 @@ class Agent:
              "cpu_pct": round(cpu, 1), "rss_mb": round(rss, 1), "spool_mb": round(self.state.size_bytes() / 2**20, 1), "entities": len(self.reg),
              "spool_dropped_unscored": int(self.state.get("dropped_unscored", 0)),
              "spool_dropped_unuploaded": int(self.state.get("dropped_unuploaded", 0)), "update": self.update_health(),
+             "disk_full_dropped": self._dropped_disk_full, "disk_full": bool(self._disk_full_since),
+             "data_mb": self.data_usage(),
              "isolated": bool(self.state.get("isolated", False))}
         try:
             st = os.statvfs(self.cfg.data_dir)

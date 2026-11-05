@@ -351,6 +351,13 @@ class Heartbeat(BaseModel):
     disk_free_mb: float | None = None     # free space of the agent's data file system (0.3.8+)
     disk_free_pct: float | None = None
     update: dict | None = None            # {"state": none|offered|updating|trial|failed, "version", "failed": [...]} (0.3.8+)
+    collector_error: str | None = Field(default=None, max_length=1000)   # the collector could not start (0.3.18+)
+    collector_behind: int | None = None   # records the loader dropped because the agent fell behind (0.3.19+)
+    collector_lost_1h: int | None = None  # ... the same two over the last hour (0.3.19+)
+    collector_behind_1h: int | None = None
+    disk_full: bool | None = None         # the data disk is full now (0.3.20+)
+    disk_full_dropped: int | None = None  # events that could not be stored because of it, since the agent started
+    data_mb: dict | None = None           # the agent's disk use by kind (0.3.20+): spool, index, models, logs, images
 
 
 @app.post("/v1/endpoints/{endpoint_id}/heartbeat")
@@ -732,7 +739,7 @@ def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
     agent = f"https://{host}:{os.environ.get('PDP_AGENT_PORT', '8443')}"
     image = agent_image(host) or os.environ.get("PDP_AGENT_IMAGE", "pdp/agent:latest")
     login = f"echo {token} | docker login {host} -u pdp --password-stdin && \\\n" if agent_image(host) else ""
-    docker = (login + f"docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host \\\n"
+    docker = (login + f"docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host --log-driver local \\\n"
               f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN={token} -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
               f"  -e PDP_SERVER_URL={agent} -e PDP_AGENT_URL={agent} {image} run")
     from .k8s import key_of

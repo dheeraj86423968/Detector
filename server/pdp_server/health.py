@@ -27,6 +27,11 @@ def problems(row: dict, target_version: str | None = None) -> list[dict]:
     dropped = int(h.get("spool_dropped_unuploaded") or 0) + int(h.get("spool_dropped_unscored") or 0)
     if dropped:
         out.append({"key": "spool_dropped", "level": "warning", "text": f"The agent's local queue reached its size limit and dropped {dropped} events"})
+    if h.get("disk_full") or h.get("disk_full_dropped"):
+        out.append({"key": "disk_full", "level": "error" if h.get("disk_full") else "warning",
+                    "text": (f"The disk holding the agent's data is full: activity cannot be stored "
+                             f"({int(h.get('disk_full_dropped') or 0):,} events dropped since the agent started). Free space on it; the agent continues by itself"
+                             if h.get("disk_full") else f"The disk was full for a while: {int(h['disk_full_dropped']):,} events could not be stored")})
     pct = h.get("disk_free_pct")
     if pct is not None and pct < 10:
         out.append({"key": "disk", "level": "error" if pct < 3 else "warning",

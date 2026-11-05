@@ -98,8 +98,16 @@ check(acks == [("c1", "ok"), ("c2", "unsupported")] and a.state.get("bundle_id")
 # 6. heartbeat carries the protocol's health fields
 h = a.health()
 check({"agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb", "spool_mb", "spool_dropped_unscored",
-       "spool_dropped_unuploaded", "entities", "update", "disk_free_mb", "disk_free_pct", "isolated"} == set(h) and h["rss_mb"] > 0 and h["disk_free_mb"] > 0,
+       "spool_dropped_unuploaded", "entities", "update", "disk_free_mb", "disk_free_pct", "isolated", "disk_full", "disk_full_dropped",
+       "data_mb"} == set(h) and h["rss_mb"] > 0 and h["disk_free_mb"] > 0 and h["data_mb"]["total"] >= h["data_mb"]["database"] > 0,
       f"health {h}")
+try:                       # the server stores only the heartbeat fields its model declares: every one the agent sends
+    from pdp_server.api import Heartbeat
+    every = set(h) | {"collector_lost", "collector_behind", "collector_lost_1h", "collector_behind_1h", "collector_error"}
+    check(every <= set(Heartbeat.model_fields if hasattr(Heartbeat, "model_fields") else Heartbeat.__fields__),
+          f"the server keeps every health field (missing: {sorted(every - set(getattr(Heartbeat, 'model_fields', None) or Heartbeat.__fields__))})")
+except ImportError:
+    pass                   # agent image: no server code
 
 # 7. updates: without the host updater only reported; with it: pull credential, request file, exit 75
 import os as _os

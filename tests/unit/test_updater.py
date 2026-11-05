@@ -27,7 +27,8 @@ open(up, "w").write(script); os.chmod(up, 0o755)
 calls = os.path.join(root, "calls")
 open(os.path.join(binp, "docker"), "w").write(f"""#!/bin/sh
 echo "$@" >> {calls}
-case "$*" in *login*) cat >/dev/null; exit 0 ;; *pull*bad-registry*) exit 1 ;; esac
+case "$*" in *login*) cat >/dev/null; exit 0 ;; *pull*bad-registry*) exit 1 ;;
+  images*) printf '%s\n' srv.example/pdp/agent:0.3.7 srv.example/pdp/agent:0.3.8 srv.example/pdp/agent:0.3.9 srv.example/pdp/agent:0.3.10 ;; esac
 exit 0
 """)
 os.chmod(os.path.join(binp, "docker"), 0o755)
@@ -83,6 +84,24 @@ check(image().endswith(":0.3.8") and os.path.exists(os.path.join(data, "update-b
 request("0.4.1", "srv.example/pdp/agent:0.4.1;touch /tmp/pwned$(id)")
 run()
 check(not os.path.exists("/tmp/pwned") and ";" not in image() and "$" not in image(), "shell metacharacters in a request are stripped")
+
+# disk: earlier images are removed once no update is on trial; never the one in use, never during a trial
+for f in ("update-request.env", "update-trial.env", "update-ok", "update-failed", "update-backoff"):
+    if os.path.exists(os.path.join(data, f)):
+        os.remove(os.path.join(data, f))
+open(os.path.join(etc, "agent.env"), "w").write("PDP_CA_SHA256=abc\nPDP_AGENT_IMAGE=srv.example/pdp/agent:0.3.8\n")
+open(calls, "w").close()
+cur_img = image()
+run()
+rm = [l.split()[-1] for l in open(calls).read().splitlines() if l.startswith("rmi")]
+check(rm and cur_img not in rm and all(x.startswith("srv.example/pdp/agent:") for x in rm),
+      f"earlier agent images are removed, the current one ({cur_img.split(':')[-1]}) kept: {[x.split(':')[-1] for x in rm]}")
+request("0.3.10", "srv.example/pdp/agent:0.3.10"); run(); open(calls, "w").close(); run()
+check(not [l for l in open(calls).read().splitlines() if l.startswith("rmi")], "nothing is removed while an update is on trial (rollback needs the previous image)")
+for _ in range(5):
+    run()                                    # never confirmed: rolled back
+rm = [l.split()[-1] for l in open(calls).read().splitlines() if l.startswith("rmi")]
+check(image() == cur_img and cur_img not in rm, f"after a rollback the image rolled back to is kept ({image().split(':')[-1]})")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

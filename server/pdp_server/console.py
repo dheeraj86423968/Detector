@@ -410,7 +410,7 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
               "events_dropped": h.get("collector_lost"), "queue_depth": h.get("queue_depth"), "cpu_pct": h.get("cpu_pct"), "rss_mb": h.get("rss_mb"),
               "events_24h": int(ev24) + int(w24), "status": status, "issues": issues,
               "disk_free_pct": h.get("disk_free_pct"), "disk_free_mb": h.get("disk_free_mb"), "spool_mb": h.get("spool_mb"),
-              "entities": h.get("entities"), "update": {**(h.get("update") or {}), "target": tgt}}
+              "entities": h.get("entities"), "data_mb": h.get("data_mb"), "update": {**(h.get("update") or {}), "target": tgt}}
     # ---- detection
     week = time.time_ns() - 7 * 86400 * 10**9
     a7 = [a for a in alerts if a["window_start_ns"] >= week]

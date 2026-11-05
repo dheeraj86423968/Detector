@@ -30,6 +30,12 @@ CREATE INDEX IF NOT EXISTS observables_last ON observables(last_ns);
 WAL_LIMIT = 64 << 20          # the WAL is truncated back to this size after a checkpoint
 
 
+def disk_full(e: Exception) -> bool:
+    """sqlite's way of saying the disk is full (SQLITE_FULL; an I/O error when even the journal cannot grow)."""
+    m = str(e).lower()
+    return "database or disk is full" in m or "disk i/o error" in m or "no space" in m
+
+
 class State:
     def __init__(self, path: str):
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -178,8 +184,15 @@ class State:
             self.c.execute("COMMIT")
             return r
         except BaseException:
-            self.c.execute("ROLLBACK")
+            if self.c.in_transaction:          # sqlite has already rolled back after some errors (a full disk)
+                self.c.execute("ROLLBACK")
             raise
+
+    def free_uploaded(self) -> int:
+        """Full disk: delete events the server already has (not yet scored ones lose local scoring; the server has
+        them); sqlite reuses the freed pages for new rows. Returns the number deleted."""
+        cur = self.c.execute("DELETE FROM events WHERE uploaded=1")
+        return cur.rowcount
 
     def day_id(self, day: str) -> int:
         i = self._day_ids.get(day)
@@ -283,6 +296,24 @@ class State:
             self.bump(k, out[k])
         self.compact()
         return out
+
+    def prune_baseline_transients(self, keep_gids, n_pre: int) -> int:
+        """Final model in place: baseline process and connection records nobody holds any more are deleted (a process
+        instance or a connection never comes back; the server has them for training). Baseline files stay: the rules
+        tell pre-existing files by their global id. Returns the number deleted."""
+        self.c.execute("CREATE TEMP TABLE IF NOT EXISTS keep_t (g INTEGER PRIMARY KEY)")
+        self.c.execute("DELETE FROM keep_t")
+        ks = [(int(g),) for g in keep_gids if int(g) < n_pre]
+        self._tx(lambda: self.c.executemany("INSERT OR IGNORE INTO keep_t VALUES (?)", ks))
+        n = 0
+        for a in range(0, int(n_pre), 100_000):          # in slices: a bounded WAL
+            n += self._tx(lambda: self.c.execute(
+                "DELETE FROM entities WHERE dense_id - 1 >= ? AND dense_id - 1 < ? AND ntype IN ('subject', 'netflow') "
+                "AND NOT EXISTS (SELECT 1 FROM keep_t WHERE g = dense_id - 1)", (a, min(a + 100_000, int(n_pre)))).rowcount)
+            self.c.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        self.c.execute("DELETE FROM keep_t")
+        self.compact()
+        return n
 
     def compact(self) -> None:
         """Return free pages to the file system and truncate the WAL."""

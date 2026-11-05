@@ -13,14 +13,19 @@ RETRYABLE = (ConnectionError, socket.timeout, socket.gaierror, OSError, http.cli
 
 
 class Transport:
-    def __init__(self, base_url: str, ca_pem_path: str | None = None, cert_path: str | None = None, key_path: str | None = None, timeout: float = 60):
+    def __init__(self, base_url: str, ca_pem_path: str | None = None, cert_path: str | None = None, key_path: str | None = None, timeout: float = 60,
+                 connect_timeout: float = 10, attempts: int = 6):
         u = urlparse(base_url)
         self.host, self.port, self.prefix = u.hostname, u.port or 443, u.path.rstrip("/")
         self.ctx = ssl.create_default_context(cafile=ca_pem_path) if ca_pem_path else ssl.create_default_context()
         self.ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         if cert_path:
             self.ctx.load_cert_chain(cert_path, key_path)
-        self.timeout = timeout
+        self.timeout = timeout                   # per read once connected (uploads, downloads)
+        # connecting (TCP + TLS) fails fast: a network that silently drops packets must not hold the caller for
+        # minutes. `attempts`: the default number of tries (the agent's main loop uses 1: it retries on its own)
+        self.connect_timeout = connect_timeout
+        self.attempts = attempts
 
     # set while the endpoint is isolated: the server's addresses resolved before isolation (DNS is blocked then);
     # TLS still verifies the server's name
@@ -28,13 +33,14 @@ class Transport:
 
     def _conn(self):
         if self.pinned:
-            return _PinnedHTTPS(self.host, self.port, self.pinned, context=self.ctx, timeout=self.timeout)
-        return http.client.HTTPSConnection(self.host, self.port, context=self.ctx, timeout=self.timeout)
+            return _PinnedHTTPS(self.host, self.port, self.pinned, context=self.ctx, timeout=self.timeout, connect_timeout=self.connect_timeout)
+        return _HTTPS(self.host, self.port, context=self.ctx, timeout=self.timeout, connect_timeout=self.connect_timeout)
 
-    def request(self, method: str, path: str, body=None, headers: dict | None = None, raw: bool = False, attempts: int = 6):
+    def request(self, method: str, path: str, body=None, headers: dict | None = None, raw: bool = False, attempts: int | None = None):
         """Connection-level failures (refused, no route, timeout, reset, 502/503 from the gateway) are retried with
         exponential backoff; application errors (4xx with a JSON body) are raised immediately."""
         delay = 2.0
+        attempts = attempts or self.attempts
         for i in range(attempts):
             try:
                 return self._request(method, path, body, headers, raw)
@@ -65,18 +71,19 @@ class Transport:
                 return r.status, dict(r.getheaders()), payload
             try:
                 js = json.loads(payload.decode() or "{}")
-            except json.JSONDecodeError:
-                js = {"ok": False, "error": payload[:200].decode(errors="replace")}
+            except json.JSONDecodeError:            # an HTML error page from the gateway or a proxy (502, 503 ...)
+                js = {"ok": False, "error": f"HTTP {r.status} from {self.host} (not an answer from the PDP server: the gateway or a proxy)"}
             if r.status >= 400 or not js.get("ok", False):
                 raise TransportError(r.status, js.get("error", js.get("detail", "request failed")))
             return js
         finally:
             c.close()
 
-    def download(self, path: str, dest: str, attempts: int = 6) -> dict:
+    def download(self, path: str, dest: str, attempts: int | None = None) -> dict:
         """GET `path` streamed into the file `dest` (models are hundreds of MB: never held in memory). Returns the
         response headers. Retried like request()."""
         delay = 2.0
+        attempts = attempts or self.attempts
         for i in range(attempts):
             c = self._conn()
             try:
@@ -111,17 +118,34 @@ class Transport:
         return self.request("POST", path, body=body, headers=h)
 
 
+class _HTTPS(http.client.HTTPSConnection):
+    """HTTPS with its own (short) timeout for connecting and the TLS handshake; `timeout` then applies to reads."""
+    def __init__(self, host, port, connect_timeout: float = 10, **kw):
+        super().__init__(host, port, **kw)
+        self._connect_timeout = connect_timeout
+
+    def connect(self):
+        t, self.timeout = self.timeout, min(self.timeout, self._connect_timeout)
+        try:
+            super().connect()
+        finally:
+            self.timeout = t
+        self.sock.settimeout(t)
+
+
 class _PinnedHTTPS(http.client.HTTPSConnection):
-    def __init__(self, host, port, addrs, **kw):
+    def __init__(self, host, port, addrs, connect_timeout: float = 10, **kw):
         super().__init__(host, port, **kw)
         self._addrs = addrs
+        self._connect_timeout = connect_timeout
 
     def connect(self):
         err = None
         for a in self._addrs:
             try:
-                sock = socket.create_connection((a, self.port), self.timeout)
+                sock = socket.create_connection((a, self.port), min(self.timeout, self._connect_timeout))
                 self.sock = self._context.wrap_socket(sock, server_hostname=self.host)
+                self.sock.settimeout(self.timeout)
                 return
             except OSError as e:
                 err = e

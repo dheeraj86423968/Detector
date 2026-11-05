@@ -154,13 +154,14 @@ check(all(b.reg.get(ev.src) is not None and b.reg.get(ev.dst) is not None for _,
 b.cfg.prune_entities_always = True
 b.upload_baseline(); b.purge_spool()
 rows0 = b.state.c.execute("SELECT count(*) FROM entities").fetchone()[0]
+files0 = b.state.c.execute("SELECT count(*) FROM entities WHERE dense_id - 1 < ? AND ntype='file'", (int(b.runtime.N),)).fetchone()[0]
 nxt = b.next_gid
 b.runtime.last_seen[:] = now - 6 * 60 * MIN
 b._last_compact = 0
 b.maybe_compact(time.time())
 rows1 = b.state.c.execute("SELECT count(*) FROM entities").fetchone()[0]
-base_kept = b.state.c.execute("SELECT count(*) FROM entities WHERE dense_id - 1 < ?", (int(b.runtime.N),)).fetchone()[0]
-check(rows1 < rows0 and base_kept == int(b.runtime.N), f"entity records on disk {rows0} -> {rows1}; all {base_kept} baseline records kept")
+base_kept = b.state.c.execute("SELECT count(*) FROM entities WHERE dense_id - 1 < ? AND ntype='file'", (int(b.runtime.N),)).fetchone()[0]
+check(rows1 < rows0 and base_kept == files0, f"entity records on disk {rows0} -> {rows1}; all {base_kept} baseline files kept (processes and connections nobody holds deleted)")
 check(all(b.state.gid_for(b.reg[i].uuid) == b.reg.gid(i) for i in range(len(b.reg))), "every live entity still has its record")
 check(b.state.next_gid() == nxt, f"next global id unchanged by the deletion ({nxt})")
 
