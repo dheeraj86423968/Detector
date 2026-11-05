@@ -89,8 +89,10 @@ services:
   worker-ingest:
     image: pdp/server:${PDP_VERSION:-dev}
     command: ["worker", "--kinds", "ingest,train_rules"]
-    environment: { <<: *db-env }
-    volumes: [ pdp_data:/data, pdp_pki:/pki ]
+    # train_rules signs the early rules-only bundles: it needs the KMS like worker-train (without it every early
+    # model failed with "/pki/bundle_signing.key not found" when PDP_KMS=transit)
+    environment: { <<: [*db-env, *kms-env] }
+    volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
     networks: [ backend ]
     restart: unless-stopped
     depends_on: { api: { condition: service_healthy } }

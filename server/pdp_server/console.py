@@ -345,6 +345,9 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
         incs = incidents.list_incidents(c, None, endpoint_id)
         checks = _checks(c, endpoint_id)
         training = db.q(c, "SELECT state, created_at, started_at FROM jobs WHERE endpoint_id=%s AND kind IN ('train','train_rules') ORDER BY created_at DESC LIMIT 1", (endpoint_id,), one=True)
+        # model builds failing again and again (the scheduler keeps retrying): say so instead of "learning" in silence
+        recent_builds = db.q(c, "SELECT state, error FROM jobs WHERE endpoint_id=%s AND kind IN ('train','train_rules') "
+                                "AND state IN ('done','failed') ORDER BY created_at DESC LIMIT 3", (endpoint_id,))
         org = db.q(c, "SELECT agent_update FROM orgs WHERE id=%s", (row["org_id"],), one=True)
         # uploads before server 0.6 have no recorded size: estimated from this endpoint's measured bytes per event,
         # else 11 bytes (measured on the L40S host and client-vm-02, gzip NDJSON)
@@ -402,7 +405,11 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
     issues += [p["text"] for p in probs]
     if learning and days and not any(d["events"] for d in days) and ep["online"]:
         issues.append("No events have been received yet")
+    build_failing = len(recent_builds) == 3 and all(b["state"] == "failed" for b in recent_builds)
+    if build_failing:
+        issues.append(f"Its detection model cannot be built (the last 3 attempts failed: {str(recent_builds[0]['error'] or 'unknown error')[:200]})")
     status = ("error" if (not ep["online"] and row["kind"] == "live" and row["phase"] != "retired") or any(p["level"] == "error" for p in probs)
+              or build_failing
               else "warning" if issues else "ok")
     health = {"online": ep["online"], "last_seen": row["last_seen"], "agent_version": h.get("agent_version") or row["agent_version"],
               "collector": "Not running" if h.get("collector_error") else "eBPF (CO-RE)" if h.get("collector_lost") is not None else "Dataset replay" if row["kind"] == "benchmark"

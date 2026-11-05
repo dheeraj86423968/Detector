@@ -613,12 +613,22 @@ def main():
             a.device = "cpu"
         else:
             log(f"GPU: {torch.cuda.get_device_name(0)}, {torch.cuda.get_device_properties(0).total_memory / 2**30:.0f} GiB")
-    with db.conn() as c:   # jobs left 'running' by a worker that died are re-queued (this worker owns those kinds)
-        n = db.q(c, "UPDATE jobs SET state='queued', started_at=NULL WHERE state='running' AND kind = ANY(%s) AND heartbeat < now() - interval '10 minutes' RETURNING id", (list(kinds),))
+    def requeue_stale():
+        """Jobs left 'running' by a worker that died or was replaced (no heartbeat for 10 minutes) are re-queued:
+        checked every minute, not only at start - a job interrupted by a worker restart had a fresh heartbeat at that
+        start and stayed 'running' for good, blocking every later job of its endpoint (one per endpoint at a time)."""
+        with db.conn() as c:
+            n = db.q(c, "UPDATE jobs SET state='queued', started_at=NULL WHERE state='running' AND kind = ANY(%s) "
+                        "AND heartbeat < now() - interval '10 minutes' RETURNING id", (list(kinds),))
         if n:
             log(f"re-queued {len(n)} stale running jobs")
+    requeue_stale()
+    last_requeue = time.time()
     hb = Heartbeat()
     while True:
+        if time.time() - last_requeue > 60:
+            requeue_stale()
+            last_requeue = time.time()
         job = None
         with db.conn() as c:
             job = db.q(c, NEXT_JOB, (list(kinds),), one=True)
