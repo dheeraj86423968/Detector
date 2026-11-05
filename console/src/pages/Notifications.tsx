@@ -21,7 +21,7 @@ const KIND: Record<Kind, { label: string; icon: JSX.Element; target: string; pla
   teams: { label: "Teams", icon: <MessageSquare size={16} />, target: "Incoming webhook URL", placeholder: "https://…webhook.office.com/…",
     hint: "In the Teams channel: ••• → Workflows → “Post to a channel when a webhook request is received”, then paste the URL." },
   webhook: { label: "Webhook", icon: <Webhook size={16} />, target: "HTTPS URL", placeholder: "https://soar.example.com/pdp",
-    hint: "PDP POSTs JSON. With a signing secret every request carries X-PDP-Signature: sha256=HMAC(secret, timestamp + \".\" + body)." },
+    hint: "M.D Lab Detector POSTs JSON. With a signing secret every request carries X-PDP-Signature: sha256=HMAC(secret, timestamp + \".\" + body)." },
   syslog: { label: "Syslog (SIEM)", icon: <Server size={16} />, target: "Syslog address", placeholder: "tls://siem.example.com:6514",
     hint: "CEF over tls://, tcp:// or udp://. Use TLS across the internet." },
 };
@@ -49,14 +49,14 @@ export default function Notifications() {
   };
   return (
     <div className="page">
-      <PageHeader title="Notifications" subtitle="Where PDP tells your team about incidents and agent problems, and feeds your SIEM."
+      <PageHeader title="Notifications" subtitle="Where M.D Lab Detector tells your team about incidents and agent problems, and feeds your SIEM."
         actions={<button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add channel</button>} />
       {data && !data.notifier_running && <div className="banner warn"><AlertTriangle size={16} />The notification service is not running on this server; messages are queued until it is back.</div>}
       <Card pad={false}>
         {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :
           chans.length === 0 ? (
             <Empty icon={<Bell size={22} />} title="No notification channels yet"
-              text="Add an e-mail list, a Slack or Teams channel, or a webhook, and PDP sends new incidents (high severity and above by default), agents that stop reporting, and collector problems there within seconds. Send a test message to check it."
+              text="Add an e-mail list, a Slack or Teams channel, or a webhook, and M.D Lab Detector sends new incidents (high severity and above by default), agents that stop reporting, and collector problems there within seconds. Send a test message to check it."
               action={<button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add channel</button>} />
           ) : (
             <div className="table-wrap">
@@ -101,7 +101,7 @@ export default function Notifications() {
       {(adding || editing) && <ChannelDialog ch={editing} emailOk={!!data?.email_available} onClose={() => { setAdding(false); setEditing(null); }}
         onDone={(c, created) => { toast(created ? `${c.name} added. Send a test message to check it.` : `${c.name} saved`); reload(); }} />}
       {removing && <Confirm danger title={`Delete ${removing.name}?`} confirmLabel="Delete channel" onClose={() => setRemoving(null)}
-        text={<p>PDP stops sending to this channel. Its delivery history is deleted with it.</p>}
+        text={<p>M.D Lab Detector stops sending to this channel. Its delivery history is deleted with it.</p>}
         onConfirm={async () => { await del(`/api/notifications/channels/${removing.id}`); toast("Channel deleted"); reload(); }} />}
       {logOf && <LogDialog ch={logOf} onClose={() => setLogOf(null)} />}
     </div>
@@ -143,7 +143,7 @@ function ChannelDialog({ ch, emailOk, onClose, onDone }: { ch: Channel | null; e
       {kind === "email" && !emailOk && <div className="banner warn"><AlertTriangle size={16} />E-mail is not set up on this server yet. Use Slack, Teams or a webhook, or ask your provider.</div>}
       <Field label="Name"><input value={name} onChange={e => setName(e.target.value)} placeholder={kind === "email" ? "Security team" : kind === "slack" ? "#security-alerts" : k.label} /></Field>
       <Field label={k.target} hint={k.hint} error={err}><input value={target} onChange={e => setTarget(e.target.value)} placeholder={k.placeholder} className="mono" /></Field>
-      {kind === "webhook" && <Field label="Signing secret" hint={ch?.has_secret ? "A secret is set. Enter a new one to replace it." : "Optional. Lets your receiver check that a request came from PDP."}>
+      {kind === "webhook" && <Field label="Signing secret" hint={ch?.has_secret ? "A secret is set. Enter a new one to replace it." : "Optional. Lets your receiver check that a request came from M.D Lab Detector."}>
         <input value={secret} onChange={e => setSecret(e.target.value)} type="password" autoComplete="new-password" /></Field>}
       <Field label="Send">
         <div className="check-list">

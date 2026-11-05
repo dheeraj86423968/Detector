@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronRight, FlaskConical, ListChecks, Loader2, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
 import { AllowEntry, AllowListResp, Check as CheckT, del, EndpointConfigResp, EndpointOverview, IncidentSummary, LifecycleStep, post, useApi, useCan } from "../api";
 import { AddAllowDialog, allowedText } from "../allowlist";
 import { AppliesTo } from "./AllowList";
 import { IsolationCard, useResponse } from "../respond";
+import { RemoveEndpointDialog } from "../endpointRemove";
 import { DailyBars } from "../chart";
 import { DETECTION, fmtBytes, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtRel, plural } from "../format";
 import { IncidentTable } from "../incidents";
@@ -17,7 +18,7 @@ export default function EndpointDetail() {
   const can = useCan();
   const [sp, setSp] = useSearchParams();
   const tab = (["incidents", "settings"].includes(sp.get("tab") || "") ? sp.get("tab") : "overview") as Tab;
-  const [fast, setFast] = useState(false);
+  const [fast, setFast] = useState(false); const [removing, setRemoving] = useState(false); const nav = useNavigate();
   const ov = useApi<EndpointOverview>(`/api/endpoints/${id}/overview`, fast ? 4000 : 30000);
   const running = !!ov.data?.check && ["queued", "running"].includes(ov.data.check.state);
   useEffect(() => { setFast(running); }, [running]);
@@ -29,6 +30,7 @@ export default function EndpointDetail() {
   return (
     <div className="page">
       <PageHeader crumbs={<Crumbs name={ep.name} />}
+        actions={can.manage_endpoints && <button className="btn" onClick={() => setRemoving(true)}><Trash2 size={15} />Remove endpoint</button>}
         title={<span className="ep-title">{ep.name}<EndpointStateBadge state={ep.state} text={ep.state_text} /></span>}
         subtitle={<div className="inc-meta">
           {ep.state_text && (!/^(offline|retired|protected)\b/i.test(ep.state_text) || /\d/.test(ep.state_text)) && <span className="meta-item">{ep.state_text}</span>}
@@ -43,6 +45,8 @@ export default function EndpointDetail() {
       {tab === "overview" && <OverviewTab d={d} reload={ov.reload} />}
       {tab === "incidents" && <IncidentsTab id={id!} learning={ep.state === "learning" || ep.state === "training"} />}
       {tab === "settings" && can.manage_endpoints && <SettingsTab id={id!} name={ep.name} />}
+      {removing && <RemoveEndpointDialog ep={{ id: id!, name: ep.name, state: ep.state }} onClose={() => setRemoving(false)}
+        onDone={how => how === "deleted" ? nav("/endpoints") : ov.reload()} />}
     </div>
   );
 }
@@ -63,7 +67,7 @@ function OverviewTab({ d, reload }: { d: EndpointOverview; reload: () => void })
   const days = baselineSlots(base);
   return (
     <>
-      <Card title="Is detection working on this endpoint?" subtitle="PDP learns what is normal on each endpoint, trains a model on it, then alerts on what departs from it.">
+      <Card title="Is detection working on this endpoint?" subtitle="M.D Lab Detector learns what is normal on each endpoint, trains a model on it, then alerts on what departs from it.">
         <Stepper steps={d.lifecycle} />
         {days.length > 0 && <div className="baseline-days">
           <div className="sub-title">Activity recorded per baseline day</div>
@@ -316,15 +320,14 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
           </form>
         </div>
       </Card>
-      <Card title="Retire endpoint" className="danger-card">
+      <Card title="Remove endpoint" className="danger-card">
         <div className="setting-row">
-          <div><div className="setting-name">Retire {name}</div><div className="muted sm">The agent is no longer accepted and the endpoint's raw activity is deleted. This cannot be undone.</div></div>
-          <button className="btn danger" onClick={() => setRetire(true)}>Retire endpoint</button>
+          <div><div className="setting-name">Remove {name}</div><div className="muted sm">Retire it (its alerts and incidents stay for the record) or delete it with all its data.</div></div>
+          <button className="btn danger" onClick={() => setRetire(true)}>Remove endpoint</button>
         </div>
       </Card>
-      {retire && <Confirm danger title={`Retire ${name}?`} confirmLabel="Retire endpoint" onClose={() => setRetire(false)}
-        text={<p>The agent on <b>{name}</b> will no longer be accepted and its raw activity is deleted. This cannot be undone.</p>}
-        onConfirm={async () => { await post(`/api/endpoints/${id}/retire`); toast(`${name} retired`); window.location.hash = `#/endpoints/${id}`; window.location.reload(); }} />}
+      {retire && <RemoveEndpointDialog ep={{ id, name }} onClose={() => setRetire(false)}
+        onDone={how => { window.location.hash = how === "deleted" ? "#/endpoints" : `#/endpoints/${id}`; window.location.reload(); }} />}
     </div>
   );
 }
@@ -363,7 +366,7 @@ function AllowCard({ id, name }: { id: string; name: string }) {
       {adding && <AddAllowDialog kinds={data?.kinds} initial={{ endpoints: [id] }} onClose={() => setAdding(false)} onDone={(_, n) => { toast(allowedText(n)); reload(); }} />}
       {removing && <Confirm danger title="Remove from the allow list?" confirmLabel="Remove entry" onClose={() => setRemoving(null)}
         text={<>
-          <p>PDP will alert on <code className="code-inline">{removing.value}</code> again{removing.endpoints ? (removing.endpoints.length > 1 ? <> on {removing.endpoints.map(x => x.name).join(", ")}</> : <> on {name}</>) : <> on <b>all endpoints</b></>}.</p>
+          <p>M.D Lab Detector will alert on <code className="code-inline">{removing.value}</code> again{removing.endpoints ? (removing.endpoints.length > 1 ? <> on {removing.endpoints.map(x => x.name).join(", ")}</> : <> on {name}</>) : <> on <b>all endpoints</b></>}.</p>
           {!removing.endpoints && <p className="muted">This entry applies to every endpoint, not only {name}.</p>}
         </>}
         onConfirm={async () => { await del(`/api/allowlist/${removing.id}`); toast("Removed from the allow list"); reload(); }} />}

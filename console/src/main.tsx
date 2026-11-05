@@ -52,7 +52,7 @@ function Shell() {
       <MeReloadContext.Provider value={reloadMe}>
         <div className="shell">
           <aside className="sidebar">
-            <div className="brand"><Logo /><div><div className="brand-name">PDP</div><div className="brand-sub">Provenance detection</div></div></div>
+            <div className="brand"><Logo /><div><div className="brand-name">M.D Lab</div><div className="brand-sub">Detector</div></div></div>
             {me.org?.name && <div className="org-name" title={me.org.name}><Building2 size={14} /><span>{me.org.name}</span></div>}
             <nav className="nav">
               <NavLink to="/overview"><LayoutDashboard size={18} />Overview</NavLink>

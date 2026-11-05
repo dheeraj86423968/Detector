@@ -28,7 +28,7 @@ export default function Signup() {
   if (mode === "off") return (
     <AuthFrame foot={<Link to="/login">Back to sign in</Link>}>
       <h1 className="login-title">Sign-up is closed</h1>
-      <p className="login-text">New organisations cannot sign up on this server. If your team already uses PDP, ask your administrator for an invite link.</p>
+      <p className="login-text">New organisations cannot sign up on this server. If your team already uses M.D Lab Detector, ask your administrator for an invite link.</p>
     </AuthFrame>
   );
 

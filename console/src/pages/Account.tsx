@@ -100,7 +100,7 @@ function TwoFactor({ enabled, required }: { enabled: boolean; required: boolean 
           <div><button className="btn" disabled={!off.password || off.code.length < 6} onClick={disable}>Turn off</button></div>
         </div>
       </>) : setup ? (<>
-        <p>Add PDP to your authenticator app (Google Authenticator, Microsoft Authenticator, 1Password, ...): open <a href={setup.otpauth_uri}>this link</a> on your phone, or enter the key by hand.</p>
+        <p>Add M.D Lab Detector to your authenticator app (Google Authenticator, Microsoft Authenticator, 1Password, ...): open <a href={setup.otpauth_uri}>this link</a> on your phone, or enter the key by hand.</p>
         <Field label="Key"><code className="code-inline mono">{setup.secret.match(/.{1,4}/g)!.join(" ")}</code></Field>
         <div className="form narrow-form">
           <Field label="Code shown by the app"><input value={code} onChange={e => setCode(e.target.value)} autoComplete="one-time-code" placeholder="123456" /></Field>

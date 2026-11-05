@@ -135,7 +135,7 @@ export type EndpointConfigResp = { ok: true; endpoint: { id: string; name: strin
 /** `install_command`: one line for a Linux server (`curl -fsSL https://<host>/install.sh | sudo bash -s -- --token <token>`);
  *  `docker_command`: hosts that only run containers; `enroll_command`: an agent that is already installed. */
 export type EnrollToken = { ok: true; token: string; expires_in_hours: number; ca_sha256: string; enroll_command: string;
-  install_command?: string; docker_command?: string; server_url?: string; agent_url?: string };
+  install_command?: string; docker_command?: string; server_url?: string; agent_url?: string; progress_key?: string };
 
 // ---------------------------------------------------------------- incidents & alerts
 

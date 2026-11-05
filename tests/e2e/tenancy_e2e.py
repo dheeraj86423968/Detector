@@ -148,7 +148,7 @@ probes = [("GET", f"/api/endpoints/{victim_ep}", None), ("GET", f"/api/endpoints
           ("GET", f"/api/incidents?endpoint_id={victim_ep}", None), ("GET", f"/api/alerts?endpoint_id={victim_ep}", None),
           ("GET", f"/api/allowlist?endpoint_id={victim_ep}", None), ("GET", f"/api/alerts/export?endpoint_id={victim_ep}", None),
           ("POST", "/api/sim/campaigns", {"name": "probe", "endpoint_id": victim_ep, "spec": {}}),
-          ("POST", f"/api/endpoints/{victim_ep}/retire", {})]
+          ("POST", f"/api/endpoints/{victim_ep}/retire", {}), ("DELETE", f"/api/endpoints/{victim_ep}", None)]
 for m, path, body in probes:
     st, _ = A.call(m, path, body)
     check(st == 404, f"A: {m} {path.replace(victim_ep, '<internal endpoint>')} -> 404 ({st})")

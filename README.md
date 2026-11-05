@@ -1,4 +1,7 @@
-# PDP — provenance detection platform
+# M.D Lab Detector (codename PDP) — provenance detection platform
+
+Product name in the console, installer and notifications: **M.D Lab Detector** (M.D Lab = Muppiri Dheeraj Lab). Technical
+names (`pdp-agent` service, `/etc/pdp`, `PDP_*` settings, `X-PDP-Signature`) keep the codename so existing installs keep working.
 
 Host-level intrusion detection from kernel telemetry. Endpoints run a small agent that builds a provenance graph
 from system calls and scores it locally in three layers - (1) executable novelty against the baseline, (2)

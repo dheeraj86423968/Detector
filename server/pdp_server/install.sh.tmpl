@@ -1,11 +1,12 @@
 #!/bin/bash
-# PDP agent installer for Linux servers, served by __SERVER__/install.sh
+# M.D Lab Detector agent installer for Linux servers, served by __SERVER__/install.sh
 #
 #   curl -fsSL __SERVER__/install.sh | sudo bash -s -- --token <enrolment token>
 #
 # Checks the host, installs docker if it is missing (apt or dnf/yum), pulls the agent image from this server,
 # writes /etc/pdp/agent.json and /etc/pdp/agent.env, installs and starts pdp-agent.service and waits until the
-# endpoint has enrolled. Re-running it is safe. Remove the agent with:  ... | sudo bash -s -- --uninstall
+# endpoint has enrolled, reporting each stage to the server (the console's Add endpoint dialog shows it). Re-running
+# it is safe. Remove the agent with:  ... | sudo bash -s -- --uninstall
 # Upgrade an existing install to this installer's service (self-updating agent):  ... | sudo bash -s -- --upgrade
 set -euo pipefail
 
@@ -21,14 +22,22 @@ LIB=${PDP_LIB_DIR:-/usr/local/lib/pdp}
 
 token="" source="ebpf" tz="UTC" install_docker=1 start=1 uninstall=0 purge=0 assume_yes=0
 
+json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | tr -d '\000-\037'; }
+# progress for the console (install with a token only; never fails the installation)
+report() {
+  [ -n "$token" ] || return 0
+  curl -fsS --max-time 5 -o /dev/null -X POST -H 'Content-Type: application/json' "$SERVER/api/public/install/progress" \
+    -d "{\"token\":\"$(json_str "$token")\",\"stage\":\"$1\",\"detail\":\"$(json_str "${2:-}")\",\"host\":\"$(json_str "$(hostname 2>/dev/null)")\"}" \
+    >/dev/null 2>&1 || true
+}
 say()  { printf '\033[1m==>\033[0m %s\n' "$*"; }
 ok()   { printf '    \033[32mok\033[0m  %s\n' "$*"; }
 warn() { printf '    \033[33m!!\033[0m  %s\n' "$*" >&2; }
-die()  { printf '\n\033[31merror:\033[0m %s\n' "$*" >&2; exit 1; }
+die()  { printf '\n\033[31merror:\033[0m %s\n' "$*" >&2; report failed "$*"; exit 1; }
 
 usage() {
   cat <<EOF
-PDP agent installer for $SERVER
+M.D Lab Detector agent installer for $SERVER
 
   curl -fsSL $SERVER/install.sh | sudo bash -s -- --token TOKEN [options]
 
@@ -66,7 +75,7 @@ done
 
 # ------------------------------------------------------------------------------------------------ uninstall
 if [ "$uninstall" -eq 1 ]; then
-  say "Removing the PDP agent"
+  say "Removing the M.D Lab Detector agent"
   systemctl disable --now "$UNIT.service" >/dev/null 2>&1 || true
   docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
   rm -f "/etc/systemd/system/$UNIT.service"
@@ -76,7 +85,7 @@ if [ "$uninstall" -eq 1 ]; then
   rm -rf "$ETC"
   ok "service and configuration removed"
   if [ "$purge" -eq 1 ]; then rm -rf "$DATA"; ok "agent data removed ($DATA)"; else ok "agent data kept in $DATA (--purge removes it)"; fi
-  echo "    Retire the endpoint in the console to remove it from your organisation."
+  echo "    Remove the endpoint in the console (Endpoints > the endpoint > Remove) to take it off your organisation."
   exit 0
 fi
 
@@ -84,6 +93,7 @@ fi
 case "$source" in ebpf|auditd|strace) ;; *) die "--source must be ebpf, auditd or strace" ;; esac
 
 # ------------------------------------------------------------------------------------------------ host checks
+report started "installer $(date -u +%H:%M:%S) UTC"
 say "Checking this host"
 arch=$(uname -m)
 case "$arch" in
@@ -118,11 +128,13 @@ ok "server $SERVER reachable"
 agent_host=${AGENT_URL#https://}; agent_port=${agent_host##*:}; agent_host=${agent_host%:*}
 if (exec 3<>"/dev/tcp/$agent_host/$agent_port") 2>/dev/null; then ok "agent port $agent_port reachable"; else
   die "cannot reach $agent_host:$agent_port (the agent sends its data there; allow outbound TCP $agent_port)"; fi
+report checks_ok "$arch, kernel $kver, $source collector, $(( mem_kb / 1024 )) MB memory"
 
 # ------------------------------------------------------------------------------------------------ docker
 if ! command -v docker >/dev/null 2>&1; then
   [ "$install_docker" -eq 1 ] || die "docker is not installed (re-run without --no-install-docker to install it)"
   say "Installing docker"
+  report docker_install "installing docker"
   if command -v apt-get >/dev/null; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq && apt-get install -y -qq docker.io >/dev/null
@@ -138,7 +150,9 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 systemctl enable --now docker >/dev/null 2>&1 || true
 docker info >/dev/null 2>&1 || die "the docker daemon is not running (systemctl start docker)"
-ok "docker $(docker version --format '{{.Server.Version}}' 2>/dev/null || echo ready)"
+dver=$(docker version --format '{{.Server.Version}}' 2>/dev/null || echo ready)
+ok "docker $dver"
+report docker_ready "docker $dver"
 
 # ------------------------------------------------------------------------------------------------ server trust
 say "Fetching the server certificate authority"
@@ -150,6 +164,28 @@ printf '%s' "$ca_sha" | grep -Eq '^[0-9a-f]{64}$' || die "could not read the ser
 ok "CA fingerprint $ca_sha (downloaded over verified HTTPS)"
 
 # ------------------------------------------------------------------------------------------------ image
+# docker pull's plain output (one line per layer state change) -> "n of m layers" every few seconds, here and in the console
+pull_progress() {
+  local line id now last=0 n_all n_done
+  declare -A seen=() fin=()
+  while IFS= read -r line; do
+    id=${line%%:*}
+    case "$line" in
+      *": Pulling fs layer"|*": Waiting") seen[$id]=1 ;;
+      *": Already exists"|*": Pull complete") seen[$id]=1; fin[$id]=1 ;;
+      *rror*|*denied*|*nauthorized*|*"not found"*) printf '    %s\n' "$line" >&2; continue ;;
+      *) continue ;;
+    esac
+    n_all=${#seen[@]}; n_done=${#fin[@]}; now=$(date +%s)
+    if [ $(( now - last )) -ge 4 ] || [ "$n_done" -eq "$n_all" ]; then
+      last=$now
+      printf '    downloading: %d of %d layers\n' "$n_done" "$n_all"
+      report downloading "$n_done of $n_all layers"
+    fi
+  done
+  return 0
+}
+
 say "Downloading the agent ($IMAGE, about 2 GB the first time)"
 old_image=$(sed -n 's/^PDP_AGENT_IMAGE=//p' "$ETC/agent.env" 2>/dev/null | tail -1)
 if [ -z "$token" ] && ! docker image inspect "$IMAGE" >/dev/null 2>&1 && [ -n "$old_image" ] && docker image inspect "$old_image" >/dev/null 2>&1; then
@@ -160,7 +196,8 @@ if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   [ -n "$token" ] || die "the agent image is missing and no --token was given to download it"
   cfg=$(mktemp -d)
   printf '{"auths":{"%s":{"auth":"%s"}}}' "$REGISTRY" "$(printf 'pdp:%s' "$token" | base64 -w0)" > "$cfg/config.json"
-  if ! DOCKER_CONFIG="$cfg" docker pull -q "$IMAGE" >/dev/null; then
+  report downloading "starting the download of ${IMAGE##*/}"
+  if ! DOCKER_CONFIG="$cfg" docker pull "$IMAGE" 2>&1 | pull_progress; then
     rm -rf "$cfg"; die "could not download $IMAGE (is the enrolment token still valid? tokens expire after 24 hours)"
   fi
   rm -rf "$cfg"
@@ -168,10 +205,10 @@ fi
 got=$(docker image inspect -f '{{.Architecture}}' "$IMAGE" 2>/dev/null || echo unknown)
 [ "$got" = "$iarch" ] || die "this server publishes the agent for $got, not for this $arch host; ask the operator for an $iarch build"
 ok "agent image ready"
+report downloaded "${IMAGE##*/}"
 
 # ------------------------------------------------------------------------------------------------ configuration
 say "Configuring the agent"
-json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
 cat > "$ETC/agent.json" <<EOF
 {
   "server_url": "$(json_str "$AGENT_URL")",
@@ -247,7 +284,7 @@ RUN
 chmod 0755 "$LIB/pdp-agent-update" "$LIB/pdp-agent-run"
 cat > "/etc/systemd/system/$UNIT.service" <<EOF
 [Unit]
-Description=PDP provenance detection agent ($SERVER)
+Description=M.D Lab Detector agent ($SERVER)
 After=docker.service network-online.target
 Requires=docker.service
 Wants=network-online.target
@@ -270,6 +307,7 @@ EOF
 chmod 0644 "/etc/systemd/system/$UNIT.service"
 systemctl daemon-reload
 ok "wrote $ETC/agent.json, $ETC/agent.env and $UNIT.service"
+report configured "$UNIT.service"
 
 if [ "$start" -eq 0 ]; then
   say "Done (not started). Start it with: systemctl enable --now $UNIT"
@@ -278,6 +316,7 @@ fi
 
 # ------------------------------------------------------------------------------------------------ start and enrol
 say "Starting the agent"
+report starting "waiting for the agent to enrol"
 systemctl enable "$UNIT.service" >/dev/null 2>&1
 systemctl restart "$UNIT.service"
 for i in $(seq 1 60); do
@@ -290,12 +329,13 @@ for i in $(seq 1 60); do
 done
 [ -s "$DATA/pki/agent.pem" ] || die "the agent did not enrol within 2 minutes; check: journalctl -u $UNIT -f"
 # the enrolment token is single use and no longer needed
+report enrolled "$(hostname)"
 sed -i '/^PDP_ENROLL_TOKEN=/d' "$ETC/agent.env"
 ok "enrolled with $SERVER"
 
 cat <<EOF
 
-  The PDP agent is running on $(hostname).
+  The M.D Lab Detector agent is running on $(hostname).
   Detection starts after one hour with an early model (high-confidence findings only); it is retrained as the
   agent learns this server's normal activity and is complete after 8 days.
   Follow its progress in the console: $SERVER/#/endpoints

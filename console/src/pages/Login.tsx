@@ -21,7 +21,7 @@ export function AuthFrame({ children, foot, wide }: { children: ReactNode; foot?
   return (
     <div className="login-page">
       <div className={cx("login-card", wide && "wide")}>
-        <div className="login-brand"><Logo size={40} /><div><div className="login-name">PDP</div><div className="login-tag">Provenance-based intrusion detection</div></div></div>
+        <div className="login-brand"><Logo size={40} /><div><div className="login-name">M.D Lab Detector</div><div className="login-tag">Provenance-based intrusion detection</div></div></div>
         {children}
       </div>
       {foot && <div className="login-foot">{foot}</div>}
@@ -87,7 +87,7 @@ export default function Login() {
   const showPw = !cfg || cfg.password;
   const signup = !!cfg?.signup && cfg.signup !== "off";
   return (
-    <AuthFrame foot={signup ? <>New to PDP? <Link to="/signup">Create an organisation</Link></> : "Trouble signing in? Contact your PDP administrator."}>
+    <AuthFrame foot={signup ? <>New to M.D Lab Detector? <Link to="/signup">Create an organisation</Link></> : "Trouble signing in? Contact your administrator."}>
       <h1 className="login-title">Sign in to the console</h1>
       {cfg?.sso && <a className="btn primary block lg sso" href="/api/oidc/login">{cfg.sso_label || "Sign in with SSO"}</a>}
       {(cfg as any)?.org_sso && <form className="login-form" onSubmit={e => { e.preventDefault(); window.location.href = `/api/sso/start?email=${encodeURIComponent(orgEmail.trim())}`; }}>

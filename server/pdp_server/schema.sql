@@ -184,6 +184,8 @@ CREATE TABLE IF NOT EXISTS hunt_results (
 -- Kubernetes (0.6): a fleet enrolment token serves up to max_uses nodes (one endpoint per node, named after it)
 ALTER TABLE enroll_tokens ADD COLUMN IF NOT EXISTS max_uses INT;
 ALTER TABLE enroll_tokens ADD COLUMN IF NOT EXISTS uses INT NOT NULL DEFAULT 0;
+-- install progress reported by the one-line installer (stages, for the console's Add endpoint dialog)
+ALTER TABLE enroll_tokens ADD COLUMN IF NOT EXISTS progress JSONB;
 
 -- detection coverage per release (0.6): the same offline simulation campaign (fixed suite and seed) against the same
 -- reference endpoint model at every release (tools/coverage.py); no attack is run on any host

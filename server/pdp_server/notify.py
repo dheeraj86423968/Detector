@@ -178,7 +178,7 @@ def incident_message(inc: dict, escalated_from: str | None = None) -> dict:
     if what:
         lines.append(f"Recognised: {what}")
     lines += ["", f"Open in the console: {link}"]
-    return {"event": "incident", "subject": f"[PDP] {sev}: {inc['title']} ({inc['endpoint_name']})", "text": "\n".join(lines),
+    return {"event": "incident", "subject": f"[M.D Lab] {sev}: {inc['title']} ({inc['endpoint_name']})", "text": "\n".join(lines),
             "title": inc["title"], "severity": inc["severity"], "link": link,
             "data": {"type": "incident", "incident_id": inc["id"], "severity": inc["severity"], "escalated_from": escalated_from,
                      "title": inc["title"], "endpoint": {"id": inc["endpoint_id"], "name": inc["endpoint_name"]}, "first_seen": first,
@@ -189,7 +189,7 @@ def incident_message(inc: dict, escalated_from: str | None = None) -> dict:
 def endpoint_message(event: str, ep: dict, what: str, severity: str = "high") -> dict:
     link = f"{console_url()}/#/endpoints/{ep['id']}"
     title = f"{ep['name']}: {what}"
-    return {"event": event, "subject": f"[PDP] {title}", "text": f"{title}\n\nOpen in the console: {link}", "title": title,
+    return {"event": event, "subject": f"[M.D Lab] {title}", "text": f"{title}\n\nOpen in the console: {link}", "title": title,
             "severity": severity, "link": link,
             "data": {"type": event, "endpoint": {"id": str(ep["id"]), "name": ep["name"], "hostname": ep.get("hostname")}, "detail": what, "link": link}}
 
@@ -252,7 +252,7 @@ def _cef_event(m: dict) -> str:
     if d.get("incident_id"):
         ext["externalId"] = d["incident_id"]
     body = " ".join(f"{k}={_cef_escape(v)}" for k, v in ext.items())
-    return f"CEF:0|PDP|Provenance Detection Platform|0.3|pdp-{m['event']}|{_cef_escape(m['title'], True)}|{sev}|{body}"
+    return f"CEF:0|M.D Lab|M.D Lab Detector|0.3|pdp-{m['event']}|{_cef_escape(m['title'], True)}|{sev}|{body}"
 
 
 def deliver(ch: dict, m: dict) -> None:
@@ -262,12 +262,12 @@ def deliver(ch: dict, m: dict) -> None:
         _smtp_send(ch["target"], m["subject"], m["text"])
     elif k == "slack":
         icon = {"critical": ":red_circle:", "high": ":large_orange_circle:", "medium": ":large_yellow_circle:"}.get(m["severity"], ":white_circle:")
-        post_json(ch["target"], {"text": f"{icon} *{m['severity'].capitalize()}* {m['title']}\n<{m['link']}|Open in the PDP console>"})
+        post_json(ch["target"], {"text": f"{icon} *{m['severity'].capitalize()}* {m['title']}\n<{m['link']}|Open in the M.D Lab Detector console>"})
     elif k == "teams":
         post_json(ch["target"], {"@type": "MessageCard", "@context": "http://schema.org/extensions", "summary": m["subject"],
                                  "themeColor": SEV_COLOR.get(m["severity"], "6B7280"), "title": m["subject"],
                                  "text": m["text"].replace("\n", "<br>"),
-                                 "potentialAction": [{"@type": "OpenUri", "name": "Open in the PDP console",
+                                 "potentialAction": [{"@type": "OpenUri", "name": "Open in the M.D Lab Detector console",
                                                       "targets": [{"os": "default", "uri": m["link"]}]}]})
     elif k == "webhook":
         post_json(ch["target"], {"source": "pdp", "event": m["event"], **m["data"]}, _signed(ch, m["event"]))
@@ -323,7 +323,7 @@ def pending_messages(c, ch: dict, eps: list[dict], incidents: list[dict]) -> lis
             w = weekly(c, ch["org_id"], nowdt)
             iso = nowdt.isocalendar()
             title = f"Weekly summary: {w['incidents_new']} new incidents, {w['incidents_open']} open"
-            out.append((f"weekly:{iso[0]}-{iso[1]:02d}", {"event": "weekly", "subject": f"[PDP] {title} ({org_row['name'] if org_row else ''})",
+            out.append((f"weekly:{iso[0]}-{iso[1]:02d}", {"event": "weekly", "subject": f"[M.D Lab] {title} ({org_row['name'] if org_row else ''})",
                                                           "text": weekly_text(w, org_row["name"] if org_row else "", console_url()), "title": title,
                                                           "severity": "low", "link": f"{console_url()}/#/reports/weekly", "data": {"type": "weekly", **w}}))
     if "platform" in events:
@@ -333,7 +333,7 @@ def pending_messages(c, ch: dict, eps: list[dict], incidents: list[dict]) -> lis
             day = time.strftime("%Y-%m-%d", time.gmtime())
             for p in platform_problems(c):
                 title = f"Platform: {p['text']}"
-                out.append((f"platform:{p['key']}:{day}", {"event": "platform", "subject": f"[PDP] {title}", "text": title, "title": title,
+                out.append((f"platform:{p['key']}:{day}", {"event": "platform", "subject": f"[M.D Lab] {title}", "text": title, "title": title,
                                                          "severity": "high" if p["level"] == "error" else "medium", "link": f"{console_url()}/#/operator",
                                                          "data": {"type": "platform", "problem": p["key"], "detail": p["text"]}}))
     now = time.time()
@@ -432,7 +432,7 @@ def _tests(c, ch: dict) -> None:
     """Test messages queued from the console (any channel, also disabled ones; not counted against the limit)."""
     for r in db.q(c, "SELECT key FROM notify_log WHERE channel_id=%s AND state='queued' ORDER BY at", (ch["id"],)):
         org = db.q(c, "SELECT name FROM orgs WHERE id=%s", (ch["org_id"],), one=True)
-        m = {"event": "test", "subject": "[PDP] Test notification", "title": "Test notification from PDP", "severity": "low",
+        m = {"event": "test", "subject": "[M.D Lab] Test notification", "title": "Test notification from M.D Lab Detector", "severity": "low",
              "link": f"{console_url()}/#/settings/notifications",
              "text": f"This is a test of the notification channel \"{ch['name']}\" of {org['name'] if org else 'your organisation'}. "
                      f"Incidents and agent problems will arrive here.", "data": {"type": "test", "channel": ch["name"]}}
@@ -457,7 +457,7 @@ def _digest(c, ch: dict) -> None:
     items = [r["subject"] for r in rows]
     text = f"{len(items)} more notifications in the last hour were held back to avoid flooding this channel:\n\n" + \
            "\n".join(f"- {s}" for s in items[:30]) + ("\n..." if len(items) > 30 else "") + f"\n\nAll of them: {console_url()}/#/incidents"
-    m = {"event": "digest", "subject": f"[PDP] {len(items)} more notifications in the last hour", "text": text, "title": f"{len(items)} more notifications",
+    m = {"event": "digest", "subject": f"[M.D Lab] {len(items)} more notifications in the last hour", "text": text, "title": f"{len(items)} more notifications",
          "severity": "medium", "link": f"{console_url()}/#/incidents", "data": {"type": "digest", "count": len(items), "subjects": items[:100]}}
     try:
         deliver(ch, m)
@@ -683,7 +683,7 @@ def test_channel(cid: int, s=Depends(admin)):
         if not r:
             raise HTTPException(404, "not found")
         key = f"test:{int(time.time() * 1000)}"
-        db.q(c, "INSERT INTO notify_log (channel_id, key, subject, state) VALUES (%s,%s,%s,'queued')", (cid, key, "[PDP] Test notification"))
+        db.q(c, "INSERT INTO notify_log (channel_id, key, subject, state) VALUES (%s,%s,%s,'queued')", (cid, key, "[M.D Lab] Test notification"))
     return {"ok": True, "queued": key}
 
 

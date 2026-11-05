@@ -48,7 +48,7 @@ os.environ["PDP_NOTIFY_ALLOW_HTTP"] = "1"
 inc = {"id": 42, "severity": "high", "title": "Remote shell opened by nginx", "endpoint_id": "e1", "endpoint_name": "web-01",
        "first_ns": 1_790_000_000 * 10**9, "alerts": 3, "behaviours": [{"label": "Remote shell"}], "tactics": ["Execution"], "status": "open"}
 m = N.incident_message(inc, escalated_from="medium")
-check(m["subject"] == "[PDP] High: Remote shell opened by nginx (web-01)" and "https://pdp.example/#/incidents/42" in m["text"]
+check(m["subject"] == "[M.D Lab] High: Remote shell opened by nginx (web-01)" and "https://pdp.example/#/incidents/42" in m["text"]
       and "(was medium)" in m["text"] and m["data"]["behaviours"] == ["Remote shell"], "incident message: subject, escalation, link, behaviours")
 
 # 3. HTTP receivers: webhook (signature), Slack, Teams
@@ -122,7 +122,7 @@ threading.Thread(target=smtp.serve_forever, daemon=True).start()
 os.environ["PDP_SMTP_URL"] = f"smtp+plain://127.0.0.1:{smtp.server_address[1]}"
 os.environ["PDP_SMTP_FROM"] = "PDP <alerts@pdp.example>"
 N.deliver({"kind": "email", "target": "soc@corp.example, oncall@corp.example"}, m)
-check(mail and "Subject: [PDP] High: Remote shell opened by nginx (web-01)" in mail[0] and "To: soc@corp.example, oncall@corp.example" in mail[0]
+check(mail and "Subject: [M.D Lab] High: Remote shell opened by nginx (web-01)" in mail[0] and "To: soc@corp.example, oncall@corp.example" in mail[0]
       and "https://pdp.example/#/incidents/42" in mail[0], "e-mail: subject, recipients, console link")
 
 # 5. syslog CEF over TCP
@@ -142,7 +142,7 @@ for _ in range(50):
     if lines:
         break
     time.sleep(0.05)
-check(lines and b"CEF:0|PDP|Provenance Detection Platform|0.3|pdp-incident|Remote shell opened by nginx|8|" in lines[0], "syslog: CEF incident event")
+check(lines and b"CEF:0|M.D Lab|M.D Lab Detector|0.3|pdp-incident|Remote shell opened by nginx|8|" in lines[0], "syslog: CEF incident event")
 
 srv.shutdown(); smtp.shutdown(); sy.shutdown()
 print("FAILURES:", fails)

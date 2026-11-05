@@ -41,7 +41,7 @@ export function IsolationCard({ endpointId, isolated, reload }: { endpointId: st
   return (
     <Card title="Response" className="learning-card">
       <div className="row-gap">
-        {isolated ? <><Unplug size={16} className="warn-text" /><b>Isolated:</b> only the PDP server is reachable from this endpoint.</>
+        {isolated ? <><Unplug size={16} className="warn-text" /><b>Isolated:</b> only the M.D Lab Detector server is reachable from this endpoint.</>
           : <><Plug size={16} className="muted" />Network normal.</>}
         <span style={{ flex: 1 }} />
         {isolated ? <button className="btn" onClick={() => setAsk("release")}>Release</button>
@@ -49,7 +49,7 @@ export function IsolationCard({ endpointId, isolated, reload }: { endpointId: st
       </div>
       {ask && <Confirm danger={ask === "isolate"} title={ask === "isolate" ? "Isolate this endpoint?" : "Release this endpoint?"} confirmLabel={ask === "isolate" ? "Isolate" : "Release"}
         onClose={() => setAsk(null)}
-        text={ask === "isolate" ? <p>All network traffic of the endpoint is blocked except to the PDP server (and DNS), until you release it. Its services stop being reachable. It stays isolated across agent restarts.</p>
+        text={ask === "isolate" ? <p>All network traffic of the endpoint is blocked except to the M.D Lab Detector server (and DNS), until you release it. Its services stop being reachable. It stays isolated across agent restarts.</p>
           : <p>Network traffic of the endpoint is allowed again.</p>}
         onConfirm={async () => { const a = ask; setAsk(null); await runAction(endpointId, { action: a }, toast, reload); }} />}
     </Card>

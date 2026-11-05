@@ -113,6 +113,18 @@ Endpoint actions (admin): `POST /api/endpoints` (enrol token: `{"name"}` →
 `POST /api/endpoints/{id}/approved-executables {"executables": [...], "approve": true|false}`,
 `POST /api/endpoints/{id}/retire`. `GET /api/endpoints/{id}` (existing, includes `config.approved_executables`).
 
+
+### Removing an endpoint, install progress (0.6)
+- `POST /api/endpoints/{id}/retire`: the agent is no longer accepted, raw activity deleted; alerts and incidents kept.
+- `DELETE /api/endpoints/{id}` (admins) -> `{ok, deleted}`: the endpoint and everything about it (alerts, incidents,
+  models, activity data, checks) are deleted; its allow-list-only entries and user access to it are removed too.
+- `POST /api/endpoints` adds `progress_key`. The one-line installer reports its stages to
+  `POST /api/public/install/progress {token, stage, detail?, host?}` (stages: started, checks_ok, docker_install,
+  docker_ready, downloading (detail "n of m layers", updated in place), downloaded, configured, starting, enrolled,
+  failed (detail = the error)); only live single-use tokens that have not expired.
+- `GET /api/install-progress/{progress_key}` (admins of the token's organisation) -> `{name, installer: [{stage, detail,
+  host, at}], endpoint: null | {id, name, hostname, phase, agent_version, enrolled_at, last_seen, reporting,
+  collector: running|error|null, collector_error, first_data_at, first_model_at}}`. The Add endpoint dialog polls it.
 ## Incidents
 
 An incident is a group of alerts on one endpoint that are close in time (gap <= 30 min); its id is the id of its

@@ -96,7 +96,7 @@ export default function Team() {
           )}
       </Card>}
       {can.manage_users && <Card title="Pending invites" pad={false}
-        subtitle="Invite links work once and are valid for 7 days. PDP does not send e-mail: you pass the link on yourself."
+        subtitle="Invite links work once and are valid for 7 days. M.D Lab Detector does not send e-mail: you pass the link on yourself."
         actions={pending.length > 0 && <button className="btn sm" onClick={() => setInviting(true)}><Mail size={14} />Invite people</button>}>
         {invites.loading && !invites.data ? <Loading block /> : invites.error && !invites.data ? <div className="pad"><ErrorState error={invites.error} onRetry={invites.reload} /></div> :
           pending.length === 0 ? <Empty icon={<Mail size={22} />} title="No pending invites"
@@ -130,7 +130,7 @@ export default function Team() {
       {editing && <UserDialog user={editing} self={me?.user_id === editing.id} roleText={roleText} eps={eps.data?.endpoints || []} sso={!!sso?.enabled} onClose={() => setEditing(null)} onDone={reload} />}
       {resetting && <ResetDialog user={resetting} onClose={() => setResetting(null)} />}
       {removing && <Confirm danger title={`Remove ${name(removing)}?`} confirmLabel="Remove user" onClose={() => setRemoving(null)}
-        text={<p>{name(removing)} will lose access to the console immediately.{removing.auth === "oidc" ? " Because they use single sign-on, they get a new account the next time they sign in unless they are also removed from the identity provider's PDP groups." : ""}</p>}
+        text={<p>{name(removing)} will lose access to the console immediately.{removing.auth === "oidc" ? " Because they use single sign-on, they get a new account the next time they sign in unless they are also removed from the identity provider's groups for this console." : ""}</p>}
         onConfirm={async () => { await del(`/api/users/${removing.id}`); toast(`${name(removing)} removed`); reload(); }} />}
     </div>
   );
@@ -177,7 +177,7 @@ function OrgCard({ org, loading, error, reload, canEdit }: { org: Org | null; lo
           <dt>Endpoints</dt>
           <dd>{max > 0 ? <>{org.endpoints.toLocaleString()} of {plural(max, "endpoint")}</> : plural(org.endpoints, "endpoint")}</dd>
           {max > 0 && <div className={cx("bar usage", full ? "full" : pct >= 80 && "near")}><span style={{ width: `${pct}%` }} /></div>}
-          {full && <div className="muted sm">Limit reached. Contact PDP support to add more.</div>}
+          {full && <div className="muted sm">Limit reached. Contact M.D Lab support to add more.</div>}
         </div>
         <div><dt>Users</dt><dd>{plural(org.users, "user")}</dd>{org.pending_invites > 0 && <div className="muted sm">{plural(org.pending_invites, "invite")} pending</div>}</div>
         <div><dt>Created</dt><dd title={fmtDateTime(org.created_at, true)}>{fmtDate(org.created_at)}</dd></div>
@@ -232,7 +232,7 @@ function InviteDialog({ roleText, eps, onClose, onDone }: { roleText: (r: Role) 
       <CopyField label="Invite link" value={made.link} multiline />
       <div className="install-note">
         The link is valid for 7 days (until {fmtDateTime(made.expires_at)}) and works once. Whoever opens it joins as {ROLE_INFO[made.role]?.label.toLowerCase() || made.role}
-        {made.email ? <> with the address {made.email}</> : null}. PDP does not send e-mail; share the link the way you normally would.
+        {made.email ? <> with the address {made.email}</> : null}. M.D Lab Detector does not send e-mail; share the link the way you normally would.
       </div>
     </Dialog>
   );

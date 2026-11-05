@@ -48,7 +48,7 @@ type: kubernetes.io/dockerconfigjson
 data:
   .dockerconfigjson: {base64.b64encode(json.dumps(auth).encode()).decode()}
 """
-    return f"""# PDP agent for Kubernetes cluster {_q(cluster)}: kubectl apply -f this file. Every node (control plane included)
+    return f"""# M.D Lab Detector agent for Kubernetes cluster {_q(cluster)}: kubectl apply -f this file. Every node (control plane included)
 # runs one agent and appears in the console as its own endpoint. Re-apply a fresh copy from the console to update.
 # The enrolment token in this file is valid until the date shown in the console and for a limited number of nodes:
 # keep the file like a password. Removing: kubectl delete namespace pdp-system (then retire the endpoints).

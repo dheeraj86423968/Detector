@@ -735,7 +735,9 @@ def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
     docker = (login + f"docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host \\\n"
               f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN={token} -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
               f"  -e PDP_SERVER_URL={agent} -e PDP_AGENT_URL={agent} {image} run")
+    from .k8s import key_of
     return {"ok": True, "token": token, "expires_in_hours": 24, "ca_sha256": fp, "server_url": server, "agent_url": agent,
+            "progress_key": key_of(token),
             "install_command": f"curl -fsSL {server}/install.sh | sudo bash -s -- --token {token}",
             "package_command": f"sudo pdp-agent-install --server {agent} --agent-url {agent} --token {token} --ca-sha256 {fp}",
             "docker_command": docker,
@@ -871,6 +873,89 @@ def retire_endpoint(endpoint_id: str, s=Depends(admin)):
         forget_endpoint(c, endpoint_id)
     db.drop_telemetry(endpoint_id)
     return {"ok": True}
+
+
+@app.delete("/api/endpoints/{endpoint_id}")
+def delete_endpoint(endpoint_id: str, s=Depends(admin)):
+    """Remove an endpoint for good: the endpoint, its alerts, incidents, models, activity data and checks are
+    deleted, its agent's certificate stops working, and it no longer counts against the endpoint limit. (Retire
+    keeps the alerts and incidents for the record.) The agent on the host keeps running until it is uninstalled."""
+    import shutil
+    require_endpoint(s, endpoint_id)
+    with db.conn() as c:
+        ep = db.q(c, "SELECT id, name FROM endpoints WHERE id=%s AND org_id=%s", (endpoint_id, s["org"]), one=True)
+        if not ep:
+            raise HTTPException(404, "not found")
+        from .allowlist import forget_endpoint
+        forget_endpoint(c, endpoint_id)
+        db.q(c, "DELETE FROM sim_campaigns WHERE endpoint_id=%s", (endpoint_id,))
+        db.q(c, "UPDATE users SET endpoints = endpoints - %s WHERE endpoints ? %s", (endpoint_id, endpoint_id))
+        db.q(c, "DELETE FROM endpoints WHERE id=%s", (endpoint_id,))       # cascades: jobs, bundles, windows, alerts, days, uploads
+    db.drop_telemetry(endpoint_id)
+    shutil.rmtree(os.path.join(os.environ.get("PDP_DATA_DIR", "/data"), "bundles", endpoint_id), ignore_errors=True)
+    return {"ok": True, "deleted": ep["name"]}
+
+
+INSTALL_STAGES = ("started", "checks_ok", "docker_install", "docker_ready", "downloading", "downloaded", "configured",
+                  "starting", "enrolled", "failed")
+
+
+class InstallProgress(BaseModel):
+    token: str = Field(min_length=10, max_length=100)
+    stage: str
+    detail: str | None = Field(default=None, max_length=1000)
+    host: str | None = Field(default=None, max_length=255)
+
+
+@app.post("/api/public/install/progress")
+def install_progress(req: InstallProgress):
+    """The one-line installer reports each stage (authenticated by its enrolment token) so the console can show
+    where an installation is. Only for live single-use tokens that have not expired."""
+    if req.stage not in INSTALL_STAGES:
+        raise HTTPException(400, "unknown stage")
+    ev = {"stage": req.stage, "detail": (req.detail or "")[:300] or None, "host": (req.host or "")[:128] or None,
+          "at": datetime.now(timezone.utc).isoformat()}
+    with db.conn() as c:
+        t = db.q(c, "SELECT progress FROM enroll_tokens WHERE token=%s AND max_uses IS NULL AND kind='live' AND expires_at > now()",
+                 (req.token,), one=True)
+        if not t:
+            raise HTTPException(404, "unknown or expired token")
+        p = list(t["progress"] or [])
+        if p and p[-1]["stage"] == req.stage == "downloading":
+            p[-1] = ev                                   # download progress updates in place
+        else:
+            p.append(ev)
+        db.q(c, "UPDATE enroll_tokens SET progress=%s WHERE token=%s", (json.dumps(p[-60:]), req.token))
+    return {"ok": True}
+
+
+@app.get("/api/install-progress/{key}")
+def get_install_progress(key: str, s=Depends(admin)):
+    """Where an installation started from the Add endpoint dialog is: the installer's stages, then the endpoint's
+    own (enrolled, reporting, collecting activity, first model)."""
+    from .k8s import key_of
+    with db.conn() as c:
+        rows = db.q(c, "SELECT token, name, progress, used_by, expires_at FROM enroll_tokens WHERE org_id=%s AND max_uses IS NULL "
+                       "AND kind='live' AND expires_at > now() - interval '7 days'", (s["org"],))
+        t = next((r for r in rows if key_of(r["token"]) == key), None)
+        if not t:
+            raise HTTPException(404, "not found")
+        ep = None
+        if t["used_by"]:
+            e = db.q(c, "SELECT id, name, hostname, phase, last_seen, health, agent_version, enrolled_at FROM endpoints WHERE id=%s",
+                     (t["used_by"],), one=True)
+            if e:
+                up = db.q(c, "SELECT count(*) AS n, min(received_at) AS first FROM upload_batches WHERE endpoint_id=%s AND kind='events'",
+                          (e["id"],), one=True)
+                model = db.q(c, "SELECT min(created_at) AS at FROM bundles WHERE endpoint_id=%s", (e["id"],), one=True)
+                h = e["health"] or {}
+                ep = {"id": str(e["id"]), "name": e["name"], "hostname": e["hostname"], "phase": e["phase"], "agent_version": e["agent_version"],
+                      "enrolled_at": e["enrolled_at"], "last_seen": e["last_seen"],
+                      "reporting": bool(e["last_seen"]) and (datetime.now(timezone.utc) - e["last_seen"]).total_seconds() < 300,
+                      "collector": "error" if h.get("collector_error") else ("running" if h else None),
+                      "collector_error": h.get("collector_error"),
+                      "first_data_at": up["first"] if up["n"] else None, "first_model_at": model["at"] if model else None}
+    return {"ok": True, "name": t["name"], "expires_at": t["expires_at"], "installer": t["progress"] or [], "endpoint": ep}
 
 
 class AgentCommand(BaseModel):

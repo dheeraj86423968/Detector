@@ -310,6 +310,37 @@ for e in (ae, ap):
     admin.call("DELETE", f"/api/allowlist/{e['id']}")
 check(ae["id"] not in {e["id"] for e in admin.call("GET", "/api/allowlist")[1]["entries"]}, "allow-list entries can be removed")
 
+# ---- install progress (one-line installer -> console) and deleting an endpoint
+st, tok3 = admin.call("POST", "/api/endpoints", {"name": "e2e-install"})
+key = tok3.get("progress_key", "")
+def report(stage, detail=None, token=None):
+    return Console().call("POST", "/api/public/install/progress", {"token": token or tok3["token"], "stage": stage, "detail": detail, "host": "web-e2e"})[0]
+check(st == 200 and len(key) == 16, "an enrolment token comes with a progress key")
+st, pr = admin.call("GET", f"/api/install-progress/{key}")
+check(st == 200 and pr["installer"] == [] and pr["endpoint"] is None, "before the command runs: no progress yet")
+check(report("started") == 200 and report("checks_ok", "x86_64, kernel 6.8") == 200, "the installer reports its stages with the token")
+check(report("pwned") == 400 and report("started", token="not-a-real-token-123") == 404, "unknown stages and tokens are refused")
+report("downloading", "3 of 12 layers"); report("downloading", "9 of 12 layers")
+st, pr = admin.call("GET", f"/api/install-progress/{key}")
+stages = [e["stage"] for e in pr["installer"]]
+check(stages == ["started", "checks_ok", "downloading"] and pr["installer"][-1]["detail"] == "9 of 12 layers" and pr["installer"][0]["host"] == "web-e2e",
+      f"the console sees the stages, download progress updated in place ({stages})")
+check(Console().call("GET", f"/api/install-progress/{key}")[0] == 401 and admin.call("GET", "/api/install-progress/0000000000000000")[0] == 404,
+      "progress needs a session and a known key")
+st, js3, cert3 = enroll(tok3["token"])
+eid3 = js3.get("endpoint_id")
+agent_call(cert3, "POST", f"/v1/endpoints/{eid3}/heartbeat", hb)
+st, pr = admin.call("GET", f"/api/install-progress/{key}")
+check(st == 200 and pr["endpoint"] and pr["endpoint"]["id"] == eid3 and pr["endpoint"]["reporting"] is True and pr["endpoint"]["first_data_at"] is None,
+      "after enrolment the console follows the endpoint itself (reporting, no data yet)")
+check(report("enrolled") == 200 and report("failed", "late") == 200, "the installer can still report until the token expires")
+check(admin.call("DELETE", f"/api/endpoints/{eid3}")[0] == 200, "admin deletes the endpoint permanently")
+check(admin.call("GET", f"/api/endpoints/{eid3}")[0] == 404 and eid3 not in [e["id"] for e in admin.call("GET", "/api/endpoints")[1]["endpoints"]],
+      "a deleted endpoint is gone, retired list included")
+check(agent_call(cert3, "GET", f"/v1/endpoints/{eid3}/status")[0] in (401, 403, 404), "the deleted endpoint's agent is refused")
+check(admin.call("DELETE", f"/api/endpoints/{eid3}")[0] == 404, "deleting twice: 404")
+check(admin.call("GET", f"/api/install-progress/{key}")[1]["endpoint"] is None, "progress of a deleted endpoint no longer links to it")
+
 # ---- retire
 check(admin.call("POST", f"/api/endpoints/{eid}/retire")[0] == 200, "retire endpoint")
 admin.call("POST", f"/api/endpoints/{other_test_eid}/retire")      # the second test endpoint as well

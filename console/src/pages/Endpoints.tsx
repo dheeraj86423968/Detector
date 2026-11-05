@@ -6,6 +6,7 @@ import { fmtDateTime, fmtRel, plural } from "../format";
 import { Card, CopyField, Dialog, Empty, EndpointStateBadge, ErrorState, Field, Loading, PageHeader, Segmented, Toggle } from "../ui";
 import { ClusterForm, ClusterResult, ClustersCard, NewCluster } from "../clusters";
 import { AgentUpdates } from "../updates";
+import { InstallProgress } from "../installProgress";
 
 export default function Endpoints() {
   const can = useCan(); const nav = useNavigate();
@@ -40,7 +41,7 @@ export default function Endpoints() {
         </div>
         {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :
           rows.length === 0 ? <Empty icon={<Server size={22} />} title={all.length ? "No endpoints match" : "No endpoints yet"}
-            text={all.length ? "Try another search." : "Install the PDP agent on a Linux host to start learning its normal behaviour."}
+            text={all.length ? "Try another search." : "Install the M.D Lab Detector agent on a Linux host to start learning its normal behaviour."}
             action={!all.length && can.manage_endpoints ? <button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add endpoint</button> : undefined} /> : (
             <div className="table-wrap">
               <table className="table clickable">
@@ -103,17 +104,17 @@ function AddEndpointDialog({ onClose, onCreated }: { onClose: () => void; onCrea
           <Field label="Endpoint name" hint="Shown in the console, e.g. web-01 or build-server.">
             <input value={name} onChange={e => setName(e.target.value)} autoFocus maxLength={128} placeholder="web-01" />
           </Field>
-          {err && <div className="err">{err.text}{err.limit && <> Retire an endpoint you no longer use, or contact PDP support to raise the limit.</>}</div>}
+          {err && <div className="err">{err.text}{err.limit && <> Remove an endpoint you no longer use, or contact M.D Lab support to raise the limit.</>}</div>}
         </form>
       ) : (
         <div className="install">
           <div className="install-step">Run on the Linux server as root</div>
           <CopyField multiline value={primary} />
           <div className="install-req">Needs Linux kernel 5.8 or newer, internet access to this console, and Docker (installed automatically if missing).</div>
-          <div className="install-note">
+          {tok.progress_key ? <InstallProgress progressKey={tok.progress_key} /> : <div className="install-note">
             The endpoint appears here as soon as the agent enrols. Detection starts after one hour with an early model that
             reports high-confidence findings; it is retrained as the agent learns and is complete after 8 days.
-          </div>
+          </div>}
           <details className="install-more">
             <summary>Other ways to install</summary>
             {tok.docker_command && <CopyField label="Servers that only run containers: start the agent with Docker" multiline value={tok.docker_command} />}

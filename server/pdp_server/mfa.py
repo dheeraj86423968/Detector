@@ -118,7 +118,7 @@ def mfa_setup(s=Depends(session)):
         if u["totp_enabled"]:
             raise HTTPException(409, "two-factor sign-in is already on; turn it off first to change the authenticator")
         db.q(c, "UPDATE users SET totp_secret=%s WHERE id=%s", (sec, s["u"]))
-    uri = f"otpauth://totp/{quote('PDP:' + u['username'])}?secret={sec}&issuer=PDP&algorithm=SHA1&digits=6&period=30"
+    uri = f"otpauth://totp/{quote('M.D Lab Detector:' + u['username'])}?secret={sec}&issuer=M.D%20Lab%20Detector&algorithm=SHA1&digits=6&period=30"
     return {"ok": True, "secret": sec, "otpauth_uri": uri}
 
 

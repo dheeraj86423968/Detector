@@ -44,7 +44,7 @@ export default function AllowList() {
         {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :
           all.length === 0 && !filtered ? (
             <Empty icon={<ListChecks size={22} />} title="Nothing on the allow list yet"
-              text={<>When an alert turns out to be normal activity, such as a tool your team uses, a backup server or a deployment script, add it here so PDP stops alerting on it.
+              text={<>When an alert turns out to be normal activity, such as a tool your team uses, a backup server or a deployment script, add it here so M.D Lab Detector stops alerting on it.
                 {can.manage_endpoints ? <> You can also use <b>Allow…</b> on an alert in an incident.</> : " Administrators can add entries."}</>}
               action={can.manage_endpoints ? <button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add to allow list</button> : undefined} />
           ) : rows.length === 0 ? (
@@ -83,7 +83,7 @@ export default function AllowList() {
         onDone={(_, n) => { toast(allowedText(n)); reload(); }} />}
       {removing && <Confirm danger title="Remove from the allow list?" confirmLabel="Remove entry" onClose={() => setRemoving(null)}
         text={<>
-          <p>PDP will alert on <code className="code-inline">{removing.value}</code>{removing.kind === "detection" ? <> ({removing.rule_text || removing.rule})</> : null} again{removing.endpoints ? <> on {removing.endpoints.map(x => x.name).join(", ")}</> : " on all endpoints"}, from the agents' next check-in.</p>
+          <p>M.D Lab Detector will alert on <code className="code-inline">{removing.value}</code>{removing.kind === "detection" ? <> ({removing.rule_text || removing.rule})</> : null} again{removing.endpoints ? <> on {removing.endpoints.map(x => x.name).join(", ")}</> : " on all endpoints"}, from the agents' next check-in.</p>
           {removing.alerts_allowed > 0 && <p className="muted">The {plural(removing.alerts_allowed, "alert")} it allowed stay marked as false alarms.</p>}
         </>}
         onConfirm={async () => { await del(`/api/allowlist/${removing.id}`); toast("Removed from the allow list"); reload(); }} />}

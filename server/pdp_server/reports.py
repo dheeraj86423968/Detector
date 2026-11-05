@@ -40,7 +40,7 @@ def weekly(c, org_id, end: datetime | None = None) -> dict:
 
 def weekly_text(w: dict, org_name: str, console: str) -> str:
     sev = ", ".join(f"{n} {s}" for s, n in w["incidents_new_by_severity"].items() if n) or "none"
-    lines = [f"PDP weekly summary for {org_name}, {w['from'][:10]} to {w['to'][:10]}", "",
+    lines = [f"M.D Lab Detector weekly summary for {org_name}, {w['from'][:10]} to {w['to'][:10]}", "",
              f"New incidents: {w['incidents_new']} ({sev}); still open: {w['incidents_open']}",
              f"Alerts: {w['alerts']} ({w['confirmed']} confirmed, {w['false_alarms']} marked false alarms)",
              f"Endpoints: {w['endpoints']} ({w['endpoints_online']} reporting; " + ", ".join(f"{n} {p}" for p, n in sorted(w["endpoints_by_phase"].items())) + ")"]
