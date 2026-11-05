@@ -31,7 +31,7 @@ from .config import Config
 from .state import State
 from .transport import Transport, TransportError
 
-VERSION = "0.3.18"
+VERSION = "0.3.19"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -968,10 +968,20 @@ class Agent:
         err = getattr(getattr(self, "source", None), "error", None)
         if err:
             h["collector_error"] = err
-        try:   # collector health: records the kernel dropped because the ring buffer was full (CO-RE eBPF)
+        try:   # collector health (CO-RE eBPF): records the kernel dropped (ring buffer full), and records the loader dropped
+               # because the agent fell behind reading them
             tr = getattr(getattr(self, "source", None), "_tracer", None)
             if tr is not None and getattr(tr, "stats", None) is not None and type(tr).__name__ == "CoreTracer":
                 h["collector_lost"] = int(tr.stats.get("lost", 0))
+                h["collector_behind"] = int(tr.stats.get("behind", 0))
+                # the same counts over the last hour: a burst long ago is not a current problem
+                now = time.time()
+                hist = self.__dict__.setdefault("_lost_hist", [])
+                hist.append((now, h["collector_lost"], h["collector_behind"]))
+                while len(hist) > 1 and hist[1][0] <= now - 3600:
+                    hist.pop(0)
+                h["collector_lost_1h"] = h["collector_lost"] - hist[0][1]
+                h["collector_behind_1h"] = h["collector_behind"] - hist[0][2]
         except Exception:  # noqa - health must never fail
             pass
         return h

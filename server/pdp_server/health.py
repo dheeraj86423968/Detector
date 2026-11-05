@@ -13,8 +13,17 @@ def problems(row: dict, target_version: str | None = None) -> list[dict]:
     if h.get("collector_error"):
         out.append({"key": "collector_error", "level": "error",
                     "text": f"The collector is not running, so nothing is recorded or detected: {str(h['collector_error'])[:300]}"})
-    if (h.get("collector_lost") or 0) > 0:
-        out.append({"key": "collector_lost", "level": "warning", "text": f"The collector dropped {h['collector_lost']} events since the agent started (ring buffer full)"})
+    # agents >= 0.3.19 report the last hour and the agent-fell-behind drops separately; older ones only a running total
+    lost = h.get("collector_lost_1h", h.get("collector_lost")) or 0
+    behind = h.get("collector_behind_1h") or 0
+    if lost > 0:
+        out.append({"key": "collector_lost", "level": "warning",
+                    "text": f"The collector missed {lost:,} events{' in the last hour' if 'collector_lost_1h' in h else ' since the agent started'}: "
+                            "the host was too busy for it to keep up with a burst of activity (the kernel's event buffer filled up)"
+                            + ("" if "collector_behind" in h else ". Agent 0.3.19 makes this much rarer")})
+    if behind > 0:
+        out.append({"key": "collector_behind", "level": "warning",
+                    "text": f"The agent fell behind reading events and dropped {behind:,} in the last hour (sustained heavy activity)"})
     dropped = int(h.get("spool_dropped_unuploaded") or 0) + int(h.get("spool_dropped_unscored") or 0)
     if dropped:
         out.append({"key": "spool_dropped", "level": "warning", "text": f"The agent's local queue reached its size limit and dropped {dropped} events"})

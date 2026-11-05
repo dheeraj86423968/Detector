@@ -65,6 +65,8 @@ char LICENSE[] SEC("license") = "Dual BSD/GPL";
 const volatile __u32 excl[MAX_EXCL] = {};
 /* records that could not be reserved because the ring buffer was full (read by the loader through the mmaped .bss) */
 __u64 lost = 0;
+/* records dropped because a program run was interrupted on its CPU by another run (scratch buffer busy) */
+__u64 nested = 0;
 
 struct {
     __uint(type, BPF_MAP_TYPE_RINGBUF);
@@ -95,10 +97,50 @@ static __always_inline int excluded(__u32 tgid) {
 #define SKIP_SELF() if (excluded(bpf_get_current_pid_tgid() >> 32)) return 0;
 #define TID() ((__u32)bpf_get_current_pid_tgid())
 
-static __always_inline struct event_t *reserve(void) {
-    struct event_t *e = bpf_ringbuf_reserve(&events, sizeof(struct event_t), 0);
-    if (!e) __sync_fetch_and_add(&lost, 1);
+/* Records are built in a per-CPU scratch buffer and copied into the ring with only the bytes they use: the 64-byte
+   header plus the string's bytes. Most records are 64-150 bytes instead of sizeof(struct event_t) = 576, so the ring
+   holds 4-8x more of them through a burst. The loader pads them back to full size (the stream format is unchanged).
+   Program runs can be interrupted on their CPU by another run (preemptible syscall tracepoints, measured on 7.0):
+   each nesting level gets its own buffer (NEST per CPU); a record is dropped (counted in `nested`) only beyond that. */
+#define NEST 4
+struct {
+    __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+    __uint(max_entries, NEST);
+    __type(key, __u32);
+    __type(value, struct event_t);
+} scratch SEC(".maps");
+struct {
+    __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+    __uint(max_entries, 1);
+    __type(key, __u32);
+    __type(value, __u32);
+} busy SEC(".maps");
+#define HDR_BYTES ((__u64)__builtin_offsetof(struct event_t, str))
+
+static __always_inline void hdr(struct event_t *e, __u32 kind);
+static __always_inline struct event_t *begin(__u32 kind) {
+    __u32 z = 0;
+    __u32 *depth = bpf_map_lookup_elem(&busy, &z);       /* this CPU's nesting depth = the next free buffer */
+    if (!depth) return 0;
+    __u32 k = *depth;
+    if (k >= NEST) { __sync_fetch_and_add(&nested, 1); return 0; }
+    *depth = k + 1;
+    struct event_t *e = bpf_map_lookup_elem(&scratch, &k);
+    if (!e) { *depth = k; return 0; }
+    hdr(e, kind);
     return e;
+}
+static __always_inline void release(void) {
+    __u32 z = 0;
+    __u32 *depth = bpf_map_lookup_elem(&busy, &z);
+    if (depth && *depth) *depth -= 1;
+}
+/* copy the header and `strbytes` bytes of the string into the ring (a failed string read counts 0) */
+static __always_inline void emit(struct event_t *e, long strbytes) {
+    __u64 n = strbytes > 0 ? (__u64)strbytes : 0;
+    if (n > STRLEN) n = STRLEN;
+    if (bpf_ringbuf_output(&events, e, HDR_BYTES + n, 0)) __sync_fetch_and_add(&lost, 1);
+    release();
 }
 
 static __always_inline void hdr(struct event_t *e, __u32 kind) {
@@ -134,11 +176,9 @@ SEC("raw_tp/sched_process_exec")
 int pdp_exec(struct bpf_raw_tracepoint_args *ctx) {
     SKIP_SELF();
     struct linux_binprm *bprm = (struct linux_binprm *)ctx->args[2];
-    struct event_t *e = reserve();
+    struct event_t *e = begin(K_EXEC_ARG);
     if (!e) return 0;
-    hdr(e, K_EXEC_ARG);
-    bpf_probe_read_kernel_str(e->str, STRLEN, BPF_CORE_READ(bprm, filename));
-    bpf_ringbuf_submit(e, 0);
+    emit(e, bpf_probe_read_kernel_str(e->str, STRLEN, BPF_CORE_READ(bprm, filename)));
     struct task_struct *t = (struct task_struct *)bpf_get_current_task();
     struct mm_struct *mm = BPF_CORE_READ(t, mm);
     if (!mm) return 0;
@@ -149,11 +189,11 @@ int pdp_exec(struct bpf_raw_tracepoint_args *ctx) {
         if (as + off >= ae) break;
         unsigned long len = ae - as - off;
         if (len > STRLEN) len = STRLEN;
-        struct event_t *a = reserve();
+        struct event_t *a = begin(K_EXEC_ARGV);
         if (!a) return 0;
-        hdr(a, K_EXEC_ARGV); a->aux = i; a->ret = (__s64)len;
+        a->aux = i; a->ret = (__s64)len;
         bpf_probe_read_user(a->str, ((len - 1) & (STRLEN - 1)) + 1, (void *)(as + off));   /* 1..STRLEN, verifier-bounded */
-        bpf_ringbuf_submit(a, 0);
+        emit(a, (long)len);
     }
     return 0;
 }
@@ -170,11 +210,11 @@ static __always_inline int remember(__u32 kind, __u32 variant, __u64 ptr, __u64 
 }
 static __always_inline int sock_now(__u32 kind, __u32 variant, const void *uaddr) {
     if (!uaddr) return 0;
-    struct event_t *e = reserve();
+    struct event_t *e = begin(kind);
     if (!e) return 0;
-    hdr(e, kind); e->aux = variant;
-    if (read_sockaddr(e, uaddr)) bpf_ringbuf_submit(e, 0);
-    else bpf_ringbuf_discard(e, 0);
+    e->aux = variant;
+    if (read_sockaddr(e, uaddr)) emit(e, 0);
+    else release();
     return 0;
 }
 
@@ -225,14 +265,13 @@ int pdp_sys_exit(struct bpf_raw_tracepoint_args *ctx) {
     long ret = (long)ctx->args[1];
     if (ret >= 0) {
         if (p->kind == K_DUP) {
-            struct event_t *e = reserve();
-            if (e) { hdr(e, K_DUP); e->aux = (__u32)p->flags; e->ret = ret; bpf_ringbuf_submit(e, 0); }
+            struct event_t *e = begin(K_DUP);
+            if (e) { e->aux = (__u32)p->flags; e->ret = ret; emit(e, 0); }
         } else if (p->kind == K_OPEN) {
-            struct event_t *e = reserve();
+            struct event_t *e = begin(K_OPEN);
             if (e) {
-                hdr(e, K_OPEN); e->ret = ret; e->flags = p->flags; e->dirfd = p->dirfd;
-                bpf_probe_read_user_str(e->str, STRLEN, (const void *)p->ptr);
-                bpf_ringbuf_submit(e, 0);
+                e->ret = ret; e->flags = p->flags; e->dirfd = p->dirfd;
+                emit(e, bpf_probe_read_user_str(e->str, STRLEN, (const void *)p->ptr));
             }
         } else {
             const void *uaddr = (const void *)p->ptr;
@@ -241,11 +280,11 @@ int pdp_sys_exit(struct bpf_raw_tracepoint_args *ctx) {
                 bpf_probe_read_user(&uaddr, sizeof(uaddr), (const void *)p->ptr);
             }
             if (uaddr) {
-                struct event_t *e = reserve();
+                struct event_t *e = begin(p->kind);
                 if (e) {
-                    hdr(e, p->kind); e->aux = p->variant; e->ret = ret;
-                    if (read_sockaddr(e, uaddr)) bpf_ringbuf_submit(e, 0);
-                    else bpf_ringbuf_discard(e, 0);
+                    e->aux = p->variant; e->ret = ret;
+                    if (read_sockaddr(e, uaddr)) emit(e, 0);
+                    else release();
                 }
             }
         }
@@ -261,10 +300,10 @@ int pdp_fork(struct bpf_raw_tracepoint_args *ctx) {
     struct task_struct *child = (struct task_struct *)ctx->args[1];
     __u32 ptgid = BPF_CORE_READ(parent, tgid), ctgid = BPF_CORE_READ(child, tgid);
     if (ctgid == ptgid || excluded(ptgid)) return 0;     /* a new thread, or a child of the agent / loader */
-    struct event_t *e = reserve();
+    struct event_t *e = begin(K_FORK);
     if (!e) return 0;
-    hdr(e, K_FORK); e->pid = ptgid; e->aux = ctgid;
-    bpf_ringbuf_submit(e, 0);
+    e->pid = ptgid; e->aux = ctgid;
+    emit(e, 0);
     return 0;
 }
 
@@ -279,9 +318,8 @@ int pdp_exit(struct bpf_raw_tracepoint_args *ctx) {
     }
     if (!group_dead) return 0;
     SKIP_SELF();
-    struct event_t *e = reserve();
+    struct event_t *e = begin(K_EXIT);
     if (!e) return 0;
-    hdr(e, K_EXIT);
-    bpf_ringbuf_submit(e, 0);
+    emit(e, 0);
     return 0;
 }

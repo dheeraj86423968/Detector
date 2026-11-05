@@ -64,7 +64,7 @@ from .common import ProvenanceMapper
 
 # record kinds emitted by the kernel program (keep in sync with BPF_PROGRAM and agent/bpf/pdp_ebpf.h)
 EXEC, EXEC_ARGV, OPEN, CONNECT, SEND, RECV, ACCEPT, FORK, EXIT, DUP = range(10)
-STATS = 255           # CO-RE loader only: ret = records lost in-kernel (ring buffer full) so far
+STATS = 255           # CO-RE loader only: ret = records lost in-kernel (ring buffer full) so far, flags = over its spool limit
 EXEC_ARG = EXEC   # old name
 AT_FDCWD = -100
 STRLEN = 512          # bytes per record string (kernel side)
@@ -547,16 +547,17 @@ class EbpfNormaliser:
     decode_event = decode   # backwards-compatible name
 
 
-def parse_records(buf, mono_to_wall: int = 0) -> tuple[list[Rec], int, int | None]:
-    """Raw struct event_t records (as the CO-RE loader streams them) -> (Recs, bytes consumed, lost count or None).
-    A trailing partial record is left for the next call; STATS records update the lost count instead of yielding.
+def parse_records(buf, mono_to_wall: int = 0) -> tuple[list[Rec], int, tuple[int, int] | None]:
+    """Raw struct event_t records (as the CO-RE loader streams them) -> (Recs, bytes consumed, (lost in the kernel,
+    dropped over the loader's spool limit) or None). A trailing partial record is left for the next call; STATS
+    records update the counts instead of yielding.
     Field for field what BccTracer._on_event builds from bcc's ctypes view of the same struct."""
     n = len(buf) // REC.size
     out: list[Rec] = []
     lost = None
     for ts, kind, pid, tid, aux, ret, flags, dirfd, family, port, addr, sb in REC.iter_unpack(memoryview(buf)[:n * REC.size]):
         if kind == STATS:
-            lost = ret
+            lost = (ret, flags)
             continue
         nul = sb.find(b"\0")
         out.append(Rec(kind=kind, pid=pid, ts_ns=ts + mono_to_wall, tid=tid, aux=aux, ret=ret, flags=flags, dirfd=dirfd,
@@ -591,7 +592,7 @@ class CoreTracer:
             raise RuntimeError(f"this kernel ({os.uname().release}) has no BTF ({KERNEL_BTF}) and no BTF file for it was found; "
                                "the server can provide one (BTF directory, see docs/DEPLOYMENT.md) or set PDP_BTF")
         self.loader = loader or find_loader()
-        self.stats = {"lost": 0}
+        self.stats = {"lost": 0, "behind": 0}
         self._err: collections.deque = collections.deque(maxlen=40)
         t0 = time.monotonic()
         self.btf = btf
@@ -653,9 +654,10 @@ class CoreTracer:
             r, _, _ = select.select([self._fd], [], [], 0)
         recs, used, lost = parse_records(self._buf, self._mono_to_wall)
         del self._buf[:used]
-        if lost is not None and lost != self.stats["lost"]:   # reported by the loader at most every 10 s
-            self.stats["lost"] = lost
-            print(f"pdp-ebpf: {lost} records lost in-kernel so far (ring buffer full: raise source.ring_pages)",
+        if lost is not None and lost != (self.stats["lost"], self.stats["behind"]):   # from the loader, at most every 10 s
+            self.stats["lost"], self.stats["behind"] = lost
+            print(f"pdp-ebpf: {lost[0]} records lost in the kernel so far (the loader did not drain the ring buffer in time: "
+                  f"a saturated host; source.ring_pages raises the buffer), {lost[1]} dropped because the agent fell behind",
                   file=sys.stderr, flush=True)
         return recs
 

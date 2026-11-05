@@ -269,6 +269,16 @@ user-space spool (`--spool-mb`, default 512 MB, allocated only while the agent c
 opening 100k+ files are not dropped: on the L40S host 0.3.1 lost ~5 % of events in such bursts, 0.3.2 lost none in a
 200k-opens burst test. Dropped events, if any, are reported in the heartbeat and on the endpoint page.
 
+Agent 0.3.19: losses still happened on busy hosts (a Kali desktop right after install: ~80k in minutes; this host
+during builds) because the loader did not get the CPU before the ring filled. Measured with the loader confined to
+two saturated CPUs and a 200k-open + 1,500-exec burst: 0.3.18 lost 4,129 records; with the loader at nice -10 none.
+0.3.19 (1) runs the loader at nice -10 (`--nice`), (2) writes compact records to the ring (64-byte header + the
+string's bytes, padded back by the loader; 4-8x more records per MB), each CPU nesting level with its own scratch
+buffer (syscall tracepoint programs are preemptible on 7.0 kernels: 37 interrupted runs in that test), and
+(3) reports the kernel's losses (`collector_lost`) and drops because the agent fell behind (`collector_behind`)
+separately, also over the last hour (`*_1h`); the console warns only about the last hour. Same burst test with
+0.3.19: nothing lost, at nice 0 or -10; a live capture decodes identically to 0.3.18.
+
 ## Console HTTPS
 
 The console is served only over HTTPS (port 80 redirects; HSTS, CSP, nosniff). Two ways to a browser-trusted lock:

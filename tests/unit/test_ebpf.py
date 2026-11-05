@@ -129,6 +129,7 @@ stream = (raw(EXEC, 10, ts=5, tid=11, s=b"/usr/bin/curl") + raw(EXEC_ARGV, 10, t
           + raw(CONNECT, 10, family=socket.AF_INET, port=socket.htons(443), addr=socket.inet_aton("9.9.9.9"))
           + raw(STATS, 1, ret=7) + raw(FORK, 10, aux=12)[:100])                  # a partial record at the end
 recs, used, lost = parse_records(stream, mono_to_wall=1000)
+lost = lost[0] if isinstance(lost, tuple) else lost
 check(used == 5 * 576 and lost == 7 and [r.kind for r in recs] == [EXEC, EXEC_ARGV, OPEN, CONNECT],
       "parse_records: complete records only, STATS consumed as the lost count, partial tail left")
 check(recs[0].s == "/usr/bin/curl" and recs[0].ts_ns == 1005 and recs[0].tid == 11, "exec record: filename, monotonic->wall ts")
