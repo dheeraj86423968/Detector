@@ -197,8 +197,20 @@ def main():
         used = db.q(c, "SELECT bundle_id, count(*) AS n FROM windows WHERE endpoint_id=%s AND start_ns >= %s AND start_ns < %s GROUP BY 1 ORDER BY 2 DESC",
                     (a.endpoint, lo, hi))
     scoring_bundle = str(used[0]["bundle_id"]) if used else None   # the bundle the agent scored the test days with
+    scoring_source = "window records" if used else None
+    if not used:
+        # window records gone (before 2026-11-05 retention deleted replayed windows by their 2019 event time): the
+        # bundle the agent scored with is the newest one published before its first test-day alert reached the server
+        with db.conn() as c:
+            first = db.q(c, "SELECT min(created_at) AS t FROM alerts WHERE endpoint_id=%s AND window_start_ns >= %s AND window_start_ns < %s",
+                         (a.endpoint, lo, hi), one=True)["t"]
+            row = first and db.q(c, "SELECT id FROM bundles WHERE endpoint_id=%s AND created_at < %s ORDER BY created_at DESC LIMIT 1",
+                                 (a.endpoint, first), one=True)
+        if row:
+            scoring_bundle, scoring_source = str(row["id"]), "inferred: newest bundle before the first test-day alert"
     out = {"endpoint": a.endpoint, "dataset": a.dataset, "test_days": D["test"], "gt_nodes_total": len(all_gt),
-           "agent_windows": dict(windows), "agent_scoring_bundle": scoring_bundle, "runs": []}
+           "agent_windows": dict(windows), "agent_scoring_bundle": scoring_bundle,
+           "agent_scoring_bundle_source": scoring_source, "runs": []}
     alerted = {r["node_uuid"] for r in alert_rows}
 
     for i, b in enumerate(bundles):

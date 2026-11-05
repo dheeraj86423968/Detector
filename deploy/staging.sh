@@ -44,6 +44,7 @@ mkdir -p nginx/public-staging
 grep -q '^PDP_CONSOLE_DIST=' "$ENV" || echo 'PDP_CONSOLE_DIST=../console/dist-next' >> "$ENV"
 grep -q '^PDP_BIND=' "$ENV" || echo 'PDP_BIND=127.0.0.1:' >> "$ENV"     # open sign-up + known admin: never public
 grep -q '^PDP_HTTPS_PROXY=' "$ENV" || echo 'PDP_HTTPS_PROXY=http://egress:3128' >> "$ENV"     # SSO + domain proof via egress
+grep -q '^PDP_TELEMETRY_SHARED_BUFFERS=' "$ENV" || echo 'PDP_TELEMETRY_SHARED_BUFFERS=1GB' >> "$ENV"   # staging holds little data; RAM is shared with production
 [ -f ../console/dist-next/index.html ] || { mkdir -p ../console/dist-next && cp -a ../console/dist/. ../console/dist-next/; }
 DC="docker compose -p pdp-staging --env-file $ENV -f docker-compose.yml"
 case "${1:-status}" in

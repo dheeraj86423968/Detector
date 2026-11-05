@@ -193,3 +193,7 @@ CREATE TABLE IF NOT EXISTS coverage_history (
   release TEXT NOT NULL, campaign_id UUID REFERENCES sim_campaigns(id) ON DELETE SET NULL, endpoint_id UUID, bundle_id UUID,
   spec_hash TEXT, detection_rate DOUBLE PRECISION, ci JSONB, fp_per_day DOUBLE PRECISION, by_family JSONB, by_evasion JSONB,
   agent_version TEXT, created_at TIMESTAMPTZ DEFAULT now(), PRIMARY KEY (release, endpoint_id));
+
+-- window summaries: when the server received them; retention counts from this, not from the endpoint's event clock
+-- (a replayed dataset or an endpoint with a wrong clock had its windows deleted at once)
+ALTER TABLE windows ADD COLUMN IF NOT EXISTS received_at TIMESTAMPTZ DEFAULT now();

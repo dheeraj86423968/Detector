@@ -13,6 +13,7 @@ x-kms-env: &kms-env
 services:
   platform-db:
     image: postgres:17
+    oom_score_adj: -500        # the kernel's last choice when memory runs out (losing a database stops everything)
     environment: { POSTGRES_USER: pdp, POSTGRES_PASSWORD: "${PDP_DB_PASSWORD:?set PDP_DB_PASSWORD}", POSTGRES_DB: platform }
     volumes: [ pdp_platform_db:/var/lib/postgresql/data ]
     networks: [ backend ]
@@ -21,6 +22,7 @@ services:
 
   telemetry-db:
     image: postgres:17
+    oom_score_adj: -500        # the kernel's last choice when memory runs out (losing a database stops everything)
     environment: { POSTGRES_USER: pdp, POSTGRES_PASSWORD: "${PDP_DB_PASSWORD:?set PDP_DB_PASSWORD}", POSTGRES_DB: telemetry }
     command: ["postgres", "-c", "shared_buffers=${PDP_TELEMETRY_SHARED_BUFFERS:-4GB}", "-c", "max_wal_size=8GB", "-c", "work_mem=64MB",
               "-c", "maintenance_work_mem=1GB", "-c", "effective_cache_size=16GB", "-c", "synchronous_commit=off"]

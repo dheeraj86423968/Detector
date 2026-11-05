@@ -232,6 +232,24 @@ def prune_early_bundles(eid: str):
             log(f"removed superseded early model {r['id']}")
 
 
+def _train_full(store, train_days, val_day, cfg, out, job, eid, bid, device, ep, refresh, fb, tz, fusion_mode, t0):
+    Trainer(store, train_days, val_day, cfg, out).run({"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(ep["config"]),
+                                                      "trained_on": device,
+                                                      "refresh": refresh, "feedback_windows": fb,
+                                                      "maturity": {"early": False, "baseline_days": len(train_days) + 1,
+                                                                   "baseline_hours": 24.0 * (len(train_days) + 1),
+                                                                   "trained_until_ns": day_bounds(val_day, tz)[1]}})
+    with db.conn() as c:
+        db.q(c, "UPDATE jobs SET progress=%s WHERE id=%s", (json.dumps({"train_days": train_days, "val_day": val_day, "seconds": round(time.time() - t0, 1)}), str(job["id"])))
+    if fusion_mode == "simulation":
+        # per-bundle fusion weights chosen on synthetic attacks injected into the benign validation day (no test data;
+        # pdp_server.tools.calibrate_fusion, docs/BENCHMARK_E3.md)
+        from pdp_server.tools.calibrate_fusion import apply_to_bundle, calibrate
+        res = calibrate(store, out, device=device)
+        apply_to_bundle(out, res)
+        log(f"train {eid}: fusion calibrated by simulation -> weights {res['chosen']['weights']} (synthetic detection {res['chosen']['detection_rate']:.2f})")
+
+
 def job_train_early(job: dict, device: str):
     """An early model from the activity recorded so far. Raw events are kept (the final model still needs them);
     the endpoint stays in its baseline phase."""
@@ -403,7 +421,7 @@ def apply_retention():
             eps = "SELECT id FROM endpoints WHERE org_id=%s"
             n = 0
             for q in (f"DELETE FROM alerts WHERE endpoint_id IN ({eps}) AND created_at < now() - %s::interval",
-                      f"DELETE FROM windows WHERE endpoint_id IN ({eps}) AND to_timestamp(start_ns / 1e9) < now() - %s::interval",
+                      f"DELETE FROM windows WHERE endpoint_id IN ({eps}) AND received_at < now() - %s::interval",   # server time, not the endpoint's clock
                       "DELETE FROM incident_events WHERE org_id=%s AND at < now() - %s::interval",
                       "DELETE FROM audit_log WHERE org_id=%s AND at < now() - %s::interval"):
                 with c.cursor() as cur:
@@ -447,21 +465,11 @@ def job_train(job: dict, device: str):
     out = os.path.join(DATA_DIR, "bundles", eid, bid)
     t0 = time.time()
     tz = ep["config"].get("tz", "UTC")
-    Trainer(store, train_days, val_day, cfg, out).run({"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(ep["config"]),
-                                                      "trained_on": device,
-                                                      "refresh": refresh, "feedback_windows": fb,
-                                                      "maturity": {"early": False, "baseline_days": len(train_days) + 1,
-                                                                   "baseline_hours": 24.0 * (len(train_days) + 1),
-                                                                   "trained_until_ns": day_bounds(val_day, tz)[1]}})
-    with db.conn() as c:
-        db.q(c, "UPDATE jobs SET progress=%s WHERE id=%s", (json.dumps({"train_days": train_days, "val_day": val_day, "seconds": round(time.time() - t0, 1)}), str(job["id"])))
-    if fusion_mode == "simulation":
-        # per-bundle fusion weights chosen on synthetic attacks injected into the benign validation day (no test data;
-        # pdp_server.tools.calibrate_fusion, docs/BENCHMARK_E3.md)
-        from pdp_server.tools.calibrate_fusion import apply_to_bundle, calibrate
-        res = calibrate(store, out, device=device)
-        apply_to_bundle(out, res)
-        log(f"train {eid}: fusion calibrated by simulation -> weights {res['chosen']['weights']} (synthetic detection {res['chosen']['detection_rate']:.2f})")
+    try:
+        _train_full(store, train_days, val_day, cfg, out, job, eid, bid, device, ep, refresh, fb, tz, fusion_mode, t0)
+    except BaseException:
+        shutil.rmtree(out, ignore_errors=True)   # no half-written bundle left behind (a retry starts a new one)
+        raise
     pki.sign_bundle(out)
     from .bundles import archive
     archive(out); archive(out, slim=True)
@@ -552,6 +560,34 @@ def job_sim(job: dict, device: str):
     log(f"sim {cid}: done, detection {s['detection_rate']:.2f} CI {s['detection_rate_ci']} fp/day {s['fp_per_day']:.1f}")
 
 
+GPU_OOM_RETRIES = 3
+GPU_OOM_DELAY_S = 600
+
+
+def is_gpu_oom(e):
+    m = str(e).lower()
+    return "out of memory" in m and ("cuda" in m or "cublas" in m or "cudnn" in m)
+
+
+def gpu_oom_retry(job, e):
+    """A GPU job that ran out of GPU memory is re-queued for later (up to GPU_OOM_RETRIES times, GPU_OOM_DELAY_S apart)
+    instead of failing for good: the card is shared (other workers, staging, benchmark agents), so the memory is usually
+    free again a few minutes later. Before this, one such failure left the endpoint without a model until someone
+    noticed."""
+    if job["kind"] not in ("train", "sim") or not is_gpu_oom(e):
+        return False
+    n = int((job.get("params") or {}).get("gpu_oom_retries", 0))
+    if n >= GPU_OOM_RETRIES:
+        return False
+    with db.conn() as c:
+        db.q(c, "UPDATE jobs SET state='queued', started_at=NULL, error=%s, "
+                "params = params || jsonb_build_object('gpu_oom_retries', %s::int, 'not_before', extract(epoch FROM now()) + %s) "
+                "WHERE id=%s", (f"GPU out of memory, retry {n + 1}/{GPU_OOM_RETRIES} in {GPU_OOM_DELAY_S // 60} min",
+                                n + 1, GPU_OOM_DELAY_S, job["id"]))
+    log(f"job {job['id']}: GPU out of memory, re-queued (retry {n + 1}/{GPU_OOM_RETRIES}) in {GPU_OOM_DELAY_S} s")
+    return True
+
+
 def _release_gpu():
     """Give cached GPU memory back between jobs (benchmark agents and other workers share the card)."""
     try:
@@ -594,6 +630,7 @@ NEXT_JOB = """
 UPDATE jobs SET state='running', started_at=now(), heartbeat=now() WHERE id = (
   SELECT j.id FROM jobs j LEFT JOIN endpoints e ON e.id = j.endpoint_id
   WHERE j.state='queued' AND j.kind = ANY(%s)
+    AND coalesce((j.params->>'not_before')::float8, 0) <= extract(epoch FROM now())
   ORDER BY (SELECT max(j2.started_at) FROM jobs j2 JOIN endpoints e2 ON e2.id = j2.endpoint_id
             WHERE e2.org_id IS NOT DISTINCT FROM e.org_id AND j2.kind = j.kind) ASC NULLS FIRST, j.created_at
   LIMIT 1 FOR UPDATE OF j SKIP LOCKED) RETURNING *"""
@@ -656,6 +693,8 @@ def main():
         except Exception as e:  # noqa
             _release_gpu()
             log(f"job {job['id']} failed: {e}\n{traceback.format_exc()}")
+            if gpu_oom_retry(job, e):
+                continue
             with db.conn() as c:
                 db.q(c, "UPDATE jobs SET state='failed', finished_at=now(), error=%s WHERE id=%s", (str(e)[:2000], job["id"]))
                 if job["kind"] == "train":
