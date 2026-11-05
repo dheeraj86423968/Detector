@@ -12,6 +12,7 @@ from __future__ import annotations
 import base64
 import os
 import re
+import time
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import PlainTextResponse, Response
@@ -53,6 +54,40 @@ def btf_available(release: str, arch: str = "x86_64"):
     return {"ok": True, "available": bool(RELEASE_RE.match(release) and find_btf(release, arch))}
 
 
+_sizes: dict[str, tuple[float, dict]] = {}
+MANIFESTS = ("application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, "
+             "application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json")
+
+
+def image_sizes(ver: str) -> dict[str, int]:
+    """Download size (compressed layers) of the published agent per architecture, read from the stack's registry
+    (cached 10 minutes): the installer shows its download progress against it. {} when the registry is unreachable."""
+    import json
+    import urllib.request
+    hit = _sizes.get(ver)
+    if hit and time.time() - hit[0] < 600:
+        return hit[1]
+    base = os.environ.get("PDP_REGISTRY_URL", "http://registry:5000") + "/v2/pdp/agent/manifests/"
+
+    def get(ref):
+        with urllib.request.urlopen(urllib.request.Request(base + ref, headers={"Accept": MANIFESTS}), timeout=5) as r:
+            return json.loads(r.read(1 << 20))
+    out: dict[str, int] = {}
+    try:
+        m = get(ver)
+        if "manifests" in m:                     # multi-architecture index (attestations have no platform)
+            for e in m["manifests"]:
+                arch = (e.get("platform") or {}).get("architecture")
+                if arch in ("amd64", "arm64") and arch not in out:
+                    out[arch] = sum(int(x.get("size", 0)) for x in get(e["digest"]).get("layers", []))
+        else:
+            out["amd64"] = sum(int(x.get("size", 0)) for x in m.get("layers", []))
+    except Exception:  # noqa: BLE001 - progress then shows megabytes without a total
+        out = {}
+    _sizes[ver] = (time.time(), out)
+    return out
+
+
 @router.get("/install.sh")
 def install_script(request: Request):
     host = public_host(request)
@@ -66,6 +101,8 @@ def install_script(request: Request):
         body = f.read()
     body = (body.replace("__SERVER__", server).replace("__AGENT_URL__", f"https://{host}:{os.environ.get('PDP_AGENT_PORT', '8443')}")
                 .replace("__IMAGE__", image).replace("__REGISTRY__", host))
+    sizes = image_sizes(os.environ.get("PDP_AGENT_VERSION", "").strip())
+    body = body.replace("__IMAGE_BYTES_AMD64__", str(sizes.get("amd64", 0))).replace("__IMAGE_BYTES_ARM64__", str(sizes.get("arm64", 0)))
     return PlainTextResponse(body, media_type="text/x-shellscript", headers={"Cache-Control": "no-store"})
 
 

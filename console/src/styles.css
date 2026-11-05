@@ -738,3 +738,7 @@ td.reason { margin: 0; }
 .remove-choice .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
 .remove-choice .choice.on { border-color: var(--info-line); background: var(--info-bg); }
 .remove-choice .choice input { margin-top: 3px; }
+.ip-body { flex: 1; min-width: 0; }
+.dl-bar { margin-top: 6px; max-width: 420px; }
+.dl-track { height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; margin-bottom: 4px; }
+.dl-fill { height: 100%; background: var(--info); transition: width .8s ease; }

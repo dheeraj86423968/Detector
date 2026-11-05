@@ -905,6 +905,8 @@ class InstallProgress(BaseModel):
     stage: str
     detail: str | None = Field(default=None, max_length=1000)
     host: str | None = Field(default=None, max_length=255)
+    done_bytes: int | None = Field(default=None, ge=0, le=10**12)      # download progress
+    total_bytes: int | None = Field(default=None, ge=0, le=10**12)
 
 
 @app.post("/api/public/install/progress")
@@ -915,6 +917,10 @@ def install_progress(req: InstallProgress):
         raise HTTPException(400, "unknown stage")
     ev = {"stage": req.stage, "detail": (req.detail or "")[:300] or None, "host": (req.host or "")[:128] or None,
           "at": datetime.now(timezone.utc).isoformat()}
+    if req.done_bytes is not None:
+        ev["done_bytes"] = req.done_bytes
+    if req.total_bytes:
+        ev["total_bytes"] = req.total_bytes
     with db.conn() as c:
         t = db.q(c, "SELECT progress FROM enroll_tokens WHERE token=%s AND max_uses IS NULL AND kind='live' AND expires_at > now()",
                  (req.token,), one=True)
@@ -922,7 +928,8 @@ def install_progress(req: InstallProgress):
             raise HTTPException(404, "unknown or expired token")
         p = list(t["progress"] or [])
         if p and p[-1]["stage"] == req.stage == "downloading":
-            p[-1] = ev                                   # download progress updates in place
+            ev["since"] = p[-1].get("since") or p[-1]["at"]     # download progress updates in place; speed from `since`
+            p[-1] = ev
         else:
             p.append(ev)
         db.q(c, "UPDATE enroll_tokens SET progress=%s WHERE token=%s", (json.dumps(p[-60:]), req.token))

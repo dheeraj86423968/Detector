@@ -11,6 +11,7 @@ import json
 import os
 import ssl
 import sys
+import time
 import tempfile
 import uuid
 
@@ -320,11 +321,17 @@ st, pr = admin.call("GET", f"/api/install-progress/{key}")
 check(st == 200 and pr["installer"] == [] and pr["endpoint"] is None, "before the command runs: no progress yet")
 check(report("started") == 200 and report("checks_ok", "x86_64, kernel 6.8") == 200, "the installer reports its stages with the token")
 check(report("pwned") == 400 and report("started", token="not-a-real-token-123") == 404, "unknown stages and tokens are refused")
-report("downloading", "3 of 12 layers"); report("downloading", "9 of 12 layers")
+def report_bytes(done, total):
+    return Console().call("POST", "/api/public/install/progress", {"token": tok3["token"], "stage": "downloading", "detail": "x",
+                                                                   "done_bytes": done, "total_bytes": total})[0]
+report("downloading", "3 of 12 layers"); time.sleep(1.1); report_bytes(120_000_000, 245_000_000)
 st, pr = admin.call("GET", f"/api/install-progress/{key}")
 stages = [e["stage"] for e in pr["installer"]]
-check(stages == ["started", "checks_ok", "downloading"] and pr["installer"][-1]["detail"] == "9 of 12 layers" and pr["installer"][0]["host"] == "web-e2e",
-      f"the console sees the stages, download progress updated in place ({stages})")
+dl = pr["installer"][-1]
+check(stages == ["started", "checks_ok", "downloading"] and dl["done_bytes"] == 120_000_000 and dl["total_bytes"] == 245_000_000
+      and dl["since"] < dl["at"] and pr["installer"][0]["host"] == "web-e2e",
+      f"the console sees the stages; download bytes updated in place, with when it started ({stages})")
+check(report_bytes(-1, 5) == 422, "negative byte counts are refused")
 check(Console().call("GET", f"/api/install-progress/{key}")[0] == 401 and admin.call("GET", "/api/install-progress/0000000000000000")[0] == 404,
       "progress needs a session and a known key")
 st, js3, cert3 = enroll(tok3["token"])

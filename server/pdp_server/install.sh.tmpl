@@ -13,6 +13,8 @@ set -euo pipefail
 SERVER="__SERVER__"
 AGENT_URL="__AGENT_URL__"
 IMAGE="__IMAGE__"
+IMAGE_BYTES_amd64=__IMAGE_BYTES_AMD64__     # download size (compressed layers); 0 = unknown
+IMAGE_BYTES_arm64=__IMAGE_BYTES_ARM64__
 REGISTRY="__REGISTRY__"
 ETC=${PDP_ETC_DIR:-/etc/pdp}
 DATA=${PDP_DATA_DIR:-/var/lib/pdp}
@@ -23,17 +25,23 @@ LIB=${PDP_LIB_DIR:-/usr/local/lib/pdp}
 token="" source="ebpf" tz="UTC" install_docker=1 start=1 uninstall=0 purge=0 assume_yes=0
 
 json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | tr -d '\000-\037'; }
-# progress for the console (install with a token only; never fails the installation)
+# progress for the console (install with a token only; never fails the installation): stage, detail, and for the
+# download the bytes so far and in total
 report() {
   [ -n "$token" ] || return 0
+  local extra=""
+  [ -n "${3:-}" ] && extra=",\"done_bytes\":$3"
+  [ -n "${4:-}" ] && [ "${4:-0}" -gt 0 ] && extra="$extra,\"total_bytes\":$4"
   curl -fsS --max-time 5 -o /dev/null -X POST -H 'Content-Type: application/json' "$SERVER/api/public/install/progress" \
-    -d "{\"token\":\"$(json_str "$token")\",\"stage\":\"$1\",\"detail\":\"$(json_str "${2:-}")\",\"host\":\"$(json_str "$(hostname 2>/dev/null)")\"}" \
+    -d "{\"token\":\"$(json_str "$token")\",\"stage\":\"$1\",\"detail\":\"$(json_str "${2:-}")\",\"host\":\"$(json_str "$(hostname 2>/dev/null)")\"$extra}" \
     >/dev/null 2>&1 || true
 }
 say()  { printf '\033[1m==>\033[0m %s\n' "$*"; }
 ok()   { printf '    \033[32mok\033[0m  %s\n' "$*"; }
 warn() { printf '    \033[33m!!\033[0m  %s\n' "$*" >&2; }
 die()  { printf '\n\033[31merror:\033[0m %s\n' "$*" >&2; report failed "$*"; exit 1; }
+# any other failure (set -e) is reported too instead of ending the installation silently
+trap 'rc=$?; printf "\n\033[31merror:\033[0m the installer stopped unexpectedly (line %s, exit %s)\n" "$LINENO" "$rc" >&2; report failed "the installer stopped unexpectedly (line $LINENO, exit $rc)"' ERR
 
 usage() {
   cat <<EOF
@@ -164,9 +172,9 @@ printf '%s' "$ca_sha" | grep -Eq '^[0-9a-f]{64}$' || die "could not read the ser
 ok "CA fingerprint $ca_sha (downloaded over verified HTTPS)"
 
 # ------------------------------------------------------------------------------------------------ image
-# docker pull's plain output (one line per layer state change) -> "n of m layers" every few seconds, here and in the console
+# docker pull's plain output (one line per layer state change) -> "n m" (layers done, layers) in $LAYERS for the meter
 pull_progress() {
-  local line id now last=0 n_all n_done
+  local line id n_all n_done
   declare -A seen=() fin=()
   while IFS= read -r line; do
     id=${line%%:*}
@@ -176,18 +184,41 @@ pull_progress() {
       *rror*|*denied*|*nauthorized*|*"not found"*) printf '    %s\n' "$line" >&2; continue ;;
       *) continue ;;
     esac
-    n_all=${#seen[@]}; n_done=${#fin[@]}; now=$(date +%s)
-    if [ $(( now - last )) -ge 4 ] || [ "$n_done" -eq "$n_all" ]; then
-      last=$now
-      printf '    downloading: %d of %d layers\n' "$n_done" "$n_all"
-      report downloading "$n_done of $n_all layers"
-    fi
+    n_all=${#seen[@]}; n_done=${#fin[@]}
+    printf '%d %d\n' "$n_done" "$n_all" > "$LAYERS"
   done
   return 0
 }
 
-say "Downloading the agent ($IMAGE, about 2 GB the first time)"
-old_image=$(sed -n 's/^PDP_AGENT_IMAGE=//p' "$ETC/agent.env" 2>/dev/null | tail -1)
+# bytes this host has received (all interfaces but loopback and container bridges)
+rx_bytes() {
+  awk '{ sub(/^ +/, ""); split($0, a, /[: ]+/); i = a[1]
+         if (NR > 2 && i != "lo" && i !~ /^(docker|veth|br-|virbr|cni|flannel|cali|vxlan)/) s += a[2] }
+       END { printf "%.0f", s }' "${PDP_NET_DEV:-/proc/net/dev}" 2>/dev/null || echo 0
+}
+
+# while the pull ($1 = its pid) runs: every 3 s "x of y MB (z MB/s), n of m layers" here and to the console
+download_meter() {
+  local rx0 t0 dl el rate tot=$IMAGE_SIZE lay="" text
+  rx0=$(rx_bytes); t0=$(date +%s)
+  while kill -0 "$1" 2>/dev/null; do
+    sleep 3
+    dl=$(( $(rx_bytes) - rx0 )); [ "$dl" -ge 0 ] || dl=0
+    [ "$tot" -gt 0 ] && [ "$dl" -gt $(( tot * 99 / 100 )) ] && dl=$(( tot * 99 / 100 ))
+    el=$(( $(date +%s) - t0 )); [ "$el" -gt 0 ] || el=1
+    rate=$(( dl / el ))
+    read -r n_done n_all < "$LAYERS" 2>/dev/null && lay=", $n_done of $n_all layers" || lay=""
+    if [ "$tot" -gt 0 ]; then text="$(( dl / 1000000 )) of $(( tot / 1000000 )) MB ($(( rate / 100000 / 10 )).$(( rate / 100000 % 10 )) MB/s)$lay"
+    else text="$(( dl / 1000000 )) MB ($(( rate / 100000 / 10 )).$(( rate / 100000 % 10 )) MB/s)$lay"; fi
+    printf '    downloading: %s\n' "$text"
+    report downloading "$text" "$dl" "$tot"
+  done
+}
+
+eval "IMAGE_SIZE=\${IMAGE_BYTES_$iarch:-0}"
+say "Downloading the agent ($IMAGE$([ "$IMAGE_SIZE" -gt 0 ] && echo ", $(( IMAGE_SIZE / 1000000 )) MB the first time"))"
+# a previous install's image (none on a new host: no file, which must not stop the installer)
+old_image=$(sed -n 's/^PDP_AGENT_IMAGE=//p' "$ETC/agent.env" 2>/dev/null | tail -1 || true)
 if [ -z "$token" ] && ! docker image inspect "$IMAGE" >/dev/null 2>&1 && [ -n "$old_image" ] && docker image inspect "$old_image" >/dev/null 2>&1; then
   ok "keeping $old_image for now; the agent updates itself to ${IMAGE##*:} through the updater"
   IMAGE=$old_image
@@ -196,16 +227,21 @@ if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   [ -n "$token" ] || die "the agent image is missing and no --token was given to download it"
   cfg=$(mktemp -d)
   printf '{"auths":{"%s":{"auth":"%s"}}}' "$REGISTRY" "$(printf 'pdp:%s' "$token" | base64 -w0)" > "$cfg/config.json"
-  report downloading "starting the download of ${IMAGE##*/}"
-  if ! DOCKER_CONFIG="$cfg" docker pull "$IMAGE" 2>&1 | pull_progress; then
-    rm -rf "$cfg"; die "could not download $IMAGE (is the enrolment token still valid? tokens expire after 24 hours)"
-  fi
-  rm -rf "$cfg"
+  report downloading "starting the download of ${IMAGE##*/}" 0 "$IMAGE_SIZE"
+  LAYERS=$(mktemp)
+  ( DOCKER_CONFIG="$cfg" docker pull "$IMAGE" 2>&1 | pull_progress ) &
+  pull_pid=$!
+  download_meter "$pull_pid" &
+  meter_pid=$!
+  pull_ok=1; wait "$pull_pid" || pull_ok=0
+  kill "$meter_pid" 2>/dev/null || true; wait "$meter_pid" 2>/dev/null || true
+  rm -rf "$cfg" "$LAYERS"
+  [ "$pull_ok" -eq 1 ] || die "could not download $IMAGE (is the enrolment token still valid? tokens expire after 24 hours)"
 fi
 got=$(docker image inspect -f '{{.Architecture}}' "$IMAGE" 2>/dev/null || echo unknown)
 [ "$got" = "$iarch" ] || die "this server publishes the agent for $got, not for this $arch host; ask the operator for an $iarch build"
 ok "agent image ready"
-report downloaded "${IMAGE##*/}"
+report downloaded "${IMAGE##*/}" "$IMAGE_SIZE" "$IMAGE_SIZE"
 
 # ------------------------------------------------------------------------------------------------ configuration
 say "Configuring the agent"
