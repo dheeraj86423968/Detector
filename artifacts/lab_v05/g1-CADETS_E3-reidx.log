@@ -1,0 +1,29 @@
+reidx 0 {"epoch": 0, "train": 0.6758, "val": 0.8469, "ADP": 0.002, "TP": 0, "FP": 17, "attacks": "0/3"} 12s
+reidx 0 {"epoch": 1, "train": 0.6223, "val": 0.7719, "ADP": 0.105, "TP": 3, "FP": 13, "attacks": "1/3"} 24s
+reidx 0 {"epoch": 2, "train": 0.6058, "val": 0.7201, "ADP": 0.454, "TP": 10, "FP": 18, "attacks": "1/3"} 36s
+reidx 0 {"epoch": 3, "train": 0.6, "val": 0.7002, "ADP": 0.368, "TP": 10, "FP": 18, "attacks": "1/3"} 49s
+reidx 0 {"epoch": 4, "train": 0.5903, "val": 0.8385, "ADP": 0.11, "TP": 3, "FP": 13, "attacks": "1/3"} 65s
+reidx 0 {"epoch": 5, "train": 0.585, "val": 0.6459, "ADP": 0.379, "TP": 3, "FP": 10, "attacks": "1/3"} 82s
+reidx 0 {"epoch": 6, "train": 0.5818, "val": 0.6553, "ADP": 0.255, "TP": 5, "FP": 17, "attacks": "1/3"} 97s
+reidx 0 {"epoch": 7, "train": 0.5755, "val": 0.7918, "ADP": 0.168, "TP": 0, "FP": 0, "attacks": "0/3"} 112s
+reidx 0 {"epoch": 8, "train": 0.5748, "val": 0.626, "ADP": 0.61, "TP": 15, "FP": 4, "attacks": "2/3"} 127s
+reidx 0 {"epoch": 9, "train": 0.5743, "val": 0.6511, "ADP": 0.9, "TP": 17, "FP": 3, "attacks": "3/3"} 143s
+reidx 0 {"epoch": 10, "train": 0.5704, "val": 0.7433, "ADP": 0.806, "TP": 9, "FP": 1, "attacks": "2/3"} 158s
+reidx 0 {"epoch": 11, "train": 0.5681, "val": 0.6789, "ADP": 0.074, "TP": 0, "FP": 0, "attacks": "0/3"} 173s
+reidx 0 SELECTED {"ADP": 0.61, "TP": 15, "FP": 4, "attacks": "2/3"}
+reidx 1 {"epoch": 0, "train": 0.675, "val": 0.7989, "ADP": 0.002, "TP": 0, "FP": 12, "attacks": "0/3"} 193s
+reidx 1 {"epoch": 1, "train": 0.6231, "val": 0.7994, "ADP": 0.159, "TP": 3, "FP": 17, "attacks": "1/3"} 208s
+reidx 1 {"epoch": 2, "train": 0.6046, "val": 0.7184, "ADP": 0.427, "TP": 10, "FP": 18, "attacks": "1/3"} 223s
+reidx 1 {"epoch": 3, "train": 0.5953, "val": 0.6653, "ADP": 0.35, "TP": 13, "FP": 18, "attacks": "1/3"} 238s
+reidx 1 {"epoch": 4, "train": 0.5875, "val": 0.7305, "ADP": 0.377, "TP": 3, "FP": 10, "attacks": "1/3"} 253s
+reidx 1 {"epoch": 5, "train": 0.5811, "val": 0.6894, "ADP": 0.361, "TP": 6, "FP": 13, "attacks": "1/3"} 269s
+reidx 1 {"epoch": 6, "train": 0.579, "val": 0.802, "ADP": 0.078, "TP": 3, "FP": 13, "attacks": "1/3"} 284s
+reidx 1 SELECTED {"ADP": 0.35, "TP": 13, "FP": 18, "attacks": "1/3"}
+reidx 2 {"epoch": 0, "train": 0.6757, "val": 0.8866, "ADP": 0.112, "TP": 0, "FP": 13, "attacks": "0/3"} 303s
+reidx 2 {"epoch": 1, "train": 0.6256, "val": 0.8217, "ADP": 0.068, "TP": 3, "FP": 15, "attacks": "1/3"} 318s
+reidx 2 {"epoch": 2, "train": 0.6084, "val": 0.6274, "ADP": 0.346, "TP": 3, "FP": 0, "attacks": "1/3"} 333s
+reidx 2 {"epoch": 3, "train": 0.5965, "val": 0.826, "ADP": 0.147, "TP": 3, "FP": 17, "attacks": "1/3"} 348s
+reidx 2 {"epoch": 4, "train": 0.5895, "val": 0.7732, "ADP": 0.341, "TP": 3, "FP": 20, "attacks": "1/3"} 364s
+reidx 2 {"epoch": 5, "train": 0.5838, "val": 0.736, "ADP": 0.413, "TP": 5, "FP": 13, "attacks": "1/3"} 379s
+reidx 2 SELECTED {"ADP": 0.346, "TP": 3, "FP": 0, "attacks": "1/3"}
+reidx ENSEMBLE {"ADP": 0.363, "TP": 10, "FP": 9, "attacks": "1/3"} 383s

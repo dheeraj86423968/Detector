@@ -1,0 +1,373 @@
+{
+ "eid": "b4021490-6dd4-4dfb-8628-b3e55af27b90",
+ "dataset": "THEIA_E3",
+ "variant": "reidx",
+ "lr": 0.0001,
+ "out_dim": 256,
+ "seeds": [
+  {
+   "seed": 0,
+   "selected": {
+    "ADP": 0.929,
+    "TP": 18,
+    "FP": 189,
+    "attacks": "2/2"
+   },
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.6887,
+     "val": 0.6624,
+     "ADP": 1.0,
+     "TP": 19,
+     "FP": 16,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 1,
+     "train": 0.6241,
+     "val": 0.6438,
+     "ADP": 0.792,
+     "TP": 8,
+     "FP": 8,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 2,
+     "train": 0.6168,
+     "val": 0.6369,
+     "ADP": 0.822,
+     "TP": 18,
+     "FP": 11,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 3,
+     "train": 0.6125,
+     "val": 0.6425,
+     "ADP": 0.523,
+     "TP": 14,
+     "FP": 29,
+     "attacks": "1/2"
+    },
+    {
+     "epoch": 4,
+     "train": 0.6095,
+     "val": 0.6437,
+     "ADP": 0.861,
+     "TP": 18,
+     "FP": 27,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 5,
+     "train": 0.6079,
+     "val": 0.6322,
+     "ADP": 0.916,
+     "TP": 19,
+     "FP": 69,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 6,
+     "train": 0.6066,
+     "val": 0.6286,
+     "ADP": 0.947,
+     "TP": 18,
+     "FP": 171,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 7,
+     "train": 0.6052,
+     "val": 0.6221,
+     "ADP": 0.929,
+     "TP": 18,
+     "FP": 166,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 8,
+     "train": 0.6033,
+     "val": 0.617,
+     "ADP": 0.929,
+     "TP": 18,
+     "FP": 189,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 9,
+     "train": 0.6022,
+     "val": 0.6208,
+     "ADP": 0.929,
+     "TP": 18,
+     "FP": 254,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 10,
+     "train": 0.6016,
+     "val": 0.6201,
+     "ADP": 0.629,
+     "TP": 18,
+     "FP": 339,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 11,
+     "train": 0.6003,
+     "val": 0.6387,
+     "ADP": 0.929,
+     "TP": 18,
+     "FP": 595,
+     "attacks": "2/2"
+    }
+   ]
+  },
+  {
+   "seed": 1,
+   "selected": {
+    "ADP": 0.795,
+    "TP": 19,
+    "FP": 176,
+    "attacks": "2/2"
+   },
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.6896,
+     "val": 0.6678,
+     "ADP": 1.0,
+     "TP": 9,
+     "FP": 15,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 1,
+     "train": 0.6234,
+     "val": 0.6376,
+     "ADP": 0.817,
+     "TP": 19,
+     "FP": 17,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 2,
+     "train": 0.6158,
+     "val": 0.6436,
+     "ADP": 0.95,
+     "TP": 18,
+     "FP": 65,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 3,
+     "train": 0.6114,
+     "val": 0.6388,
+     "ADP": 0.617,
+     "TP": 18,
+     "FP": 61,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 4,
+     "train": 0.6097,
+     "val": 0.6274,
+     "ADP": 0.896,
+     "TP": 19,
+     "FP": 59,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 5,
+     "train": 0.6083,
+     "val": 0.6367,
+     "ADP": 0.852,
+     "TP": 19,
+     "FP": 68,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 6,
+     "train": 0.6061,
+     "val": 0.6241,
+     "ADP": 0.851,
+     "TP": 19,
+     "FP": 93,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 7,
+     "train": 0.605,
+     "val": 0.6267,
+     "ADP": 0.69,
+     "TP": 19,
+     "FP": 140,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 8,
+     "train": 0.6032,
+     "val": 0.6235,
+     "ADP": 0.795,
+     "TP": 19,
+     "FP": 176,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 9,
+     "train": 0.6018,
+     "val": 0.6275,
+     "ADP": 0.8,
+     "TP": 18,
+     "FP": 102,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 10,
+     "train": 0.6004,
+     "val": 0.6283,
+     "ADP": 0.806,
+     "TP": 18,
+     "FP": 94,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 11,
+     "train": 0.6005,
+     "val": 0.6261,
+     "ADP": 0.67,
+     "TP": 18,
+     "FP": 45,
+     "attacks": "2/2"
+    }
+   ]
+  },
+  {
+   "seed": 2,
+   "selected": {
+    "ADP": 0.335,
+    "TP": 15,
+    "FP": 170,
+    "attacks": "2/2"
+   },
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.6902,
+     "val": 0.6642,
+     "ADP": 0.467,
+     "TP": 7,
+     "FP": 15,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 1,
+     "train": 0.6229,
+     "val": 0.6484,
+     "ADP": 0.798,
+     "TP": 17,
+     "FP": 17,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 2,
+     "train": 0.6158,
+     "val": 0.6392,
+     "ADP": 0.117,
+     "TP": 2,
+     "FP": 13,
+     "attacks": "1/2"
+    },
+    {
+     "epoch": 3,
+     "train": 0.6124,
+     "val": 0.639,
+     "ADP": 0.516,
+     "TP": 12,
+     "FP": 18,
+     "attacks": "1/2"
+    },
+    {
+     "epoch": 4,
+     "train": 0.6096,
+     "val": 0.6252,
+     "ADP": 0.519,
+     "TP": 14,
+     "FP": 17,
+     "attacks": "1/2"
+    },
+    {
+     "epoch": 5,
+     "train": 0.6077,
+     "val": 0.6311,
+     "ADP": 0.673,
+     "TP": 15,
+     "FP": 38,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 6,
+     "train": 0.6058,
+     "val": 0.6197,
+     "ADP": 0.638,
+     "TP": 15,
+     "FP": 77,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 7,
+     "train": 0.6043,
+     "val": 0.6202,
+     "ADP": 0.591,
+     "TP": 15,
+     "FP": 138,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 8,
+     "train": 0.603,
+     "val": 0.6112,
+     "ADP": 0.569,
+     "TP": 15,
+     "FP": 186,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 9,
+     "train": 0.6017,
+     "val": 0.6112,
+     "ADP": 0.535,
+     "TP": 14,
+     "FP": 152,
+     "attacks": "1/2"
+    },
+    {
+     "epoch": 10,
+     "train": 0.6007,
+     "val": 0.6066,
+     "ADP": 0.335,
+     "TP": 15,
+     "FP": 170,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 11,
+     "train": 0.5998,
+     "val": 0.6121,
+     "ADP": 0.324,
+     "TP": 15,
+     "FP": 166,
+     "attacks": "2/2"
+    }
+   ]
+  }
+ ],
+ "ensemble": {
+  "ADP": 0.902,
+  "TP": 18,
+  "FP": 68,
+  "attacks": "2/2"
+ },
+ "ensemble_ratio_file": "/lab/r1-THEIA_E3-reidx-0.0001-256.npy"
+}

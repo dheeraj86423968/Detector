@@ -22,10 +22,10 @@ from dataclasses import dataclass, field
 import numpy as np
 import torch
 
-from .bundle import load_state_dict, verify_digests
+from .bundle import check_requires, detector1_file, load_state_dict, verify_digests
 from .featurizer import Word2VecFeaturizer
 from .layers import ALWAYS_EVIDENCE, EVIDENCE_RULES, DeterministicLayers, Hit
-from .models import DEG_DIM, OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, window_degrees
+from .models import OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, velox_input_dim, velox_window_inputs
 from .schema import EDGE_TYPES, Registry
 from .scoring import Calibration, FusionCalibration, above, aggregate_weights, fill_missing, node_scores
 from .windows import Window, batches
@@ -192,6 +192,7 @@ class Runtime:
         seen_at_load_ns: "last seen" time given to the entities held at load (compaction measures age from it)."""
         verify_digests(bundle_dir)
         self.m = json.load(open(os.path.join(bundle_dir, "manifest.json")))
+        check_requires(self.m)
         self.dev = torch.device(device)
         # the node-feature matrix can live on a different device than the models; keeping it on CPU while the
         # models run on the GPU spares ~N*(emb+3)*4 bytes of GPU memory (large registries OOM'd otherwise)
@@ -203,11 +204,12 @@ class Runtime:
             return
         self.feat = Word2VecFeaturizer.load(os.path.join(bundle_dir, "featurizer"))
         d1, d2 = self.m["detectors"]["detector-1"], self.m["detectors"]["detector-2"]
-        self.deg1 = bool(d1.get("degree_features", False))
+        # detector-1 structural input: "input" from 0.5 on; earlier bundles: window degrees or none
+        self.in1 = d1.get("input") or ("window_degrees" if d1.get("degree_features") else "none")
         self.velox = []
         for k in range(int(d1.get("seeds", 0)) or 1):
             v = VeloxModel(d1["in_dim"], d1["out_dim"]).to(self.dev).eval()
-            f = os.path.join(bundle_dir, f"detector-1-s{k}.npz")
+            f = os.path.join(bundle_dir, detector1_file(self.in1, k))
             v.load_state_dict(load_state_dict(f if os.path.exists(f) else os.path.join(bundle_dir, "detector-1.npz")))
             self.velox.append(v)
         self.orthrus = []
@@ -222,7 +224,8 @@ class Runtime:
         self.cal2 = [Calibration(pick(c), c["percentiles"]) for c in cal["detector-2"]]
         agg = cal.get("detector-2-aggregate")   # label-free seed weights (older bundles: plain mean)
         self.agg2 = np.asarray(agg["weights"] if agg else aggregate_weights("mean", [0.0] * len(self.cal2)), dtype=np.float64)
-        self.fcal = FusionCalibration(tuple(cal["fusion"]["weights"]), pick(cal["fusion"]), cal["fusion"]["percentiles"])
+        self.fcal = FusionCalibration(tuple(cal["fusion"]["weights"]), pick(cal["fusion"]), cal["fusion"]["percentiles"],
+                                      cal["fusion"].get("mode", "weighted"))
         # deterministic layers + learned alerting policy (absent in pre-0.3 bundles)
         self.layers = DeterministicLayers.load(bundle_dir, self.m["num_nodes"], set(approved_executables or ())) if layers else None
         pol = self.m.get("learned_policy") or {}
@@ -238,7 +241,7 @@ class Runtime:
         self.set_learned_alerts(self.default_learned_alerts)
         # node features for the baseline registry + TGN state continuing from the end of the validation day
         self.N = self.m["num_nodes"]
-        feat_dim = d1["in_dim"] - (DEG_DIM if self.deg1 else 0)   # node features; detector-1 adds the window degrees
+        feat_dim = d1["in_dim"] - (velox_input_dim(0, self.in1))   # node features; window degrees add columns
         self._tgn_init = load_tgn_state(os.path.join(bundle_dir, "tgn_state.npz"))
         compacted = registry.gids is not None
         if compacted:
@@ -306,7 +309,7 @@ class Runtime:
         self.x.assign([(i, ents[i].label, ents[i].ntype) for i in ids], self.feat)
 
     def _init_layers_only(self, bundle_dir, registry, approved_executables, daily_budget, seen_at_load_ns):
-        self.feat, self.velox, self.orthrus, self.deg1, self.x, self.state = None, [], [], False, None, None
+        self.feat, self.velox, self.orthrus, self.in1, self.x, self.state = None, [], [], "none", None, None
         self.keep_reset_state, self._tgn_init, self._tgn_init_val = False, None, None
         self.N = self.m["num_nodes"]
         self.layers = DeterministicLayers.load(bundle_dir, self.N, set(approved_executables or ()))
@@ -373,17 +376,11 @@ class Runtime:
         x = self.x
         def xg(idx):   # gather features for a batch to the compute device (features may live on CPU)
             return x[idx.to(self.featdev)].to(self.dev)
-        if self.deg1:
-            dgs, dgd = window_degrees(src, dst, et)
-        l1s = []
-        for v in self.velox:
-            parts = []
-            for a, b in batches(w):
-                xs, xd = xg(src[a:b]), xg(dst[a:b])
-                if self.deg1:
-                    xs, xd = torch.cat([xs, dgs[a:b]], 1), torch.cat([xd, dgd[a:b]], 1)
-                parts.append(v.losses(xs, xd, et[a:b]))
-            l1s.append(torch.cat(parts).cpu().numpy())
+        parts = [[] for _ in self.velox]
+        for a, b, xs, xd in velox_window_inputs(src, dst, et, xg, self.in1):   # inputs built once, shared by the seeds
+            for k, v in enumerate(self.velox):
+                parts[k].append(v.losses(xs, xd, et[a:b]))
+        l1s = [torch.cat(p).cpu().numpy() for p in parts]
         l2 = [[] for _ in self.orthrus]
         for a, b in batches(w):
             tb = make_tgn_batch(src[a:b], dst[a:b], x, self.state)

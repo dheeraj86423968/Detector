@@ -74,6 +74,57 @@ def window_degrees(src: torch.Tensor, dst: torch.Tensor, etype: torch.Tensor | N
     return deg[s_i], deg[d_i]
 
 
+def batch_role_scale(src: torch.Tensor, dst: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    """Detector-1 structural input (0.5 default): the node-feature scale PIDSMaker's Velox actually receives.
+
+    PIDSMaker builds each 1024-edge batch's node features with `GraphReindexer.node_features_reshape`, which (with
+    `fix_buggy_graph_reindexer: False`, the setting of every published Velox / Orthrus result) scatter-means the
+    source features and then scatter-means the destination features *into the same buffer*. A node that is both a
+    source and a destination of the batch therefore gets x * (1 + 1/k), k = the number of batch edges it receives;
+    every other node gets x. Moon et al. (arXiv 2609.33532) identified this as the only structural signal Velox
+    sees. It is reproduced here on purpose, as a feature: per-batch role (sends and receives) and fan-in. On the
+    development sets it lifted detector-1's ADP from 0.13 / 0.55 / 0.11 (window degrees) to 0.36 / 1.00 / 0.25
+    (CADETS / THEIA / OpTC H201, artifacts/lab_v05). Returns the scale of every edge's source and destination ((E,)
+    each); deterministic per batch, identical in training and in the runtime."""
+    E = src.shape[0]
+    nodes, inv = torch.unique(torch.cat([src, dst]), return_inverse=True)
+    s_i, d_i = inv[:E], inv[E:]
+    U = nodes.shape[0]
+    k_in = torch.zeros(U, dtype=torch.float32, device=src.device).index_add_(0, d_i, torch.ones(E, dtype=torch.float32, device=src.device))
+    is_src = torch.zeros(U, dtype=torch.bool, device=src.device)
+    is_src[s_i] = True
+    scale = torch.where(is_src & (k_in > 0), 1.0 + 1.0 / k_in.clamp(min=1.0), torch.ones_like(k_in))
+    return scale[s_i], scale[d_i]
+
+
+VELOX_INPUTS = ("none", "window_degrees", "batch_scale")
+
+
+def velox_input_dim(feat_dim: int, mode: str) -> int:
+    return feat_dim + (DEG_DIM if mode == "window_degrees" else 0)
+
+
+def velox_window_inputs(src: torch.Tensor, dst: torch.Tensor, etype: torch.Tensor, gather, mode: str, size: int = 1024):
+    """Detector-1 inputs of a window, batch by batch: yields (a, b, x_src, x_dst) for the edge slice a:b.
+    gather(ids) returns node features on the compute device. The one implementation used by the trainer, the
+    runtime and the research tools."""
+    if mode not in VELOX_INPUTS:
+        raise ValueError(f"unknown detector-1 input {mode!r}")
+    if mode == "window_degrees":
+        dgs, dgd = window_degrees(src, dst, etype)
+    E = src.shape[0]
+    for a in range(0, E, size):
+        b = min(a + size, E)
+        s, d = src[a:b], dst[a:b]
+        xs, xd = gather(s), gather(d)
+        if mode == "window_degrees":
+            xs, xd = torch.cat([xs, dgs[a:b]], 1), torch.cat([xd, dgd[a:b]], 1)
+        elif mode == "batch_scale":
+            fs, fd = batch_role_scale(s, d)
+            xs, xd = xs * fs[:, None], xd * fd[:, None]
+        yield a, b, xs, xd
+
+
 class VeloxModel(nn.Module):
     def __init__(self, in_dim: int, out_dim: int = 256):
         super().__init__()

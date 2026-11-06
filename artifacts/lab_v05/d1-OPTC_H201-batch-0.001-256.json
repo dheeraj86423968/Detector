@@ -1,0 +1,175 @@
+{
+ "eid": "f85bab6a-0fce-4b21-81d8-dd967b8d4395",
+ "dataset": "OPTC_H201",
+ "variant": "batch",
+ "lr": 0.001,
+ "out_dim": 256,
+ "seeds": [
+  {
+   "seed": 0,
+   "selected": {
+    "ADP": 0.09,
+    "TP": 1,
+    "FP": 14,
+    "attacks": "1/1"
+   },
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.5631,
+     "val": 0.529,
+     "ADP": 0.09,
+     "TP": 1,
+     "FP": 14,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 1,
+     "train": 0.5502,
+     "val": 0.5459,
+     "ADP": 0.139,
+     "TP": 1,
+     "FP": 26,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 2,
+     "train": 0.55,
+     "val": 0.532,
+     "ADP": 0.072,
+     "TP": 0,
+     "FP": 9,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 3,
+     "train": 0.5494,
+     "val": 0.5663,
+     "ADP": 0.197,
+     "TP": 0,
+     "FP": 7,
+     "attacks": "0/1"
+    }
+   ]
+  },
+  {
+   "seed": 1,
+   "selected": {
+    "ADP": 0.076,
+    "TP": 0,
+    "FP": 17,
+    "attacks": "0/1"
+   },
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.562,
+     "val": 0.5275,
+     "ADP": 0.076,
+     "TP": 0,
+     "FP": 17,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 1,
+     "train": 0.5496,
+     "val": 0.5385,
+     "ADP": 0.999,
+     "TP": 0,
+     "FP": 0,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 2,
+     "train": 0.5524,
+     "val": 0.5319,
+     "ADP": 0.09,
+     "TP": 0,
+     "FP": 5,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 3,
+     "train": 0.5503,
+     "val": 0.5369,
+     "ADP": 0.166,
+     "TP": 1,
+     "FP": 10,
+     "attacks": "1/1"
+    }
+   ]
+  },
+  {
+   "seed": 2,
+   "selected": {
+    "ADP": 0.249,
+    "TP": 1,
+    "FP": 4,
+    "attacks": "1/1"
+   },
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.5609,
+     "val": 0.5987,
+     "ADP": 0.124,
+     "TP": 0,
+     "FP": 0,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 1,
+     "train": 0.5519,
+     "val": 0.5533,
+     "ADP": 0.201,
+     "TP": 0,
+     "FP": 0,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 2,
+     "train": 0.549,
+     "val": 0.5319,
+     "ADP": 0.249,
+     "TP": 1,
+     "FP": 4,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 3,
+     "train": 0.5491,
+     "val": 0.5396,
+     "ADP": 0.249,
+     "TP": 0,
+     "FP": 3,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 4,
+     "train": 0.5475,
+     "val": 0.5353,
+     "ADP": 0.142,
+     "TP": 1,
+     "FP": 34,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 5,
+     "train": 0.5479,
+     "val": 0.5321,
+     "ADP": 0.11,
+     "TP": 1,
+     "FP": 29,
+     "attacks": "1/1"
+    }
+   ]
+  }
+ ],
+ "ensemble": {
+  "ADP": 0.07,
+  "TP": 0,
+  "FP": 9,
+  "attacks": "0/1"
+ },
+ "ensemble_ratio_file": "/lab/r1-OPTC_H201-batch-0.001-256.npy"
+}

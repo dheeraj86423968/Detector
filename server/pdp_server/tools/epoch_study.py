@@ -30,7 +30,7 @@ def main():
     a = ap.parse_args()
     from pdp_engine.data import WindowStore
     from pdp_engine.featurizer import Word2VecFeaturizer
-    from pdp_engine.models import VeloxModel, seed_everything, window_degrees
+    from pdp_engine.models import VeloxModel, seed_everything, velox_window_inputs
     from pdp_engine.scoring import node_scores
     from pdp_engine.trainer import TrainConfig, Trainer
     from pdp_engine.windows import batches
@@ -57,11 +57,9 @@ def main():
             for d in days:
                 for w in store.windows(d):
                     src, dst, et = (torch.from_numpy(z).to(dev) for z in (w.src, w.dst, w.etype))
-                    xs, xd = x[src], x[dst]
-                    if cfg.velox_degree_features:   # the same structural input as the trainer / runtime
-                        ds, dd = window_degrees(src, dst, et)
-                        xs, xd = torch.cat([xs, ds], 1), torch.cat([xd, dd], 1)
-                    l = torch.cat([model.losses(xs[i:j], xd[i:j], et[i:j]) for i, j in batches(w)]).cpu().numpy()
+                    # the same structural input as the trainer / runtime
+                    l = torch.cat([model.losses(xs, xd, et[i:j]) for i, j, xs, xd in
+                                   velox_window_inputs(src, dst, et, lambda q: x[q], tr.velox_input)]).cpu().numpy()
                     node_scores(n, w.src, w.dst, l, s)
         return s
 

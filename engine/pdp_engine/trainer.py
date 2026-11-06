@@ -15,11 +15,12 @@ from dataclasses import dataclass, field
 import numpy as np
 import torch
 
-from .bundle import save_state_dict, write_manifest
+from .bundle import detector1_file, requirements, save_state_dict, write_manifest
 from .data import WindowStore, nodes_in_days
 from .featurizer import Word2VecFeaturizer
 from .layers import LayerConfig, TagParams, fit_layers
-from .models import DEG_DIM, OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, save_tgn_state, seed_everything, window_degrees
+from .models import (OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, save_tgn_state, seed_everything,
+                     velox_input_dim, velox_window_inputs)
 from .schema import NUM_NODE_TYPES
 from .scoring import Calibration, FusionCalibration, aggregate_weights, fill_missing, node_scores
 from .windows import batches
@@ -31,11 +32,13 @@ class TrainConfig:
     w2v_epochs: int = 50
     # detector-1 (tuned values from the study)
     velox_out_dim: int = 256
-    velox_lr: float = 1e-4
+    velox_lr: float = 1e-3           # 0.5: 1e-3 (with the batch_scale input it was >= 1e-4 on all development sets)
     velox_epochs: int = 12
     velox_seed: int = 0               # first detector-1 seed; seeds velox_seed .. velox_seed + velox_runs - 1
     velox_runs: int = 3               # detector-1 seed ensemble (ratios averaged): single runs are unstable
-    velox_degree_features: bool = True   # explicit window degree input (models.window_degrees)
+    velox_input: str = "batch_scale"     # structural input (models.VELOX_INPUTS); 0.3/0.4 used "window_degrees"
+    velox_degree_features: bool = False  # legacy override: True selects the 0.3/0.4 window degree input
+    velox_average_top: int = 3           # 0.5: detector-1 weights = mean of the 3 lowest-validation-loss epochs (1: best only)
     # detector-2
     orthrus_seeds: tuple = (0, 1, 2, 3, 4)
     orthrus_hid_dim: int = 256
@@ -47,7 +50,8 @@ class TrainConfig:
     weight_decay: float = 1e-5
     batch_size: int = 1024
     patience: int = 3
-    fusion_weights: tuple = (2.0, 1.0)
+    fusion_weights: tuple = (2.0, 1.0)   # mode "weighted" only
+    fusion_mode: str = "max"             # 0.5: max of the two ratios (scoring.FusionCalibration); 0.2-0.4: "weighted" 2:1
     # label-free aggregation of the k detector-2 seeds into one ratio: "best_val_loss" (only the seed with the
     # lowest benign validation loss), "mean" (average of per-seed ratios), "weighted" (softmax of -val_loss).
     # 0.3 default: "mean" over 5 seeds. best_val_loss scored higher on injected attacks (28% vs 18% on CADETS), but
@@ -71,6 +75,16 @@ def log(msg):
     print(time.strftime("%Y-%m-%d %H:%M:%S"), "-", msg, flush=True)
 
 
+def average_top(kept: list, k: int) -> dict:
+    """Weights of the k epochs with the lowest validation loss, averaged (k <= 1: the best epoch alone). Label-free
+    model selection: detector-1's validation loss jumps between epochs (CADETS: 0.63 -> 0.84 -> 0.65), and the single
+    best epoch is a noisy pick; averaging nearby minima of the same run is a standard variance reduction (stochastic
+    weight averaging) that costs nothing at inference. Development sets (artifacts/lab_v05): ensemble ADP CADETS
+    0.36 -> 0.64, THEIA unchanged (0.90), the weakest seed of each better."""
+    top = [sd for _, sd in sorted(kept, key=lambda t: t[0])[:max(1, k)]]
+    return {name: sum(sd[name] for sd in top) / len(top) for name in top[0]}
+
+
 class Trainer:
     def __init__(self, store: WindowStore, train_days: list[str], val_day: str, cfg: TrainConfig = TrainConfig(), out_dir: str = "bundle"):
         self.store, self.train_days, self.val_day, self.cfg, self.out_dir = store, train_days, val_day, cfg, out_dir
@@ -90,28 +104,30 @@ class Trainer:
         return self.feat
 
     # ---------------------------------------------------------------- detector-1
-    def _velox_inputs(self, w):
-        """Per-edge source / destination inputs of detector-1 for a whole window (features [+ window degrees])."""
+    @property
+    def velox_input(self) -> str:
+        """Detector-1 structural input (models.VELOX_INPUTS). An explicit velox_degree_features=True (0.3/0.4 endpoint
+        overrides) still selects the window degrees."""
+        return "window_degrees" if self.cfg.velox_degree_features else self.cfg.velox_input
+
+    def _velox_batches(self, w):
+        """(a, b, x_src, x_dst, etype) per 1024-edge batch of a window, with the configured structural input."""
         src, dst, et = (torch.from_numpy(a).to(self.dev) for a in (w.src, w.dst, w.etype))
-        xs, xd = self.x[src], self.x[dst]
-        if self.cfg.velox_degree_features:
-            ds, dd = window_degrees(src, dst, et)
-            xs, xd = torch.cat([xs, ds], 1), torch.cat([xd, dd], 1)
-        return xs, xd, et
+        for a, b, xs, xd in velox_window_inputs(src, dst, et, lambda i: self.x[i], self.velox_input, self.cfg.batch_size):
+            yield a, b, xs, xd, et[a:b]
 
     @property
     def velox_in_dim(self) -> int:
-        return int(self.x.shape[1]) + (DEG_DIM if self.cfg.velox_degree_features else 0)
+        return velox_input_dim(int(self.x.shape[1]), self.velox_input)
 
     def _velox_epoch(self, model, opt, days, train: bool):
         model.train(train)
         tot, n = 0.0, 0
         for d in days:
             for w in self.store.windows(d):
-                xs, xd, et = self._velox_inputs(w)
-                for a, b in batches(w, self.cfg.batch_size):
+                for a, b, xs, xd, et in self._velox_batches(w):
                     with torch.set_grad_enabled(train):
-                        loss = model.losses(xs[a:b], xd[a:b], et[a:b], reduce=True)
+                        loss = model.losses(xs, xd, et, reduce=True)
                     if train:
                         opt.zero_grad(); loss.backward(); opt.step()
                     tot += float(loss) * (b - a); n += b - a
@@ -122,19 +138,19 @@ class Trainer:
         seed_everything(seed)
         model = VeloxModel(self.velox_in_dim, self.cfg.velox_out_dim).to(self.dev)
         opt = torch.optim.Adam(model.parameters(), lr=self.cfg.velox_lr, weight_decay=self.cfg.weight_decay)
-        best, best_sd, bad = float("inf"), None, 0
+        best, bad, kept = float("inf"), 0, []      # kept: (validation loss, weights) of every epoch
         for ep in range(self.cfg.velox_epochs):
             tr = self._velox_epoch(model, opt, self.train_days, True)
             va = self._velox_epoch(model, None, [self.val_day], False)
             log(f"detector-1 seed {seed} epoch {ep}: train {tr:.4f} val {va:.4f}")
+            kept.append((va, {k: v.detach().clone() for k, v in model.state_dict().items()}))
             if va < best:
                 best, bad = va, 0
-                best_sd = {k: v.detach().clone() for k, v in model.state_dict().items()}
             else:
                 bad += 1
                 if bad >= self.cfg.patience:
                     break
-        model.load_state_dict(best_sd)
+        model.load_state_dict(average_top(kept, self.cfg.velox_average_top))
         self.velox = model
         return model
 
@@ -144,8 +160,7 @@ class Trainer:
         model.eval()
         scores = np.full(self.N, -np.inf, dtype=np.float32)
         for w in self.store.windows(self.val_day):
-            xs, xd, et = self._velox_inputs(w)
-            loss = torch.cat([model.losses(xs[a:b], xd[a:b], et[a:b]) for a, b in batches(w, self.cfg.batch_size)])
+            loss = torch.cat([model.losses(xs, xd, et) for a, b, xs, xd, et in self._velox_batches(w)])
             node_scores(self.N, w.src, w.dst, loss.cpu().numpy(), scores)
         return scores
 
@@ -213,7 +228,7 @@ class Trainer:
             sc = self.velox_val_scores(model)
             c = Calibration.from_validation(sc)
             cal1s.append(c); ratios1.append(fill_missing(c.ratio(sc)))
-            save_state_dict(os.path.join(self.out_dir, f"detector-1-s{k}.npz"), model.state_dict())
+            save_state_dict(os.path.join(self.out_dir, detector1_file(self.velox_input, k)), model.state_dict())
             log(f"detector-1 seed {seed} threshold {c.threshold:.3f}")
         cal1 = cal1s[0]
 
@@ -232,14 +247,14 @@ class Trainer:
         save_tgn_state(os.path.join(self.out_dir, "tgn_state_val_start.npz"), val_start)
         r1 = np.mean(ratios1, axis=0)       # the runtime averages the detector-1 seed ratios the same way
         r2 = np.average(ratios2, axis=0, weights=agg)   # the aggregation the runtime will apply, so the fusion is calibrated on it
-        fcal = FusionCalibration.from_validation(r1, r2, self.cfg.fusion_weights)
+        fcal = FusionCalibration.from_validation(r1, r2, self.cfg.fusion_weights, self.cfg.fusion_mode)
         log(f"fusion threshold {fcal.threshold:.3f}")
         calibration = {
             "detector-1": {"threshold": cal1.threshold, "percentiles": cal1.percentiles},
             "detector-1-seeds": [{"threshold": c.threshold, "percentiles": c.percentiles} for c in cal1s],
             "detector-2": [{"threshold": c.threshold, "percentiles": c.percentiles} for c in cal2],
             "detector-2-aggregate": {"mode": self.cfg.orthrus_aggregate, "weights": [float(w) for w in agg], "val_loss": val_losses},
-            "fusion": {"weights": list(fcal.weights), "threshold": fcal.threshold, "percentiles": fcal.percentiles},
+            "fusion": {"weights": list(fcal.weights), "threshold": fcal.threshold, "percentiles": fcal.percentiles, "mode": fcal.mode},
         }
         json.dump(calibration, open(os.path.join(self.out_dir, "calibration.json"), "w"), indent=1)
         # layers 1 + 2: fitted on the same benign days (training + validation), no attack data
@@ -254,10 +269,12 @@ class Trainer:
             **(meta or {}),
             "num_nodes": self.N, "train_days": self.train_days, "val_day": self.val_day,
             "detectors": {"detector-1": {"in_dim": self.velox_in_dim, "out_dim": self.cfg.velox_out_dim, "seeds": len(cal1s),
-                                         "degree_features": bool(self.cfg.velox_degree_features)},
+                                         "degree_features": self.velox_input == "window_degrees", "input": self.velox_input,
+                                         "lr": self.cfg.velox_lr, "average_top": self.cfg.velox_average_top},
                           "detector-2": {"in_dim": int(self.x.shape[1]), "hid_dim": self.cfg.orthrus_hid_dim, "out_dim": self.cfg.orthrus_out_dim,
                                          "dropout": self.cfg.orthrus_dropout, "seeds": len(self.cfg.orthrus_seeds), "neighbor_size": self.cfg.neighbor_size}},
             "calibration": calibration,
+            "requires": requirements(self.velox_input, self.cfg.fusion_mode),
             "layers": {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules,
                        "known_executables": len(spec["known_executables"]),
                        "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()}},

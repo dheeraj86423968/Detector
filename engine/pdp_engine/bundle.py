@@ -3,7 +3,9 @@
 Layout of a bundle directory:
   manifest.json      {version, created, endpoint, detectors:{...}, calibration:{...}, sha256:{file: digest}}
   featurizer/        vectors.npy, featurizer.json
-  detector-1.npz     Velox weights
+  detector-1-s<k>.npz  Velox weights per seed (window-degree / no structural input; 0.2: detector-1.npz)
+  detector-1-bs-s<k>.npz  the same with the batch_scale input (0.5): a different name so that agents before 0.5,
+                     which would score it without the input, fail to load the bundle and keep their previous one
   detector-2-s<k>.npz ORTHRUS weights per seed
   tgn_state.npz      neighbour loader + edge-type history at the end of the baseline
   signature.json     Ed25519 signature of manifest.json (added by the server's signer)
@@ -17,6 +19,25 @@ import time
 
 import numpy as np
 import torch
+
+
+# features a bundle can require of the runtime (manifest "requires"); a runtime refuses bundles needing others
+SUPPORTED_FEATURES = {"detector-1:batch_scale", "fusion:max"}
+
+
+def detector1_file(velox_input: str, k: int) -> str:
+    return f"detector-1-bs-s{k}.npz" if velox_input == "batch_scale" else f"detector-1-s{k}.npz"
+
+
+def requirements(velox_input: str, fusion_mode: str) -> list[str]:
+    """What a bundle needs beyond the 0.4 runtime (manifest "requires")."""
+    return (["detector-1:batch_scale"] if velox_input == "batch_scale" else []) + (["fusion:max"] if fusion_mode == "max" else [])
+
+
+def check_requires(manifest: dict) -> None:
+    missing = [f for f in manifest.get("requires") or [] if f not in SUPPORTED_FEATURES]
+    if missing:
+        raise ValueError(f"bundle needs runtime features this version does not have: {missing} (update the agent)")
 
 
 def save_state_dict(path: str, sd: dict) -> None:

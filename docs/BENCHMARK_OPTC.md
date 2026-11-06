@@ -251,3 +251,26 @@ Recall stays low: the OpTC ground truth is mostly network connections (H201: 2,8
 to one command-and-control address), and the rules flag a channel's first connection, not each beacon. Following an
 alarmed channel would raise recall here, but it added hundreds of false positives on THEIA (development data), so
 it was not adopted.
+
+## 0.5 (2026-11-06; docs/DETECTION_LAYERS.md "0.5")
+
+Learned detectors changed (detector-1 input / lr / epoch averaging, max fusion), layers and policy unchanged; the 0.4
+bundles with detector-1 retrained under the 0.5 defaults (`tools.retrain_detector1`; the endpoints' own velox
+overrides ignored, as for a client) and the fusion re-calibrated. **H201 was a development set; H501 and H051 were
+held out and run once** after the configuration was frozen. Both had been held out for 0.4 too, so they are seen at
+the aggregate level. Raw JSON: `artifacts/benchmark_optc/eval-optc-*-v05.json`.
+
+| host | version | detector-1 ADP | fused ADP | product ADP mean / min / max | MCC | TP / FP |
+|---|---|---|---|---|---|---|
+| H201 (dev) | 0.4 | 0.15 | 0.13 | 0.80 / 0.75 / 1.00 | 0.023 | 6 / 18 |
+| | 0.5 | 0.18 | 0.17 | **1.00 / 1.00 / 1.00** | 0.023 | 6 / 18 |
+| H501 (held out) | 0.4 | 0.02 | 0.02 | 0.61 / 0.57 / 0.62 | 0.047 | 10 / 50 |
+| | 0.5 | 0.07 | 0.09 | 0.60 / 0.56 / 0.62 | 0.047 | 10 / 50 |
+| H051 (held out) | 0.4 | 0.20 | 0.18 | 0.86 / 0.78 / 0.93 | 0.610 | 72 / 50 |
+| | 0.5 | **0.03** | **0.08** | 0.83 / 0.70 / 1.00 | 0.610 | 72 / 50 |
+
+(Detector-2 unchanged: H201 0.13, H501 0.18, H051 0.26.) **The 0.5 learned changes do not carry over to Windows
+OpTC**: on the held-out hosts H501 is slightly better and H051 worse, mean about flat, and both detectors remain
+near chance on all three hosts. The alerts are identical to 0.4; product ADP moves only through the order within a
+severity (H201 now 1.00 in every run, above Velox's published 0.90, but H201 is a development set). The 0.4
+comparison with Bilot et al. above still holds for H501 (0.60 vs Velox 0.39) and H051 (0.83 vs Orthrus 0.68).

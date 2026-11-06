@@ -106,7 +106,7 @@ def apply_to_bundle(bundle_dir: str, res: dict, source_bundle: str | None = None
     man = json.load(open(os.path.join(bundle_dir, "manifest.json")))
     cal = man["calibration"]
     cal["fusion"] = {"weights": ch["weights"], "threshold": ch["threshold"], "percentiles": ch["percentiles"],
-                     "calibrated_by": "simulation", "source_bundle": source_bundle}
+                     "mode": "weighted", "calibrated_by": "simulation", "source_bundle": source_bundle}
     json.dump(cal, open(os.path.join(bundle_dir, "calibration.json"), "w"), indent=1)
     meta = {k: v for k, v in man.items() if k not in ("sha256", "format", "created")}
     meta.update({"calibration": cal, "fusion_calibration": {k: res[k] for k in ("validation_day", "attacks", "candidates")}})

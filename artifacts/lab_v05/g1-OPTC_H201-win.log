@@ -1,0 +1,40 @@
+win 0 {"epoch": 0, "train": 0.5866, "val": 0.5344, "ADP": 0.047, "TP": 0, "FP": 0, "attacks": "0/1"} 18s
+win 0 {"epoch": 1, "train": 0.5514, "val": 0.5249, "ADP": 0.083, "TP": 0, "FP": 6, "attacks": "0/1"} 39s
+win 0 {"epoch": 2, "train": 0.5484, "val": 0.5247, "ADP": 0.052, "TP": 0, "FP": 20, "attacks": "0/1"} 60s
+win 0 {"epoch": 3, "train": 0.5474, "val": 0.5242, "ADP": 0.076, "TP": 0, "FP": 15, "attacks": "0/1"} 82s
+win 0 {"epoch": 4, "train": 0.5469, "val": 0.5233, "ADP": 0.09, "TP": 0, "FP": 14, "attacks": "0/1"} 105s
+win 0 {"epoch": 5, "train": 0.5461, "val": 0.5217, "ADP": 0.124, "TP": 2, "FP": 30, "attacks": "1/1"} 129s
+win 0 {"epoch": 6, "train": 0.5457, "val": 0.5212, "ADP": 0.132, "TP": 1, "FP": 9, "attacks": "1/1"} 152s
+win 0 {"epoch": 7, "train": 0.5453, "val": 0.5201, "ADP": 0.082, "TP": 3, "FP": 49, "attacks": "1/1"} 175s
+win 0 {"epoch": 8, "train": 0.545, "val": 0.5201, "ADP": 0.085, "TP": 2, "FP": 31, "attacks": "1/1"} 198s
+win 0 {"epoch": 9, "train": 0.5448, "val": 0.5201, "ADP": 0.09, "TP": 1, "FP": 30, "attacks": "1/1"} 221s
+win 0 {"epoch": 10, "train": 0.5446, "val": 0.5196, "ADP": 0.11, "TP": 1, "FP": 9, "attacks": "1/1"} 243s
+win 0 {"epoch": 11, "train": 0.5446, "val": 0.5207, "ADP": 0.166, "TP": 2, "FP": 10, "attacks": "1/1"} 264s
+win 0 SELECTED {"ADP": 0.11, "TP": 1, "FP": 9, "attacks": "1/1"}
+win 1 {"epoch": 0, "train": 0.5853, "val": 0.5338, "ADP": 0.047, "TP": 0, "FP": 0, "attacks": "0/1"} 291s
+win 1 {"epoch": 1, "train": 0.5517, "val": 0.526, "ADP": 0.083, "TP": 0, "FP": 7, "attacks": "0/1"} 313s
+win 1 {"epoch": 2, "train": 0.5485, "val": 0.5243, "ADP": 0.072, "TP": 0, "FP": 7, "attacks": "0/1"} 335s
+win 1 {"epoch": 3, "train": 0.5476, "val": 0.523, "ADP": 0.07, "TP": 0, "FP": 13, "attacks": "0/1"} 359s
+win 1 {"epoch": 4, "train": 0.5468, "val": 0.5222, "ADP": 0.142, "TP": 1, "FP": 14, "attacks": "1/1"} 382s
+win 1 {"epoch": 5, "train": 0.5462, "val": 0.5214, "ADP": 0.142, "TP": 0, "FP": 6, "attacks": "0/1"} 404s
+win 1 {"epoch": 6, "train": 0.5457, "val": 0.5211, "ADP": 0.082, "TP": 3, "FP": 55, "attacks": "1/1"} 427s
+win 1 {"epoch": 7, "train": 0.5454, "val": 0.5205, "ADP": 0.124, "TP": 0, "FP": 8, "attacks": "0/1"} 448s
+win 1 {"epoch": 8, "train": 0.5451, "val": 0.5204, "ADP": 0.117, "TP": 0, "FP": 10, "attacks": "0/1"} 469s
+win 1 {"epoch": 9, "train": 0.545, "val": 0.52, "ADP": 0.15, "TP": 0, "FP": 6, "attacks": "0/1"} 487s
+win 1 {"epoch": 10, "train": 0.5447, "val": 0.5201, "ADP": 0.167, "TP": 0, "FP": 6, "attacks": "0/1"} 507s
+win 1 {"epoch": 11, "train": 0.5446, "val": 0.5197, "ADP": 0.082, "TP": 0, "FP": 6, "attacks": "0/1"} 529s
+win 1 SELECTED {"ADP": 0.082, "TP": 0, "FP": 6, "attacks": "0/1"}
+win 2 {"epoch": 0, "train": 0.5843, "val": 0.5345, "ADP": 0.031, "TP": 0, "FP": 4, "attacks": "0/1"} 558s
+win 2 {"epoch": 1, "train": 0.5513, "val": 0.5262, "ADP": 0.078, "TP": 0, "FP": 15, "attacks": "0/1"} 581s
+win 2 {"epoch": 2, "train": 0.5484, "val": 0.5257, "ADP": 0.057, "TP": 0, "FP": 10, "attacks": "0/1"} 602s
+win 2 {"epoch": 3, "train": 0.5474, "val": 0.5258, "ADP": 0.052, "TP": 0, "FP": 37, "attacks": "0/1"} 622s
+win 2 {"epoch": 4, "train": 0.5469, "val": 0.5227, "ADP": 0.058, "TP": 2, "FP": 34, "attacks": "1/1"} 643s
+win 2 {"epoch": 5, "train": 0.5464, "val": 0.5216, "ADP": 0.082, "TP": 2, "FP": 36, "attacks": "1/1"} 664s
+win 2 {"epoch": 6, "train": 0.5459, "val": 0.521, "ADP": 0.13, "TP": 1, "FP": 9, "attacks": "1/1"} 684s
+win 2 {"epoch": 7, "train": 0.5453, "val": 0.5204, "ADP": 0.072, "TP": 0, "FP": 11, "attacks": "0/1"} 707s
+win 2 {"epoch": 8, "train": 0.5451, "val": 0.5206, "ADP": 0.076, "TP": 2, "FP": 32, "attacks": "1/1"} 729s
+win 2 {"epoch": 9, "train": 0.5448, "val": 0.5199, "ADP": 0.078, "TP": 0, "FP": 9, "attacks": "0/1"} 753s
+win 2 {"epoch": 10, "train": 0.5447, "val": 0.5199, "ADP": 0.069, "TP": 0, "FP": 30, "attacks": "0/1"} 777s
+win 2 {"epoch": 11, "train": 0.5445, "val": 0.5195, "ADP": 0.117, "TP": 0, "FP": 6, "attacks": "0/1"} 800s
+win 2 SELECTED {"ADP": 0.117, "TP": 0, "FP": 6, "attacks": "0/1"}
+win ENSEMBLE {"ADP": 0.11, "TP": 0, "FP": 6, "attacks": "0/1"} 811s

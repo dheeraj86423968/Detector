@@ -1,0 +1,35 @@
+none 0 {"epoch": 0, "train": 0.7012, "val": 0.6687, "ADP": 0.249, "TP": 10, "FP": 11, "attacks": "1/2"} 9s
+none 0 {"epoch": 1, "train": 0.6277, "val": 0.6406, "ADP": 0.284, "TP": 10, "FP": 10, "attacks": "1/2"} 19s
+none 0 {"epoch": 2, "train": 0.6234, "val": 0.6402, "ADP": 0.284, "TP": 10, "FP": 21, "attacks": "1/2"} 29s
+none 0 {"epoch": 3, "train": 0.6211, "val": 0.6319, "ADP": 0.307, "TP": 12, "FP": 21, "attacks": "1/2"} 38s
+none 0 {"epoch": 4, "train": 0.6189, "val": 0.6365, "ADP": 0.399, "TP": 14, "FP": 50, "attacks": "1/2"} 48s
+none 0 {"epoch": 5, "train": 0.6166, "val": 0.6376, "ADP": 0.565, "TP": 15, "FP": 45, "attacks": "2/2"} 57s
+none 0 {"epoch": 6, "train": 0.6147, "val": 0.6327, "ADP": 0.582, "TP": 15, "FP": 43, "attacks": "2/2"} 67s
+none 0 SELECTED {"ADP": 0.307, "TP": 12, "FP": 21, "attacks": "1/2"}
+none 1 {"epoch": 0, "train": 0.7026, "val": 0.6674, "ADP": 0.024, "TP": 0, "FP": 12, "attacks": "0/2"} 81s
+none 1 {"epoch": 1, "train": 0.6281, "val": 0.6424, "ADP": 0.234, "TP": 10, "FP": 12, "attacks": "1/2"} 90s
+none 1 {"epoch": 2, "train": 0.6235, "val": 0.6358, "ADP": 0.392, "TP": 12, "FP": 8, "attacks": "1/2"} 100s
+none 1 {"epoch": 3, "train": 0.6211, "val": 0.6352, "ADP": 0.408, "TP": 12, "FP": 23, "attacks": "1/2"} 110s
+none 1 {"epoch": 4, "train": 0.6184, "val": 0.6264, "ADP": 0.424, "TP": 14, "FP": 26, "attacks": "1/2"} 119s
+none 1 {"epoch": 5, "train": 0.6154, "val": 0.6094, "ADP": 0.518, "TP": 14, "FP": 107, "attacks": "1/2"} 128s
+none 1 {"epoch": 6, "train": 0.6122, "val": 0.6037, "ADP": 0.517, "TP": 14, "FP": 49, "attacks": "1/2"} 138s
+none 1 {"epoch": 7, "train": 0.6099, "val": 0.6027, "ADP": 0.629, "TP": 16, "FP": 64, "attacks": "2/2"} 147s
+none 1 {"epoch": 8, "train": 0.608, "val": 0.6046, "ADP": 0.643, "TP": 17, "FP": 48, "attacks": "2/2"} 157s
+none 1 {"epoch": 9, "train": 0.6069, "val": 0.5994, "ADP": 0.644, "TP": 17, "FP": 57, "attacks": "2/2"} 167s
+none 1 {"epoch": 10, "train": 0.6061, "val": 0.6079, "ADP": 0.644, "TP": 17, "FP": 68, "attacks": "2/2"} 177s
+none 1 {"epoch": 11, "train": 0.605, "val": 0.6042, "ADP": 0.64, "TP": 19, "FP": 53, "attacks": "2/2"} 187s
+none 1 SELECTED {"ADP": 0.644, "TP": 17, "FP": 57, "attacks": "2/2"}
+none 2 {"epoch": 0, "train": 0.7029, "val": 0.6612, "ADP": 0.024, "TP": 0, "FP": 10, "attacks": "0/2"} 202s
+none 2 {"epoch": 1, "train": 0.6278, "val": 0.6385, "ADP": 0.215, "TP": 10, "FP": 25, "attacks": "1/2"} 213s
+none 2 {"epoch": 2, "train": 0.6232, "val": 0.627, "ADP": 0.307, "TP": 12, "FP": 8, "attacks": "1/2"} 222s
+none 2 {"epoch": 3, "train": 0.6208, "val": 0.6361, "ADP": 0.392, "TP": 12, "FP": 17, "attacks": "1/2"} 233s
+none 2 {"epoch": 4, "train": 0.6179, "val": 0.6226, "ADP": 0.428, "TP": 14, "FP": 32, "attacks": "1/2"} 242s
+none 2 {"epoch": 5, "train": 0.6154, "val": 0.6184, "ADP": 0.429, "TP": 14, "FP": 36, "attacks": "1/2"} 253s
+none 2 {"epoch": 6, "train": 0.6126, "val": 0.6074, "ADP": 0.596, "TP": 15, "FP": 109, "attacks": "2/2"} 263s
+none 2 {"epoch": 7, "train": 0.6104, "val": 0.6092, "ADP": 0.694, "TP": 15, "FP": 33, "attacks": "2/2"} 274s
+none 2 {"epoch": 8, "train": 0.6085, "val": 0.6099, "ADP": 0.694, "TP": 17, "FP": 54, "attacks": "2/2"} 284s
+none 2 {"epoch": 9, "train": 0.6072, "val": 0.6048, "ADP": 0.694, "TP": 17, "FP": 59, "attacks": "2/2"} 294s
+none 2 {"epoch": 10, "train": 0.606, "val": 0.6194, "ADP": 0.66, "TP": 15, "FP": 55, "attacks": "2/2"} 303s
+none 2 {"epoch": 11, "train": 0.6048, "val": 0.6062, "ADP": 0.66, "TP": 17, "FP": 68, "attacks": "2/2"} 314s
+none 2 SELECTED {"ADP": 0.694, "TP": 17, "FP": 59, "attacks": "2/2"}
+none ENSEMBLE {"ADP": 0.66, "TP": 15, "FP": 50, "attacks": "2/2"} 319s

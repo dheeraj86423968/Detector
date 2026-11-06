@@ -1,0 +1,229 @@
+{
+ "eid": "5eafc637-14c7-4074-b4d3-4e611dea925e",
+ "dataset": "CADETS_E3",
+ "variant": "reidx",
+ "lr": 0.001,
+ "out_dim": 256,
+ "seeds": [
+  {
+   "seed": 0,
+   "selected": {
+    "ADP": 0.461,
+    "TP": 13,
+    "FP": 39,
+    "attacks": "1/3"
+   },
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.6264,
+     "val": 0.7442,
+     "ADP": 0.016,
+     "TP": 0,
+     "FP": 0,
+     "attacks": "0/3"
+    },
+    {
+     "epoch": 1,
+     "train": 0.5977,
+     "val": 0.7069,
+     "ADP": 0.004,
+     "TP": 0,
+     "FP": 12,
+     "attacks": "0/3"
+    },
+    {
+     "epoch": 2,
+     "train": 0.5861,
+     "val": 0.6728,
+     "ADP": 0.43,
+     "TP": 3,
+     "FP": 2,
+     "attacks": "1/3"
+    },
+    {
+     "epoch": 3,
+     "train": 0.5841,
+     "val": 0.6985,
+     "ADP": 0.907,
+     "TP": 6,
+     "FP": 3,
+     "attacks": "1/3"
+    },
+    {
+     "epoch": 4,
+     "train": 0.5801,
+     "val": 0.6765,
+     "ADP": 0.36,
+     "TP": 13,
+     "FP": 31,
+     "attacks": "1/3"
+    },
+    {
+     "epoch": 5,
+     "train": 0.5776,
+     "val": 0.6489,
+     "ADP": 0.461,
+     "TP": 13,
+     "FP": 39,
+     "attacks": "1/3"
+    },
+    {
+     "epoch": 6,
+     "train": 0.5763,
+     "val": 0.6769,
+     "ADP": 0.048,
+     "TP": 0,
+     "FP": 38,
+     "attacks": "0/3"
+    },
+    {
+     "epoch": 7,
+     "train": 0.5743,
+     "val": 0.6599,
+     "ADP": 0.68,
+     "TP": 6,
+     "FP": 1,
+     "attacks": "2/3"
+    },
+    {
+     "epoch": 8,
+     "train": 0.5729,
+     "val": 0.6667,
+     "ADP": 0.754,
+     "TP": 6,
+     "FP": 5,
+     "attacks": "2/3"
+    }
+   ]
+  },
+  {
+   "seed": 1,
+   "selected": {
+    "ADP": 0.344,
+    "TP": 3,
+    "FP": 0,
+    "attacks": "1/3"
+   },
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.6226,
+     "val": 0.6921,
+     "ADP": 0.043,
+     "TP": 0,
+     "FP": 0,
+     "attacks": "0/3"
+    },
+    {
+     "epoch": 1,
+     "train": 0.5942,
+     "val": 0.6646,
+     "ADP": 0.344,
+     "TP": 3,
+     "FP": 0,
+     "attacks": "1/3"
+    },
+    {
+     "epoch": 2,
+     "train": 0.5951,
+     "val": 0.6758,
+     "ADP": 0.343,
+     "TP": 5,
+     "FP": 8,
+     "attacks": "1/3"
+    },
+    {
+     "epoch": 3,
+     "train": 0.5858,
+     "val": 0.7149,
+     "ADP": 0.467,
+     "TP": 3,
+     "FP": 6,
+     "attacks": "1/3"
+    },
+    {
+     "epoch": 4,
+     "train": 0.5825,
+     "val": 0.7473,
+     "ADP": 0.043,
+     "TP": 0,
+     "FP": 4,
+     "attacks": "0/3"
+    }
+   ]
+  },
+  {
+   "seed": 2,
+   "selected": {
+    "ADP": 0.347,
+    "TP": 6,
+    "FP": 309,
+    "attacks": "3/3"
+   },
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.6167,
+     "val": 0.7363,
+     "ADP": 0.341,
+     "TP": 3,
+     "FP": 0,
+     "attacks": "1/3"
+    },
+    {
+     "epoch": 1,
+     "train": 0.5912,
+     "val": 0.664,
+     "ADP": 0.117,
+     "TP": 0,
+     "FP": 0,
+     "attacks": "0/3"
+    },
+    {
+     "epoch": 2,
+     "train": 0.5897,
+     "val": 0.6554,
+     "ADP": 0.347,
+     "TP": 6,
+     "FP": 309,
+     "attacks": "3/3"
+    },
+    {
+     "epoch": 3,
+     "train": 0.5831,
+     "val": 0.6756,
+     "ADP": 0.933,
+     "TP": 9,
+     "FP": 314,
+     "attacks": "3/3"
+    },
+    {
+     "epoch": 4,
+     "train": 0.5843,
+     "val": 0.663,
+     "ADP": 0.215,
+     "TP": 0,
+     "FP": 0,
+     "attacks": "0/3"
+    },
+    {
+     "epoch": 5,
+     "train": 0.5852,
+     "val": 0.7834,
+     "ADP": 0.009,
+     "TP": 0,
+     "FP": 2,
+     "attacks": "0/3"
+    }
+   ]
+  }
+ ],
+ "ensemble": {
+  "ADP": 0.364,
+  "TP": 9,
+  "FP": 1,
+  "attacks": "1/3"
+ },
+ "ensemble_ratio_file": "/lab/r1-CADETS_E3-reidx-0.001-256.npy"
+}

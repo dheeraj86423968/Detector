@@ -1,0 +1,391 @@
+{
+ "eid": "f85bab6a-0fce-4b21-81d8-dd967b8d4395",
+ "dataset": "OPTC_H201",
+ "variant": "reidx",
+ "lr": 0.0001,
+ "out_dim": 256,
+ "seeds": [
+  {
+   "seed": 3,
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.5831,
+     "val": 0.5292,
+     "ADP": 0.067,
+     "TP": 0,
+     "FP": 7,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 1,
+     "train": 0.5517,
+     "val": 0.5267,
+     "ADP": 0.074,
+     "TP": 0,
+     "FP": 11,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 2,
+     "train": 0.5494,
+     "val": 0.5245,
+     "ADP": 0.083,
+     "TP": 1,
+     "FP": 14,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 3,
+     "train": 0.5477,
+     "val": 0.5227,
+     "ADP": 0.249,
+     "TP": 1,
+     "FP": 16,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 4,
+     "train": 0.547,
+     "val": 0.5221,
+     "ADP": 0.249,
+     "TP": 1,
+     "FP": 16,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 5,
+     "train": 0.5465,
+     "val": 0.5216,
+     "ADP": 0.249,
+     "TP": 1,
+     "FP": 12,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 6,
+     "train": 0.5461,
+     "val": 0.5218,
+     "ADP": 0.249,
+     "TP": 1,
+     "FP": 8,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 7,
+     "train": 0.5459,
+     "val": 0.5218,
+     "ADP": 0.285,
+     "TP": 1,
+     "FP": 4,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 8,
+     "train": 0.5456,
+     "val": 0.5213,
+     "ADP": 0.285,
+     "TP": 1,
+     "FP": 4,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 9,
+     "train": 0.5455,
+     "val": 0.5213,
+     "ADP": 0.199,
+     "TP": 0,
+     "FP": 3,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 10,
+     "train": 0.5453,
+     "val": 0.5213,
+     "ADP": 0.199,
+     "TP": 1,
+     "FP": 4,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 11,
+     "train": 0.5452,
+     "val": 0.5213,
+     "ADP": 0.199,
+     "TP": 1,
+     "FP": 4,
+     "attacks": "1/1"
+    }
+   ],
+   "selected": {
+    "ADP": 0.199,
+    "TP": 0,
+    "FP": 3,
+    "attacks": "0/1"
+   },
+   "swa3": {
+    "ADP": 0.199,
+    "TP": 1,
+    "FP": 4,
+    "attacks": "1/1"
+   }
+  },
+  {
+   "seed": 4,
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.5832,
+     "val": 0.529,
+     "ADP": 0.064,
+     "TP": 0,
+     "FP": 9,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 1,
+     "train": 0.5518,
+     "val": 0.5264,
+     "ADP": 0.068,
+     "TP": 0,
+     "FP": 13,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 2,
+     "train": 0.5494,
+     "val": 0.5236,
+     "ADP": 0.082,
+     "TP": 1,
+     "FP": 14,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 3,
+     "train": 0.5479,
+     "val": 0.5228,
+     "ADP": 0.099,
+     "TP": 1,
+     "FP": 14,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 4,
+     "train": 0.5471,
+     "val": 0.523,
+     "ADP": 0.124,
+     "TP": 1,
+     "FP": 16,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 5,
+     "train": 0.5466,
+     "val": 0.5216,
+     "ADP": 0.099,
+     "TP": 1,
+     "FP": 14,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 6,
+     "train": 0.5463,
+     "val": 0.5215,
+     "ADP": 0.099,
+     "TP": 0,
+     "FP": 9,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 7,
+     "train": 0.5458,
+     "val": 0.5213,
+     "ADP": 0.099,
+     "TP": 0,
+     "FP": 3,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 8,
+     "train": 0.5457,
+     "val": 0.5223,
+     "ADP": 0.11,
+     "TP": 0,
+     "FP": 3,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 9,
+     "train": 0.5454,
+     "val": 0.5216,
+     "ADP": 0.199,
+     "TP": 0,
+     "FP": 3,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 10,
+     "train": 0.5454,
+     "val": 0.5211,
+     "ADP": 0.221,
+     "TP": 1,
+     "FP": 6,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 11,
+     "train": 0.5451,
+     "val": 0.5213,
+     "ADP": 0.221,
+     "TP": 2,
+     "FP": 7,
+     "attacks": "1/1"
+    }
+   ],
+   "selected": {
+    "ADP": 0.221,
+    "TP": 1,
+    "FP": 6,
+    "attacks": "1/1"
+   },
+   "swa3": {
+    "ADP": 0.199,
+    "TP": 0,
+    "FP": 3,
+    "attacks": "0/1"
+   }
+  },
+  {
+   "seed": 5,
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.5833,
+     "val": 0.5293,
+     "ADP": 0.066,
+     "TP": 0,
+     "FP": 7,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 1,
+     "train": 0.5519,
+     "val": 0.5265,
+     "ADP": 0.073,
+     "TP": 0,
+     "FP": 11,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 2,
+     "train": 0.5493,
+     "val": 0.5235,
+     "ADP": 0.249,
+     "TP": 1,
+     "FP": 16,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 3,
+     "train": 0.5478,
+     "val": 0.5233,
+     "ADP": 0.249,
+     "TP": 1,
+     "FP": 14,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 4,
+     "train": 0.5472,
+     "val": 0.523,
+     "ADP": 0.249,
+     "TP": 1,
+     "FP": 18,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 5,
+     "train": 0.5466,
+     "val": 0.5225,
+     "ADP": 0.249,
+     "TP": 1,
+     "FP": 10,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 6,
+     "train": 0.5462,
+     "val": 0.5221,
+     "ADP": 0.199,
+     "TP": 1,
+     "FP": 5,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 7,
+     "train": 0.5459,
+     "val": 0.522,
+     "ADP": 0.199,
+     "TP": 1,
+     "FP": 4,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 8,
+     "train": 0.5457,
+     "val": 0.5218,
+     "ADP": 0.101,
+     "TP": 0,
+     "FP": 11,
+     "attacks": "0/1"
+    },
+    {
+     "epoch": 9,
+     "train": 0.5455,
+     "val": 0.5215,
+     "ADP": 0.199,
+     "TP": 2,
+     "FP": 15,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 10,
+     "train": 0.5454,
+     "val": 0.5213,
+     "ADP": 0.199,
+     "TP": 1,
+     "FP": 8,
+     "attacks": "1/1"
+    },
+    {
+     "epoch": 11,
+     "train": 0.5454,
+     "val": 0.5212,
+     "ADP": 0.142,
+     "TP": 1,
+     "FP": 14,
+     "attacks": "1/1"
+    }
+   ],
+   "selected": {
+    "ADP": 0.142,
+    "TP": 1,
+    "FP": 14,
+    "attacks": "1/1"
+   },
+   "swa3": {
+    "ADP": 0.181,
+    "TP": 2,
+    "FP": 11,
+    "attacks": "1/1"
+   }
+  }
+ ],
+ "ensemble": {
+  "ADP": 0.199,
+  "TP": 1,
+  "FP": 4,
+  "attacks": "1/1"
+ },
+ "ensemble_ratio_file": "/lab/r1-OPTC_H201-reidx-0.0001-256-swa3.npy"
+}

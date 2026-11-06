@@ -1,0 +1,43 @@
+reidx 0 {"epoch": 0, "train": 0.5832, "val": 0.5297, "ADP": 0.067, "TP": 0, "FP": 9, "attacks": "0/1"} 27s
+reidx 0 {"epoch": 1, "train": 0.5517, "val": 0.5261, "ADP": 0.076, "TP": 0, "FP": 11, "attacks": "0/1"} 55s
+reidx 0 {"epoch": 2, "train": 0.5495, "val": 0.5261, "ADP": 0.166, "TP": 1, "FP": 14, "attacks": "1/1"} 82s
+reidx 0 {"epoch": 3, "train": 0.5478, "val": 0.523, "ADP": 0.249, "TP": 1, "FP": 16, "attacks": "1/1"} 110s
+reidx 0 {"epoch": 4, "train": 0.5472, "val": 0.5221, "ADP": 0.249, "TP": 1, "FP": 14, "attacks": "1/1"} 136s
+reidx 0 {"epoch": 5, "train": 0.5466, "val": 0.5218, "ADP": 0.249, "TP": 1, "FP": 14, "attacks": "1/1"} 163s
+reidx 0 {"epoch": 6, "train": 0.5462, "val": 0.5218, "ADP": 0.249, "TP": 1, "FP": 10, "attacks": "1/1"} 190s
+reidx 0 {"epoch": 7, "train": 0.546, "val": 0.5221, "ADP": 0.285, "TP": 2, "FP": 11, "attacks": "1/1"} 217s
+reidx 0 {"epoch": 8, "train": 0.5458, "val": 0.5215, "ADP": 0.332, "TP": 2, "FP": 6, "attacks": "1/1"} 244s
+reidx 0 {"epoch": 9, "train": 0.5456, "val": 0.5214, "ADP": 0.285, "TP": 1, "FP": 4, "attacks": "1/1"} 272s
+reidx 0 {"epoch": 10, "train": 0.5454, "val": 0.5216, "ADP": 0.285, "TP": 1, "FP": 4, "attacks": "1/1"} 299s
+reidx 0 {"epoch": 11, "train": 0.5453, "val": 0.5215, "ADP": 0.285, "TP": 1, "FP": 4, "attacks": "1/1"} 326s
+reidx 0 SELECTED {"ADP": 0.285, "TP": 1, "FP": 4, "attacks": "1/1"}
+reidx 0 SWA3 {"ADP": 0.285, "TP": 1, "FP": 4, "attacks": "1/1"}
+reidx 1 {"epoch": 0, "train": 0.584, "val": 0.5307, "ADP": 0.065, "TP": 0, "FP": 7, "attacks": "0/1"} 374s
+reidx 1 {"epoch": 1, "train": 0.5518, "val": 0.5262, "ADP": 0.07, "TP": 0, "FP": 11, "attacks": "0/1"} 401s
+reidx 1 {"epoch": 2, "train": 0.5493, "val": 0.5242, "ADP": 0.079, "TP": 0, "FP": 13, "attacks": "0/1"} 429s
+reidx 1 {"epoch": 3, "train": 0.5478, "val": 0.5229, "ADP": 0.099, "TP": 1, "FP": 14, "attacks": "1/1"} 456s
+reidx 1 {"epoch": 4, "train": 0.5471, "val": 0.5224, "ADP": 0.249, "TP": 1, "FP": 16, "attacks": "1/1"} 483s
+reidx 1 {"epoch": 5, "train": 0.5466, "val": 0.5217, "ADP": 0.124, "TP": 1, "FP": 12, "attacks": "1/1"} 510s
+reidx 1 {"epoch": 6, "train": 0.5462, "val": 0.5216, "ADP": 0.249, "TP": 1, "FP": 6, "attacks": "1/1"} 537s
+reidx 1 {"epoch": 7, "train": 0.5459, "val": 0.5214, "ADP": 0.332, "TP": 0, "FP": 3, "attacks": "0/1"} 564s
+reidx 1 {"epoch": 8, "train": 0.5457, "val": 0.5211, "ADP": 0.199, "TP": 1, "FP": 4, "attacks": "1/1"} 591s
+reidx 1 {"epoch": 9, "train": 0.5455, "val": 0.5213, "ADP": 0.221, "TP": 1, "FP": 4, "attacks": "1/1"} 617s
+reidx 1 {"epoch": 10, "train": 0.5454, "val": 0.5207, "ADP": 0.199, "TP": 1, "FP": 5, "attacks": "1/1"} 640s
+reidx 1 {"epoch": 11, "train": 0.5452, "val": 0.5208, "ADP": 0.199, "TP": 1, "FP": 4, "attacks": "1/1"} 662s
+reidx 1 SELECTED {"ADP": 0.199, "TP": 1, "FP": 5, "attacks": "1/1"}
+reidx 1 SWA3 {"ADP": 0.199, "TP": 1, "FP": 4, "attacks": "1/1"}
+reidx 2 {"epoch": 0, "train": 0.5842, "val": 0.5299, "ADP": 0.067, "TP": 0, "FP": 5, "attacks": "0/1"} 705s
+reidx 2 {"epoch": 1, "train": 0.5518, "val": 0.5267, "ADP": 0.075, "TP": 0, "FP": 11, "attacks": "0/1"} 730s
+reidx 2 {"epoch": 2, "train": 0.549, "val": 0.5233, "ADP": 0.11, "TP": 1, "FP": 24, "attacks": "1/1"} 754s
+reidx 2 {"epoch": 3, "train": 0.5478, "val": 0.5227, "ADP": 0.249, "TP": 1, "FP": 24, "attacks": "1/1"} 779s
+reidx 2 {"epoch": 4, "train": 0.547, "val": 0.5226, "ADP": 0.166, "TP": 1, "FP": 6, "attacks": "1/1"} 804s
+reidx 2 {"epoch": 5, "train": 0.5468, "val": 0.5217, "ADP": 0.088, "TP": 0, "FP": 5, "attacks": "0/1"} 828s
+reidx 2 {"epoch": 6, "train": 0.5461, "val": 0.5218, "ADP": 0.085, "TP": 0, "FP": 7, "attacks": "0/1"} 852s
+reidx 2 {"epoch": 7, "train": 0.5459, "val": 0.5221, "ADP": 0.087, "TP": 0, "FP": 13, "attacks": "0/1"} 878s
+reidx 2 {"epoch": 8, "train": 0.5456, "val": 0.5208, "ADP": 0.086, "TP": 0, "FP": 20, "attacks": "0/1"} 902s
+reidx 2 {"epoch": 9, "train": 0.5456, "val": 0.5214, "ADP": 0.088, "TP": 0, "FP": 10, "attacks": "0/1"} 926s
+reidx 2 {"epoch": 10, "train": 0.5454, "val": 0.5211, "ADP": 0.088, "TP": 0, "FP": 5, "attacks": "0/1"} 951s
+reidx 2 {"epoch": 11, "train": 0.5452, "val": 0.5213, "ADP": 0.086, "TP": 0, "FP": 9, "attacks": "0/1"} 975s
+reidx 2 SELECTED {"ADP": 0.086, "TP": 0, "FP": 20, "attacks": "0/1"}
+reidx 2 SWA3 {"ADP": 0.088, "TP": 0, "FP": 7, "attacks": "0/1"}
+reidx ENSEMBLE {"ADP": 0.199, "TP": 0, "FP": 3, "attacks": "0/1"} 999s

@@ -337,5 +337,52 @@ else:
     ra, rb = torch.expm1(a * 7).round(), torch.expm1(b * 7).round()
     check(ra[0].tolist() == [3, 0, 2, 0] and rb[2].tolist() == [0, 2, 0, 2], "window degrees: out/in degree and distinct successors/predecessors")
 
+    # batch_scale must equal what PIDSMaker's GraphReindexer (fix_buggy_graph_reindexer: False) feeds Velox: a
+    # scatter-mean of the source features, then a scatter-mean of the destination features into the same buffer
+    # (torch_scatter's mean with `out`: sum into out, then divide by the destination count, clamped to 1)
+    from pdp_engine.models import batch_role_scale, velox_window_inputs
+    g = torch.Generator().manual_seed(0)
+    n, E = 12, 300
+    s = torch.randint(0, n, (E,), generator=g); d = torch.randint(0, n, (E,), generator=g)
+    x = torch.rand((n, 5), generator=g)
+    out = torch.zeros((n, 5))
+    cs = torch.zeros(n).index_add_(0, s, torch.ones(E)).clamp(min=1)
+    out.index_add_(0, s, x[s]); out /= cs[:, None]                       # first pass: mean over source edges
+    cd = torch.zeros(n).index_add_(0, d, torch.ones(E)).clamp(min=1)
+    out.index_add_(0, d, x[d]); out /= cd[:, None]                       # second pass into the same buffer
+    fs, fd = batch_role_scale(s, d)
+    check(torch.allclose(x[s] * fs[:, None], out[s], atol=1e-6) and torch.allclose(x[d] * fd[:, None], out[d], atol=1e-6),
+          "batch_scale equals PIDSMaker's reindexed Velox input (double scatter-mean)")
+    sl = torch.tensor([0, 1, 2]); dl = torch.tensor([1, 3, 1])           # node 1: source once, destination twice
+    fs, fd = batch_role_scale(sl, dl)
+    check(fs.tolist() == [1.0, 1.5, 1.0] and fd.tolist() == [1.5, 1.0, 1.5], "batch_scale: x(1 + 1/k) for nodes that send and receive")
+    S = torch.arange(2500) % 40; Dd = (torch.arange(2500) * 7) % 40; xf = torch.rand((40, 3), generator=g)
+    parts = list(velox_window_inputs(S, Dd, torch.zeros(2500, dtype=torch.long), lambda q: xf[q], "batch_scale"))
+    b2s, _ = batch_role_scale(S[1024:2048], Dd[1024:2048])
+    check([(a, b) for a, b, *_ in parts] == [(0, 1024), (1024, 2048), (2048, 2500)] and torch.allclose(parts[1][2], xf[S[1024:2048]] * b2s[:, None]),
+          "velox_window_inputs: 1024-edge batches, scale computed per batch")
+    from pdp_engine.bundle import check_requires, detector1_file
+    from pdp_engine.trainer import average_top
+    check(detector1_file("batch_scale", 2) == "detector-1-bs-s2.npz" and detector1_file("window_degrees", 0) == "detector-1-s0.npz",
+          "batch_scale weights get a file name pre-0.5 runtimes do not load (they refuse the bundle instead of scoring it wrongly)")
+    check_requires({"requires": ["detector-1:batch_scale"]}); check_requires({})
+    try:
+        check_requires({"requires": ["detector-9:future"]}); refused = False
+    except ValueError:
+        refused = True
+    check(refused, "a bundle requiring an unknown runtime feature is refused")
+    kept = [(0.7, {"w": torch.tensor([1.0])}), (0.5, {"w": torch.tensor([3.0])}), (0.6, {"w": torch.tensor([5.0])}), (0.9, {"w": torch.tensor([100.0])})]
+    check(float(average_top(kept, 3)["w"]) == 3.0 and float(average_top(kept, 1)["w"]) == 3.0 and float(average_top(kept, 2)["w"]) == 4.0,
+          "average_top: mean weights of the k lowest-validation-loss epochs")
+    from pdp_engine.scoring import FusionCalibration
+    r1v, r2v = np.array([0.2, 1.0, 0.5]), np.array([0.9, 0.1, 0.5])
+    fm = FusionCalibration.from_validation(r1v, r2v, (2.0, 1.0), "max")
+    fw = FusionCalibration.from_validation(r1v, r2v, (2.0, 1.0))
+    check(fm.threshold == 1.0 and list(fm.fuse(np.array([3.0, 0.0]), np.array([0.0, 2.0]))) == [3.0, 2.0] and fw.mode == "weighted"
+          and abs(fw.threshold - 0.7) < 1e-9, "fusion max: the more confident detector; weighted stays the 0.4 mean")
+    from pdp_engine.bundle import requirements
+    check(requirements("batch_scale", "max") == ["detector-1:batch_scale", "fusion:max"] and requirements("window_degrees", "weighted") == [],
+          "0.5 bundles declare what they need; 0.4-style bundles declare nothing")
+
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

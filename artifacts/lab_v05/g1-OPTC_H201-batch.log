@@ -1,0 +1,40 @@
+batch 0 {"epoch": 0, "train": 0.5861, "val": 0.5344, "ADP": 0.046, "TP": 0, "FP": 7, "attacks": "0/1"} 28s
+batch 0 {"epoch": 1, "train": 0.5516, "val": 0.5249, "ADP": 0.071, "TP": 0, "FP": 11, "attacks": "0/1"} 57s
+batch 0 {"epoch": 2, "train": 0.5483, "val": 0.5236, "ADP": 0.088, "TP": 0, "FP": 23, "attacks": "0/1"} 86s
+batch 0 {"epoch": 3, "train": 0.5472, "val": 0.5223, "ADP": 0.046, "TP": 0, "FP": 29, "attacks": "0/1"} 113s
+batch 0 {"epoch": 4, "train": 0.5461, "val": 0.5211, "ADP": 0.051, "TP": 0, "FP": 13, "attacks": "0/1"} 139s
+batch 0 {"epoch": 5, "train": 0.5455, "val": 0.5201, "ADP": 0.041, "TP": 0, "FP": 7, "attacks": "0/1"} 165s
+batch 0 {"epoch": 6, "train": 0.5453, "val": 0.52, "ADP": 0.11, "TP": 0, "FP": 7, "attacks": "0/1"} 193s
+batch 0 {"epoch": 7, "train": 0.5451, "val": 0.5197, "ADP": 0.199, "TP": 1, "FP": 4, "attacks": "1/1"} 222s
+batch 0 {"epoch": 8, "train": 0.5448, "val": 0.5196, "ADP": 0.199, "TP": 1, "FP": 4, "attacks": "1/1"} 251s
+batch 0 {"epoch": 9, "train": 0.5446, "val": 0.5196, "ADP": 0.199, "TP": 1, "FP": 4, "attacks": "1/1"} 280s
+batch 0 {"epoch": 10, "train": 0.5445, "val": 0.5193, "ADP": 0.199, "TP": 1, "FP": 6, "attacks": "1/1"} 309s
+batch 0 {"epoch": 11, "train": 0.5444, "val": 0.5193, "ADP": 0.2, "TP": 1, "FP": 4, "attacks": "1/1"} 338s
+batch 0 SELECTED {"ADP": 0.2, "TP": 1, "FP": 4, "attacks": "1/1"}
+batch 1 {"epoch": 0, "train": 0.5846, "val": 0.5349, "ADP": 0.045, "TP": 0, "FP": 5, "attacks": "0/1"} 378s
+batch 1 {"epoch": 1, "train": 0.5517, "val": 0.5255, "ADP": 0.073, "TP": 0, "FP": 15, "attacks": "0/1"} 407s
+batch 1 {"epoch": 2, "train": 0.5485, "val": 0.5232, "ADP": 0.063, "TP": 0, "FP": 23, "attacks": "0/1"} 436s
+batch 1 {"epoch": 3, "train": 0.5471, "val": 0.5217, "ADP": 0.045, "TP": 0, "FP": 12, "attacks": "0/1"} 466s
+batch 1 {"epoch": 4, "train": 0.5461, "val": 0.5206, "ADP": 0.043, "TP": 0, "FP": 33, "attacks": "0/1"} 495s
+batch 1 {"epoch": 5, "train": 0.5456, "val": 0.52, "ADP": 0.142, "TP": 0, "FP": 5, "attacks": "0/1"} 524s
+batch 1 {"epoch": 6, "train": 0.5453, "val": 0.5201, "ADP": 0.199, "TP": 1, "FP": 4, "attacks": "1/1"} 553s
+batch 1 {"epoch": 7, "train": 0.5449, "val": 0.5204, "ADP": 0.047, "TP": 0, "FP": 27, "attacks": "0/1"} 582s
+batch 1 {"epoch": 8, "train": 0.5448, "val": 0.5197, "ADP": 0.142, "TP": 1, "FP": 12, "attacks": "1/1"} 606s
+batch 1 {"epoch": 9, "train": 0.5447, "val": 0.5203, "ADP": 0.199, "TP": 1, "FP": 4, "attacks": "1/1"} 630s
+batch 1 {"epoch": 10, "train": 0.5444, "val": 0.5194, "ADP": 0.053, "TP": 1, "FP": 28, "attacks": "1/1"} 654s
+batch 1 {"epoch": 11, "train": 0.5443, "val": 0.5189, "ADP": 0.048, "TP": 0, "FP": 19, "attacks": "0/1"} 680s
+batch 1 SELECTED {"ADP": 0.048, "TP": 0, "FP": 19, "attacks": "0/1"}
+batch 2 {"epoch": 0, "train": 0.5834, "val": 0.5338, "ADP": 0.046, "TP": 0, "FP": 11, "attacks": "0/1"} 716s
+batch 2 {"epoch": 1, "train": 0.5515, "val": 0.5251, "ADP": 0.073, "TP": 0, "FP": 10, "attacks": "0/1"} 742s
+batch 2 {"epoch": 2, "train": 0.5484, "val": 0.5233, "ADP": 0.062, "TP": 0, "FP": 17, "attacks": "0/1"} 768s
+batch 2 {"epoch": 3, "train": 0.5471, "val": 0.522, "ADP": 0.047, "TP": 0, "FP": 54, "attacks": "0/1"} 794s
+batch 2 {"epoch": 4, "train": 0.5463, "val": 0.5216, "ADP": 0.044, "TP": 0, "FP": 24, "attacks": "0/1"} 820s
+batch 2 {"epoch": 5, "train": 0.5456, "val": 0.5203, "ADP": 0.048, "TP": 0, "FP": 3, "attacks": "0/1"} 850s
+batch 2 {"epoch": 6, "train": 0.5451, "val": 0.5201, "ADP": 0.046, "TP": 0, "FP": 7, "attacks": "0/1"} 879s
+batch 2 {"epoch": 7, "train": 0.5449, "val": 0.5198, "ADP": 0.048, "TP": 0, "FP": 5, "attacks": "0/1"} 909s
+batch 2 {"epoch": 8, "train": 0.5447, "val": 0.5198, "ADP": 0.055, "TP": 0, "FP": 7, "attacks": "0/1"} 937s
+batch 2 {"epoch": 9, "train": 0.5445, "val": 0.5196, "ADP": 0.048, "TP": 0, "FP": 29, "attacks": "0/1"} 966s
+batch 2 {"epoch": 10, "train": 0.5444, "val": 0.5196, "ADP": 0.05, "TP": 0, "FP": 26, "attacks": "0/1"} 993s
+batch 2 {"epoch": 11, "train": 0.5444, "val": 0.5189, "ADP": 0.044, "TP": 0, "FP": 9, "attacks": "0/1"} 1017s
+batch 2 SELECTED {"ADP": 0.044, "TP": 0, "FP": 9, "attacks": "0/1"}
+batch ENSEMBLE {"ADP": 0.11, "TP": 0, "FP": 5, "attacks": "0/1"} 1031s

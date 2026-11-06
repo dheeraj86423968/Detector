@@ -1,0 +1,283 @@
+{
+ "eid": "b4021490-6dd4-4dfb-8628-b3e55af27b90",
+ "dataset": "THEIA_E3",
+ "variant": "reidx",
+ "lr": 0.001,
+ "out_dim": 256,
+ "seeds": [
+  {
+   "seed": 3,
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.646,
+     "val": 0.6444,
+     "ADP": 0.732,
+     "TP": 0,
+     "FP": 0,
+     "attacks": "0/2"
+    },
+    {
+     "epoch": 1,
+     "train": 0.6269,
+     "val": 0.7014,
+     "ADP": 1.0,
+     "TP": 20,
+     "FP": 35,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 2,
+     "train": 0.6215,
+     "val": 0.6443,
+     "ADP": 1.0,
+     "TP": 19,
+     "FP": 55,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 3,
+     "train": 0.6222,
+     "val": 0.6754,
+     "ADP": 0.942,
+     "TP": 19,
+     "FP": 27,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 4,
+     "train": 0.6205,
+     "val": 0.6575,
+     "ADP": 0.905,
+     "TP": 19,
+     "FP": 33,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 5,
+     "train": 0.6168,
+     "val": 0.6714,
+     "ADP": 0.91,
+     "TP": 19,
+     "FP": 70,
+     "attacks": "2/2"
+    }
+   ],
+   "selected": {
+    "ADP": 1.0,
+    "TP": 19,
+    "FP": 55,
+    "attacks": "2/2"
+   },
+   "swa3": {
+    "ADP": 0.91,
+    "TP": 19,
+    "FP": 39,
+    "attacks": "2/2"
+   }
+  },
+  {
+   "seed": 4,
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.6426,
+     "val": 0.6684,
+     "ADP": 0.035,
+     "TP": 20,
+     "FP": 563,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 1,
+     "train": 0.6239,
+     "val": 0.7515,
+     "ADP": 0.046,
+     "TP": 3,
+     "FP": 69,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 2,
+     "train": 0.6234,
+     "val": 0.7055,
+     "ADP": 0.015,
+     "TP": 5,
+     "FP": 478,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 3,
+     "train": 0.6212,
+     "val": 0.6645,
+     "ADP": 0.796,
+     "TP": 19,
+     "FP": 77,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 4,
+     "train": 0.6208,
+     "val": 0.6483,
+     "ADP": 0.901,
+     "TP": 18,
+     "FP": 13,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 5,
+     "train": 0.619,
+     "val": 0.6612,
+     "ADP": 0.913,
+     "TP": 19,
+     "FP": 62,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 6,
+     "train": 0.6182,
+     "val": 0.6516,
+     "ADP": 0.916,
+     "TP": 19,
+     "FP": 69,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 7,
+     "train": 0.6177,
+     "val": 0.6499,
+     "ADP": 1.0,
+     "TP": 19,
+     "FP": 92,
+     "attacks": "2/2"
+    }
+   ],
+   "selected": {
+    "ADP": 0.901,
+    "TP": 18,
+    "FP": 13,
+    "attacks": "2/2"
+   },
+   "swa3": {
+    "ADP": 1.0,
+    "TP": 19,
+    "FP": 89,
+    "attacks": "2/2"
+   }
+  },
+  {
+   "seed": 5,
+   "epochs": [
+    {
+     "epoch": 0,
+     "train": 0.6464,
+     "val": 0.6859,
+     "ADP": 1.0,
+     "TP": 20,
+     "FP": 13,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 1,
+     "train": 0.6217,
+     "val": 0.7167,
+     "ADP": 0.964,
+     "TP": 18,
+     "FP": 58,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 2,
+     "train": 0.6193,
+     "val": 0.6628,
+     "ADP": 0.929,
+     "TP": 20,
+     "FP": 92,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 3,
+     "train": 0.6214,
+     "val": 0.6533,
+     "ADP": 0.607,
+     "TP": 19,
+     "FP": 149,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 4,
+     "train": 0.6134,
+     "val": 0.6526,
+     "ADP": 0.653,
+     "TP": 18,
+     "FP": 113,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 5,
+     "train": 0.6152,
+     "val": 0.6589,
+     "ADP": 1.0,
+     "TP": 18,
+     "FP": 58,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 6,
+     "train": 0.6162,
+     "val": 0.6326,
+     "ADP": 1.0,
+     "TP": 19,
+     "FP": 127,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 7,
+     "train": 0.6145,
+     "val": 0.6407,
+     "ADP": 0.975,
+     "TP": 18,
+     "FP": 3,
+     "attacks": "2/2"
+    },
+    {
+     "epoch": 8,
+     "train": 0.6114,
+     "val": 0.6439,
+     "ADP": 0.809,
+     "TP": 14,
+     "FP": 9,
+     "attacks": "1/2"
+    },
+    {
+     "epoch": 9,
+     "train": 0.6179,
+     "val": 0.6415,
+     "ADP": 1.0,
+     "TP": 20,
+     "FP": 17,
+     "attacks": "2/2"
+    }
+   ],
+   "selected": {
+    "ADP": 1.0,
+    "TP": 19,
+    "FP": 127,
+    "attacks": "2/2"
+   },
+   "swa3": {
+    "ADP": 0.977,
+    "TP": 19,
+    "FP": 95,
+    "attacks": "2/2"
+   }
+  }
+ ],
+ "ensemble": {
+  "ADP": 1.0,
+  "TP": 19,
+  "FP": 71,
+  "attacks": "2/2"
+ },
+ "ensemble_ratio_file": "/lab/r1-THEIA_E3-reidx-0.001-256-swa3.npy"
+}

@@ -45,20 +45,36 @@ class Calibration:
 
 @dataclass
 class FusionCalibration:
-    weights: tuple[float, float]           # (detector-1, detector-2) e.g. (2, 1)
+    """How the two detectors' threshold ratios become one learned score. mode "max" (0.5 default): a node scores
+    as high as the more confident detector - no weights to choose, and right whichever detector is the stronger one
+    on an endpoint (on the development sets detector-1 is on THEIA, detector-2 on CADETS; ranking ADP mean over
+    CADETS / THEIA / H201: max 0.65, 1:2 0.60, 1:1 0.58, 2:1 0.52 - artifacts/lab_v05). mode "weighted": the weighted
+    mean (0.2-0.4 default 2:1; the simulation calibration chooses weights)."""
+    weights: tuple[float, float]           # (detector-1, detector-2) e.g. (2, 1); used by mode "weighted"
     threshold: float                       # max fused validation score
     percentiles: dict[str, float] = field(default_factory=dict)
+    mode: str = "weighted"
 
     def fuse(self, r1: np.ndarray, r2: np.ndarray) -> np.ndarray:
-        w1, w2 = self.weights
-        return (w1 * r1 + w2 * r2) / (w1 + w2)
+        return fuse_ratios(r1, r2, self.weights, self.mode)
 
     @staticmethod
-    def from_validation(r1: np.ndarray, r2: np.ndarray, weights=(2.0, 1.0)) -> "FusionCalibration":
-        w1, w2 = weights
-        f = (w1 * r1 + w2 * r2) / (w1 + w2)
+    def from_validation(r1: np.ndarray, r2: np.ndarray, weights=(2.0, 1.0), mode: str = "weighted") -> "FusionCalibration":
+        f = fuse_ratios(r1, r2, weights, mode)
         f = f[np.isfinite(f)]
-        return FusionCalibration(weights, float(f.max()), {p: float(np.percentile(f, float(p))) for p in ("99", "99.9", "99.99")})
+        return FusionCalibration(weights, float(f.max()), {p: float(np.percentile(f, float(p))) for p in ("99", "99.9", "99.99")}, mode)
+
+
+FUSION_MODES = ("weighted", "max")
+
+
+def fuse_ratios(r1: np.ndarray, r2: np.ndarray, weights=(2.0, 1.0), mode: str = "weighted") -> np.ndarray:
+    if mode == "max":
+        return np.maximum(r1, r2)
+    if mode != "weighted":
+        raise ValueError(f"unknown fusion mode {mode!r}")
+    w1, w2 = weights
+    return (w1 * r1 + w2 * r2) / (w1 + w2)
 
 
 def fill_missing(r: np.ndarray) -> np.ndarray:

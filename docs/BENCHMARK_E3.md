@@ -245,3 +245,25 @@ runs now have the same alerts and the same ADP: the deterministic alerts are ran
 score only orders alerts within a severity, and on E3 it no longer changes which attack node comes first.
 CADETS precision (0.66) now matches the lower end of the published precision (0.66-0.85), with ADP above both
 published systems in every run.
+
+## 0.5 (2026-11-06; docs/DETECTION_LAYERS.md "0.5")
+
+The learned detectors changed (detector-1 input / lr / epoch averaging, max fusion); layers 1-2 and the policy did
+not. Same 5 bundles per dataset as 0.4, with detector-1 retrained under the 0.5 defaults on each bundle's own
+baseline (`tools.retrain_detector1`, same seed sets) and the fusion re-calibrated; detector-2 unchanged. CADETS and
+THEIA were development sets. Raw JSON: `artifacts/benchmark_e3/eval-{cadets,theia}-v05.json`; lab in `artifacts/lab_v05/`.
+
+Learned-only ranking ADP (mean / min / max over the 5 runs):
+
+| | detector-1 | detector-2 | fused (learned ranker) |
+|---|---|---|---|
+| CADETS 0.4 | 0.12 / 0.04 / 0.20 | 0.91 / 0.79 / 1.00 | 0.30 / 0.17 / 0.39 |
+| **CADETS 0.5** | **0.41 / 0.34 / 0.60** | 0.91 / 0.79 / 1.00 | **0.83 / 0.37 / 1.00** |
+| THEIA 0.4 | 0.26 / 0.05 / 0.55 | 0.85 / 0.24 / 1.00 | 0.71 / 0.40 / 0.87 |
+| **THEIA 0.5** | **0.98 / 0.92 / 1.00** | 0.85 / 0.24 / 1.00 | **0.95 / 0.73 / 1.00** |
+
+The product's alerts are identical to 0.4 in every run (CADETS ADP 1.00, MCC 0.530, 29 TP / 15 FP; THEIA ADP 1.00,
+MCC 0.684, 100 TP / 81 FP): the learned layer only orders alerts within a severity and on E3 that order already had
+an attack node first. The gain matters where the deterministic layers miss (or when `learned_alerts` is on): on
+THEIA detector-1 alone now reaches ADP 1.00 (each attack's first node above every benign node) in 4 of 5 runs, the
+fused ranker in 4 of 5 on THEIA and 2 of 5 on CADETS (0.4: none). Velox's published CADETS ADP of 0.94 selects the epoch by test ADP; validation-loss selection gives 0.34-0.60.

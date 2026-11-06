@@ -1,0 +1,18 @@
+batch 0 {"epoch": 0, "train": 0.5631, "val": 0.529, "ADP": 0.09, "TP": 1, "FP": 14, "attacks": "1/1"} 29s
+batch 0 {"epoch": 1, "train": 0.5502, "val": 0.5459, "ADP": 0.139, "TP": 1, "FP": 26, "attacks": "1/1"} 63s
+batch 0 {"epoch": 2, "train": 0.55, "val": 0.532, "ADP": 0.072, "TP": 0, "FP": 9, "attacks": "0/1"} 102s
+batch 0 {"epoch": 3, "train": 0.5494, "val": 0.5663, "ADP": 0.197, "TP": 0, "FP": 7, "attacks": "0/1"} 142s
+batch 0 SELECTED {"ADP": 0.09, "TP": 1, "FP": 14, "attacks": "1/1"}
+batch 1 {"epoch": 0, "train": 0.562, "val": 0.5275, "ADP": 0.076, "TP": 0, "FP": 17, "attacks": "0/1"} 193s
+batch 1 {"epoch": 1, "train": 0.5496, "val": 0.5385, "ADP": 0.999, "TP": 0, "FP": 0, "attacks": "0/1"} 227s
+batch 1 {"epoch": 2, "train": 0.5524, "val": 0.5319, "ADP": 0.09, "TP": 0, "FP": 5, "attacks": "0/1"} 259s
+batch 1 {"epoch": 3, "train": 0.5503, "val": 0.5369, "ADP": 0.166, "TP": 1, "FP": 10, "attacks": "1/1"} 295s
+batch 1 SELECTED {"ADP": 0.076, "TP": 0, "FP": 17, "attacks": "0/1"}
+batch 2 {"epoch": 0, "train": 0.5609, "val": 0.5987, "ADP": 0.124, "TP": 0, "FP": 0, "attacks": "0/1"} 349s
+batch 2 {"epoch": 1, "train": 0.5519, "val": 0.5533, "ADP": 0.201, "TP": 0, "FP": 0, "attacks": "0/1"} 387s
+batch 2 {"epoch": 2, "train": 0.549, "val": 0.5319, "ADP": 0.249, "TP": 1, "FP": 4, "attacks": "1/1"} 421s
+batch 2 {"epoch": 3, "train": 0.5491, "val": 0.5396, "ADP": 0.249, "TP": 0, "FP": 3, "attacks": "0/1"} 452s
+batch 2 {"epoch": 4, "train": 0.5475, "val": 0.5353, "ADP": 0.142, "TP": 1, "FP": 34, "attacks": "1/1"} 481s
+batch 2 {"epoch": 5, "train": 0.5479, "val": 0.5321, "ADP": 0.11, "TP": 1, "FP": 29, "attacks": "1/1"} 514s
+batch 2 SELECTED {"ADP": 0.249, "TP": 1, "FP": 4, "attacks": "1/1"}
+batch ENSEMBLE {"ADP": 0.07, "TP": 0, "FP": 9, "attacks": "0/1"} 531s

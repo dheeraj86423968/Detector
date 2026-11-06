@@ -1,4 +1,51 @@
-# Layered detection (0.3, revised in 0.4)
+# Layered detection (0.3, revised in 0.4 and 0.5)
+
+## 0.5 (2026-11-06): the learned detectors
+
+Layers 1-2 and the alert policy are unchanged; 0.5 changes how detector-1 (Velox) is trained and how the two
+learned detectors are fused. Nothing is per dataset or per client: one default for every endpoint, chosen on the
+development sets only (protocol, lab scripts and logs: `artifacts/lab_v05/`).
+
+| change | setting (`TrainConfig`) | why |
+|---|---|---|
+| Detector-1 structural input = the published Velox's reindexer input: per 1024-edge batch a node that both sends and receives gets its features scaled by 1 + 1/k (k = its in-count in the batch) | `velox_input = "batch_scale"` (`models.batch_role_scale`) | Velox has no message passing; the only structure it sees comes from PIDSMaker's GraphReindexer double scatter-mean, which our port had replaced with window degrees. Without any structure detector-1 is useless (CADETS ADP 0.008); window degrees do not reproduce it (0.13); batch_scale does (0.36-0.60) |
+| Learning rate 1e-3 (was 1e-4) | `velox_lr` | PIDSMaker's tuned value on 6 of its 8 Velox datasets; >= 1e-4 on THEIA, equal within seed noise on CADETS / H201 |
+| The weights of the 3 epochs with the lowest validation loss are averaged | `velox_average_top = 3` | same mean ADP as the single best epoch, worst seed better (0.09 vs 0.04); no inference cost |
+| Fusion = max of the two detectors' threshold ratios (was 2:1 weighted mean) | `fusion_mode = "max"` | the stronger detector differs per dataset (CADETS: detector-2, THEIA: detector-1); max has no weight to choose and was best on the development mean (0.65 vs 0.52 for 2:1) |
+
+Detector-2 (ORTHRUS) is unchanged: the 5-seed mean of max-normalised ratios was best or tied among 11 label-free
+seed combinations (median, trimmed mean, robust-z, percentile normalisation). Published Velox's CADETS ADP (0.94)
+uses test-ADP epoch selection; ours selects by validation loss only, as a product must.
+
+**Compatibility**: 0.5 bundles name detector-1's weights `detector-1-bs-s<k>.npz` and list `requires:
+["detector-1:batch_scale", "fusion:max"]` in the manifest. 0.4 agents find no weights they can load and keep their
+previous bundle; 0.5.0 agents check `requires` and refuse a bundle that needs a feature they do not know. Older
+bundles keep working unchanged in 0.5 agents (window-degree input, weighted fusion). Existing endpoints get 0.5 on
+their next retrain, or without detector-2 GPU time:
+```
+docker exec pdp-worker-train-1 python -m pdp_server.tools.retrain_detector1 --endpoint <id> --bundles <current bundle> --deploy
+```
+(detector-1 retrained on the bundle's own baseline, detector-2 / layers / policy copied, fusion re-calibrated on the
+validation day; about 4-9 min per endpoint on the L40S on the benchmark data).
+
+### Result (5 runs per dataset; details in docs/BENCHMARK_E3.md and docs/BENCHMARK_OPTC.md, "0.5")
+
+Learned-only ranking ADP (node level, mean over runs; 0.4 -> 0.5):
+
+| dataset | detector-1 | fused (learned ranker) | product ADP | alerts (TP / FP) |
+|---|---|---|---|---|
+| CADETS (dev) | 0.12 -> **0.41** | 0.30 -> **0.83** | 1.00 -> 1.00 | unchanged |
+| THEIA (dev) | 0.26 -> **0.98** | 0.71 -> **0.95** | 1.00 -> 1.00 | unchanged |
+| H201 (dev) | 0.15 -> 0.18 | 0.13 -> 0.17 | 0.80 -> **1.00** | unchanged |
+| H501 (held out) | 0.02 -> 0.07 | 0.02 -> 0.09 | 0.61 -> 0.60 | unchanged |
+| H051 (held out) | 0.20 -> **0.03** | 0.18 -> **0.08** | 0.86 -> 0.83 | unchanged |
+
+On DARPA E3 the learned ranker went from weak to good. **The held-out OpTC hosts do not confirm the gain**: H501
+improves slightly, H051 gets worse, and their held-out mean is about flat (fused 0.10 -> 0.08, product ADP 0.74 ->
+0.72). On Windows OpTC both learned detectors stay close to useless before and after (ADP <= 0.26). Alerts, MCC,
+precision and recall are identical on all 25 bundles, because since 0.4 the learned layer only orders alerts within
+a severity. H501 / H051 had already been used as held-out sets for 0.4; nothing in this round looked at them before
+the single final run.
 
 ## 0.4 (2026-11-06): what changed and why
 
@@ -58,7 +105,7 @@ false-positive volume is bounded by construction.
 ## The three layers
 
 Code: `engine/pdp_engine/layers.py` (layers 1-2), `engine/pdp_engine/runtime.py` (`AlertPolicy`),
-`engine/pdp_engine/models.py` (`window_degrees`), `engine/pdp_engine/trainer.py`.
+`engine/pdp_engine/models.py` (`batch_role_scale`, `window_degrees`), `engine/pdp_engine/trainer.py`.
 
 ### Layer 1 - executable novelty
 
@@ -104,10 +151,14 @@ the live collectors' one node per exec image (EXECUTE into the new image, then C
 
 ### Layer 3 - learned ranker (Velox + ORTHRUS), fixed
 
-* **Detector-1 structural input** (`models.window_degrees`): log1p of each node's out-/in-degree and distinct
-  successors / predecessors in the window are appended to the node features. The published Velox got
-  degree-dependent inputs only through the reindexer defect; our faithful port had none. Per-edge-type counts are
-  deliberately excluded - they would contain the label being predicted.
+* **Detector-1 structural input** (0.5: `models.batch_role_scale`, `velox_input = "batch_scale"`): per 1024-edge
+  batch, a node that both sends and receives has its features scaled by 1 + 1/k (k = in-count in the batch) - the
+  input the published Velox gets from PIDSMaker's reindexer. 0.3-0.4 used `models.window_degrees` (log1p of each
+  node's out-/in-degree and distinct successors / predecessors appended to the features), which old bundles keep.
+  Per-edge-type counts are deliberately excluded - they would contain the label being predicted. 0.5 also trains
+  detector-1 at lr 1e-3 and averages the weights of its 3 lowest-validation-loss epochs.
+* **Fusion** (0.5: `fusion_mode = "max"`): the fused score is the max of the two detectors' threshold ratios;
+  0.2-0.4 bundles use the 2:1 weighted mean, recorded as `calibration.fusion.mode`.
 * **Seed ensembles**: detector-1 averages 3 seeds, detector-2 averages 5 seeds (`orthrus_aggregate = "mean"`; 0.2
   kept only the seed with the lowest validation loss, which keeps all of that seed's variance).
 * **Bounded alerting** (`AlertPolicy`): the fused score alerts on its own only
@@ -151,3 +202,6 @@ docker exec pdp-worker-train-1 python -m pdp_server.tools.add_layers --endpoint 
 Agents must be 0.3 to load a bundle *trained* by 0.3 (detector-1's input width and seed files changed; an older
 agent refuses it at load time and keeps its previous bundle). A pre-0.3 bundle upgraded with `add_layers` loads in an
 old agent but is scored without the layers - upgrade the agent first.
+
+Agents must be 0.5.0 to load a bundle trained (or upgraded with `retrain_detector1`) by 0.5: detector-1's weight
+files are renamed and the manifest's `requires` lists the new features; an older agent keeps its previous bundle.
