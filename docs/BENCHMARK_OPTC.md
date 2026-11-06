@@ -1,8 +1,8 @@
 # DARPA OpTC benchmark (hosts 201, 501, 051) — full product cycle
 
-Status: run 0 (the deployed bundle of each host) done on 2026-11-05 on the L40S host; four more seeded runs per host
-in progress (`train_variants`, then `darpa_eval --bundles all`). Results: section "Results" below, raw JSON in
-`artifacts/benchmark_optc/`.
+Status: done 2026-11-06 on the L40S host: the deployed bundle of each host (run 0) plus four independently seeded
+bundles per host (`train_variants`, `darpa_eval --bundles all`), five runs as in Bilot et al. Results: section
+"Results" below, raw JSON in `artifacts/benchmark_optc/` (`eval-optc-*-run0.json`, `eval-optc-*-5runs.json`).
 
 ## Data
 
@@ -141,30 +141,68 @@ What fired (alerts on the test days, by layer and rule, attack vs benign node):
 * **Learned layer**: weak on OpTC in this product configuration. Alone it finds the attack only on H051 (2 TP);
   corroborated alerts (learned score next to a deterministic alert) add 4-7 attack nodes per host.
 
+### Five runs (mean / min / best, as Bilot et al.)
+
+Runs 1-4 retrain both learned detectors with disjoint seeds on the same baseline; layers 1 and 2 are deterministic
+(identical in every run: H051 71 TP / 86 FP, H201 6 / 274, H501 13 / 76). TP / FP of the run with the best
+precision.
+
+| host | view | ADP mean / min / best | precision mean / min / best | TP / FP (best) | attack found |
+|---|---|---|---|---|---|
+| H051 | detector-1 alone | 0.20 / 0.07 / 0.33 | 0.10 / 0.00 / 0.25 | 2 / 6 | 2 of 5 runs |
+| | detector-2 alone | 0.26 / 0.02 / 0.43 | 0.00 / 0.00 / 0.00 | 0 / 4 | 0 of 5 |
+| | learned fusion | 0.18 / 0.08 / 0.33 | 0.08 / 0.00 / 0.22 | 2 / 7 | 2 of 5 |
+| | **layered product** | **0.59 / 0.50 / 0.88** | **0.35 / 0.34 / 0.35** | **77 / 141** | **5 of 5** |
+| H201 | detector-1 alone | 0.15 / 0.07 / 0.25 | 0.00 / 0.00 / 0.00 | 0 / 2 | 0 of 5 |
+| | detector-2 alone | 0.13 / 0.09 / 0.17 | 0.00 / 0.00 / 0.00 | 0 / 0 | 0 of 5 |
+| | learned fusion | 0.13 / 0.06 / 0.18 | 0.00 / 0.00 / 0.00 | 0 / 4 | 0 of 5 |
+| | **layered product** | **0.73 / 0.67 / 1.00** | **0.02 / 0.02 / 0.03** | **10 / 360** | **5 of 5** |
+| H501 | detector-1 alone | 0.02 / 0.01 / 0.03 | 0.00 / 0.00 / 0.00 | 0 / 0 | 0 of 5 |
+| | detector-2 alone | 0.18 / 0.08 / 0.50 | 0.05 / 0.00 / 0.25 | 1 / 3 | 1 of 5 |
+| | learned fusion | 0.02 / 0.01 / 0.02 | 0.00 / 0.00 / 0.00 | 0 / 10 | 0 of 5 |
+| | **layered product** | **0.37 / 0.25 / 0.45** | **0.08 / 0.08 / 0.09** | **19 / 195** | **5 of 5** |
+
+Layered product, mean over the five runs: H051 77.6 TP / 147 FP (recall 0.68, MCC 0.49); H201 8.8 / 349 (MCC 0.01);
+H501 18.2 / 208 (MCC 0.04). Its ADP varies between runs although its alerts barely change: with one attack per
+host, ADP is the precision at the first attack node in the ranking, and the order inside the deterministic alerts is
+broken by the learned score (run 0 ranked an attack node first on H201 and H051; the other runs did not).
+
 ### Comparison with Bilot et al. (Table 6)
 
-| host | published: range over Velox / Orthrus / Kairos (mean of 5 runs; best run's TP / FP) | this product, run 0 |
-|---|---|---|
-| H051 | ADP 0.50-0.68; precision 0.08-0.14 mean, best run 1 TP / 1-4 FP | layered: ADP 0.88, precision 0.35, **78 TP** / 145 FP, MCC 0.49; detector-1 alone 2 TP / 6 FP (precision 0.25, ADP 0.33) |
-| H201 | ADP 0.48-0.90; precision 0.14-0.38 mean, best run 1 TP / 0-3 FP | layered: ADP 1.00 (attack ranked first), precision 0.02, 8 TP / 345 FP; learned alone misses (ADP 0.11-0.25) |
-| H501 | ADP 0.25-0.39; precision 0.11-0.13 mean, best run 1 TP / 4 FP | layered: ADP 0.40, precision 0.09, 19 TP / 195 FP; learned alone misses (ADP 0.02-0.10) |
+| host | system | ADP mean / min / best | precision mean / min / best | TP / FP (best) |
+|---|---|---|---|---|
+| H051 | Orthrus | 0.68 / 0.06 / 1.00 | 0.08 / 0.00 / 0.20 | 1 / 4 |
+| | Velox | 0.57 / 0.11 / 1.00 | 0.12 / 0.00 / 0.50 | 1 / 1 |
+| | Kairos | 0.50 / 0.11 / 1.00 | 0.14 / 0.00 / 0.33 | 1 / 2 |
+| | **this product (layered)** | 0.59 / 0.50 / 0.88 | **0.35 / 0.34 / 0.35** | **77 / 141** |
+| H201 | Velox | 0.90 / 0.50 / 1.00 | 0.18 / 0.11 / 0.25 | 1 / 3 |
+| | Kairos | 0.75 / 0.25 / 1.00 | 0.38 / 0.00 / 1.00 | 1 / 0 |
+| | Orthrus | 0.48 / 0.23 / 1.00 | 0.14 / 0.00 / 0.25 | 1 / 3 |
+| | **this product (layered)** | 0.73 / 0.67 / 1.00 | 0.02 / 0.02 / 0.03 | 10 / 360 |
+| H501 | Velox | 0.39 / 0.20 / 0.50 | 0.13 / 0.00 / 0.20 | 1 / 4 |
+| | Orthrus | 0.25 / 0.14 / 0.33 | 0.11 / 0.04 / 0.20 | 1 / 4 |
+| | **this product (layered)** | 0.37 / 0.25 / 0.45 | 0.08 / 0.08 / 0.09 | 19 / 195 |
 
 Reading it honestly:
 
-* The **layered product detects the attack on all three hosts** in one run, with many more attack nodes than any
-  published system (8-78 TP vs 1). Its ADP is at or above the best published mean of Velox, Orthrus and Kairos on every host (1.00 vs 0.90
-  on H201, 0.88 vs 0.68 on H051, 0.40 vs 0.39 on H501; Flash on H201 and Magic on H501 reach ADP 1.00 but with
-  precision 0.00, flagging 239 k and 260 k benign nodes).
-* Its **precision is lower on H201 and H501** (0.02 and 0.09 against published means of 0.14-0.38): 145-353 false
-  alarms over three days, most from the novelty layer's Windows pseudo-processes (fixable with a Windows allow-list)
-  and corroborated learned alerts. On H051 it is higher (0.35 vs 0.14).
-* The **learned detectors alone are below the published Velox and Orthrus** on H201 and H501 (they miss the
-  attack at their thresholds; ADP 0.02-0.25 against 0.25-0.90). Differences from PIDSMaker: one shared 256-d
-  word2vec instead of per-system featurisation, the product's 15-minute windows and its ensemble of 3 + 5 seeds, and
-  OpTC's TERMINATE / RENAME / DELETE mapped differently (Data). The published per-host tuning was used for learning
-  rate and dimensions only.
-* One run so far; Bilot et al. report the mean of five. The variance runs will replace the "run 0" column with
-  mean / min / best.
+* **Consistency is the product's strength.** The layered product detects the attack in all 15 runs, with 8-79
+  attack nodes per run, and its worst run is close to its average. The published systems flag one attack node in
+  their best run and miss entirely in some runs (minimum precision 0.00 for every system on H051, for Orthrus and
+  Kairos on H201, and for Velox on H501).
+* **H051: better than every published system on precision and attack coverage** (precision 0.35 vs 0.08-0.14 mean;
+  78 of 114 attack nodes; MCC 0.49). ADP mean 0.59 is mid-range (Orthrus 0.68, Velox 0.57, Kairos 0.50) but its
+  minimum (0.50) is far above theirs (0.06-0.11).
+* **H201 and H501: more false alarms than the published systems.** Precision 0.02 and 0.08 against published means
+  of 0.11-0.38. Mean ADP is below the best published systems (0.73 vs Velox 0.90 and Kairos 0.75 on H201; 0.37
+  vs Velox 0.39 on H501), above Orthrus on both. Most of H201's false alarms come from the novelty layer flagging Windows
+  pseudo-processes (`MemCompression`, `Idle`): a Windows allow-list would remove about 270 of its ~350.
+* **The learned detectors alone are below the published Velox and Orthrus** on all three hosts (they find the
+  attack in 3 of 30 detector-runs; ADP means 0.02-0.26 against 0.25-0.90). Differences from PIDSMaker: one shared
+  256-d word2vec instead of per-system featurisation, the product's 15-minute windows and its seed ensembles, the
+  OpTC actions mapped differently (Data), and only learning rate and dimensions taken from the published tuning.
+  On OpTC the product's detection comes from the deterministic layers, with the learned layer adding a few
+  attack nodes per run (4-8, mostly corroborated by a deterministic alert).
+* Single-run caveat retracted: run 0's ADP (1.00 on H201, 0.88 on H051) was its luckiest; the means above replace it.
 
 ### Problems found while running it
 
