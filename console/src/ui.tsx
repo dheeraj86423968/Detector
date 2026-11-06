@@ -191,17 +191,41 @@ export function Dialog({ title, subtitle, onClose, children, footer, width = 560
     </div>, document.body);
 }
 
-/** Small confirm dialog; resolves the action and reports errors inline. */
-export function Confirm({ title, text, confirmLabel, danger, onClose, onConfirm }: { title: string; text: ReactNode; confirmLabel: string; danger?: boolean; onClose: () => void; onConfirm: () => Promise<unknown> }) {
-  const [busy, setBusy] = useState(false); const [err, setErr] = useState("");
-  const go = async () => { setBusy(true); setErr(""); try { await onConfirm(); onClose(); } catch (e: any) { setErr(e.message); setBusy(false); } };
+/** Small confirm dialog; resolves the action and reports errors inline. With `reasonLabel` it asks for a reason
+ * (required; passed to onConfirm) - the server records it in the audit log and notifies the admins. */
+export function Confirm({ title, text, confirmLabel, danger, onClose, onConfirm, reasonLabel }: { title: string; text: ReactNode; confirmLabel: string; danger?: boolean; onClose: () => void; onConfirm: (reason: string) => Promise<unknown>; reasonLabel?: string }) {
+  const [busy, setBusy] = useState(false); const [err, setErr] = useState(""); const [reason, setReason] = useState("");
+  const go = async () => { setBusy(true); setErr(""); try { await onConfirm(reason.trim()); onClose(); } catch (e: any) { setErr(e.message); setBusy(false); } };
   return (
     <Dialog title={title} onClose={onClose} width={460}
-      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className={cx("btn", danger ? "danger" : "primary")} disabled={busy} onClick={go}>{busy && <Loader2 className="spin" size={14} />}{confirmLabel}</button></>}>
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className={cx("btn", danger ? "danger" : "primary")} disabled={busy || (!!reasonLabel && !reason.trim())} onClick={go}>{busy && <Loader2 className="spin" size={14} />}{confirmLabel}</button></>}>
       <div className="confirm-text">{text}</div>
+      {reasonLabel && <Field label={reasonLabel} hint="Recorded in the activity log; your organisation's admins are notified.">
+        <input value={reason} onChange={e => setReason(e.target.value)} maxLength={500} autoFocus />
+      </Field>}
       {err && <div className="err">{err}</div>}
     </Dialog>
   );
+}
+
+/** The server refused a change that weakens detection until a reason is given (400 "Reason required: ..."). */
+export const isReasonRequired = (e: any) => e?.status === 400 && /^Reason required/i.test(e?.message || "");
+
+/**
+ * Run a settings change; when the server answers "Reason required" ask for one and send the change again with it.
+ * Returns [run, dialog]: render `dialog` in the component.
+ */
+export function useReasoned(): [(fn: (reason?: string) => Promise<unknown>, ok: string, done?: () => void) => Promise<void>, ReactNode] {
+  const toast = useToast();
+  const [pending, setPending] = useState<null | { msg: string; fn: (reason?: string) => Promise<unknown>; ok: string; done?: () => void }>(null);
+  const run = async (fn: (reason?: string) => Promise<unknown>, ok: string, done?: () => void) => {
+    try { await fn(); toast(ok); done?.(); }
+    catch (e: any) { if (isReasonRequired(e)) setPending({ msg: e.message, fn, ok, done }); else toast(e.message, "err"); }
+  };
+  const dialog = pending && <Confirm title="This weakens detection" confirmLabel="Apply with this reason" danger reasonLabel="Reason"
+    text={<p>{pending.msg.replace(/^Reason required:\s*/i, "").replace(/\. Send it again.*$/i, ".")}</p>}
+    onClose={() => setPending(null)} onConfirm={async reason => { await pending.fn(reason); toast(pending.ok); pending.done?.(); }} />;
+  return [run, dialog || null];
 }
 
 export function Menu({ items, label = "More actions" }: { items: ({ label: string; onClick: () => void; danger?: boolean; disabled?: boolean; title?: string } | null | false)[]; label?: string }) {

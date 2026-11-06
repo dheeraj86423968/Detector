@@ -201,7 +201,8 @@ export function allowValueError(kind: string, value: string, rule?: string | nul
   }
   const programLike = kind === "program" || rule === "learned" || rule === "novel_executable";
   if (/\s/.test(v) && !v.startsWith("/")) return "A program name cannot contain spaces. Use its full path instead.";
-  if (v.includes("/") && !v.startsWith("/")) return programLike ? "Use a full path starting with / (e.g. /usr/bin/links) or a bare name (links)." : "Use the full path, starting with /.";
+  if (v.includes("/") && !v.startsWith("/")) return programLike ? "Use the program's full path, starting with / (e.g. /usr/bin/links)." : "Use the full path, starting with /.";
+  if (programLike && /[*?]/.test(v)) return "Wildcards are not accepted: name one program by its full path.";
   if (v.length > 1 && v.endsWith("/")) return "This looks like a folder. Enter the path of a file or program.";
   return null;
 }

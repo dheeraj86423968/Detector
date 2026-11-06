@@ -63,7 +63,8 @@ export default function AllowList() {
                         <div className="min0">
                           <Mid text={e.value} className="mono allow-value" />
                           <div className="muted sm ellipsis">{e.kind === "detection" ? <span title={`Specific detection: ${e.rule_text || e.rule}`}>Detection · {e.rule_text || e.rule}</span> : kindLabel(e.kind)}
-                            {e.kind === "program" && !e.value.includes("/") ? " · any folder" : ""}</div>
+                            {e.kind === "program" && !e.value.includes("/") && !e.value.includes("\\") ? " · name only (programs recorded without a folder)" : ""}
+                            {e.risks?.includes("interpreter") ? <span className="warn-text"> · interpreter / shell{e.force ? " (allowed on purpose)" : ""}</span> : ""}</div>
                         </div>
                       </div>
                     </td>
@@ -84,7 +85,7 @@ export default function AllowList() {
       {removing && <Confirm danger title="Remove from the allow list?" confirmLabel="Remove entry" onClose={() => setRemoving(null)}
         text={<>
           <p>M.D Lab Detector will alert on <code className="code-inline">{removing.value}</code>{removing.kind === "detection" ? <> ({removing.rule_text || removing.rule})</> : null} again{removing.endpoints ? <> on {removing.endpoints.map(x => x.name).join(", ")}</> : " on all endpoints"}, from the agents' next check-in.</p>
-          {removing.alerts_allowed > 0 && <p className="muted">The {plural(removing.alerts_allowed, "alert")} it allowed stay marked as false alarms.</p>}
+          {removing.alerts_allowed > 0 && <p className="muted">The {plural(removing.alerts_allowed, "alert")} it resolved automatically are opened again; alerts an analyst has triaged since keep their status.</p>}
         </>}
         onConfirm={async () => { await del(`/api/allowlist/${removing.id}`); toast("Removed from the allow list"); reload(); }} />}
     </div>

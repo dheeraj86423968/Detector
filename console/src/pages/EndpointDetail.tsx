@@ -9,7 +9,7 @@ import { RemoveEndpointDialog } from "../endpointRemove";
 import { DailyBars } from "../chart";
 import { DETECTION, fmtBytes, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtRel, plural } from "../format";
 import { IncidentTable } from "../incidents";
-import { AllowKindIcon, Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, Mid, PageHeader, ShowMore, Tabs, Toggle, useShowMore, useToast } from "../ui";
+import { AllowKindIcon, Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, Mid, PageHeader, ShowMore, Tabs, Toggle, useReasoned, useShowMore, useToast } from "../ui";
 
 type Tab = "overview" | "incidents" | "settings";
 
@@ -297,27 +297,28 @@ function IncidentsTab({ id, learning }: { id: string; learning: boolean }) {
 // ---------------------------------------------------------------- settings (admin)
 
 function SettingsTab({ id, name }: { id: string; name: string }) {
-  const toast = useToast();
+  const [withReason, reasonDialog] = useReasoned();
   const { data, error, loading, reload } = useApi<EndpointConfigResp>(`/api/endpoints/${id}`);
   const [budget, setBudget] = useState<string>(""); const [retire, setRetire] = useState(false);
   const cfg = data?.endpoint.config || {};
   useEffect(() => { if (data) setBudget(String(cfg.learned_daily_budget ?? 20)); }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
   if (loading && !data) return <Loading block />;
   if (error && !data) return <ErrorState error={error} onRetry={reload} />;
-  const act = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast(ok); reload(); } catch (e: any) { toast(e.message, "err"); } };
   const learnedOn = cfg.learned_alerts ?? data?.learned_alerts_default ?? true;
+  /** a change that weakens detection asks for a reason (the server says so) and is sent again with it */
+  const setCfg = (config: Record<string, unknown>, ok: string) => withReason(reason => post(`/api/endpoints/${id}/config`, { config, reason }), ok, reload);
   return (
     <div className="settings">
       <AllowCard id={id} name={name} />
       <Card title="Unusual-behaviour alerts" subtitle="Besides new programs and suspicious data flows, the learned model can raise alerts on its own for behaviour unlike the baseline.">
         <div className="setting-row">
           <div><div className="setting-name">Raise unusual-behaviour alerts</div><div className="muted sm">When off, the model only adds context to the other detections.</div></div>
-          <Toggle checked={learnedOn} label="Raise unusual-behaviour alerts" onChange={v => act(() => post(`/api/endpoints/${id}/config`, { config: { learned_alerts: v } }), v ? "Unusual-behaviour alerts turned on" : "Unusual-behaviour alerts turned off")} />
+          <Toggle checked={learnedOn} label="Raise unusual-behaviour alerts" onChange={v => setCfg({ learned_alerts: v }, v ? "Unusual-behaviour alerts turned on" : "Unusual-behaviour alerts turned off")} />
         </div>
         <div className="setting-row">
           <div><div className="setting-name">Daily limit</div><div className="muted sm">At most this many unusual-behaviour alerts per day; the most unusual come first.</div></div>
-          <form className="inline-form" onSubmit={e => { e.preventDefault(); const v = parseInt(budget, 10); if (!isNaN(v) && v >= 0) act(() => post(`/api/endpoints/${id}/config`, { config: { learned_daily_budget: v } }), `Daily limit set to ${v}`); }}>
-            <input type="number" min={0} max={10000} value={budget} disabled={!learnedOn} onChange={e => setBudget(e.target.value)} style={{ width: 96 }} aria-label="Daily limit" />
+          <form className="inline-form" onSubmit={e => { e.preventDefault(); const v = parseInt(budget, 10); if (!isNaN(v) && v >= 0) setCfg({ learned_daily_budget: v }, `Daily limit set to ${v}`); }}>
+            <input type="number" min={0} max={1000} value={budget} disabled={!learnedOn} onChange={e => setBudget(e.target.value)} style={{ width: 96 }} aria-label="Daily limit" />
             <button className="btn" disabled={!learnedOn || budget === String(cfg.learned_daily_budget ?? 20)}>Save</button>
           </form>
         </div>
@@ -328,6 +329,7 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
           <button className="btn danger" onClick={() => setRetire(true)}>Remove endpoint</button>
         </div>
       </Card>
+      {reasonDialog}
       {retire && <RemoveEndpointDialog ep={{ id, name }} onClose={() => setRetire(false)}
         onDone={how => { window.location.hash = how === "deleted" ? "#/endpoints" : `#/endpoints/${id}`; window.location.reload(); }} />}
     </div>

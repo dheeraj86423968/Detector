@@ -109,9 +109,11 @@ Detection checks (synthetic attacks replayed into this endpoint's own data, scor
 
 Endpoint actions (admin): `POST /api/endpoints` (enrol token: `{"name"}` →
 `{"token", "ca_sha256", "expires_in_hours", "server_url", "agent_url", "install_command"` (Linux package),
-`"docker_command"` (container), `"enroll_command"` (already-installed agent)`}`), `POST /api/endpoints/{id}/config`,
-`POST /api/endpoints/{id}/approved-executables {"executables": [...], "approve": true|false}`,
-`POST /api/endpoints/{id}/retire`. `GET /api/endpoints/{id}` (existing, includes `config.approved_executables`).
+`"docker_command"` (container), `"enroll_command"` (already-installed agent)`}`), `POST /api/endpoints/{id}/config
+{"config": {...}, "reason"?}` (typed and range-checked; `reason` required when the change weakens detection, see
+"Misuse resistance (0.6)"), `POST /api/endpoints/{id}/approved-executables {"executables": [...], "approve": true|false,
+"note", "force"?}` (allow-list rules), `POST /api/endpoints/{id}/retire`. `GET /api/endpoints/{id}` (includes the
+effective `config.approved_executables` from the allow list, and `posture`); `GET /api/endpoints/{id}/posture`.
 
 
 ### Removing an endpoint, install progress (0.6)
@@ -171,7 +173,8 @@ so the UI can number the attack steps. Library/system file reads of a process ar
 Alerts (secondary view): `GET /api/alerts?endpoint_id=&status=&layer=&limit=` → fields `id, endpoint_id, endpoint,
 window_start_ns, node_uuid, ntype, label, layer, rule, reason, status, created_at, incident_id` (no scores; reasons are
 score-free sentences),
-`POST /api/alerts/{id} {"status"}` (`can.triage`), `GET /api/alerts/export?format=csv|ndjson`.
+`POST /api/alerts/{id} {"status"}` (`can.triage`), `GET /api/alerts/export?format=csv|ndjson&endpoint_id=&status=&limit=&since_id=`
+(`can.triage`; at most 100000 rows per request, see "Misuse resistance (0.6)").
 
 Detection type names for the UI: `novelty` "New program", `rules` "Suspicious data flow", `corroborated`
 "Related activity", `learned` "Unusual behaviour", `evidence` "Supporting evidence".
@@ -194,10 +197,16 @@ selected endpoints. Agents receive the merged list with their configuration; the
 ```
 `POST /api/allowlist` (`can.manage_endpoints`) `{"kind", "value", "rule"?, "endpoints": null|[ids], "note"?, "resolve_open": true}`
 → `{"ok": true, "id": 3, "alerts_allowed": 18}` (how many open alerts it covered and removed from incidents).
-`value`: program = path (`/usr/bin/links`) or bare name (`links`, matches any path); address = IP or CIDR (at most /16,
-IPv6 /48); detection = the detection's key with `rule` one of `novel_executable, untrusted_exec, untrusted_code_network,
-exfiltration, tainted_modify, tainted_spawn`, or `learned` with a program as value (unusual-behaviour / related-activity alerts of that program). 409 if the same entry exists; 400 with a message on invalid input.
-`DELETE /api/allowlist/{id}` (`can.manage_endpoints`) → `{"ok": true}` (alerts it covered stay marked as false alarms).
+`value`: program = full path (`/usr/bin/links`, `C:\Program Files\App\app.exe`), compared as the agent compares
+programs (0.6: a bare name matches only a program recorded without a path, and is accepted only for endpoints whose
+collector records none); address = IP or CIDR (at most /16, IPv6 /48); detection = the detection's key with `rule`
+one of `novel_executable, untrusted_exec, untrusted_code_network, exfiltration, tainted_modify, tainted_spawn`, or
+`learned` with a program as value (unusual-behaviour / related-activity alerts of that program). 0.6: `note` (or
+`reason`) is required; interpreters, shells, loaders and system binaries need `"force": true`; wildcards and folders are
+refused. 409 if the same entry exists; 400 with a message on invalid input. Entries carry `risks` (`name_only`,
+`interpreter`, `wildcard`, `large_network`) and `force`.
+`DELETE /api/allowlist/{id}` (`can.manage_endpoints`) → `{"ok": true, "alerts_reopened": n}` (0.6: alerts the entry
+resolved automatically are open again; alerts an analyst triaged since keep their status).
 
 `GET /api/alerts/{id}/allow-options` → ready-made entries for an "Allow..." dialog on an alert / graph node:
 ```json
@@ -233,13 +242,14 @@ failed, updater}`; `issues` lists disk, event loss, falling behind, failed updat
 - Sessions: `POST /api/me/password` ends the user's other sessions (this one gets a new cookie); so does an admin
   setting a user's password (`PATCH /api/users/{id} {password}`) and `tools/reset_password`.
   `POST /api/me/sessions/end` signs out everywhere else. An ended session answers 401.
-- `GET /api/audit?limit=` (admins): `{entries: [{at, who, action, target, status, ip}]}`.
+- `GET /api/audit?limit=` (admins): `{entries: [{at, who, action, target, status, ip, detail}]}` (`detail`, 0.6: redacted
+  before/after `changes`, `reason`, `weakens`, export `rows`, hunt `query`).
 - `POST /api/incidents/{id}/assign {user_id|null}`, `POST /api/incidents/{id}/notes {text}`; incident detail adds
   `assignee`, `history`, `assignable`; `GET /api/incidents?assignee=me|none`. `GET /api/reports/weekly`.
 
 ## Response actions (0.6, admins, opt-in)
 `PATCH /api/org {response_actions: true}`; `POST /api/endpoints/{id}/respond {action: kill_process|isolate|release,
-node_uuid (kill_process: a process an alert of this endpoint was raised on)}` → `{id}`;
+node_uuid (kill_process: a process an alert of this endpoint was raised on), reason (required, 0.6)}` → `{id}`;
 `GET /api/endpoints/{id}/commands/{id}` → `{state, result}` (the agent acts within its next status poll). Health
 adds `isolated`. Agents 0.3.15+.
 
@@ -263,10 +273,97 @@ sent as a `hunt` command to every endpoint of the organisation that reported wit
 `GET /api/notifications/channels` → `{channels: [{id, name, kind, target, has_secret, min_severity, events, every_alert,
 enabled, last_ok_at, last_error, last_error_at, ...}], email_available, notifier_running}` (secrets are never returned).
 `POST /api/notifications/channels` `{name, kind: email|slack|teams|webhook|syslog, target, secret?, min_severity:
-low|medium|high|critical, events: [incident, agent_offline, agent_health], every_alert (webhook/syslog), enabled}`;
+low|medium|high|critical, events: [incident, agent_offline, agent_health, weekly, detection_weakened, response_action],
+every_alert (webhook/syslog), enabled}`;
 `PATCH` / `DELETE /api/notifications/channels/{id}`; `POST /api/notifications/channels/{id}/test` queues a test
 message; `GET /api/notifications/log?channel_id=` recent deliveries (sent, failed, suppressed, digest, queued).
 All org-scoped: another organisation's channel ids answer 404.
+
+## Misuse resistance (0.6)
+
+Someone with console or API access - an insider, or an attacker holding a stolen session or an admin's password -
+must not be able to weaken detection silently, and the product resists uses it was not built for (bulk extraction,
+reaching other endpoints' or organisations' data, burning shared GPU time). Implemented in `pdp_server/posture.py`;
+unit tests `tests/unit/test_posture.py`, database check `tests/e2e/misuse_check.py`.
+
+**Typed settings.** Every key of `POST /api/endpoints/{id}/config` (and of the initial `config` of `POST
+/api/endpoints`) and every `train.*` key has a type and a range (`posture.CONFIG_SCHEMA`, `TRAIN_SCHEMA`, checked
+against `pdp_engine.trainer.TrainConfig`: a new engine field is not configurable until it is listed). Examples:
+`learned_daily_budget` 0-1000, `train.*_epochs` 1-100, `train.velox_runs` 1-10, at most 10 `train.orthrus_seeds`,
+`train.alert_layers` null or a non-empty list of layers, `train.corroboration_percentile` 99 / 99.9 / 99.99.
+`train.device` is refused (the training worker chooses it; it used to make every training fail), and so are keys the
+server manages (`kind`, `cluster`, `refresh_days` ...). `approved_executables` is refused with a pointer to the allow
+list. A configuration in which neither deterministic layer (new programs, data-flow rules) can alert is refused
+outright, reason or not (retire the endpoint instead).
+
+**Weakening needs a reason, is audited and notified.** These changes are allowed for admins but answer `400 "Reason
+required: ..."` until the request carries a non-empty `reason` (at most 500 characters):
+
+| where | weakening |
+|---|---|
+| endpoint settings | layer 1 or 2 turned off; alerting dropped for a layer (`train.alert_layers`); `train.layers_only`; corroboration percentile raised; learned alerts turned off; a learned-alert daily limit above 100 (a flood that buries real alerts) or set to 0 while they are on; `periodic_retrain: false`; `early_models: false`; `fp_budget` raised; a shorter baseline; `retain_baseline_events: true` (privacy) |
+| allow list | every new entry (program, address, detection); the `note` is the reason |
+| organisation | retention lowered; two-factor sign-in no longer required |
+| response actions | every action (`reason` required) |
+
+Each is written to the audit log in the same transaction as the change, with a redacted before/after diff (secret
+values never, webhook URLs reduced to their host), the reason and what it weakens, and becomes a security event:
+`GET /api/security-events` (admins) → `{events: [{id, kind: detection_weakened|response_action, severity, endpoint_id,
+endpoint, who, title, detail: {reason, changes, diff, ...}, at}]}`. The notifier sends them (severity high, whatever the
+channel's minimum severity) to every channel subscribed to `detection_weakened` / `response_action` **or to
+`incident`**: an admin cannot keep incident notifications while silencing these. Removing or disabling a channel,
+dropping events from it, raising its minimum severity or changing its destination is itself a `detection_weakened`
+event (sent to the remaining channels).
+
+**Allow-list programs.** Full paths only, matched exactly as the agent's layer 1 matches approvals
+(`pdp_engine.layers.program_key`: Windows spellings and per-version / GUID folders normalised) - approving `python3`
+no longer marks alerts for `/dev/shm/x/python3` as allowed. A bare name is accepted only for endpoints whose model
+shows the collector records programs without paths (otherwise 400). Wildcards (`*`, `?`, `[...]`) and folders are
+refused. Interpreters, shells, loaders and system binaries that run other code (bash, sh, python*, perl, node,
+java, env, sudo, ld-linux*.so, powershell, cmd, wscript/cscript, mshta, rundll32, regsvr32, msiexec, certutil ...)
+answer `400 "Confirmation required: ..."` unless the request has `"force": true` and a note; the entry records
+`force`. Existing `approved_executables` stored in endpoint configurations are migrated at start-up into allow-list
+entries with the note "migrated from endpoint config" (no creator, an audit row each; values kept as they were - a
+migration is not a new approval - and shown with their `risks`); the endpoint configuration no longer contributes
+approvals. Deleting an entry reopens the alerts it resolved automatically (`allowed_by` = the entry, still
+`false_positive`, `status_by` = the entry's creator or never set).
+
+**Who changed an alert.** `alerts.status_by` / `status_at` are set by `POST /api/alerts/{id}`, incident status
+actions and allow-list auto-resolution (`status_by` = the entry's creator), and cleared when a deletion reopens it.
+
+**Detection posture.** Per endpoint, from the model manifest and the settings: no model (protected, or long after
+enrolment), stuck on an early model, degraded (last build failed), model older than 60 days with periodic retraining
+off or older than 120 days, a deterministic layer off in the model or in the settings, the model not alerting on
+them, a rules-only model, learned alerts on with a daily limit above 100, stored training settings that would make
+training fail, risky allow-list entries (interpreter, bare name). Shown with the endpoint's health issues (overview)
+and as `posture: {level: ok|warning|error, problems: [{key, level, text}]}` on `GET /api/endpoints/{id}` and
+`/posture`. The notifier recomputes it every 5 minutes (`PDP_POSTURE_REFRESH_S`); a new or worse problem is a
+`detection_weakened` event.
+
+**Export, hunts, simulation.** `GET /api/alerts/export` needs `can.triage` (viewers 403), returns at most 100000 rows
+per request (`PDP_EXPORT_MAX_ROWS`; a larger `limit` is a 400): page with `since_id` (rows with a larger id, oldest
+first; `X-PDP-Next-Since-Id` gives the next page while `X-PDP-More: 1`). Every export is audited with its filters and
+row count. Hunts ask only the endpoints in the starter's scope, and every user sees hunts and answers only for the
+endpoints in their own scope; each hunt is audited with its query text. `POST /api/sim/campaigns` accepts a
+`bundle_id` only if it is one of that endpoint's own models (the simulation worker checks again before loading a
+model); simulated attacks are capped per organisation at `PDP_SIM_RUNS_PER_DAY` (20000) per 24 hours (429).
+Per-user token buckets (table `rate_buckets`, shared by all API workers; burst/per hour): exports `PDP_RATE_EXPORT`
+10/30, hunts `PDP_RATE_HUNT` 20/120, simulation campaigns and detection checks `PDP_RATE_SIM` 5/20; over the limit:
+429 with `Retry-After`. Sign-in and sign-up keep their gateway rate limits.
+
+**Audit retention.** The audit log is kept for at least 365 days whatever the organisation's data retention (a lower
+retention deletes old alerts and incidents, not the record of who changed what).
+
+**What remains.** An organisation admin can still weaken detection - now only visibly: with a reason, in the audit
+log and notified to the organisation's channels. There is no two-person approval, so a single malicious admin can
+still act (and could also delete the channels first; that is notified to the other channels and kept in the audit
+log, but if every channel is gone only the console's security events and audit log show it). The audit log and the
+security events live in the same database the platform operator controls; they are not tamper-proof against the
+operator or anyone with database access, and admins of the organisation can read but not edit them through the API.
+Rate limits are per user, not per organisation (many accounts multiply them); exports are bounded per request, not
+in total. Program matching is exactly the agent's: a program approved at one path is still trusted if an attacker
+replaces the file at that path (layer 2 and the learned layer still see what it does). Detection settings changed by
+the platform operator's tools (`tools/token.py`, direct database access) bypass the reason requirement.
 
 ## Organisations (multi-tenant, 0.5)
 

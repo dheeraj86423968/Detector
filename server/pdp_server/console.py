@@ -259,7 +259,8 @@ def set_incident_status(incident_id: int, req: IncidentStatus, s=Depends(triager
         alerts = incidents.find(c, scope_list(s), incident_id)
         if not alerts:
             raise HTTPException(404, "not found")
-        db.q(c, "UPDATE alerts SET status=%s WHERE id = ANY(%s)", (incidents.STATUS_OF_ACTION[req.status], [a["id"] for a in alerts]))
+        db.q(c, "UPDATE alerts SET status=%s, status_by=%s, status_at=now() WHERE id = ANY(%s)",
+             (incidents.STATUS_OF_ACTION[req.status], s["u"], [a["id"] for a in alerts]))
         _event(c, s, incident_id, "status", (req.note or "").strip()[:5000] or None, req.status)
     return {"ok": True}
 
@@ -401,6 +402,10 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
     from .health import problems
     from .updates import target_version
     tgt = target_version(org["agent_update"] if org else "auto")
+    from . import posture
+    from .allowlist import entries_for
+    with db.conn() as c:
+        row = dict(row, posture=posture.compute(row, bundle, entries_for(c, endpoint_id)))   # detection posture (0.6)
     probs = problems(row, tgt) if row["kind"] == "live" else []
     issues += [p["text"] for p in probs]
     if learning and days and not any(d["events"] for d in days) and ep["online"]:
@@ -417,7 +422,8 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
               "events_dropped": h.get("collector_lost"), "queue_depth": h.get("queue_depth"), "cpu_pct": h.get("cpu_pct"), "rss_mb": h.get("rss_mb"),
               "events_24h": int(ev24) + int(w24), "status": status, "issues": issues,
               "disk_free_pct": h.get("disk_free_pct"), "disk_free_mb": h.get("disk_free_mb"), "spool_mb": h.get("spool_mb"),
-              "entities": h.get("entities"), "data_mb": h.get("data_mb"), "update": {**(h.get("update") or {}), "target": tgt}}
+              "entities": h.get("entities"), "data_mb": h.get("data_mb"), "update": {**(h.get("update") or {}), "target": tgt},
+              "posture": row["posture"]}
     # ---- detection
     week = time.time_ns() - 7 * 86400 * 10**9
     a7 = [a for a in alerts if a["window_start_ns"] >= week]
@@ -463,6 +469,9 @@ def run_check(endpoint_id: str, s=Depends(triager)):
             raise HTTPException(409, "a detection check is already running")
         spec = {"days": ["validation"], "families": CHECK_FAMILIES, "evasion_levels": CHECK_LEVELS,
                 "runs": len(CHECK_FAMILIES) * len(CHECK_LEVELS) * 6, "attacks_per_pass": 3, "seed": secrets.randbits(31)}
+        from . import posture
+        posture.take(c, s["u"], "sim")
+        posture.check_sim_quota(c, s["org"], spec["runs"])
         cid = pki.new_id()
         db.q(c, "INSERT INTO sim_campaigns (id, name, endpoint_id, bundle_id, spec, seed, state) VALUES (%s,%s,%s,%s,%s,%s,'queued')",
              (cid, f"Detection check {datetime.now(timezone.utc):%Y-%m-%d %H:%M}", endpoint_id, None, json.dumps(spec), spec["seed"]))

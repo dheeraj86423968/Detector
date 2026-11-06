@@ -56,4 +56,7 @@ def problems(row: dict, target_version: str | None = None) -> list[dict]:
         how = ("apply the cluster's manifest again: Endpoints > Kubernetes clusters > Manifest" if isinstance(cfg, dict) and cfg.get("cluster")
                else "this host's service predates automatic updates (run the installer with --upgrade once)")
         out.append({"key": "no_updater", "level": "warning", "text": f"Agent {target_version} is available; {how}"})
+    # detection posture (pdp_server.posture.compute, 0.6), when the caller computed it for this row: no or early model,
+    # stale model, layers off, risky allow-list entries (its worsening is notified as a security event, not here)
+    out += list((row.get("posture") or {}).get("problems") or [])
     return out

@@ -197,3 +197,26 @@ CREATE TABLE IF NOT EXISTS coverage_history (
 -- window summaries: when the server received them; retention counts from this, not from the endpoint's event clock
 -- (a replayed dataset or an endpoint with a wrong clock had its windows deleted at once)
 ALTER TABLE windows ADD COLUMN IF NOT EXISTS received_at TIMESTAMPTZ DEFAULT now();
+
+-- 0.6: control-plane misuse resistance (pdp_server/posture.py, docs/CONSOLE_API.md "Misuse resistance (0.6)").
+-- Who changed an alert's status and when (console triage, incident actions, allow-list auto-resolution: the entry's
+-- creator); read by the training side to tell analyst verdicts from automatic ones.
+ALTER TABLE alerts ADD COLUMN IF NOT EXISTS status_by INT REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE alerts ADD COLUMN IF NOT EXISTS status_at TIMESTAMPTZ;
+-- 0.6: redacted before/after of settings and allow-list changes, reasons, export row counts, hunt queries
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS detail JSONB;
+-- 0.6: security-relevant events the organisation's admins are told about (notification events detection_weakened,
+-- response_action): detection weakened by a setting or allow-list change (with the reason given), detection posture
+-- worsened, a notification channel silenced, a response action taken
+CREATE TABLE IF NOT EXISTS security_events (
+  id BIGSERIAL PRIMARY KEY, org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE, kind TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'high', endpoint_id UUID REFERENCES endpoints(id) ON DELETE SET NULL,
+  user_id INT REFERENCES users(id) ON DELETE SET NULL, username TEXT, title TEXT NOT NULL, detail JSONB,
+  at TIMESTAMPTZ DEFAULT now());
+CREATE INDEX IF NOT EXISTS security_events_org ON security_events (org_id, at DESC);
+-- 0.6: per-user token buckets for expensive console calls (export, hunt, simulation), shared by all API workers
+CREATE TABLE IF NOT EXISTS rate_buckets (
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, kind TEXT NOT NULL, tokens DOUBLE PRECISION NOT NULL,
+  at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (user_id, kind));
+-- 0.6: an interpreter / shell allowed on purpose (force + reason)
+ALTER TABLE allowlist ADD COLUMN IF NOT EXISTS forced BOOLEAN NOT NULL DEFAULT false;
