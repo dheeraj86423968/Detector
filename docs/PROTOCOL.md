@@ -70,6 +70,92 @@ a count per distinct entry; 30 days, at most 300k entries) and answers with
 `POST /v1/endpoints/{id}/hunts/{hunt_id}` (gzip NDJSON rows `{kind, program, object, first_ns, last_ns, count}`, or
 one row `{"none": true}`), then acknowledges the command. Only endpoints the hunt was sent to can answer.
 
+## Integrity of the endpoint signal (0.6)
+
+Threat: an attacker with root on a monitored host blinds the product quietly - stops or detaches the collector,
+drops alerts before they leave the host, swaps the model or its signing key, or stops the agent and keeps the console
+green by re-sending its last heartbeat with the agent's own key. 0.6 makes each of these visible to the analyst: an
+endpoint health problem (console) and an `agent_health` notification; the detection-relevant ones are errors and are
+notified as **high** severity. Server logic: `server/pdp_server/integrity.py`; state per endpoint in
+`endpoint_integrity`, received sequence numbers in `integrity_seqs` (schema.sql, "0.6"). Everything is general (no
+per-client logic); the thresholds are defaults, overridable through the environment variables named below.
+
+What the agent (0.6.0+) adds to every heartbeat:
+
+| field | meaning |
+|---|---|
+| `hb_seq` | heartbeat sequence number, persisted in the agent's state (never goes back, also across restarts) |
+| `run_id`, `started_at` | one per agent process start (the restart marker) |
+| `agent_time` | the agent's wall clock when sending |
+| `counters` | since the last heartbeat the server received: `events` collected, `dropped` (kernel, loader, spool cap, full disk), `windows`, `alerts`, `interval_s` |
+| `source` | collector `kind`, `alive`, `events` (eBPF total) and `canary` `{sent, seen, missed, pending, last_seen_age_s}` |
+| `bundle` | loaded model `id`, its `manifest_sha256`, the `signing_key_fp` on disk, the `pinned_key_fp`, and `refused {id, reason}` |
+| `config_sha256` | sha256 of the effective local configuration (agent.json + environment + defaults, secret-looking keys left out) |
+| `window_seq`, `alert_seq`, `unreported`, `lost_seqs` | last sequence numbers assigned, batches still queued for delivery, numbers the agent's own queue limit dropped |
+| `score_failures`, `score_failures_24h` | windows the detector failed on and that were skipped |
+
+Every window summary carries `seq`; every alert carries `seq` and `aid` (idempotency key: sha256 of endpoint,
+sequence number, window, node, layer and rule). Upload batch ids no longer repeat after the local spool empties.
+
+What the server checks (problem key, level, default):
+
+| check | problem | level |
+|---|---|---|
+| a heartbeat whose `hb_seq` does not increase within the same run, or comes from an earlier run: a replay. It is **not** stored as the endpoint's health, so the health also goes stale | `heartbeat_replay` | error |
+| the sequence went back at a restart (new `run_id`): the agent's local state was deleted or restored | `heartbeat_reset` | warning |
+| the agent still calls the server (`last_seen` < 3 min) but no valid heartbeat for max(5 min, 3 heartbeat intervals) (`PDP_INTEGRITY_HB_STALE_S`) | `heartbeat_stale` | error |
+| no events for longer than max(30 min, 2 x the longest silence this endpoint had in the last 7 days); only after 24 h of 0.6 history, only for live endpoints; endpoints whose normal silences exceed 3 h (i.e. threshold above 6 h) are not judged (`PDP_INTEGRITY_QUIET_MIN_S`, `_QUIET_FACTOR`, `_QUIET_MAX_S`, `_QUIET_HISTORY_S`) | `collection_stopped` | error |
+| eBPF canary: every 60 s (`source.canary_s`, 0 = off) a short-lived child of the agent opens a file with a fresh nonce in the data directory; the collector must deliver that open within 300 s. 3 misses in a row (`PDP_INTEGRITY_CANARY_MISSED`) | `collector_blind` | error |
+| collector kind on a live endpoint is not a whole-host collector (`ebpf`, `auditd`, `etw`): replay/sandbox error, `strace` warning | `source_kind` | error / warning |
+| window/alert sequence numbers missing once the agent reports `unreported = 0` (everything delivered): alerts were removed before delivery. Checked from the first number this server received (no false gap when the server is upgraded after its agents). Numbers the agent declares lost to its queue limit (500 batches during a long outage) are a warning instead | `a_seq_gap`, `w_seq_gap` (`*_seq_lost`) | error (warning) |
+| signing key on the endpoint is not the server's, or differs from the one pinned at enrolment | `bundle_key`, `bundle_key_pin` | error |
+| the agent runs another model than the endpoint's current one, or none, more than 1 h after it was published (`PDP_INTEGRITY_BUNDLE_GRACE_S`) and for at least 10 min (a re-fetch) | `bundle_mismatch` | error |
+| the current model's manifest digest on the endpoint differs from the published one | `bundle_modified` | error |
+| the agent refused a model (wrong endpoint or id in the manifest, digest not the announced one, key not the pinned one) | `bundle_refused` | error |
+| the detector failed on windows in the last 24 h (they were skipped, see below) | `scoring_failed` | error |
+| agent clock more than 5 min off (`PDP_INTEGRITY_CLOCK_SKEW_S`); more than 1 h: error | `clock_skew` | warning / error |
+| local configuration digest changed | `config_changed` | info (notified as low, shown for 24 h; does not make the endpoint unhealthy) |
+| uploaded events with impossible timestamps refused (below) | `ingest_rejected` | warning |
+
+One-off findings are shown for 24 h (`PDP_INTEGRITY_FINDING_H`); ongoing problems carry their start time in the key,
+so each episode is notified once. Window summaries are insert-only for their alert count and highest score: a later
+upload of the same window can raise but never lower them (past summaries cannot be rewritten to hide alerts). Alerts
+are stored once per `aid` (a retried upload no longer duplicates them).
+
+Agent side: the model signing key is pinned at enrolment (agents enrolled earlier pin the key they have when 0.6
+first starts); a bundle is loaded only if the key on disk matches the pin, the manifest digest is the one the server
+announced in `status`, and the manifest's `endpoint`/`bundle_id` (when present) are this endpoint and the announced
+id. Scoring is guarded per window: an exception is retried once, then the window is skipped and counted; a crash
+that kills the process while scoring (marker in the state) counts as an attempt too, so a window that crashes the
+detector twice is skipped after the restart instead of crash-looping (detection off). The heartbeat is also sent
+while a long backlog is scored, and the auditd source no longer holds the loop while audit.log is quiet.
+
+Notifications (`agent_health`): event drops (`collector_lost`, `collector_behind`, `spool_dropped`) are keyed per
+hour on the 1-hour counts (no longer by the order of magnitude of a running total that resets with the collector),
+and are high when over 100,000 in the hour (`PDP_NOTIFY_DROPS_HIGH`) or while the endpoint raised alerts in the last
+hour (agents before 0.3.19/0.3.22 report only running totals and keep the order-of-magnitude keys); `disk_full` and
+`collector_error` repeat once a day while they last.
+
+Ingest bounds (agent uploads): gzip bodies are decompressed in bounded steps (at most 1 GiB, `PDP_INGEST_MAX_BYTES`,
+and above 64 MB at most 200 x the compressed size, `PDP_INGEST_MAX_RATIO`); at most 250,000 rows per request
+(`PDP_INGEST_MAX_ROWS`); events of live endpoints must lie between enrolment - 1 day and server time + 1 day
+(benchmark/simulation endpoints replay 2018/2019 datasets: 2000-01-01 .. now + 1 day), others are refused and counted;
+a batch may touch at most 8 days (`PDP_INGEST_MAX_DAYS`) and only the days present get a partition. Single-use
+enrolment tokens are locked while used: two concurrent enrolments with one token cannot both succeed.
+
+Older agents (0.3.x-0.5.x) send none of these fields and are never flagged for their absence: their integrity
+posture is `unsupported` (endpoint detail `health.integrity`), and only the pre-0.6 checks apply to them.
+
+**Not covered.** All of this raises the bar from "stop the service" to "replace the agent". A root attacker who
+fully emulates the agent - takes its key and state, and keeps sending heartbeats with increasing sequence numbers,
+plausible event counters, the right model identity and a canary answer, while not actually collecting - is not
+detected; nor is a collector that drops chosen events while passing the canary through. Root can also edit the
+pinned key and the agent's state (the server-side comparison of the reported key and model is what catches a swap,
+as long as the agent code itself reports truthfully). Closing this needs host attestation (TPM-measured boot and
+agent binary, remote attestation of the running agent), which PDP does not have. Hosts that are naturally silent for
+hours are not judged by the silence check (only the canary covers them, eBPF only); auditd and ETW have no canary
+yet. A state reset re-starts the alert/window sequence and can hide a gap from before the reset.
+
 ## Console API (session cookie, roles admin|analyst)
 `/api/login`, `/api/logout`, `/api/me`, `/api/me/password`, `/api/users` (admin: list / create / delete),
 `/api/endpoints` (admin POST: enrolment token + `ca_sha256` + `enroll_command`), `/api/endpoints/{id}` (timeline,
