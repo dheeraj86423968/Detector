@@ -99,11 +99,12 @@ check(acks == [("c1", "ok"), ("c2", "unsupported")] and a.state.get("bundle_id")
 h = a.health()
 check({"agent_version", "queue_depth", "last_window_end_ns", "cpu_pct", "rss_mb", "spool_mb", "spool_dropped_unscored",
        "spool_dropped_unuploaded", "entities", "update", "disk_free_mb", "disk_free_pct", "isolated", "disk_full", "disk_full_dropped", "spool_dropped_unscored_1h", "spool_dropped_unuploaded_1h",
-       "data_mb"} == set(h) and h["rss_mb"] > 0 and h["disk_free_mb"] > 0 and h["data_mb"]["total"] >= h["data_mb"]["database"] > 0,
+       "data_mb", "run_id", "started_at", "counters", "source", "bundle", "config_sha256", "window_seq", "alert_seq", "unreported",
+       "lost_seqs", "score_failures", "score_failures_24h"} == set(h) and h["rss_mb"] > 0 and h["disk_free_mb"] > 0 and h["data_mb"]["total"] >= h["data_mb"]["database"] > 0,
       f"health {h}")
 try:                       # the server stores only the heartbeat fields its model declares: every one the agent sends
     from pdp_server.api import Heartbeat
-    every = set(h) | {"collector_lost", "collector_behind", "collector_lost_1h", "collector_behind_1h", "collector_error"}
+    every = set(h) | {"collector_lost", "collector_behind", "collector_lost_1h", "collector_behind_1h", "collector_error", "hb_seq", "agent_time"}
     check(every <= set(Heartbeat.model_fields if hasattr(Heartbeat, "model_fields") else Heartbeat.__fields__),
           f"the server keeps every health field (missing: {sorted(every - set(getattr(Heartbeat, 'model_fields', None) or Heartbeat.__fields__))})")
 except ImportError:
@@ -182,6 +183,181 @@ a.handle_command({"id": "c10", "command": "hunt", "hunt_id": "h-2", "q": "nothin
 check(a.tr.paths("/hunts/h-2")[0][2] == [{"none": True}], "no match is answered explicitly")
 a.state.c.execute("UPDATE observables SET last_ns = 1 WHERE kind='write'"); a.state.c.commit()
 check(a.state.prune_observables() == 1 and a.state.hunt("x_1.sh", "write") == [], "entries not seen for 30 days are pruned")
+
+# 10. integrity of the endpoint signal (0.6)
+import json as _json
+import numpy as _np
+from pdp_agent import agent as A
+from pdp_engine.windows import Window as _Win
+
+# heartbeat: a persisted sequence number (survives a restart), one run id per process, counters since the last
+# heartbeat the server received
+a = make_agent("ebpf")
+a.ingest(items([yesterday + k for k in range(7)], "hb"))
+b1 = a.heartbeat_body()
+check(b1["hb_seq"] == 1 and b1["counters"]["events"] == 7 and abs(b1["agent_time"] - time.time()) < 5 and b1["run_id"] == a.run_id,
+      f"heartbeat: seq 1, 7 events counted, agent clock ({b1['counters']})")
+a._heartbeat_sent(b1, time.time())
+b2 = a.heartbeat_body()
+check(b2["hb_seq"] == 2 and b2["counters"]["events"] == 0, "after a delivered heartbeat the counters start again")
+a.ingest(items([yesterday + 100 + k for k in range(3)], "hc"))
+b3 = a.heartbeat_body()                                  # not delivered: the next one still covers these events
+a.ingest(items([yesterday + 200 + k for k in range(2)], "hd"))
+b4 = a.heartbeat_body()
+check(b3["counters"]["events"] == 3 and b4["counters"]["events"] == 5 and b4["hb_seq"] == 4, "an undelivered heartbeat's counts carry over")
+a2 = Agent(a.cfg)
+b5 = a2.heartbeat_body()
+check(b5["hb_seq"] == 5 and b5["run_id"] != a.run_id and b5["started_at"] >= b1["started_at"], "the sequence survives a restart; the run id does not")
+calls = []
+a2.eid, a2.tr = "e1", FakeTransport()
+a2._maybe_heartbeat(time.time())
+a2._maybe_heartbeat(time.time())
+check(len(a2.tr.paths("/heartbeat")) == 1 and a2.tr.paths("/heartbeat")[0][2]["hb_seq"] == 6, "heartbeat at most once per interval")
+
+# window summaries and alerts: sequence numbers and an idempotency key; the queue limit declares what it drops
+a = make_agent("ebpf")
+al = lambda n: {"window_start_ns": 5, "node": {"uuid": f"n{n}"}, "layer": "rules", "rule": "r"}
+a._unreported = []
+a._queue([{"start_ns": 1}, {"start_ns": 2}], [al(1), al(2)])
+a._queue([], [al(3)])
+w0, a0 = a._unreported[0]
+check([w["seq"] for w in w0] == [1, 2] and [x["seq"] for x in a0] == [1, 2] and a._unreported[1][1][0]["seq"] == 3, "windows and alerts numbered per endpoint")
+check(a0[0]["aid"] == A.alert_id("e1", a0[0]) and a0[0]["aid"] != a0[1]["aid"] and len(a0[0]["aid"]) == 32, "alert idempotency key bound to content and sequence")
+check(a.state.get("window_seq") == 2 and a.state.get("alert_seq") == 3 and len(a.state.get("unreported")) == 2, "sequence counters and the queue are on disk")
+h = a.health()
+check(h["window_seq"] == 2 and h["alert_seq"] == 3 and h["unreported"] == 2 and h["counters"]["alerts"] == 3, "heartbeat reports the last numbers and the pending queue")
+a._unreported = []
+old_max = A.UNREPORTED_MAX
+A.UNREPORTED_MAX = 2
+for i in range(4):
+    a._queue([], [al(10 + i)])
+A.UNREPORTED_MAX = old_max
+check(a.state.get("lost_seqs")["a"] == [[4, 4], [5, 5]] and len(a.state.get("unreported")) == 2, f"queue limit: dropped numbers declared ({a.state.get('lost_seqs')})")
+
+# baseline upload batch ids never repeat, also after the spool emptied (ids used to restart at 1)
+a = make_agent("ebpf", baseline_days=3)
+a.ingest(items([yesterday + k for k in range(4)], "ba"))
+a.upload_baseline()
+a.state.c.execute("DELETE FROM events")              # everything uploaded and scored: the spool is empty
+a.ingest(items([yesterday + 50 + k for k in range(4)], "bb"))
+a.upload_baseline()
+bids = [c[3] for c in a.tr.paths("/events")]
+check(len(bids) == 2 and len(set(bids)) == 2 and all(b.endswith("-m") for b in bids), f"batch ids unique after the spool emptied ({bids})")
+import sqlite3 as _sq
+d = tempfile.mkdtemp()
+c0 = _sq.connect(d + "/state.sqlite")
+from pdp_agent.state import DDL as _DDL
+c0.executescript(_DDL)
+c0.execute("INSERT INTO events (id, ts_ns, src, op, dst, eid, day) VALUES (7, 1, 0, 0, 0, 'x', 1)"); c0.commit(); c0.close()
+from pdp_agent.state import State as _State
+st = _State(d + "/state.sqlite")
+st.add_events([(2, 0, "READ", 0, "y", "2026-01-01")])
+ids = [r[0] for r in st.c.execute("SELECT id FROM events ORDER BY id")]
+check(ids == [7, 8] and st.batch_id("2026-01-01", 7, 7) == "2026-01-01-7-7" and st.batch_id("2026-01-01", 7, 8) == "2026-01-01-7-8-m",
+      "existing spool: old rows keep their batch id (a retry stays a duplicate), new rows get the new form")
+
+# scoring guard: a window the detector fails on is retried once, then skipped and counted - no crash loop
+class FailRuntime:
+    def __init__(self, bad):
+        self.bad, self.calls = bad, 0
+    def score(self, w, **kw):
+        self.calls += 1
+        if w.start_ns in self.bad:
+            raise ValueError("crafted content")
+        return "ok"
+win = lambda t: _Win(start_ns=t, end_ns=t + 10, src=_np.zeros(1, dtype=_np.int64), dst=_np.zeros(1, dtype=_np.int64),
+                     t=_np.zeros(1, dtype=_np.int64), etype=_np.zeros(1, dtype=_np.int64), event_uuid=["x"])
+a = make_agent("ebpf")
+a.runtime = FailRuntime({100})
+check(a._score(win(50)) == "ok" and a._score(win(100)) is None and a.runtime.calls == 3, "failing window: tried twice, then skipped")
+check(a.state.get("score_failures") == 1 and a.health()["score_failures_24h"] == 1 and a.state.get("scoring_window") is None,
+      "the skipped window is counted and reported in the heartbeat")
+a.runtime.calls = 0
+check(a._score(win(100)) is None and a.runtime.calls == 0, "a quarantined window is not scored again")
+a.state.set("scoring_window", "300")                  # the process died while scoring window 300 (e.g. killed by the kernel)
+a2 = Agent(a.cfg); a2.runtime = FailRuntime(set())
+check(a2._score_attempts.get("300") == 1 and a2._score(win(300)) == "ok", "a crash while scoring counts as one attempt; the window gets one more")
+a2.state.set("scoring_window", "400"); a3 = Agent(a.cfg); a3.state.set("scoring_window", "400"); a4 = Agent(a.cfg)
+a4.runtime = FailRuntime(set())
+check(a4._score_attempts.get("400") == 2 and a4._score(win(400)) is None and a4.runtime.calls == 0, "two crashes on one window: it is skipped after the restart")
+
+# bundles: pinned signing key, announced manifest digest, the manifest's endpoint and bundle id
+from cryptography.hazmat.primitives import serialization as _ser
+from cryptography.hazmat.primitives.asymmetric import ed25519 as _ed
+pem = lambda k: k.public_key().public_bytes(_ser.Encoding.PEM, _ser.PublicFormat.SubjectPublicKeyInfo)
+k1, k2 = _ed.Ed25519PrivateKey.generate(), _ed.Ed25519PrivateKey.generate()
+a = make_agent("ebpf")
+import os as _os2
+_os2.makedirs(a.cfg.pki_dir, exist_ok=True)
+open(a.cfg.signing_pub, "wb").write(pem(k1))
+a = Agent(a.cfg); a.state.set("endpoint_id", "e1")
+check(a.state.get("signing_key_fp") == A.key_fingerprint(pem(k1)), "an agent enrolled before 0.6 pins the signing key it has")
+bd = tempfile.mkdtemp()
+def manifest(**m):
+    open(bd + "/manifest.json", "w").write(_json.dumps(m))
+    return A.file_sha256(bd + "/manifest.json")
+def refused(bid, pub, sha=None):
+    try:
+        a._check_bundle(bid, bd, pub, sha)
+        return None
+    except A.BundleRefused as e:
+        return str(e)
+sha = manifest(endpoint="e1", bundle_id="b1")
+check(refused("b1", pem(k1), sha) is None, "own bundle with the announced digest and the pinned key is accepted")
+check("pinned" in (refused("b1", pem(k2), sha) or ""), "a different signing key on disk is refused")
+check("announced" in (refused("b1", pem(k1), "0" * 64) or ""), "a manifest other than the announced one is refused")
+check("endpoint" in (refused("b1", pem(k1)) if manifest(endpoint="e2", bundle_id="b1") else ""), "a bundle built for another endpoint is refused")
+check("names bundle" in (refused("b1", pem(k1)) if manifest(endpoint="e1", bundle_id="b9") else ""), "a bundle under another id is refused")
+manifest(version=1)
+check(refused("b1", pem(k1)) is None, "older manifests without endpoint/bundle_id fields still load")
+open(a.cfg.signing_pub, "wb").write(pem(k2))
+hb = a.health()["bundle"]
+check(hb["signing_key_fp"] == A.key_fingerprint(pem(k2)) and hb["pinned_key_fp"] == A.key_fingerprint(pem(k1)) and hb["id"] is None,
+      "heartbeat reports the key on disk and the pinned one")
+
+# configuration digest: changes with the effective configuration, not with secrets
+c1, c2 = Config(source={"kind": "ebpf"}), Config(source={"kind": "auditd"})
+c3 = Config(source={"kind": "ebpf"}); c3.enroll_token = "s3cret"
+check(A.config_digest(c1) != A.config_digest(c2) and A.config_digest(c1) == A.config_digest(c3), "config digest: source matters, secrets do not")
+
+# auditd: a quiet audit.log no longer holds the agent's loop (idle ticks)
+from pdp_agent.sources.live import AuditdLive
+d = tempfile.mkdtemp(); open(d + "/audit.log", "w").close()
+t0, n = time.time(), 0
+for b in AuditdLive(d + "/audit.log").batches(lambda: time.time() - t0 > 6):
+    n += 1
+    if n >= 2:
+        break
+check(n >= 2 and time.time() - t0 < 6, f"auditd source yields idle ticks on a quiet log ({n} in {time.time() - t0:.1f}s)")
+
+# eBPF canary: a child opens a nonce file; the collector must deliver it (consumed, never an event)
+from pdp_agent.sources.ebpf import OPEN as _OPEN, EXIT as _EXIT, EbpfLive, Rec
+class CanaryTracer:
+    def __init__(self, src, deliver=True):
+        self.src, self.deliver, self.stats = src, deliver, {"lost": 0}
+    def poll(self, timeout_ms=200):
+        time.sleep(0.02)
+        if not self.deliver:
+            return []
+        out = []
+        for nonce, (t0, child, path) in list(self.src._canary_pending.items()):
+            out += [Rec(_OPEN, child.pid, ts_ns=time.time_ns(), s=path), Rec(_EXIT, child.pid)]
+        return out
+d = tempfile.mkdtemp()
+src = EbpfLive(canary_s=0.2, canary_dir=d, run_id="t", proc="/nonexistent")
+src._tracer = CanaryTracer(src); src._canary_next = 0
+got, t0 = [], time.time()
+for b in src.batches(lambda: time.time() - t0 > 1.5):
+    got += b
+cs = src.canary_status()
+check(cs["sent"] >= 3 and cs["seen"] >= cs["sent"] - 1 and cs["missed"] == 0 and got == [] and len(_os2.listdir(d)) <= cs["pending"],
+      f"canary seen, consumed (no events), files removed ({cs})")
+src = EbpfLive(canary_s=0.2, canary_dir=d, run_id="t", proc="/nonexistent")
+src._tracer = CanaryTracer(src, deliver=False); src._canary_next = 0; src.CANARY_DEADLINE_S = 0.3
+t0 = time.time()
+for b in src.batches(lambda: time.time() - t0 > 1.5):
+    pass
+check(src.canary_status()["missed"] >= 3, f"a detached collector misses the canary ({src.canary_status()})")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

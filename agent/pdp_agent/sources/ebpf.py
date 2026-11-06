@@ -757,7 +757,8 @@ class EbpfLive:
 
     def __init__(self, batch: int = 2000, command: list[str] | None = None, tracer: CoreTracer | BccTracer | None = None,
                  run_id: str | None = None, cwd: str | None = None, ring_pages: int = 1024, proc: str = "/proc",
-                 engine: str | None = None, btf: Callable[[], str | None] | None = None, retry_s: float = 600):
+                 engine: str | None = None, btf: Callable[[], str | None] | None = None, retry_s: float = 600,
+                 canary_s: float = 0, canary_dir: str | None = None):
         self.batch, self.command, self.cwd, self.ring_pages, self.engine = batch, command, cwd, ring_pages, engine
         self._tracer = tracer
         self.btf, self.retry_s = btf, retry_s       # btf: called before each start attempt (may download one)
@@ -765,6 +766,94 @@ class EbpfLive:
         self.norm = EbpfNormaliser(run_id, proc=proc)
         self.proc: subprocess.Popen | None = None
         self.stats = {"records": 0, "events": 0}
+        # 0.6 canary (system-wide mode only): every `canary_s` a short-lived child of the agent opens a file whose
+        # name carries a fresh nonce; the collector must deliver that open. The child's records are consumed here (never
+        # part of the provenance graph). Proves end to end that the probes are attached and the loader streams.
+        self.canary_s, self.canary_dir = float(canary_s or 0), canary_dir
+        self._canary = {"sent": 0, "seen": 0, "missed": 0, "last_seen": 0.0, "error": None}
+        self._canary_pending: dict[str, tuple[float, subprocess.Popen, str]] = {}   # nonce -> (sent at, child, path)
+        self._canary_pids: dict[int, float] = {}        # child pid -> when to forget it (its exit record normally first)
+        self._canary_next = time.time() + 30
+        self.CANARY_DEADLINE_S = 300.0                   # a canary not delivered by then counts as missed
+
+    # ------------------------------------------------------------------ canary (0.6)
+    def canary_status(self) -> dict | None:
+        if not self.canary_s or self.command:
+            return None
+        c = self._canary
+        out = {"sent": c["sent"], "seen": c["seen"], "missed": c["missed"], "pending": len(self._canary_pending),
+               "last_seen_age_s": round(time.time() - c["last_seen"], 1) if c["last_seen"] else None}
+        if c["error"]:
+            out["error"] = c["error"]
+        return out
+
+    def _canary_tick(self) -> None:
+        now = time.time()
+        for nonce, (t0, child, path) in list(self._canary_pending.items()):
+            if child.poll() is not None and child.returncode not in (0, None) and not self._canary["error"]:
+                self._canary["error"] = f"canary child exited with {child.returncode}"
+            if now - t0 > self.CANARY_DEADLINE_S:
+                del self._canary_pending[nonce]
+                self._canary["missed"] += 1
+                self._canary_cleanup(child, path)
+        for pid, until in list(self._canary_pids.items()):
+            if now > until:
+                del self._canary_pids[pid]
+        if now < self._canary_next or self.command:
+            return
+        if not self._canary["sent"] and self.canary_dir:        # leftovers of an earlier run
+            try:
+                for f in os.listdir(self.canary_dir):
+                    if f.startswith(".pdp-canary-"):
+                        os.unlink(os.path.join(self.canary_dir, f))
+            except OSError:
+                pass
+        self._canary_next = now + self.canary_s
+        nonce = uuidlib.uuid4().hex
+        d = self.canary_dir or "/tmp"
+        path = os.path.join(d, f".pdp-canary-{nonce}")
+        try:
+            with open(path, "w") as f:                  # written by the agent itself: excluded in-kernel, not seen
+                f.write("pdp collector canary\n")
+            sh = "/bin/sh" if os.path.exists("/bin/sh") else None
+            argv = [sh, "-c", 'exec 3< "$1"', "pdp-canary", path] if sh else [sys.executable, "-S", "-c", "import sys; open(sys.argv[1]).close()", path]
+            child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, close_fds=True)
+        except OSError as e:
+            self._canary["error"] = f"cannot start the canary: {e}"[:200]
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+            return
+        self._canary_pids[child.pid] = now + self.CANARY_DEADLINE_S + 60
+        self._canary_pending[nonce] = (now, child, path)
+        self._canary["sent"] += 1
+
+    @staticmethod
+    def _canary_cleanup(child, path) -> None:
+        try:
+            child.poll()
+            os.unlink(path)
+        except OSError:
+            pass
+
+    def _canary_record(self, r: Rec) -> None:
+        """A record of a canary child: an open of a pending canary file marks it seen; all are consumed."""
+        if r.kind == EXIT:
+            self._canary_pids.pop(r.pid, None)
+            return
+        if r.kind != OPEN or not r.s:
+            return
+        name = os.path.basename(r.s)
+        if not name.startswith(".pdp-canary-"):
+            return
+        x = self._canary_pending.pop(name[len(".pdp-canary-"):], None)
+        if x is not None:
+            self._canary["seen"] += 1
+            self._canary["missed"] = 0
+            self._canary["last_seen"] = time.time()
+            self._canary["error"] = None
+            self._canary_cleanup(x[1], x[2])
 
     @property
     def tracer(self) -> CoreTracer | BccTracer:
@@ -795,7 +884,11 @@ class EbpfLive:
 
     def _decode(self, recs: list[Rec], track: set[int] | None) -> list:
         out = []
+        canary = self._canary_pids
         for r in recs:
+            if canary and (r.pid in canary or (r.kind == OPEN and ".pdp-canary-" in r.s)):
+                self._canary_record(r)
+                continue
             if track is not None:
                 if r.kind == FORK:
                     if r.pid not in track:
@@ -820,6 +913,8 @@ class EbpfLive:
             track = {self.proc.pid}
         buf, last = [], time.time()
         while not stop():
+            if self.canary_s and track is None:
+                self._canary_tick()
             buf.extend(self._decode(tr.poll(200), track))
             done = self.proc is not None and self.proc.poll() is not None
             if done:

@@ -34,8 +34,10 @@ from .config import Config
 from .state import State, disk_full
 from .transport import Transport, TransportError
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
+SCORE_MAX_ATTEMPTS = 2   # a window the detector fails on this many times (exception or crash) is skipped, not retried
+UNREPORTED_MAX = 500     # alert/window batches kept on disk while the server is unreachable
 
 
 _TZ = {}
@@ -69,6 +71,48 @@ def ca_fingerprint(pem: bytes) -> str:
 
 def _norm_fp(fp: str) -> str:
     return fp.replace(":", "").strip().lower()
+
+
+def key_fingerprint(pem: bytes | str) -> str:
+    """sha256 (hex) of a public key's DER SubjectPublicKeyInfo (the server computes the same, pdp_server.integrity)."""
+    import hashlib
+    from cryptography.hazmat.primitives import serialization
+    pem = pem.encode() if isinstance(pem, str) else pem
+    k = serialization.load_pem_public_key(pem)
+    return hashlib.sha256(k.public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)).hexdigest()
+
+
+def file_sha256(path: str) -> str:
+    import hashlib
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def alert_id(eid: str, a: dict) -> str:
+    """Idempotency key of an alert: bound to its content and sequence number, so a retried upload is stored once."""
+    import hashlib
+    k = f"{eid}|{a.get('seq')}|{a.get('window_start_ns')}|{(a.get('node') or {}).get('uuid')}|{a.get('layer')}|{a.get('rule')}"
+    return hashlib.sha256(k.encode()).hexdigest()[:32]
+
+
+_SECRET_KEYS = ("token", "password", "secret", "credential")
+
+
+def config_digest(cfg) -> str:
+    """sha256 of the agent's effective local configuration (defaults, /etc/pdp/agent.json, environment), without
+    anything secret-looking: reported so the server notices a local change (a swapped collector, a new server URL)."""
+    import dataclasses
+    import hashlib
+    d = {**dataclasses.asdict(cfg), **{k: v for k, v in vars(cfg).items() if not k.startswith("_")}}
+    d = {k: v for k, v in d.items() if not any(x in k.lower() for x in _SECRET_KEYS)}
+    return hashlib.sha256(json.dumps(d, sort_keys=True, default=str).encode()).hexdigest()
+
+
+class BundleRefused(Exception):
+    """A model the agent will not load: wrong endpoint, wrong id, digest or signing key not the expected one."""
 
 
 _SKIP_WRITE = ("/proc/", "/sys/", "/dev/")
@@ -153,6 +197,30 @@ class Agent:
         # that an update is available (older installs, hand-made units)
         self.updater = os.environ.get("PDP_UPDATER") == "1"
         self._update_offer: dict | None = None
+        # 0.6: integrity of the endpoint signal (pdp_server/integrity.py): one id per agent process, counters since
+        # the last delivered heartbeat, the loaded model's identity, scoring failures
+        self.run_id = uuidlib.uuid4().hex
+        self.started_at = time.time()
+        self._ctr = {"events": 0, "windows": 0, "alerts": 0}
+        self._ctr_t = time.time()
+        self._drops_sent: int | None = None
+        self._last_hb = 0.0
+        self._manifest_sha: str | None = None
+        self._bundle_refused: dict | None = None
+        self._score_attempts = {str(k): int(v) for k, v in (self.state.get("score_attempts") or {}).items()}
+        crashed = self.state.get("scoring_window")
+        if crashed:                          # the agent died while scoring this window (a crash no except can catch)
+            self._score_attempts[str(crashed)] = self._score_attempts.get(str(crashed), 0) + 1
+            self.state.set("score_attempts", self._score_attempts)
+            self.state.set("scoring_window", None)
+            log(f"the agent stopped while scoring the window starting at {crashed} (attempt {self._score_attempts[str(crashed)]}"
+                f" of {SCORE_MAX_ATTEMPTS})")
+        if self.state.get("signing_key_fp") is None and os.path.exists(cfg.signing_pub):   # enrolled before 0.6: pin now
+            try:
+                self.state.set("signing_key_fp", key_fingerprint(open(cfg.signing_pub, "rb").read()))
+                log(f"model signing key pinned, sha256 {self.state.get('signing_key_fp')}")
+            except (OSError, ValueError) as e:
+                log(f"model signing key unreadable ({e}); not pinned")
 
     # ------------------------------------------------------------------ enrolment
     def enroll(self, token: str, ca_sha256: str | None = None, attempts: int = 30):
@@ -204,6 +272,7 @@ class Agent:
         open(self.cfg.cert_path, "w").write(r["cert_pem"])
         open(self.cfg.server_ca, "w").write(r["ca_pem"])
         open(self.cfg.signing_pub, "w").write(r["bundle_signing_pub"])
+        self.state.set("signing_key_fp", key_fingerprint(r["bundle_signing_pub"]))   # pinned: a swapped key is refused
         self.state.set("endpoint_id", r["endpoint_id"]); self.state.set("config", r["config"]); self.state.set("phase", "baseline")
         log(f"enrolled as endpoint {r['endpoint_id']}")
 
@@ -242,11 +311,40 @@ class Agent:
                     pass
             time.sleep(10)
 
+    def _queue(self, wins: list, alerts: list) -> None:
+        """Queue window summaries and alerts for delivery with their sequence numbers (0.6: the server checks that every
+        number arrives) and the alerts' idempotency keys."""
+        ws, as_ = int(self.state.get("window_seq", 0) or 0), int(self.state.get("alert_seq", 0) or 0)
+        for w in wins:
+            ws += 1
+            w["seq"] = ws
+        for a in alerts:
+            as_ += 1
+            a["seq"] = as_
+            a["aid"] = alert_id(str(getattr(self, "eid", None) or self.state.get("endpoint_id")), a)
+        self._ctr["windows"] += len(wins)
+        self._ctr["alerts"] += len(alerts)
+        self._unreported.append((wins, alerts))
+        self._save_unreported()
+        self.state.set("window_seq", ws)          # after the queue is on disk: a crash in between reuses numbers, never skips
+        self.state.set("alert_seq", as_)
+
     def _save_unreported(self) -> None:
         """Alerts and window summaries not yet delivered survive a restart or power cut (real-time alerts are
         marked as sent when queued, so losing the queue would lose them for good)."""
+        if len(self._unreported) > UNREPORTED_MAX:     # what would not survive a restart is declared lost (0.6)
+            lost = self.state.get("lost_seqs") or {"w": [], "a": []}
+            for w0, a0 in self._unreported[:-UNREPORTED_MAX]:
+                for k, rows in (("w", w0), ("a", a0)):
+                    sq = [r["seq"] for r in rows if isinstance(r, dict) and r.get("seq") is not None]
+                    if sq and [min(sq), max(sq)] not in lost[k]:
+                        lost[k] = (lost[k] + [[min(sq), max(sq)]])[-20:]
+            try:
+                self.state.set("lost_seqs", lost)
+            except Exception:  # noqa - best effort
+                pass
         try:
-            self.state.set("unreported", self._unreported[-500:])
+            self.state.set("unreported", self._unreported[-UNREPORTED_MAX:])
         except Exception as e:  # noqa - best effort
             log(f"could not save the pending alerts: {e}")
 
@@ -274,6 +372,7 @@ class Agent:
             if len(evs) >= 5000:
                 self._commit(ents, evs); ents, evs = [], []
         self._commit(ents, evs)
+        self._ctr["events"] += n
         return n
 
     def _register(self, e: Entity) -> int:
@@ -424,7 +523,7 @@ class Agent:
             while rows:
                 if time.time() > t_end:
                     return                          # the rest next turn
-                bid = f"{day}-{rows[0][0]}-{rows[-1][0]}"
+                bid = self.state.batch_id(day, rows[0][0], rows[-1][0])
                 uid = self._uuids({r[2] for r in rows} | {r[4] for r in rows})
                 self.tr.post_ndjson(f"/v1/endpoints/{self.eid}/events", [{"ts_ns": r[1], "src": uid[r[2]], "op": r[3], "dst": uid[r[4]], "event_uuid": r[5]} for r in rows], batch_id=bid)
                 self.state.mark_events_uploaded([r[0] for r in rows])
@@ -458,8 +557,9 @@ class Agent:
         return time.time_ns() > day_end_ns(day, self.tz) + DAY_GRACE_S * 1_000_000_000
 
     # ------------------------------------------------------------------ bundles
-    def fetch_bundle(self, bundle_id: str):
-        """Download (streamed to disk; `slim`: without the server-only replay state), unpack, verify, load."""
+    def fetch_bundle(self, bundle_id: str, sha256: str | None = None):
+        """Download (streamed to disk; `slim`: without the server-only replay state), unpack, verify, load. `sha256`:
+        the manifest digest the server announced for this bundle (0.6: checked before loading)."""
         root = os.path.join(self.cfg.data_dir, "bundles")
         dest = os.path.join(root, bundle_id)
         os.makedirs(dest, exist_ok=True)
@@ -474,7 +574,14 @@ class Agent:
         finally:
             if os.path.exists(tmp):
                 os.unlink(tmp)
-        self._load_bundle(bundle_id, os.path.join(dest, "bundle"))
+        try:
+            self._load_bundle(bundle_id, os.path.join(dest, "bundle"), expect_sha256=sha256)
+        except BundleRefused as e:
+            self._bundle_refused = {"id": bundle_id, "reason": str(e)[:300]}
+            log(f"bundle {bundle_id} refused: {e}")
+            raise
+        if sha256:
+            self.state.set("bundle_sha256", sha256)
 
     # ------------------------------------------------------------------ entity ages (compaction)
     # A model load used to give every entity "last seen = now", so after each restart or model upgrade (early
@@ -525,8 +632,28 @@ class Agent:
         rt.last_seen[order[i[ok]]] = np.minimum(rt.last_seen[order[i[ok]]], t[ok])
         return int(ok.sum())
 
-    def _load_bundle(self, bundle_id: str, bdir: str):
-        verify_signature(bdir, open(self.cfg.signing_pub, "rb").read())
+    def _check_bundle(self, bundle_id: str, bdir: str, pub: bytes, expect_sha256: str | None) -> str:
+        """0.6: the signing key is the one pinned at enrolment, the manifest is the one the server announced, and it
+        was built for this endpoint under this id. Returns the manifest's sha256."""
+        pin = self.state.get("signing_key_fp")
+        if pin and key_fingerprint(pub) != pin:
+            raise BundleRefused(f"the model signing key on disk ({key_fingerprint(pub)[:16]}...) is not the one pinned at enrolment ({pin[:16]}...)")
+        mpath = os.path.join(bdir, "manifest.json")
+        sha = file_sha256(mpath)
+        if expect_sha256 and sha != expect_sha256:
+            raise BundleRefused(f"manifest digest {sha[:16]}... is not the announced {str(expect_sha256)[:16]}...")
+        man = json.load(open(mpath))
+        eid = self.state.get("endpoint_id")
+        if man.get("endpoint") and eid and str(man["endpoint"]) != str(eid):
+            raise BundleRefused(f"the model was built for endpoint {man['endpoint']}, not this one ({eid})")
+        if man.get("bundle_id") and str(man["bundle_id"]) != str(bundle_id):
+            raise BundleRefused(f"the model's manifest names bundle {man['bundle_id']}, not {bundle_id}")
+        return sha
+
+    def _load_bundle(self, bundle_id: str, bdir: str, expect_sha256: str | None = None):
+        pub = open(self.cfg.signing_pub, "rb").read()
+        verify_signature(bdir, pub)
+        sha = self._check_bundle(bundle_id, bdir, pub, expect_sha256)
         carried = self._seen_now()             # the running model's entity ages, kept over the upgrade
         device = getattr(self.cfg, "device", "cpu")
         feat_device = getattr(self.cfg, "feat_device", None) or ("cpu" if device == "cuda" else device)
@@ -544,6 +671,8 @@ class Agent:
             self.builder.window_ns = wns
         first = self.state.get("bundle_id") is None
         self.state.set("bundle_id", bundle_id)
+        self._manifest_sha = sha
+        self._bundle_refused = None
         self._prune_bundles(bundle_id)
         mat = self.runtime.m.get("maturity") or {}
         what = (f"early model, {mat.get('baseline_hours')} h of activity" if mat.get("early") else "final model")
@@ -609,9 +738,11 @@ class Agent:
         if not bid or not os.path.exists(os.path.join(bdir, "manifest.json")):
             return False
         try:
-            self._load_bundle(bid, bdir)
+            self._load_bundle(bid, bdir, expect_sha256=self.state.get("bundle_sha256"))
             return True
         except Exception as e:  # noqa - a damaged local bundle is re-fetched from the server
+            if isinstance(e, BundleRefused):
+                self._bundle_refused = {"id": bid, "reason": str(e)[:300]}
             log(f"local bundle {bid} unusable ({e}); will fetch again")
             self.state.set("bundle_id", None)
             return False
@@ -637,8 +768,9 @@ class Agent:
                 if closed:
                     self.run_rules(closed[0].start_ns)            # the rest of the closed window
                     for w in closed:
-                        results.append((w, self.runtime.score(w, keep_edge_losses=True, hits=self._win_hits)))
-                        self._win_hits = []
+                        r = self._score(w)
+                        if r is not None:
+                            results.append((w, r))
                     self.state.mark_scored(self._open_ids)    # everything pushed so far was in the closed window(s)
                     self._open_ids = []
             last = rows[-1]
@@ -646,6 +778,7 @@ class Agent:
             self._max_id = max(self._max_id, max(r[0] for r in rows))
             self.run_rules(self.builder._start if self.builder._start is not None else (self._slice[0][2] if self._slice else 0))
             self.report(results)
+            self._maybe_heartbeat()         # a long backlog must not silence the heartbeat (0.6: a silent heartbeat is flagged)
             rows = self.state.unscored_events(after=self._cursor, max_id=self._max_id)
 
     def run_rules(self, window_start_ns: int) -> None:
@@ -658,7 +791,11 @@ class Agent:
         a = list(zip(*sl))
         mini = Window(start_ns=int(sl[0][2]), end_ns=int(sl[-1][2]), src=np.array(a[0], dtype=np.int64), dst=np.array(a[1], dtype=np.int64),
                       t=np.array(a[2], dtype=np.int64), etype=np.array(a[3], dtype=np.int64), event_uuid=list(a[4]))
-        hits = self.runtime.rules(mini)
+        try:
+            hits = self.runtime.rules(mini)
+        except Exception as e:  # noqa - 0.6: a slice the rules cannot handle must not stop the agent (crash loop on replay)
+            self._score_failed(f"rules@{int(sl[0][2])}", f"{type(e).__name__}: {e}")
+            return
         self._win_hits += hits
         if not hits:
             return
@@ -681,8 +818,7 @@ class Agent:
                    "reason": main.get("detail"), "reasons": rs} for n, e, layer, main, rs in out]
         self._save_early()
         self._unreported = getattr(self, "_unreported", [])
-        self._unreported.append(([], alerts))
-        self._save_unreported()
+        self._queue([], alerts)
         log(f"real-time: {len(alerts)} rule alerts ({', '.join(sorted({a['rule'] for a in alerts}))})")
 
     def _save_early(self):
@@ -692,12 +828,52 @@ class Agent:
 
     def flush_window(self):
         self.run_rules(self.builder._start or 0)
-        results = [(w, self.runtime.score(w, keep_edge_losses=True, hits=self._win_hits)) for w in self.builder.finish()]
+        closed = list(self.builder.finish())
+        results = [(w, r) for w in closed for r in [self._score(w)] if r is not None]
         self._win_hits = []
-        if results:
+        if closed:
             self.state.mark_scored(self._open_ids)
             self._open_ids = []
         self.report(results)
+
+    def _score(self, w: Window) -> WindowResult | None:
+        """Score one window, guarded (0.6): an exception is retried once and the window is then skipped (counted,
+        reported in the heartbeat), so a window the detector cannot handle - for example crafted event content - does
+        not stop detection. A crash no except catches (the process dies while scoring) is remembered through a marker
+        and counts as an attempt: after SCORE_MAX_ATTEMPTS the replayed window is skipped instead of crash-looping."""
+        hits, self._win_hits = self._win_hits, []
+        key = str(int(w.start_ns))
+        err = "failed before"
+        while self._score_attempts.get(key, 0) < SCORE_MAX_ATTEMPTS:
+            self.state.set("scoring_window", key)
+            try:
+                r = self.runtime.score(w, keep_edge_losses=True, hits=hits)
+            except Exception as e:  # noqa - any failure of the detector on this window
+                self.state.set("scoring_window", None)
+                self._score_attempts[key] = self._score_attempts.get(key, 0) + 1
+                self._save_score_attempts()
+                err = f"{type(e).__name__}: {e}"
+                log(f"scoring the window starting at {key} failed (attempt {self._score_attempts[key]} of {SCORE_MAX_ATTEMPTS}): {err}")
+                continue
+            self.state.set("scoring_window", None)
+            if self._score_attempts.pop(key, None) is not None:
+                self._save_score_attempts()
+            return r
+        self._score_failed(key, err)
+        return None
+
+    def _save_score_attempts(self) -> None:
+        if len(self._score_attempts) > 200:
+            self._score_attempts = dict(list(self._score_attempts.items())[-200:])
+        self.state.set("score_attempts", self._score_attempts)
+
+    def _score_failed(self, key: str, err: str) -> None:
+        self.state.bump("score_failures", 1)
+        now = time.time()
+        ts = [t for t in (self.state.get("score_fail_times") or []) if t > now - 86400][-1000:] + [now]
+        self.state.set("score_fail_times", ts)
+        log(f"window starting at {key} skipped: detection failed on it ({err[:300]}); "
+            f"{len(ts)} window(s) skipped in the last 24 h")
 
     def context(self, w: Window, r: WindowResult, node: int, hops: int = 1, cap: int = 300) -> dict:
         """Window-local neighbourhood of a flagged node with per-edge losses (detector-1)."""
@@ -741,8 +917,7 @@ class Agent:
                                "fused": float(r.fused[i]), "r1": float(r.r1[i]), "r2": float(r.r2[i]), "context": self.context(w, r, int(n)),
                                "layer": layer, "rule": main.get("rule"), "reason": main.get("detail"), "reasons": rs})
         if wins or alerts:
-            self._unreported.append((wins, alerts))
-            self._save_unreported()
+            self._queue(wins, alerts)
         if not self._online():
             return                                  # delivered when the server is back (kept on disk meanwhile)
         try:
@@ -775,7 +950,7 @@ class Agent:
             if self.tr is not None and self.state.get("isolated_addrs"):        # the saved server addresses first)
                 self.tr.pinned = list(self.state.get("isolated_addrs"))
             log(f"response: re-applying network isolation: {self.isolate()}")
-        last_hb, last_status, last_purge = 0, 0, time.time()
+        last_status, last_purge = 0, time.time()
         self._offline_since = 0
         self._reachable = threading.Event()
         self._unreported = [tuple(x) for x in (self.state.get("unreported") or [])] + getattr(self, "_unreported", [])
@@ -806,7 +981,7 @@ class Agent:
                             b = st.get("bundle")       # while learning: an early model (server 0.5), replaced as it improves
                             if b and b["id"] != self.state.get("bundle_id") and b["id"] != getattr(self, "_bad_bundle", None):
                                 try:
-                                    self.fetch_bundle(b["id"])
+                                    self.fetch_bundle(b["id"], b.get("sha256"))
                                 except (TransportError, OSError):
                                     raise
                                 except Exception as e:  # noqa - a model this agent cannot use must not stop it
@@ -839,13 +1014,7 @@ class Agent:
                     except Exception as e:  # noqa - the index is best effort
                         log(f"activity index: {e}")
                     self._obs = {}
-                if now - last_hb > self.cfg.heartbeat_interval and self._online():
-                    try:
-                        self.tr.request("POST", f"/v1/endpoints/{self.eid}/heartbeat", self.health())
-                        self.confirm_update()
-                    except (TransportError, OSError) as e:
-                        self._went_offline(now, e)
-                    last_hb = now
+                self._maybe_heartbeat(now)
             except sqlite3.OperationalError as e:      # a full disk must not stop the agent (crash loop): it keeps
                 if not disk_full(e):                   # running, drops what it cannot store (counted, in the heartbeat)
                     raise                               # and continues by itself once there is space again
@@ -855,6 +1024,83 @@ class Agent:
                     raise
                 self._disk_full(e)
         self._save_seen()                      # stopping (update, shutdown): entity ages survive the restart
+
+    # ------------------------------------------------------------------ heartbeat (0.6: integrity of the signal)
+    def _maybe_heartbeat(self, now: float | None = None) -> None:
+        now = time.time() if now is None else now
+        if now - self._last_hb <= self.cfg.heartbeat_interval or not self._online() or self.tr is None:
+            return
+        try:
+            body = self.heartbeat_body(now)
+            self.tr.request("POST", f"/v1/endpoints/{self.eid}/heartbeat", body)
+            self._heartbeat_sent(body, now)
+            self.confirm_update()
+        except (TransportError, OSError) as e:
+            self._went_offline(now, e)
+        self._last_hb = now
+
+    def _drops_total(self, h: dict) -> int:
+        return int(h.get("disk_full_dropped") or 0) + int(h.get("spool_dropped_unscored") or 0) + int(h.get("spool_dropped_unuploaded") or 0) \
+            + int(h.get("collector_lost") or 0) + int(h.get("collector_behind") or 0)
+
+    def heartbeat_body(self, now: float | None = None) -> dict:
+        """health() plus the sequence number (persisted: it never goes back, also across restarts; a heartbeat that
+        does not advance it is a replay) and the agent's clock."""
+        now = time.time() if now is None else now
+        h = self.health()
+        seq = int(self.state.get("hb_seq", 0) or 0) + 1
+        self.state.set("hb_seq", seq)
+        drops = self._drops_total(h)
+        base = self._drops_sent if self._drops_sent is not None and self._drops_sent <= drops else drops
+        h["counters"]["dropped"] = drops - base
+        h.update({"hb_seq": seq, "agent_time": time.time()})
+        return h
+
+    def _heartbeat_sent(self, body: dict, now: float) -> None:
+        """Counters cover the time since the last heartbeat the server received."""
+        c = body.get("counters") or {}
+        for k in ("events", "windows", "alerts"):
+            self._ctr[k] = max(0, self._ctr[k] - int(c.get(k) or 0))
+        self._ctr_t = now
+        self._drops_sent = self._drops_total(body)
+
+    def _source_health(self) -> dict:
+        src = getattr(self, "source", None)
+        out = {"kind": self.cfg.source.get("kind"), "alive": src is not None and not getattr(src, "error", None)}
+        st = getattr(src, "stats", None)
+        if isinstance(st, dict) and "events" in st:
+            out["events"] = int(st["events"])
+        cs = getattr(src, "canary_status", None)
+        if callable(cs):
+            try:
+                c = cs()
+                if c:
+                    out["canary"] = c
+            except Exception:  # noqa - health must never fail
+                pass
+        return out
+
+    def _bundle_health(self) -> dict:
+        pin = self.state.get("signing_key_fp")
+        try:
+            fp = key_fingerprint(open(self.cfg.signing_pub, "rb").read())
+        except (OSError, ValueError):
+            fp = None
+        out = {"id": self.state.get("bundle_id") if self.runtime is not None else None, "manifest_sha256": self._manifest_sha if self.runtime is not None else None,
+               "signing_key_fp": fp, "pinned_key_fp": pin}
+        if self._bundle_refused:
+            out["refused"] = self._bundle_refused
+        return out
+
+    def integrity_health(self) -> dict:
+        now = time.time()
+        fails = [t for t in (self.state.get("score_fail_times") or []) if t > now - 86400]
+        return {"run_id": self.run_id, "started_at": self.started_at,
+                "counters": {**self._ctr, "interval_s": round(now - self._ctr_t, 1)},
+                "source": self._source_health(), "bundle": self._bundle_health(), "config_sha256": config_digest(self.cfg),
+                "window_seq": int(self.state.get("window_seq", 0) or 0), "alert_seq": int(self.state.get("alert_seq", 0) or 0),
+                "unreported": len(getattr(self, "_unreported", []) or []), "lost_seqs": self.state.get("lost_seqs") or {},
+                "score_failures": int(self.state.get("score_failures", 0) or 0), "score_failures_24h": len(fails)}
 
     def _spool_drops_1h(self) -> dict:
         """Spool drops over the last hour (the kv counters are running totals since install)."""
@@ -1179,4 +1425,8 @@ class Agent:
                 h["collector_behind_1h"] = h["collector_behind"] - hist[0][2]
         except Exception:  # noqa - health must never fail
             pass
+        try:
+            h.update(self.integrity_health())
+        except Exception as e:  # noqa - health must never fail
+            log(f"integrity health: {e}")
         return h
