@@ -296,6 +296,7 @@ class OrgPatch(BaseModel):
     retention_days: int | None = None
     require_mfa: bool | None = None
     response_actions: bool | None = None
+    reason: str | None = Field(default=None, max_length=500)    # required for a lower retention or optional 2FA (0.6)
 
 
 def _sso_out(sso: dict | None) -> dict | None:
@@ -321,9 +322,18 @@ def patch_org(req: OrgPatch, s=Depends(admin)):
         sets.append("require_mfa=%s"); vals.append(req.require_mfa)
     if req.response_actions is not None:
         sets.append("response_actions=%s"); vals.append(req.response_actions)
+    from . import posture
     with db.conn() as c:
         if sets:
+            keys = ("name", "retention_days", "require_mfa", "response_actions")
+            before = db.q(c, f"SELECT {', '.join(keys)} FROM orgs WHERE id=%s FOR UPDATE", (s["org"],), one=True)
+            after = {**before, **{k: getattr(req, k) for k in keys if getattr(req, k) is not None}}
+            weak = posture.org_weakenings(before, after)
+            reason = posture.require_reason(weak, req.reason)
             db.q(c, f"UPDATE orgs SET {', '.join(sets)} WHERE id=%s", (*vals, s["org"]))
+            posture.audit_change(c, s, "organisation settings changed", None, before=before, after=after, reason=reason,
+                                 extra={"weakens": weak} if weak else None)
+            posture.weakened(c, s, weak, reason, subject="organisation settings", before=before, after=after)
         return {"ok": True, "org": _org_out(c, s["org"])}
 
 

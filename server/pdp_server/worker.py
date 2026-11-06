@@ -441,7 +441,7 @@ def apply_retention():
             for q in (f"DELETE FROM alerts WHERE endpoint_id IN ({eps}) AND created_at < now() - %s::interval",
                       f"DELETE FROM windows WHERE endpoint_id IN ({eps}) AND received_at < now() - %s::interval",   # server time, not the endpoint's clock
                       "DELETE FROM incident_events WHERE org_id=%s AND at < now() - %s::interval",
-                      "DELETE FROM audit_log WHERE org_id=%s AND at < now() - %s::interval"):
+                      "DELETE FROM audit_log WHERE org_id=%s AND at < now() - GREATEST(%s::interval, interval '365 days')"):   # audit: >= 1 year
                 with c.cursor() as cur:
                     cur.execute(q, (o["id"], cut)); n += cur.rowcount
             if n:
@@ -546,7 +546,7 @@ def job_sim(job: dict, device: str):
         camp = db.q(c, "SELECT * FROM sim_campaigns WHERE id=%s", (cid,), one=True)
         ep = db.q(c, "SELECT * FROM endpoints WHERE id=%s", (camp["endpoint_id"],), one=True)
         bid = str(camp["bundle_id"] or ep["current_bundle"] or "")
-        bundle = db.q(c, "SELECT path FROM bundles WHERE id=%s", (bid,), one=True) if bid else None
+        bundle = db.q(c, "SELECT path FROM bundles WHERE id=%s AND endpoint_id=%s", (bid, ep["id"]), one=True) if bid else None   # never another endpoint's model
         db.q(c, "UPDATE sim_campaigns SET state='running', bundle_id=%s WHERE id=%s", (bid or None, cid))
     if not bundle:
         raise RuntimeError("endpoint has no bundle to simulate against")

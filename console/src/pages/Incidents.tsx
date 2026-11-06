@@ -122,8 +122,8 @@ function AlertList({ sp, set, eps }: { sp: URLSearchParams; set: (k: string, v: 
         <label className="inline-toggle" title="Alerts covered by the allow list are kept for the record as false alarms"><Toggle checked={showAllowed} onChange={v => set("allowed", v ? "1" : "")} label="Show allowed alerts" />Show allowed{allowedN ? ` (${allowedN.toLocaleString()})` : ""}</label>
         <div className="filters-end">
           <span className="muted">{data ? `${plural(rows.length, "alert")}${fetched.length >= 500 ? " (of the newest 500)" : ""}` : ""}</span>
-          <a className="btn sm" href={`/api/alerts/export?${new URLSearchParams([...exportQs, ["format", "csv"]])}`} download><Download size={14} />CSV</a>
-          <a className="btn sm" href={`/api/alerts/export?${new URLSearchParams([...exportQs, ["format", "ndjson"]])}`} download><Download size={14} />NDJSON</a>
+          {can.triage && <><a className="btn sm" href={`/api/alerts/export?${new URLSearchParams([...exportQs, ["format", "csv"]])}`} download><Download size={14} />CSV</a>
+          <a className="btn sm" href={`/api/alerts/export?${new URLSearchParams([...exportQs, ["format", "ndjson"]])}`} download><Download size={14} />NDJSON</a></>}
         </div>
       </div>
       {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :

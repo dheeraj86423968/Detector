@@ -58,4 +58,7 @@ def problems(row: dict, target_version: str | None = None) -> list[dict]:
         out.append({"key": "no_updater", "level": "warning", "text": f"Agent {target_version} is available; {how}"})
     from .integrity import problems as integrity_problems     # 0.6: tampering / blinding (agents 0.6+ only)
     out += integrity_problems(row)
+    # detection posture (pdp_server.posture.compute, 0.6), when the caller computed it for this row: no or early model,
+    # stale model, layers off, risky allow-list entries (its worsening is notified as a security event, not here)
+    out += list((row.get("posture") or {}).get("problems") or [])
     return out

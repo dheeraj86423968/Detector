@@ -40,6 +40,7 @@ def _include_console_routes():
     from .respond import router as respond_router
     from .hunt import router as hunt_router, agent_router as hunt_agent_router
     from .k8s import router as k8s_router
+    from .posture import router as posture_router
     app.include_router(dist_router)
     app.include_router(router)
     app.include_router(allow_router)
@@ -54,13 +55,15 @@ def _include_console_routes():
     app.include_router(respond_router)
     app.include_router(hunt_router)
     app.include_router(k8s_router)
+    app.include_router(posture_router)
     hunt_agent_router(app, agent_endpoint, ndjson_rows)
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")
 AGENT_COMMANDS = ("refetch_bundle",)
+# 0.6: typed and range-checked in pdp_server.posture (approved_executables is refused: programs go on the allow list)
 CONFIG_KEYS = {"baseline_days", "tz", "retain_baseline_events", "train", "window_minutes", "fp_budget",
-               "approved_executables", "learned_daily_budget", "learned_alerts", "periodic_retrain", "early_models"}
+               "learned_daily_budget", "learned_alerts", "periodic_retrain", "early_models"}
 SERVER_HOSTNAMES = os.environ.get("PDP_HOSTNAMES", "localhost").split(",")
 
 
@@ -721,6 +724,11 @@ def update_user(user_id: int, body: dict, s=Depends(admin)):
                 raise HTTPException(400, "this is the last enabled admin")
         if sets:
             db.q(c, f"UPDATE users SET {', '.join(sets)} WHERE id=%s", (*params, user_id))
+            from .posture import audit_change
+            keys = ("role", "display_name", "email", "endpoints", "disabled")
+            audit_change(c, s, "user changed", f"user_id={user_id} ({u['username']})", before={k: u.get(k) for k in keys},
+                         after={k: (body[k] if k in body else u.get(k)) for k in keys},
+                         extra={"password_reset": True} if "password" in body else None)
     return {"ok": True}
 
 
@@ -762,6 +770,7 @@ class NewEndpoint(BaseModel):
     kind: str = "live"
     dataset: str | None = None   # benchmark endpoints replay a dataset
     config: dict = {}             # initial endpoint configuration (same keys as POST /api/endpoints/{id}/config)
+    reason: str | None = Field(default=None, max_length=500)   # required when the configuration weakens detection
 
 
 @app.post("/api/endpoints")
@@ -770,16 +779,21 @@ def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
         raise HTTPException(400, "kind must be live, benchmark or simulation")
     if req.kind != "live" and not s["op"]:
         raise HTTPException(403, "only the platform operator can create benchmark or simulation endpoints")
-    bad = set(req.config) - CONFIG_KEYS
-    if bad:
-        raise HTTPException(400, f"unknown config keys: {sorted(bad)}")
+    from . import posture
     _validate_config(req.config)
+    posture.check_floor(req.config)
+    weak = posture.weakenings({}, req.config)
+    reason = posture.require_reason(weak, req.reason)
     token = secrets.token_urlsafe(24)
     from .orgs import check_endpoint_limit
     with db.conn() as c:
         check_endpoint_limit(c, s["org"])
         db.q(c, "INSERT INTO enroll_tokens (token, name, created_by, expires_at, kind, dataset, config, org_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
              (token, req.name, s["u"], datetime.now(timezone.utc) + timedelta(hours=24), req.kind, req.dataset, json.dumps(req.config), s["org"]))
+        if req.config:
+            posture.audit_change(c, s, "endpoint added with settings", f"name={req.name}", before={}, after=req.config, reason=reason,
+                                 extra={"weakens": weak} if weak else None)
+            posture.weakened(c, s, weak, reason, subject=f"new endpoint {req.name}", before={}, after=req.config)
     fp = pki.ca_sha256()
     from .distrib import agent_image, public_host
     host = public_host(request)
@@ -815,27 +829,43 @@ def endpoint_detail(endpoint_id: str, s=Depends(session)):
     return {"ok": True, "endpoint": _ep_out(ep),
             "jobs": [dict(j, id=str(j["id"])) for j in jobs], "baseline_days": [dict(d, date=str(d["date"])) for d in days],
             "timeline": endpoint_timeline(endpoint_id),
+            "posture": _posture(endpoint_id),
             # what the agent does when the endpoint has no learned_alerts setting (the current bundle's policy)
             "learned_alerts_default": bool(((pol or {}).get("p") or {}).get("learned_alerts", True))}
 
 
+def _posture(endpoint_id: str) -> dict:
+    from .posture import for_endpoint
+    with db.conn() as c:
+        return for_endpoint(c, endpoint_id)
+
+
 class ConfigPatch(BaseModel):
     config: dict
+    reason: str | None = Field(default=None, max_length=500)   # required when the change weakens detection (0.6)
 
 
 @app.post("/api/endpoints/{endpoint_id}/config")
 def patch_config(endpoint_id: str, req: ConfigPatch, s=Depends(admin)):
     """Merge keys into the endpoint configuration (baseline_days, tz, retain_baseline_events, train.*); the agent
-    follows the server's configuration on its next status poll."""
+    follows the server's configuration on its next status poll. Every key is typed and range-checked; a change that
+    weakens detection needs a reason, is audited with its before/after and notified (pdp_server.posture)."""
     require_endpoint(s, endpoint_id)
-    bad = set(req.config) - CONFIG_KEYS
-    if bad:
-        raise HTTPException(400, f"unknown config keys: {sorted(bad)}")
+    from . import posture
     _validate_config(req.config)
     with db.conn() as c:
-        row = db.q(c, "UPDATE endpoints SET config = config || %s WHERE id=%s RETURNING config, phase, baseline_days_done", (json.dumps(req.config), endpoint_id), one=True)
-        if not row:
+        cur = db.q(c, "SELECT config, name FROM endpoints WHERE id=%s FOR UPDATE", (endpoint_id,), one=True)
+        if not cur:
             raise HTTPException(404)
+        merged = {**(cur["config"] or {}), **req.config}
+        posture.check_floor(merged)
+        weak = posture.weakenings(cur["config"], merged)
+        reason = posture.require_reason(weak, req.reason)
+        row = db.q(c, "UPDATE endpoints SET config = config || %s WHERE id=%s RETURNING config, phase, baseline_days_done", (json.dumps(req.config), endpoint_id), one=True)
+        posture.audit_change(c, s, "endpoint settings changed", f"endpoint_id={endpoint_id}", before=cur["config"], after=row["config"],
+                             reason=reason, extra={"weakens": weak} if weak else None)
+        posture.weakened(c, s, weak, reason, subject=cur["name"], endpoint_id=endpoint_id, before=cur["config"], after=row["config"],
+                         extra={"endpoint_name": cur["name"]})
         # a shorter baseline may already be complete: start training now instead of waiting for a day that is not needed
         need = int(row["config"].get("baseline_days", 7)) + 1
         if "baseline_days" in req.config and row["phase"] == "baseline" and row["baseline_days_done"] >= need and \
@@ -846,18 +876,24 @@ def patch_config(endpoint_id: str, req: ConfigPatch, s=Depends(admin)):
 
 
 class ApprovalReq(BaseModel):
-    executables: list[str]
+    executables: list[str] = Field(max_length=100)
     approve: bool = True
+    note: str | None = Field(default=None, max_length=500)      # 0.6: approving needs a reason (note or reason)
+    reason: str | None = Field(default=None, max_length=500)
+    force: bool = False                                          # interpreters / shells / loaders
 
 
 @app.post("/api/endpoints/{endpoint_id}/approved-executables")
 def approve_executables(endpoint_id: str, req: ApprovalReq, s=Depends(admin)):
-    """Layer-1 approvals (kept for older consoles and scripts): program entries of the allow list for this endpoint.
+    """Layer-1 approvals (kept for older consoles and scripts): program entries of the allow list for this endpoint,
+    with the allow list's rules (full paths, a reason, force for interpreters; audited and notified).
     Approving resolves the endpoint's open 'new program' alerts for these programs."""
     require_endpoint(s, endpoint_id)
-    from .allowlist import entries_for, mark_alerts
-    items = [x.strip() for x in req.executables if x and x.strip()]
-    _validate_config({"approved_executables": items})
+    from .allowlist import create_entry, entries_for, remove_entry
+    from .posture import audit_change
+    items = list(dict.fromkeys(x.strip() for x in req.executables if x and x.strip()))
+    if any(len(x) > 4096 for x in items):
+        raise HTTPException(400, "a program path has at most 4096 characters")
     with db.conn() as c:
         if not db.q(c, "SELECT 1 FROM endpoints WHERE id=%s", (endpoint_id,), one=True):
             raise HTTPException(404)
@@ -865,13 +901,12 @@ def approve_executables(endpoint_id: str, req: ApprovalReq, s=Depends(admin)):
         for prog in items:
             have = [e for e in mine if e["value"] == prog]
             if req.approve and not have:
-                row = db.q(c, "INSERT INTO allowlist (kind, value, endpoint_ids, created_by, org_id) VALUES ('program', %s, %s, %s, %s) RETURNING *",
-                           (prog, json.dumps([endpoint_id]), s["u"], s["org"]), one=True)
-                mark_alerts(c, row)
+                create_entry(c, s, "program", prog, None, [endpoint_id], req.note or req.reason, req.force)
             elif not req.approve:
                 for e in have:
-                    db.q(c, "DELETE FROM allowlist WHERE id=%s", (e["id"],))
-                    db.q(c, "UPDATE alerts SET allowed_by=NULL WHERE allowed_by=%s", (e["id"],))
+                    remove_entry(c, e)
+                    audit_change(c, s, "allow list: entry removed", f"entry_id={e['id']}",
+                                 before={"kind": "program", "value": e["value"], "endpoints": e["endpoint_ids"]}, after=None)
         ep = db.q(c, "SELECT config FROM endpoints WHERE id=%s", (endpoint_id,), one=True)
         from .allowlist import effective_config
         approved = effective_config(c, endpoint_id, ep["config"])["approved_executables"]
@@ -879,35 +914,9 @@ def approve_executables(endpoint_id: str, req: ApprovalReq, s=Depends(admin)):
 
 
 def _validate_config(cfg: dict) -> None:
-    if "approved_executables" in cfg:
-        v = cfg["approved_executables"]
-        if not (isinstance(v, list) and all(isinstance(x, str) and 0 < len(x) <= 4096 for x in v) and len(v) <= 20000):
-            raise HTTPException(400, "approved_executables must be a list of program paths / names")
-    if "learned_alerts" in cfg and not isinstance(cfg["learned_alerts"], bool):
-        raise HTTPException(400, "learned_alerts must be true or false")
-    if "learned_daily_budget" in cfg and not (isinstance(cfg["learned_daily_budget"], int) and 0 <= cfg["learned_daily_budget"] <= 100000):
-        raise HTTPException(400, "learned_daily_budget must be an integer between 0 and 100000")
-    if "fp_budget" in cfg and cfg["fp_budget"] not in FP_BUDGETS:
-        raise HTTPException(400, f"fp_budget must be one of {list(FP_BUDGETS)}")
-    if "baseline_days" in cfg and not (isinstance(cfg["baseline_days"], int) and 1 <= cfg["baseline_days"] <= 60):
-        raise HTTPException(400, "baseline_days must be an integer between 1 and 60")
-    if "window_minutes" in cfg and not (isinstance(cfg["window_minutes"], (int, float)) and 1 <= cfg["window_minutes"] <= 240):
-        raise HTTPException(400, "window_minutes must be between 1 and 240 (takes effect for days ingested after the change)")
-    if "tz" in cfg:
-        try:
-            from zoneinfo import ZoneInfo
-            ZoneInfo(cfg["tz"])
-        except Exception:  # noqa
-            raise HTTPException(400, f"unknown timezone {cfg['tz']!r}")
-    if "train" in cfg:
-        import dataclasses
-        sys_path_engine()
-        from pdp_engine.trainer import TrainConfig
-        known = {f.name for f in dataclasses.fields(TrainConfig)} | {"fusion_calibration"}
-        if not isinstance(cfg["train"], dict) or set(cfg["train"]) - known:
-            raise HTTPException(400, f"train: unknown keys {sorted(set(cfg['train']) - known) if isinstance(cfg['train'], dict) else cfg['train']}")
-        if cfg["train"].get("fusion_calibration", "fixed") not in ("fixed", "simulation"):
-            raise HTTPException(400, "train.fusion_calibration must be 'fixed' or 'simulation'")
+    """Typed, range-checked endpoint configuration (pdp_server.posture.validate_config; 400 on the first problem)."""
+    from .posture import validate_config
+    validate_config(cfg)
 
 
 def sys_path_engine():
@@ -1102,24 +1111,50 @@ def update_alert(alert_id: int, req: AlertUpdate, s=Depends(triager)):
         raise HTTPException(400, f"status must be one of {list(ALERT_STATUSES)}")
     sc, sp = scope_sql(s, "endpoint_id")
     with db.conn() as c:
-        if not db.q(c, f"UPDATE alerts SET status=%s WHERE id=%s AND {sc} RETURNING id", (req.status, alert_id, *sp), one=True):
+        if not db.q(c, f"UPDATE alerts SET status=%s, status_by=%s, status_at=now() WHERE id=%s AND {sc} RETURNING id",
+                    (req.status, s["u"], alert_id, *sp), one=True):
             raise HTTPException(404)
     return {"ok": True}
 
 
+EXPORT_MAX_ROWS = int(os.environ.get("PDP_EXPORT_MAX_ROWS", "100000"))
+
+
 @app.get("/api/alerts/export")
-def export_alerts(s=Depends(session), format: str = "csv", endpoint_id: str | None = None, status: str | None = None, limit: int = 100000):
-    """Download alerts (newest first) as CSV or NDJSON for a SIEM / spreadsheet."""
+def export_alerts(request: Request, s=Depends(triager), format: str = "csv", endpoint_id: str | None = None, status: str | None = None,
+                  limit: int = EXPORT_MAX_ROWS, since_id: int | None = None):
+    """Download alerts (newest first) as CSV or NDJSON for a SIEM / spreadsheet. Analysts and admins only, at most
+    EXPORT_MAX_ROWS rows per request: page with since_id (alerts with a larger id, oldest first; the response's
+    X-PDP-Next-Since-Id header is the next page's since_id while more rows remain). Every export is audited with
+    its row count; exports are rate-limited per user (pdp_server.posture)."""
     import csv
+    from . import posture
     if format not in ("csv", "ndjson"):
         raise HTTPException(400, "format must be csv or ndjson")
+    if not 1 <= limit <= EXPORT_MAX_ROWS:
+        raise HTTPException(400, f"limit must be between 1 and {EXPORT_MAX_ROWS} rows per request; page through more with since_id")
+    if status is not None and status not in ALERT_STATUSES:
+        raise HTTPException(400, f"status must be one of {list(ALERT_STATUSES)}")
     if endpoint_id:
         require_endpoint(s, endpoint_id)
     sc, sp = scope_sql(s, "a.endpoint_id")
+    order = "a.id ASC" if since_id is not None else "a.window_start_ns DESC"
+    with db.conn() as c:
+        posture.take(c, s["u"], "export")
     with db.conn() as c:
         rows = db.q(c, "SELECT a.id, a.endpoint_id, e.name AS endpoint, e.hostname, a.window_start_ns, a.node_uuid, a.ntype, a.label, a.fused, a.r1, a.r2, a.status, a.created_at, "
                        "coalesce(a.layer, 'learned') AS layer, a.rule, a.reason FROM alerts a JOIN endpoints e ON e.id=a.endpoint_id WHERE (%s::uuid IS NULL OR a.endpoint_id=%s) AND (%s::text IS NULL OR a.status=%s) "
-                       f"AND {sc} ORDER BY a.window_start_ns DESC LIMIT %s", (endpoint_id, endpoint_id, status, status, *sp, max(1, min(limit, 1_000_000))))
+                       f"AND (%s::bigint IS NULL OR a.id > %s) AND {sc} ORDER BY {order} LIMIT %s",
+                    (endpoint_id, endpoint_id, status, status, since_id, since_id, *sp, limit + 1))
+        more = len(rows) > limit
+        rows = rows[:limit]
+        from .audit import _client_ip
+        posture.audit_change(c, s, "alerts exported", f"format={format}" + (f", endpoint_id={endpoint_id}" if endpoint_id else ""),
+                             extra={"rows": len(rows), "status_filter": status, "since_id": since_id, "limit": limit, "more": more,
+                                    "ip": _client_ip(request)})
+    page = {"X-PDP-Rows": str(len(rows)), "X-PDP-More": "1" if more else "0"}
+    if more and since_id is not None and rows:
+        page["X-PDP-Next-Since-Id"] = str(rows[-1]["id"])
     from .incidents import clean_reason
     for r in rows:
         r["reason"] = clean_reason(r["layer"], r["reason"])
@@ -1128,13 +1163,13 @@ def export_alerts(s=Depends(session), format: str = "csv", endpoint_id: str | No
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     if format == "ndjson":
         body = "".join(json.dumps({k: v for k, v in r.items() if k not in ("fused", "r1", "r2")}, default=str) + "\n" for r in rows)
-        return PlainTextResponse(body, media_type="application/x-ndjson", headers={"Content-Disposition": f'attachment; filename="pdp-alerts-{stamp}.ndjson"'})
+        return PlainTextResponse(body, media_type="application/x-ndjson", headers={"Content-Disposition": f'attachment; filename="pdp-alerts-{stamp}.ndjson"', **page})
     out = io.StringIO()
     cols = ["id", "endpoint", "hostname", "endpoint_id", "window_start", "window_start_ns", "layer", "rule", "reason", "ntype", "label", "node_uuid",
             "status", "created_at"]
     w = csv.DictWriter(out, fieldnames=cols, extrasaction="ignore")
     w.writeheader(); w.writerows(rows)
-    return PlainTextResponse(out.getvalue(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="pdp-alerts-{stamp}.csv"'})
+    return PlainTextResponse(out.getvalue(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="pdp-alerts-{stamp}.csv"', **page})
 
 
 @app.get("/api/alerts/{alert_id}/graph")
@@ -1181,13 +1216,24 @@ class NewCampaign(BaseModel):
 
 @app.post("/api/sim/campaigns")
 def create_campaign(req: NewCampaign, s=Depends(triager)):
+    """A simulation campaign against one of the endpoint's own models (bundle_id must belong to endpoint_id). Limited
+    per user (rate) and per organisation (simulated attacks per 24 hours, pdp_server.posture)."""
     require_endpoint(s, req.endpoint_id)
     spec = dict(req.spec)
     from_sim = {"days", "runs", "attacks_per_pass", "families", "evasion_levels", "seed", "horizon_windows", "fp_budget"}
     if set(spec) - from_sim:
         raise HTTPException(400, f"unknown spec keys: {sorted(set(spec) - from_sim)}")
-    if not (1 <= int(spec.get("runs", 40)) <= 5000) or not (1 <= int(spec.get("attacks_per_pass", 3)) <= 50):
+    try:
+        bad_n = not (1 <= int(spec.get("runs", 40)) <= 5000) or not (1 <= int(spec.get("attacks_per_pass", 3)) <= 50)
+    except (TypeError, ValueError):
+        bad_n = True
+    if bad_n:
         raise HTTPException(400, "runs must be 1..5000 and attacks_per_pass 1..50")
+    if req.bundle_id is not None:
+        try:
+            req.bundle_id = str(uuidlib.UUID(req.bundle_id))
+        except ValueError:
+            raise HTTPException(400, "bundle_id: not a model id") from None
     if spec.get("fp_budget") not in FP_BUDGETS:
         raise HTTPException(400, f"fp_budget must be one of {list(FP_BUDGETS)}")
     spec.setdefault("days", ["validation"])
@@ -1201,6 +1247,11 @@ def create_campaign(req: NewCampaign, s=Depends(triager)):
             raise HTTPException(404, "endpoint not found")
         if not (req.bundle_id or ep["current_bundle"]):
             raise HTTPException(409, "the endpoint has no trained bundle yet")
+        if req.bundle_id and not db.q(c, "SELECT 1 FROM bundles WHERE id=%s AND endpoint_id=%s", (req.bundle_id, req.endpoint_id), one=True):
+            raise HTTPException(400, "bundle_id must be one of this endpoint's own models")
+        from . import posture
+        posture.take(c, s["u"], "sim")
+        posture.check_sim_quota(c, s["org"], int(spec["runs"]))
         db.q(c, "INSERT INTO sim_campaigns (id, name, endpoint_id, bundle_id, spec, seed, state) VALUES (%s,%s,%s,%s,%s,%s,'queued')",
              (cid, req.name, req.endpoint_id, req.bundle_id, json.dumps(spec), spec["seed"]))
         db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, params) VALUES (%s,%s,'sim',%s)", (pki.new_id(), req.endpoint_id, json.dumps({"campaign_id": cid})))

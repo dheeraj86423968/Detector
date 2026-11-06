@@ -28,6 +28,8 @@ const KIND: Record<Kind, { label: string; icon: JSX.Element; target: string; pla
 const EVENT_TEXT: Record<string, string> = {
   incident: "Incidents", agent_offline: "Agent offline / back", weekly: "Weekly summary (Monday morning)", agent_health: "Agent health (lost events, disk, updates)",
   platform: "Platform problems (operator: backups, job queues, server disk)",
+  detection_weakened: "Detection weakened (settings, allow list, model posture; always sent with incidents)",
+  response_action: "Response actions (process stopped, endpoint isolated; always sent with incidents)",
 };
 const SEV_TEXT: Record<string, string> = { low: "Low and above", medium: "Medium and above", high: "High and above", critical: "Critical only" };
 
@@ -118,7 +120,7 @@ function ChannelDialog({ ch, emailOk, onClose, onDone }: { ch: Channel | null; e
   const [target, setTarget] = useState(ch?.target || "");
   const [secret, setSecret] = useState("");
   const [sev, setSev] = useState(ch?.min_severity || "high");
-  const [events, setEvents] = useState<string[]>(ch?.events || ["incident", "agent_offline", "agent_health", "weekly"]);
+  const [events, setEvents] = useState<string[]>(ch?.events || ["incident", "agent_offline", "agent_health", "weekly", "detection_weakened", "response_action"]);
   const [every, setEvery] = useState(!!ch?.every_alert);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -147,7 +149,7 @@ function ChannelDialog({ ch, emailOk, onClose, onDone }: { ch: Channel | null; e
         <input value={secret} onChange={e => setSecret(e.target.value)} type="password" autoComplete="new-password" /></Field>}
       <Field label="Send">
         <div className="check-list">
-          {(["incident", "agent_offline", "agent_health", "weekly", ...(useCan().operate ? ["platform"] as const : [])] as const).map(e => (
+          {(["incident", "agent_offline", "agent_health", "weekly", "detection_weakened", "response_action", ...(useCan().operate ? ["platform"] as const : [])] as const).map(e => (
             <label key={e} className="check"><input type="checkbox" checked={events.includes(e)} onChange={() => flip(e)} />{EVENT_TEXT[e]}</label>))}
           {(kind === "webhook" || kind === "syslog") && <label className="check"><input type="checkbox" checked={every} onChange={() => setEvery(!every)} />Every single alert as well (SIEM feed)</label>}
         </div>

@@ -170,8 +170,9 @@ export type Overview = { ok: true; endpoints: { total: number; protected: number
 export type AllowKind = "program" | "address" | "detection";
 export type AllowKindInfo = { id: AllowKind; label: string; text: string };
 export type AllowEntry = { id: number; kind: AllowKind; value: string; rule: string | null; rule_text?: string | null;
-  endpoints: { id: string; name: string }[] | null; note?: string | null; created_by?: string | null; created_at: string; alerts_allowed: number };
+  endpoints: { id: string; name: string }[] | null; note?: string | null; created_by?: string | null; created_at: string; alerts_allowed: number;
+  risks?: string[]; force?: boolean };
 export type AllowListResp = { ok: true; kinds: AllowKindInfo[]; entries: AllowEntry[] };
 export type AllowOption = { kind: AllowKind; value: string; rule: string | null; title: string; text: string };
 export type AllowOptionsResp = { ok: true; alert_id: number; endpoint_id: string; allowed_by: number | null; options: AllowOption[] };
-export type NewAllowEntry = { kind: AllowKind; value: string; rule?: string | null; endpoints: string[] | null; note?: string; resolve_open: boolean };
+export type NewAllowEntry = { kind: AllowKind; value: string; rule?: string | null; endpoints: string[] | null; note?: string; resolve_open: boolean; force?: boolean };

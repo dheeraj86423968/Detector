@@ -2,15 +2,28 @@ import { useEffect, useState } from "react";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { api, del, useApi, useCan } from "../api";
 import { fmtDateTime, fmtRel } from "../format";
-import { Card, Field, Loading, PageHeader, Toggle, useToast } from "../ui";
+import { Card, Field, Loading, PageHeader, Toggle, useReasoned, useToast } from "../ui";
 
 type Org = { retention_days: number; require_mfa: boolean; sso: null | { provider: string; tenant?: string; issuer?: string; client_id: string;
   has_secret: boolean; domains: string[]; default_role: string; admin_emails: string[]; enabled: boolean;
   proof?: { domain: string; verified_at: string | null; record_name: string; record_value: string }[] } };
-type Entry = { id: number; at: string; who: string | null; action: string; target: string | null; status: number | null; ip: string | null };
+type Entry = { id: number; at: string; who: string | null; action: string; target: string | null; status: number | null; ip: string | null;
+  detail?: { reason?: string; weakens?: string[]; changes?: Record<string, { before: unknown; after: unknown }>; rows?: number; query?: string } | null };
+
+/** One line of what an audit entry's details say: the reason, what it weakened, the fields that changed. */
+const detailText = (d: Entry["detail"]) => {
+  if (!d) return "";
+  const parts: string[] = [];
+  if (d.weakens?.length) parts.push(`Weakens: ${d.weakens.join("; ")}`);
+  if (d.reason) parts.push(`Reason: ${d.reason}`);
+  if (d.changes && Object.keys(d.changes).length) parts.push(Object.entries(d.changes).slice(0, 6).map(([k, v]) => `${k}: ${JSON.stringify(v.before)} → ${JSON.stringify(v.after)}`).join(", "));
+  if (d.rows != null) parts.push(`${d.rows} rows`);
+  if (d.query) parts.push(`query "${d.query}"`);
+  return parts.join(" · ");
+};
 
 export default function Security() {
-  const can = useCan(); const toast = useToast();
+  const can = useCan(); const [withReason, reasonDialog] = useReasoned();
   const org = useApi<{ org: Org }>("/api/org");
   const log = useApi<{ entries: Entry[] }>("/api/audit?limit=300");
   const [ret, setRet] = useState<number | "">("");
@@ -18,9 +31,9 @@ export default function Security() {
   if (!can.manage_org) return <div className="page"><PageHeader title="Security" /><Card><p className="muted">Only administrators manage security settings.</p></Card></div>;
   if (!org.data) return <div className="page"><Loading block /></div>;
   const o = org.data.org;
-  const patch = async (body: any, done: string) => {
-    try { await api("/api/org", { method: "PATCH", body: JSON.stringify(body) }); toast(done); org.reload(); } catch (e: any) { toast(e.message, "err"); }
-  };
+  // a lower retention or optional two-factor sign-in asks for a reason (recorded and notified to the admins)
+  const patch = (body: any, done: string) =>
+    withReason(reason => api("/api/org", { method: "PATCH", body: JSON.stringify({ ...body, reason }) }), done, () => { org.reload(); log.reload(); });
   return (
     <div className="page">
       <PageHeader title="Security" subtitle="Sign-in rules, single sign-on, how long data is kept, and who changed what." />
@@ -36,19 +49,21 @@ export default function Security() {
           <p className="muted sm">Off by default. Each action is confirmed, carried out by the endpoint's agent (0.3.15+) and recorded in the activity log.</p>
         </Card>
         <Card title="Data retention">
-          <Field label="Keep alerts, incidents and the activity log for" hint="30 to 3650 days; older data is deleted every night.">
+          <Field label="Keep alerts and incidents for" hint="30 to 3650 days; older data is deleted every night. The activity log is kept for at least 365 days.">
             <div className="row-gap"><input type="number" min={30} max={3650} value={ret} onChange={e => setRet(e.target.value ? Number(e.target.value) : "")} style={{ width: 110 }} /> days
               <button className="btn sm" disabled={ret === "" || ret === o.retention_days} onClick={() => patch({ retention_days: ret }, "Retention saved")}>Save</button></div>
           </Field>
         </Card>
       </div>
+      {reasonDialog}
       <SSOCard sso={o.sso} reload={org.reload} />
       <Card title="Activity log" subtitle="Changes made in the console and sign-ins, newest first" pad={false}>
         {!log.data ? <Loading block /> : log.data.entries.length === 0 ? <p className="pad muted">Nothing yet.</p> : (
           <div className="table-wrap"><table className="table middle"><thead><tr><th style={{ width: 150 }}>When</th><th style={{ width: "18%" }}>Who</th><th>What</th><th style={{ width: 70 }}>Result</th><th style={{ width: 130 }}>From</th></tr></thead>
             <tbody>{log.data.entries.map(e => (
               <tr key={e.id}><td className="sm" title={fmtDateTime(e.at, true)}>{fmtRel(e.at)}</td><td className="ellipsis">{e.who || "—"}</td>
-                <td className="sm"><span className="mono">{e.action}</span>{e.target && <div className="muted ellipsis">{e.target}</div>}</td>
+                <td className="sm"><span className="mono">{e.action}</span>{e.target && <div className="muted ellipsis">{e.target}</div>}
+                  {e.detail && detailText(e.detail) && <div className="muted ellipsis" title={detailText(e.detail)}>{detailText(e.detail)}</div>}</td>
                 <td className={e.status && e.status >= 400 ? "err-text" : ""}>{e.status ?? ""}</td><td className="sm mono">{e.ip || ""}</td></tr>))}</tbody></table></div>
         )}
       </Card>

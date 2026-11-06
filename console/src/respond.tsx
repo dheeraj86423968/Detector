@@ -11,28 +11,30 @@ export function useResponse(): boolean {
 }
 
 /** Queue an action and report the agent's answer (it acts within its next status poll, about 30 s). */
-export async function runAction(endpointId: string, body: { action: string; node_uuid?: string }, toast: (t: string, tone?: "ok" | "err" | "info") => void, done?: () => void) {
-  try {
-    const r = await post<{ id: string }>(`/api/endpoints/${endpointId}/respond`, body);
-    toast("Sent to the agent; it acts within about 30 seconds", "info");
-    for (let i = 0; i < 40; i++) {
-      await new Promise(res => setTimeout(res, 3000));
-      const j = await api<{ state: string; result: string | null }>(`/api/endpoints/${endpointId}/commands/${r.id}`);
-      if (j.state !== "queued" && j.state !== "running") {
-        toast(j.result || j.state, (j.result || "").startsWith("ok") ? "ok" : "err"); done?.(); return;
+export async function runAction(endpointId: string, body: { action: string; node_uuid?: string; reason: string }, toast: (t: string, tone?: "ok" | "err" | "info") => void, done?: () => void) {
+  const r = await post<{ id: string }>(`/api/endpoints/${endpointId}/respond`, body);    // errors (e.g. no reason) stay in the dialog
+  toast("Sent to the agent; it acts within about 30 seconds", "info");
+  void (async () => {      // the dialog closes; the agent's answer arrives as a toast
+    try {
+      for (let i = 0; i < 40; i++) {
+        await new Promise(res => setTimeout(res, 3000));
+        const j = await api<{ state: string; result: string | null }>(`/api/endpoints/${endpointId}/commands/${r.id}`);
+        if (j.state !== "queued" && j.state !== "running") {
+          toast(j.result || j.state, (j.result || "").startsWith("ok") ? "ok" : "err"); done?.(); return;
+        }
       }
-    }
-    toast("No answer from the agent yet; check the endpoint later", "err");
-  } catch (e: any) { toast(e.message, "err"); }
+      toast("No answer from the agent yet; check the endpoint later", "err");
+    } catch (e: any) { toast(e.message, "err"); }
+  })();
 }
 
 export function StopProcessButton({ endpointId, nodeUuid, label }: { endpointId: string; nodeUuid: string; label: string }) {
   const toast = useToast(); const [ask, setAsk] = useState(false);
   return (<>
     <button className="btn sm danger-soft" title="Stop this process on the endpoint" onClick={e => { e.stopPropagation(); setAsk(true); }}><Ban size={14} />Stop</button>
-    {ask && <Confirm danger title="Stop this process?" confirmLabel="Stop process" onClose={() => setAsk(false)}
+    {ask && <Confirm danger title="Stop this process?" confirmLabel="Stop process" onClose={() => setAsk(false)} reasonLabel="Reason"
       text={<p>The agent ends <code className="code-inline">{label}</code> on the endpoint, if it still runs as the same process (a reused process id is never touched).</p>}
-      onConfirm={async () => { setAsk(false); await runAction(endpointId, { action: "kill_process", node_uuid: nodeUuid }, toast); }} />}
+      onConfirm={async reason => { await runAction(endpointId, { action: "kill_process", node_uuid: nodeUuid, reason }, toast); }} />}
   </>);
 }
 
@@ -48,10 +50,10 @@ export function IsolationCard({ endpointId, isolated, reload }: { endpointId: st
           : <button className="btn danger-soft" onClick={() => setAsk("isolate")}><Unplug size={15} />Isolate endpoint</button>}
       </div>
       {ask && <Confirm danger={ask === "isolate"} title={ask === "isolate" ? "Isolate this endpoint?" : "Release this endpoint?"} confirmLabel={ask === "isolate" ? "Isolate" : "Release"}
-        onClose={() => setAsk(null)}
+        onClose={() => setAsk(null)} reasonLabel="Reason"
         text={ask === "isolate" ? <p>All network traffic of the endpoint is blocked except to the M.D Lab Detector server (and DNS), until you release it. Its services stop being reachable. It stays isolated across agent restarts.</p>
           : <p>Network traffic of the endpoint is allowed again.</p>}
-        onConfirm={async () => { const a = ask; setAsk(null); await runAction(endpointId, { action: a }, toast, reload); }} />}
+        onConfirm={async reason => { await runAction(endpointId, { action: ask, reason }, toast, reload); }} />}
     </Card>
   );
 }

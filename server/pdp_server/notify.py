@@ -12,6 +12,10 @@ Events: `incident` (a new incident at or above the channel's minimum severity, o
 `agent_health` (the collector lost events, the spool size cap dropped events). With `every_alert` a webhook or
 syslog channel also receives every single alert (SIEM feed, at least once, in order; replaces the server-wide
 exporter for that organisation).
+0.6 security events (pdp_server.posture): `detection_weakened` (a setting or allow-list change that weakens detection,
+with who and the reason given; an endpoint's detection posture worsening; a notification channel silenced) and
+`response_action` (a process stopped, an endpoint isolated or released). Severity high, sent regardless of the
+channel's minimum severity, to every channel subscribed to them or to `incident`.
 
 Delivery never floods: at most PDP_NOTIFY_MAX_PER_HOUR messages per channel and hour; the rest are logged as
 suppressed and summarised in one digest per hour. Every send is logged once per (channel, key) in notify_log.
@@ -50,6 +54,7 @@ router = APIRouter()
 
 KINDS = ("email", "slack", "teams", "webhook", "syslog")
 EVENTS = ("incident", "agent_offline", "agent_health", "weekly", "platform")   # platform: operator alerts (internal organisation)
+EVENTS += ("detection_weakened", "response_action")    # 0.6: security events (pdp_server.posture)
 SEVERITIES = ("low", "medium", "high", "critical")
 SEV_RANK = {s: i for i, s in enumerate(SEVERITIES)}
 EMAIL_RE = re.compile(r"^[^@\s,;<>]+@[^@\s,;<>]+\.[^@\s,;<>]+$")
@@ -336,6 +341,8 @@ def pending_messages(c, ch: dict, eps: list[dict], incidents: list[dict]) -> lis
                 out.append((f"platform:{p['key']}:{day}", {"event": "platform", "subject": f"[M.D Lab] {title}", "text": title, "title": title,
                                                          "severity": "high" if p["level"] == "error" else "medium", "link": f"{console_url()}/#/operator",
                                                          "data": {"type": "platform", "problem": p["key"], "detail": p["text"]}}))
+    from .posture import security_messages
+    out += security_messages(c, ch, console_url())
     now = time.time()
     for ep in eps:
         if "agent_offline" in events and ep["last_seen"] is not None and ep["phase"] in ("baseline", "training", "protected"):
@@ -550,6 +557,11 @@ def main():
             with db.conn() as c:      # what the console shows (the API has neither the SMTP settings nor internet access)
                 db.q(c, "INSERT INTO kv (k, v, updated_at) VALUES ('notifier', %s, now()) ON CONFLICT (k) DO UPDATE SET v=excluded.v, updated_at=now()",
                      (json.dumps({"email": bool(os.environ.get("PDP_SMTP_URL")), "allow_private": _allow_private(), "at": time.time()}),))
+            try:      # detection posture of every endpoint; a worsening becomes a security event (sent below)
+                from .posture import refresh_all
+                refresh_all()
+            except Exception as e:  # noqa
+                log(f"posture refresh failed: {e}")
             t = run_once()
             if any(t.values()):
                 log(f"notifications: {t}")
@@ -565,7 +577,7 @@ class ChannelIn(BaseModel):
     target: str = Field(min_length=1, max_length=2000)
     secret: str | None = Field(default=None, max_length=200)
     min_severity: str = "high"
-    events: list[str] = Field(default_factory=lambda: ["incident", "agent_offline", "agent_health", "weekly"])
+    events: list[str] = Field(default_factory=lambda: ["incident", "agent_offline", "agent_health", "weekly", "detection_weakened", "response_action"])
     every_alert: bool = False
     enabled: bool = True
 
@@ -642,6 +654,8 @@ def create_channel(req: ChannelIn, s=Depends(admin)):
                     "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *",
                  (s["org"], req.name.strip(), req.kind, t, req.secret or None, req.min_severity, json.dumps(req.events), req.every_alert,
                   req.enabled, start, start, who["n"] if who else None), one=True)
+        from .posture import audit_change
+        audit_change(c, s, "notification channel added", f"channel_id={r['id']}", before=None, after=_out(r))
     return {"ok": True, "channel": _out(r)}
 
 
@@ -663,15 +677,21 @@ def patch_channel(cid: int, req: ChannelPatch, s=Depends(admin)):
         if "target" in new:
             sets.append("target=%s"); vals.append(t)
         if sets:
+            old = r
             r = db.q(c, f"UPDATE notify_channels SET {', '.join(sets)} WHERE id=%s RETURNING *", (*vals, cid), one=True)
+            from .posture import channel_silenced
+            channel_silenced(c, s, _out(old), _out(r))
     return {"ok": True, "channel": _out(r)}
 
 
 @router.delete("/api/notifications/channels/{cid}")
 def delete_channel(cid: int, s=Depends(admin)):
     with db.conn() as c:
-        if not db.q(c, "DELETE FROM notify_channels WHERE id=%s AND org_id=%s RETURNING id", (cid, s["org"]), one=True):
+        r = db.q(c, "DELETE FROM notify_channels WHERE id=%s AND org_id=%s RETURNING *", (cid, s["org"]), one=True)
+        if not r:
             raise HTTPException(404, "not found")
+        from .posture import channel_silenced
+        channel_silenced(c, s, _out(r), None)
     return {"ok": True}
 
 
