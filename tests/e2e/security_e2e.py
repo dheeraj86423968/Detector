@@ -89,7 +89,8 @@ check(E.call("POST", "/api/me/mfa/disable", {"password": "analyst-password-1", "
       "it cannot be turned off while the organisation requires it")
 
 # retention
-check(A.call("PATCH", "/api/org", {"retention_days": 10})[0] == 400 and A.call("PATCH", "/api/org", {"retention_days": 90})[0] == 200
+check(A.call("PATCH", "/api/org", {"retention_days": 90})[0] == 400, "0.6: lowering retention needs a reason")
+check(A.call("PATCH", "/api/org", {"retention_days": 10, "reason": "e2e"})[0] == 400 and A.call("PATCH", "/api/org", {"retention_days": 90, "reason": "e2e"})[0] == 200
       and A.call("GET", "/api/org")[1]["org"]["retention_days"] == 90, "retention: 30-3650 days, saved")
 
 # per-organisation single sign-on settings

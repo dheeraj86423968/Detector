@@ -1,4 +1,62 @@
-# Layered detection (0.3, revised in 0.4 and 0.5)
+# Layered detection (0.3, revised in 0.4, 0.5 and 0.6)
+
+## 0.6 (2026-11-06): resistance to evasion, poisoning, tampering and misuse
+
+A code review of the engine, the agent and the control plane (three independent read-only audits) looked for ways
+an attacker on a host, or an insider with console access, could make an attack invisible without anyone noticing.
+Everything below is general (no program, path, address or dataset names in the logic beyond OS conventions such as
+autostart locations and interpreter names).
+
+**Layers 1-2: evasion paths closed** (`LayerConfig`; on for new fits, a layers.json fitted earlier keeps its
+behaviour until re-fitted with `tools.add_layers`):
+
+| setting | evasion it closes |
+|---|---|
+| `strict_program_key` | `/tmp/fedcba9876543210` matched any hex-named baseline program (the file name was collapsed to `{id}`); `/tmp/LS` matched `/tmp/ls` (POSIX paths were case-folded). Now only directory components collapse, only Windows programs are case-folded |
+| `strict_addresses` | `1.2.3.4%x` or `[2001:db8::1]` failed to parse and so counted as a local, trusted address |
+| `script_exec` | `python3 /tmp/payload.py`, `bash x.sh`, `powershell -File x.ps1`: the interpreter is a known program and the script is only *read*, so a downloaded script never raised `untrusted_exec` and its C2 never `untrusted_code_network`. The script argument read by a known interpreter is now executed code |
+| `socket_io` | `read()` / `write()` on a socket (DARPA-style READ / WRITE edges to a netflow) were not receive / send: no download taint, no exfiltration check |
+| `persistence` | new alarm `untrusted_persistence`: a process holding untrusted code or data writes an autostart location (cron, systemd / init, shell rc files, `authorized_keys`, `ld.so.preload`, desktop autostart, launchd, Windows Tasks and Startup folders); new files there were invisible to `tainted_modify` (pre-existing files only) - "cron persistence not detected" was an open limitation |
+| `late_exfil` | connect first, then read `/etc/shadow`, then write to the socket: exfiltration was checked only at send time with what had been read before |
+| (always) | the untrusted-file memory of `image_exec` is bounded (a flood of distinct paths could exhaust the agent's memory and turn detection off); an overflowing learned score ranks first instead of last |
+
+Not adopted (lab_v06): `connect_receives` (taint a process on any connection to an untrusted address, for
+collectors that see `connect()` but not `read()` on sockets) added 150-2000 false positives on OpTC; the stricter
+retrain rules (`recurring_trust`, `relax_min_days`: what is new since the previous model must recur on two days)
+added 56 on THEIA in a retrain simulation. Both remain available, off by default.
+
+**Learning integrity** (`pdp_server/learning.py`): a model is retrained on the endpoint's recent days, so an attacker
+active before the first model or between retrainings would become "normal". Now
+- everything an alert of the endpoint points at - the programs of new-program / untrusted-exec alerts, alerted
+  remote addresses, the (rule, key) of rule alerts - stays out of the new model's known programs, trusted addresses
+  and relaxed thresholds, unless an administrator resolved that alert as benign (false positive or closed, or an
+  allow-list entry). Open, acknowledged, true-positive alerts and analyst verdicts release nothing. Only alerts about
+  activity up to the end of the learned days count. The bundle manifest records what was excluded;
+- false-positive verdicts become benign training windows only when an administrator gave them (or an allow-list
+  entry); before 0.6 any analyst's verdict - or a whole incident marked false positive in one click - taught the next
+  model the attack.
+
+**Collector**: the eBPF collector recorded exec paths as passed to `execve()`: `execve("ls")` from `/tmp` looked like
+the system `ls` (a bare name matches a known program), and `./x` never met the taint of the file the download wrote
+as `/tmp/x`. Relative and dotted paths are now resolved like opened files; `fexecve` of a memfd is named by its image
+(`/memfd:name (deleted)`), not `/dev/fd/N`.
+
+**Endpoint signal integrity** (agent 0.6.0, `pdp_server/integrity.py`, docs/PROTOCOL.md "Integrity of the endpoint
+signal (0.6)"): heartbeat sequence numbers (replay), collector liveness and a canary (a stopped or detached collector
+on a live agent), window / alert sequence numbers with gap detection (alerts dropped on the host), the loaded model's
+id, digest and signing key compared with the server's (a swapped model or key), the local configuration digest,
+clock skew, guarded scoring (a window that crashes the detector is skipped and reported instead of crash-looping),
+bounded ingest. **Misuse resistance** (docs/CONSOLE_API.md "Misuse resistance (0.6)"): typed and range-checked
+settings; changes that weaken detection need a reason, are audited with a before/after diff and notified to the
+organisation as `detection_weakened`; program approvals only through the allow list, full paths, interpreters only
+with an explicit confirmation; per-endpoint detection posture; scoped hunts; bounded, audited exports; rate limits.
+
+**What remains** (no change in 0.6): a root attacker who fully emulates the agent is not detectable without host
+attestation; the live eBPF collector does not trace `read()` / `write()` on TCP sockets, so a download over HTTPS
+taints only through layer 1 (a new program) - the file it wrote is not untrusted content (follow-up: socket I/O in
+the collector); taint decays with a one-hour half-life and attenuates per file hop (Morse / CAPTAIN design: an
+attacker who waits, or copies a payload three times, launders layer-2 taint - layer 1 still flags a new program);
+approvals and known programs are by path, not by content hash.
 
 ## 0.5 (2026-11-06): the learned detectors
 

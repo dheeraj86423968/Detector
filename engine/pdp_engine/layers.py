@@ -739,13 +739,15 @@ class LayerConfig:
     local_multicast: bool = True       # multicast / broadcast addresses are local, not untrusted sources
     # 0.6 (docs/DETECTION_LAYERS.md "0.6"): resistance to evasion and to a poisoned baseline. A layers.json fitted
     # before 0.6 lacks the keys and keeps the earlier behaviour until re-fitted.
-    strict_program_key: bool = False   # case only for Windows programs; never collapse the file name itself
-    strict_addresses: bool = False     # '1.2.3.4%zone' / '[::1]' parsed, not treated as non-addresses (local)
-    script_exec: bool = False          # an interpreter loading its script argument executes that script
-    socket_io: bool = False            # read / write on a socket = receive / send
-    persistence: bool = False          # untrusted_persistence alarm on autostart locations
+    # On by default (lab_v06: no change in any metric on the five development sets):
+    strict_program_key: bool = True    # case only for Windows programs; never collapse the file name itself
+    strict_addresses: bool = True      # '1.2.3.4%zone' / '[::1]' parsed, not treated as non-addresses (local)
+    script_exec: bool = True           # an interpreter loading its script argument executes that script
+    socket_io: bool = True             # read / write on a socket = receive / send
+    persistence: bool = True           # untrusted_persistence alarm on autostart locations
+    late_exfil: bool = True            # sensitive read while holding an untrusted connection = exfiltration
+    # Off by default (lab_v06: 150-2000 more false positives on OpTC / THEIA E3); available per endpoint:
     connect_receives: bool = False     # a connection to an untrusted address taints the process (downloads via read())
-    late_exfil: bool = False           # sensitive read while holding an untrusted connection = exfiltration
     recurring_trust: bool = False      # retrain: an address new since the previous model is trusted only on >= 2 days
     relax_min_days: int = 1            # retrain: a key new since the previous model is relaxed only on >= N days
 
