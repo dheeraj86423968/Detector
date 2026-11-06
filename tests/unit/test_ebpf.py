@@ -37,6 +37,20 @@ e = feed(Rec(EXEC, 100, ts_ns=1000, s="/usr/bin/curl"), argv("curl", "-s", "http
 check(any(o == "EXECUTE" and s == "file" and d == "subject" and dl == "subject /usr/bin/curl curl -s http://x" for o, s, d, sl, dl, _ in e),
       "exec -> EXECUTE file->process with label 'exe argv'")
 check(any(o == "CLONE" for o, *_ in e) and all(t == 1000 for *_, t in e), "exec also emits CLONE; timestamp of the exec record")
+# 0.6: exec paths are absolute - relative names joined to the cwd, '..' removed, fexecve / memfd named by the image
+import os as _os, tempfile as _tf
+_pd = _tf.mkdtemp(); _work = _tf.mkdtemp()
+_os.makedirs(f"{_pd}/321"); _os.symlink(_work, f"{_pd}/321/cwd"); _os.symlink("/", f"{_pd}/321/root")
+_os.symlink("/memfd:payload (deleted)", f"{_pd}/321/exe")
+n6 = EbpfNormaliser("boot", proc=_pd)
+check(n6.exec_path(321, "ls") == _os.path.realpath(_work) + "/ls", f"relative exec name resolved against the cwd ({n6.exec_path(321, 'ls')})")
+check(n6.exec_path(321, "/usr/bin/../../tmp/x") == "/tmp/x" and n6.exec_path(321, "//usr//bin/./id") == "/usr/bin/id",
+      "'..', '.', '//' in an exec path are normalised")
+check(n6.exec_path(321, "/usr/bin/python3") == "/usr/bin/python3", "absolute exec paths are kept as recorded (identities from before 0.6 stay)")
+check(n6.exec_path(321, "/dev/fd/3") == "/memfd:payload (deleted)", "fexecve of a memfd is named by its image, not /dev/fd/N")
+e6 = [(ev.op, ents[1].label) for r in (Rec(EXEC, 321, ts_ns=10, s="./run.sh"), Rec(EXIT, 321, ts_ns=11)) for ents, ev in n6.decode(r)]
+check(any(op == "EXECUTE" and lab.startswith("subject " + _os.path.realpath(_work) + "/run.sh") for op, lab in e6),
+      f"decode: the EXECUTE event carries the resolved program ({e6[:1]})")
 # an exec whose argv chunk never arrives is flushed by the next record of that pid
 e = feed(Rec(EXEC, 100, ts_ns=2000, s="/bin/true"), Rec(OPEN, 100, ts_ns=2001, s="/etc/hosts", flags=0, ret=3))
 check([o for o, *_ in e][:2] == ["EXECUTE", "CLONE"] and "OPEN" in [o for o, *_ in e], "exec without argv chunk flushed by the next record")

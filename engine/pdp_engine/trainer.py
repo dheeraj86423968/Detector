@@ -92,6 +92,8 @@ class Trainer:
         self.reg = store.load_registry()
         self.N = len(self.reg)
         self.x = None  # node features on device
+        self.layer_exclude: dict | None = None   # 0.6 learning integrity: kept out of layers 1-2 (fit_layers exclude)
+        self.layer_prior: dict | None = None     # 0.6: layers.json of the model a retrain replaces (fit_layers prior)
 
     # ---------------------------------------------------------------- featurisation
     def fit_featurizer(self) -> Word2VecFeaturizer:
@@ -259,7 +261,7 @@ class Trainer:
         json.dump(calibration, open(os.path.join(self.out_dir, "calibration.json"), "w"), indent=1)
         # layers 1 + 2: fitted on the same benign days (training + validation), no attack data
         lcfg = LayerConfig(novelty=self.cfg.layer_novelty, rules=self.cfg.layer_rules, tags=TagParams())
-        spec = fit_layers(self.store, self.train_days + [self.val_day], self.reg, self.N, lcfg, log=log)
+        spec = fit_layers(self.store, self.train_days + [self.val_day], self.reg, self.N, lcfg, log=log, exclude=self.layer_exclude, prior=self.layer_prior)
         json.dump(spec, open(os.path.join(self.out_dir, "layers.json"), "w"))
         policy = {"daily_budget": int(self.cfg.learned_daily_budget), "corroboration_percentile": self.cfg.corroboration_percentile,
                   "learned_alerts": bool(self.cfg.learned_alerts)}
@@ -277,7 +279,8 @@ class Trainer:
             "requires": requirements(self.velox_input, self.cfg.fusion_mode),
             "layers": {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules,
                        "known_executables": len(spec["known_executables"]),
-                       "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()}},
+                       "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},
+                       **({"excluded": spec["excluded"]} if spec.get("excluded") else {})},
             "learned_policy": policy,
         })
         return self.out_dir
@@ -286,7 +289,7 @@ class Trainer:
         """A bundle with layers 1-2 only (known programs, trusted addresses, per-key thresholds): what an early model
         alerts with anyway. The runtime scores nothing learned with it (fused = 0)."""
         lcfg = LayerConfig(novelty=self.cfg.layer_novelty, rules=self.cfg.layer_rules, tags=TagParams())
-        spec = fit_layers(self.store, self.train_days + [self.val_day], self.reg, self.N, lcfg, log=log)
+        spec = fit_layers(self.store, self.train_days + [self.val_day], self.reg, self.N, lcfg, log=log, exclude=self.layer_exclude, prior=self.layer_prior)
         json.dump(spec, open(os.path.join(self.out_dir, "layers.json"), "w"))
         policy = {"daily_budget": 0, "corroboration_percentile": self.cfg.corroboration_percentile,
                   "alert_layers": sorted(self.cfg.alert_layers or ("novelty", "rules"))}

@@ -25,7 +25,7 @@ from pdp_engine.data import WindowStore, ingest_day  # noqa: E402
 from pdp_engine.schema import EDGE_TYPE_ID, Entity, Event, Registry  # noqa: E402
 from pdp_engine.trainer import TrainConfig, Trainer  # noqa: E402
 
-from . import db, pki  # noqa: E402
+from . import db, learning, pki  # noqa: E402
 
 DATA_DIR = os.environ.get("PDP_DATA_DIR", "/data")
 ATTACK_DIR = os.environ.get("PDP_ATTACK_DIR", "/opt/pdp/sim/attacks")
@@ -232,8 +232,24 @@ def prune_early_bundles(eid: str):
             log(f"removed superseded early model {r['id']}")
 
 
+def _trainer(store, train_days, val_day, cfg, out, eid, tz="UTC", retrain=False):
+    """A Trainer whose layers 1-2 leave out what this endpoint's unreleased alerts point at (pdp_server.learning) and,
+    on a retrain, treat what is new since the current model more strictly (fit_layers prior)."""
+    tr = Trainer(store, train_days, val_day, cfg, out)
+    with db.conn() as c:
+        ex = learning.exclusions(c, eid, learning.day_end_ns(list(train_days) + [val_day], tz))
+        cur = db.q(c, "SELECT b.path FROM endpoints e JOIN bundles b ON b.id=e.current_bundle WHERE e.id=%s", (eid,), one=True) if retrain else None
+    if cur and os.path.exists(os.path.join(cur["path"], "layers.json")):
+        tr.layer_prior = json.load(open(os.path.join(cur["path"], "layers.json")))
+    if any(ex.values()):
+        tr.layer_exclude = ex
+        log(f"train {eid}: excluded from the baseline (unreleased alerts): {len(ex['programs'])} programs, "
+            f"{len(ex['addresses'])} addresses, {len(ex['rule_keys'])} rule keys")
+    return tr
+
+
 def _train_full(store, train_days, val_day, cfg, out, job, eid, bid, device, ep, refresh, fb, tz, fusion_mode, t0):
-    Trainer(store, train_days, val_day, cfg, out).run({"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(ep["config"]),
+    _trainer(store, train_days, val_day, cfg, out, eid, tz, retrain=refresh).run({"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(ep["config"]),
                                                       "trained_on": device,
                                                       "refresh": refresh, "feedback_windows": fb,
                                                       "maturity": {"early": False, "baseline_days": len(train_days) + 1,
@@ -318,7 +334,7 @@ def job_train_early(job: dict, device: str):
             overrides.setdefault("orthrus_epochs", 3)
             overrides.setdefault("velox_epochs", 3)
             overrides.setdefault("w2v_epochs", 10)
-    Trainer(store, ["train"], "val", TrainConfig(device=device, **overrides), out).run(
+    _trainer(store, ["train"], "val", TrainConfig(device=device, **overrides), out, eid).run(
         {"endpoint": eid, "bundle_id": bid, "window_ns": window_ns(cfg), "trained_on": device,
          "maturity": {"early": True, "baseline_hours": hours, "windows": len(paths), "trained_until_ns": int(last.end_ns),
                       "alert_layers": list(overrides.get("alert_layers") or ["novelty", "rules", "corroborated", "learned"]),
@@ -354,7 +370,9 @@ def write_feedback_day(eid: str, store) -> int:
     import shutil as _sh
     reg = store.load_registry()
     with db.conn() as c:
-        rows = db.q(c, "SELECT id, context FROM alerts WHERE endpoint_id=%s AND status='false_positive' ORDER BY id DESC LIMIT 2000", (eid,))
+        # 0.6: only verdicts an administrator gave (or an allow-list entry) teach the model (pdp_server.learning)
+        rows = db.q(c, f"SELECT a.id, a.context FROM alerts a WHERE a.endpoint_id=%s AND a.status='false_positive' AND {learning.feedback_filter()} "
+                       "ORDER BY a.id DESC LIMIT 2000", (eid,))
     wins, seen = [], set()
     for r in rows:
         ctx = r["context"] or {}

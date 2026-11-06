@@ -44,6 +44,38 @@ services:
         reservations:
           devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]
 
+  agent-bench-clearscope-e3:   # DARPA E3 ClearScope (Android; 0.6 held-out, docs/BENCHMARK_HELDOUT.md)
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["agent", "run"]
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+    volumes:
+      - pdp_bench_agent_clearscope_e3:/var/lib/pdp
+      - ./bench/agent-clearscope-e3.json:/etc/pdp/agent.json:ro
+    networks: [ edge, research ]
+    depends_on: [ gateway ]
+    <<: *bench-limits
+    deploy:
+      resources:
+        reservations:
+          devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]
+
+  agent-bench-fivedirections-e3:   # DARPA E3 FiveDirections (Windows; 0.6 held-out, docs/BENCHMARK_HELDOUT.md)
+    image: pdp/server:${PDP_VERSION:-dev}
+    command: ["agent", "run"]
+    environment:
+      PDP_AGENT_CONFIG: /etc/pdp/agent.json
+    volumes:
+      - pdp_bench_agent_fivedirections_e3:/var/lib/pdp
+      - ./bench/agent-fivedirections-e3.json:/etc/pdp/agent.json:ro
+    networks: [ edge, research ]
+    depends_on: [ gateway ]
+    <<: *bench-limits
+    deploy:
+      resources:
+        reservations:
+          devices: [ { driver: nvidia, count: 1, capabilities: [gpu] } ]
+
   agent-bench-optc-h201:      # DARPA OpTC host 201 (Windows; docs/BENCHMARK_OPTC.md)
     image: pdp/server:${PDP_VERSION:-dev}
     command: ["agent", "run"]
@@ -128,3 +160,5 @@ volumes:
   pdp_bench_agent_optc_h201: {}
   pdp_bench_agent_optc_h501: {}
   pdp_bench_agent_optc_h051: {}
+  pdp_bench_agent_clearscope_e3: {}
+  pdp_bench_agent_fivedirections_e3: {}

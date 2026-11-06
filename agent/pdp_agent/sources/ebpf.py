@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import collections
 import os
+import posixpath
 import select
 import shutil
 import socket
@@ -497,7 +498,7 @@ class EbpfNormaliser:
         if k == EXEC:
             # the exec record is followed by its argv chunks; flush any previous exec of this pid still waiting
             yield from self._flush_exec(r.pid)
-            self._exec[r.pid] = (ts, r.s, [])
+            self._exec[r.pid] = (ts, self.exec_path(r.pid, r.s), [])
         elif k == EXEC_ARGV:
             x = self._exec.get(r.pid)
             if x is not None and len(x[2]) == r.aux:
@@ -532,6 +533,24 @@ class EbpfNormaliser:
             op = {CONNECT: "CONNECT", SEND: "SENDMSG" if r.aux == 1 else "SENDTO",
                   RECV: "RECVMSG" if r.aux == 1 else "RECVFROM", ACCEPT: "RECVFROM"}[k]
             yield from M.socket(r.pid, ts, op, ip, r.port)
+
+    def exec_path(self, pid: int, path: str) -> str:
+        """The program an exec ran, as an absolute path (0.6). execve() takes the name as the caller wrote it:
+        `execve("ls")` from /tmp runs /tmp/ls, and `/usr/bin/../../tmp/x` is /tmp/x - recorded verbatim, the first
+        looked like the system's `ls` to layer 1 (a bare name matches a known program by name) and neither met the
+        taint of the file the download wrote. Relative names are joined to the cwd and resolved
+        like opened files; absolute paths are only normalised ('.', '..', '//'), not symlink-resolved, so program
+        identities recorded before 0.6 stay the same (/usr/bin/python3 stays /usr/bin/python3)."""
+        if not path:
+            return path
+        if path.startswith(("/dev/fd/", "/proc/self/fd/")):        # fexecve / memfd: the image has no name of its own
+            img = self._link(pid, "exe")                           # e.g. '/memfd:payload (deleted)' - a program never seen
+            return img if img else path
+        if not path.startswith("/"):                               # the record carries no dirfd: relative to the cwd
+            return self.resolve(pid, path, AT_FDCWD)
+        if "/." in path or "//" in path:
+            return posixpath.normpath(path) if not path.startswith("//") else "/" + posixpath.normpath(path).lstrip("/")
+        return path
 
     def _flush_exec(self, pid: int):
         x = self._exec.pop(pid, None)

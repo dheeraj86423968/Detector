@@ -78,9 +78,13 @@ def fuse_ratios(r1: np.ndarray, r2: np.ndarray, weights=(2.0, 1.0), mode: str = 
 
 
 def fill_missing(r: np.ndarray) -> np.ndarray:
-    """Nodes a detector never scored (-inf) count as 0 (no evidence) in the fusion."""
+    """Nodes a detector never scored (-inf) count as 0 (no evidence) in the fusion; NaN as 0 too. An overflowing score
+    (+inf) is the strongest evidence, not none (0.6: it used to become 0 and rank last)."""
     r = r.copy()
+    big = np.isposinf(r)
     r[~np.isfinite(r)] = 0.0
+    if big.any():
+        r[big] = np.float32(1e6) if r.dtype == np.float32 else 1e6
     return r
 
 

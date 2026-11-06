@@ -31,7 +31,12 @@ def layer_bundle(eid: str, src: dict, deploy: bool = False) -> str:
     man = json.load(open(os.path.join(src["path"], "manifest.json")))
     store = store_for(eid)
     reg = store.load_registry()
-    spec = fit_layers(store, list(man["train_days"]) + [man["val_day"]], reg, int(man["num_nodes"]), log=log)
+    from pdp_server.learning import day_end_ns, exclusions
+    with db.conn() as c:                 # 0.6: what unreleased alerts point at stays out of the re-fitted baseline
+        tz = (db.q(c, "SELECT config FROM endpoints WHERE id=%s", (eid,), one=True) or {}).get("config", {}).get("tz", "UTC")
+        ex = exclusions(c, eid, day_end_ns(list(man["train_days"]) + [man["val_day"]], tz))
+    spec = fit_layers(store, list(man["train_days"]) + [man["val_day"]], reg, int(man["num_nodes"]), log=log,
+                      exclude=ex if any(ex.values()) else None)
     bid = pki.new_id()
     out = os.path.join(os.path.dirname(src["path"].rstrip("/")), bid)
     shutil.copytree(src["path"], out)
@@ -42,7 +47,8 @@ def layer_bundle(eid: str, src: dict, deploy: bool = False) -> str:
     meta = {k: v for k, v in man.items() if k not in ("sha256", "format", "created")}
     meta.update({"bundle_id": bid, "layers_added_to": str(src["id"]),
                  "layers": {"file": "layers.json", "novelty": True, "rules": True, "known_executables": len(spec["known_executables"]),
-                            "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()}}})
+                            "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},
+                            **({"excluded": spec["excluded"]} if spec.get("excluded") else {})}})
     # the current learned-alert default comes with the current layers (0.4: ranking only; an endpoint setting overrides it)
     meta["learned_policy"] = dict({"daily_budget": TrainConfig.learned_daily_budget, "corroboration_percentile": TrainConfig.corroboration_percentile},
                                   **(meta.get("learned_policy") or {}), learned_alerts=TrainConfig.learned_alerts)

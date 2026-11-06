@@ -48,6 +48,7 @@ from .windows import Window
 EXECUTE, CLONE, READ, WRITE = (EDGE_TYPE_ID[k] for k in ("EXECUTE", "CLONE", "READ", "WRITE"))
 RECV = {EDGE_TYPE_ID["RECVFROM"], EDGE_TYPE_ID["RECVMSG"]}
 SEND = {EDGE_TYPE_ID["SENDTO"], EDGE_TYPE_ID["SENDMSG"], EDGE_TYPE_ID["CONNECT"]}
+RECV_ID, SEND_ID, CONNECT_ID = EDGE_TYPE_ID["RECVFROM"], EDGE_TYPE_ID["SENDTO"], EDGE_TYPE_ID["CONNECT"]
 
 RULES = {
     "novel_executable": "runs a program that never ran during the baseline",
@@ -57,6 +58,7 @@ RULES = {
     "tainted_modify": "a process with untrusted code or data modifies a file that existed in the baseline",
     "exfiltration": "a process that read sensitive data sends to an untrusted address",
     "untrusted_code_network": "a program loaded from an untrusted file communicates with an untrusted address",
+    "untrusted_persistence": "a process with untrusted code or data writes to an autostart location",
 }
 
 # credential / secret stores (initial confidentiality 1). Deliberately short: a broad list taints every process.
@@ -67,6 +69,26 @@ SENSITIVE = re.compile(r"(^/etc/(shadow|gshadow|sudoers|master\.passwd|spwd\.db)
 # master keys, the credential manager and vault, browser password stores, password-manager databases.
 SENSITIVE_WIN = re.compile(r"(^/windows/system32/config/(sam|security)$|/ntds\.dit$|/appdata/(roaming|local)/microsoft/"
                            r"(credentials|protect|vault)/|/login data$|/logins\.json$|/key[34]\.db$|\.kdbx$)")
+# Autostart / persistence locations (0.6, `persistence`): what runs again by itself after a reboot or a login - cron,
+# init / systemd units, shell start-up files, SSH authorized keys, the dynamic-loader preload list, desktop autostart,
+# launchd jobs; Windows scheduled tasks and Startup folders (canonical_path form). General OS knowledge, not a
+# dataset list; writes there by a process holding untrusted code or data are an alarm (benign-calibrated per key).
+PERSISTENCE = re.compile(r"(^/etc/(crontab$|cron\.|anacrontab$|rc\.local$|rc\.d/|rc\.conf$|init\.d/|init/|systemd/system/|profile$|"
+                         r"profile\.d/|bash\.bashrc$|zsh/|ld\.so\.preload$|xdg/autostart/|update-motd\.d/|periodic/|launchd\.conf$)|"
+                         r"^/var/spool/cron/|^/(usr/)?lib/systemd/system/|/\.config/(systemd/user|autostart)/|"
+                         r"/\.(bashrc|bash_profile|bash_login|profile|zshrc|zprofile|zlogin|zshenv)$|/\.ssh/authorized_keys2?$|"
+                         r"/library/launch(agents|daemons)/|"
+                         r"^/windows/system32/tasks/|/start menu/programs/startup/|^/windows/(system32|syswow64)/grouppolicy/.*/scripts/)", re.I)
+# Script interpreters (0.6, `script_exec`): `python3 /tmp/x.py` loads code from the script it reads, so the script is
+# treated like an executed file (code integrity, untrusted_exec). Names of the common interpreters on Linux, BSD,
+# macOS and Windows; version suffixes allowed (python3.11, perl5.30).
+INTERPRETER = re.compile(r"^(python[\d.]*w?|pypy[\d.]*|perl[\d.]*|ruby[\d.]*|node(js)?|php[\d.]*|lua[\d.]*|tclsh[\d.]*|"
+                         r"(ba|da|z|k|c|tc|a|fi|mk)?sh|osascript|powershell(_ise)?|pwsh|cscript|wscript|mshta|java)$")
+_STOP_OPTS = {"-c", "-m", "-e", "-E", "--eval", "-command", "-encodedcommand", "-enc", "-ec", "-p", "--print"}
+_FILE_OPTS = {"-file", "-jar"}
+_VALUE_OPTS = {"-w", "-x", "-i", "-o", "-r", "--require", "-executionpolicy", "-ep", "-windowstyle", "-cp", "-classpath",
+               "-configurationname", "-inputformat", "-outputformat", "-workingdirectory"}
+UNTRUSTED_FILES_CAP = 200_000    # image_exec: untrusted written files remembered (bounded: oldest forgotten first)
 UNKNOWN_PROGRAM = {"None", "", "null"}
 LOCAL_ADDR = {"", "NA", "None", "null", "localhost", "0.0.0.0", "::", "::1", "*"}
 
@@ -112,9 +134,27 @@ _VERSION_DIR = re.compile(r"^v?\d+(?:[._]\d+)+$")
 _EXE_SUFFIX = re.compile(r"\.(exe|com)$")
 
 
-def program_key(exe: str) -> str:
+_WIN_LIKE = re.compile(r"(^(?:/device/harddiskvolume\d+|/\?\?/[a-z]:|//\?/[a-z]:|[a-z]:)/|^%systemroot%|^%windir%|"
+                       r"\.(exe|com|bat|cmd|dll|scr|ps1|vbs|js|msi|cpl|hta)$)", re.I)
+
+
+def program_key(exe: str, strict: bool = False) -> str:
     """Canonical program identity: '/Device/HarddiskVolume1/Windows/System32/PING.EXE' and 'C:\\Windows\\system32\\ping.exe'
-    -> '/windows/system32/ping.exe'; GUID / long hex directory names -> '{id}', version directories -> '{v}'."""
+    -> '/windows/system32/ping.exe'; GUID / long hex directory names -> '{id}', version directories -> '{v}'.
+    strict (0.6): only Windows-style programs are case-folded (POSIX paths are case-sensitive: '/tmp/LS' is not
+    '/tmp/ls'), and only directory components are collapsed - a file named like a hex id or a GUID keeps its name
+    ('/tmp/fedcba9876543210' used to become the known program '/tmp/{id}')."""
+    if strict:
+        q = exe.replace("\\", "/")
+        win = "\\" in exe or bool(_WIN_LIKE.search(q))
+        p = q.casefold() if win else q
+        p = p.replace("%systemroot%", "/windows").replace("%windir%", "/windows")
+        p = _NT_PREFIX.sub("", p) if win else p
+        if "/" not in p:
+            return p
+        parts = p.split("/")
+        dirs = [_HEXID.sub("{id}", _GUID.sub("{id}", x.casefold())) if win else _HEXID.sub("{id}", _GUID.sub("{id}", x)) for x in parts[:-1]]
+        return "/".join([("{v}" if _VERSION_DIR.match(x) else x) for x in dirs] + parts[-1:])
     p = exe.replace("\\", "/").casefold()
     p = p.replace("%systemroot%", "/windows").replace("%windir%", "/windows")
     p = _NT_PREFIX.sub("", p)
@@ -139,12 +179,16 @@ def remote_ip(label: str) -> str:
     return parts[1] if len(parts) > 1 else "None"
 
 
-def is_local(ip: str, multicast: bool = False) -> bool:
+def is_local(ip: str, multicast: bool = False, strict: bool = False) -> bool:
     """Not a remote host: loopback, unspecified, link-local, non-addresses; with multicast=True (0.4) also multicast
     and limited broadcast - group traffic of the local network (IPv6 neighbour discovery, mDNS, LLMNR, SSDP), which
-    0.3 treated as an untrusted remote source and so tainted every process that receives it."""
+    0.3 treated as an untrusted remote source and so tainted every process that receives it.
+    strict (0.6): an address with a zone id or brackets ('1.2.3.4%x', '[2001:db8::1]') is parsed without them - it
+    used to fail parsing and so counted as local, i.e. trusted."""
     if ip in LOCAL_ADDR:
         return True
+    if strict:
+        ip = ip.strip("[]").split("%", 1)[0]
     try:
         a = ipaddress.ip_address(ip)
         return a.is_loopback or a.is_unspecified or a.is_link_local or (
@@ -202,7 +246,7 @@ class Hit:
 # ------------------------------------------------------------------------------------------------- layer 1
 class NoveltyLayer:
     def __init__(self, known: set[str], approved: set[str] | None = None, normalize: bool = False, instances: int = 0,
-                 full_paths: bool = False):
+                 full_paths: bool = False, strict_keys: bool = False):
         """normalize: compare programs by program_key (else by the raw path). instances > 0: only the first
         `instances` processes of a new program per day alert; later ones are 'novel_executable_repeat' evidence (one
         new tool run in a loop is one finding, not hundreds)."""
@@ -210,11 +254,12 @@ class NoveltyLayer:
         self.normalize = bool(normalize)
         self.instances = int(instances or 0)
         self.full_paths = bool(full_paths)
+        self.strict = bool(strict_keys)
         self.approved = set(approved or ())
         self._checked: set[int] = set()
         self._count: dict[tuple[str, int], int] = defaultdict(int)
         if self.normalize:
-            self.known_keys = {program_key(k) for k in self.known if k not in UNKNOWN_PROGRAM}
+            self.known_keys = {self.key(k) for k in self.known if k not in UNKNOWN_PROGRAM}
             self.known_names = {program_name(k) for k in self.known_keys}
 
     @property
@@ -224,7 +269,10 @@ class NoveltyLayer:
     @approved.setter
     def approved(self, v) -> None:
         self._approved = set(v or ())
-        self._approved_keys = {program_key(k) for k in self._approved}
+        self._approved_keys = {self.key(k) for k in self._approved}
+
+    def key(self, exe: str) -> str:
+        return program_key(exe, getattr(self, "strict", False))
 
     def reset(self):
         self._checked = set()
@@ -238,7 +286,7 @@ class NoveltyLayer:
             return True   # no program recorded (collector missed the exec) is missing data, not a new program
         if not self.normalize:
             return False
-        k = program_key(exe)
+        k = self.key(exe)
         if k in self.known_keys or k in self._approved_keys:
             return True
         return "/" not in k and program_name(k) in self.known_names   # recorded without a path: match by name
@@ -263,7 +311,7 @@ class NoveltyLayer:
             ts = int(first_t.get(n, w.start_ns))
             rule = "novel_executable"
             if self.instances:
-                ck = (program_key(exe) if self.normalize else exe, ts // 86_400_000_000_000)
+                ck = (self.key(exe) if self.normalize else exe, ts // 86_400_000_000_000)
                 self._count[ck] += 1
                 if self._count[ck] > self.instances:
                     rule = "novel_executable_repeat"
@@ -298,7 +346,7 @@ class TagParams:
 
 
 class _Tag:
-    __slots__ = ("code", "data", "t", "conf", "exec", "origin")
+    __slots__ = ("code", "data", "t", "conf", "exec", "origin", "exec_script")
 
     def __init__(self, itg: float, conf: float, origin: int):
         self.code = 1.0       # processes: code integrity
@@ -307,17 +355,32 @@ class _Tag:
         self.conf = conf
         self.exec = False     # process image has executed a file (live collectors: one node per image)
         self.origin = origin  # node that introduced the lowest integrity (for explanations)
+        self.exec_script = False   # script_exec: an interpreter process has loaded its script
 
 
 class TagEngine:
     def __init__(self, params: TagParams, trusted_ips: set[str], thresholds: dict[str, dict[str, float]] | None,
                  n_preexisting: int, fit: bool = False, private_services: set[str] | None = None, full_paths: bool = False,
-                 image_exec: bool = False, local_multicast: bool = False):
+                 image_exec: bool = False, local_multicast: bool = False, strict_addresses: bool = False,
+                 script_exec: bool = False, socket_io: bool = False, persistence: bool = False,
+                 connect_receives: bool = False, late_exfil: bool = False):
         """full_paths: Windows path handling (programs with spaces, canonical directories, Windows credential stores).
         image_exec: a process whose program file was written with untrusted content in the stream counts as executing
         it, for collectors that record no EXECUTE event (Windows). local_multicast: multicast / broadcast addresses
-        are local (see is_local)."""
+        are local (see is_local).
+        0.6: strict_addresses (is_local strict), script_exec (an interpreter reading its script argument executes it),
+        socket_io (READ / WRITE on a socket are receive / send: the download, C2 and exfiltration checks see them),
+        persistence (untrusted_persistence alarm), connect_receives (a connection to an untrusted address taints the
+        process like a receive: collectors that trace connect() but not read() on sockets - the live eBPF collector,
+        OpenSSL reads with read() - otherwise never see a download), late_exfil (a process holding a connection to
+        an untrusted address that then reads sensitive data is exfiltration, not only sensitive-read-then-connect)."""
         self.p = params
+        self.strict_addresses = bool(strict_addresses)
+        self.script_exec = bool(script_exec)
+        self.socket_io = bool(socket_io)
+        self.persistence = bool(persistence)
+        self.connect_receives = bool(connect_receives)
+        self.late_exfil = bool(late_exfil)
         self.local_multicast = bool(local_multicast)
         self.full_paths = bool(full_paths)
         self.image_exec = bool(image_exec)
@@ -342,6 +405,7 @@ class TagEngine:
         self.cur_day = 0
         self.fit_mode = fit
         self.benign_min: dict[tuple[str, str], float] = {}       # fit mode: lowest value per (rule, key)
+        self.benign_days: dict[tuple[str, str], set] = defaultdict(set)   # fit mode: baseline days each (rule, key) fired
         self.benign_count: dict[str, int] = defaultdict(int)
         self.reset()
 
@@ -351,6 +415,8 @@ class TagEngine:
         self._untrusted_files: dict[str, int] = {}      # image_exec: canonical path -> file node with untrusted content
         self._fired: set[tuple[str, int]] = set()
         self._lbl: dict[int, str] = {}
+        self._script: dict[int, str | None] = {}         # script_exec: process -> its script argument (None: not a script run)
+        self._peer: dict[int, int] = {}                  # late_exfil: process -> its latest untrusted peer (netflow node)
 
     # ---- helpers
     def _label(self, reg: Registry, n: int) -> str:
@@ -367,7 +433,7 @@ class TagEngine:
             e = reg.entities[n]
             if e.ntype == "netflow":
                 ip = remote_ip(e.label)
-                t = _Tag(1.0 if (is_local(ip, self.local_multicast) or ip in self.trusted or self._allowed(ip) or self._private_trusted(ip)) else 0.0, 0.0, n)
+                t = _Tag(1.0 if (is_local(ip, self.local_multicast, self.strict_addresses) or ip in self.trusted or self._allowed(ip) or self._private_trusted(ip)) else 0.0, 0.0, n)
                 self.__dict__.setdefault("_net_nodes", set()).add(n)
             elif e.ntype == "file":
                 fp_ = file_path(e.label)
@@ -427,6 +493,7 @@ class TagEngine:
                 k = (rule, key)
                 if value < self.benign_min.get(k, 2.0):
                     self.benign_min[k] = value
+                self.benign_days[k].add(self.cur_day)
                 self.benign_count[rule] += 1
             return
         thr = self.thr.get(rule, {}).get(key, self.p.untrusted)
@@ -438,6 +505,47 @@ class TagEngine:
         o = t.origin
         e = reg.entities[o]
         return f"{e.ntype} {self._label(reg, o)}"
+
+    def _script_of(self, reg: Registry, n: int) -> str | None:
+        """The script an interpreter process runs: the first argument after the interpreter's options, '' when it
+        runs inline code (-c / -e / -Command) or reads stdin; None when the process is not an interpreter."""
+        if n in self._script:
+            return self._script[n]
+        out = None
+        e = reg.entities[n]
+        if e.ntype == "subject":
+            exe = self._label(reg, n)
+            name = re.sub(r"\.exe$", "", exe.replace("\\", "/").rsplit("/", 1)[-1].casefold())
+            if INTERPRETER.match(name):
+                out = ""
+                pre = "subject " + exe
+                rest = e.label[len(pre):] if e.label.startswith(pre) else (e.label.split(" ", 2)[2] if e.label.count(" ") >= 2 else "")
+                toks = [t.strip("\"'") for t in rest.split()]
+                if toks and re.sub(r"\.exe$", "", toks[0].replace("\\", "/").rsplit("/", 1)[-1].casefold()) == name:
+                    toks = toks[1:]                         # argv[0]
+                k = 0
+                while k < len(toks):
+                    t, tl = toks[k], toks[k].casefold()
+                    if tl in _STOP_OPTS or t in _STOP_OPTS:
+                        break
+                    if tl in _FILE_OPTS:
+                        out = toks[k + 1] if k + 1 < len(toks) else ""
+                        break
+                    if t.startswith("-") or (t.startswith("//") and name in ("cscript", "wscript")):
+                        k += 2 if tl in _VALUE_OPTS else 1
+                        continue
+                    out = t
+                    break
+        self._script[n] = out
+        return out
+
+    @staticmethod
+    def _same_file(path: str, script: str) -> bool:
+        p, q = canonical_path(path), canonical_path(script.replace("\\", "/"))
+        if q.startswith("/"):
+            return p == q
+        q = q[2:] if q.startswith("./") else q
+        return bool(q) and (p.endswith("/" + q) or p == q)
 
     # ---- registry compaction
     def keep_nodes(self, now: int) -> set[int]:
@@ -464,6 +572,8 @@ class TagEngine:
         self.tags = tags
         self.parent_exe = {m[n]: v for n, v in self.parent_exe.items() if m[n] >= 0}
         self._lbl = {m[n]: v for n, v in self._lbl.items() if m[n] >= 0}
+        self._script = {m[n]: v for n, v in self._script.items() if m[n] >= 0}
+        self._peer = {m[n]: m[v] for n, v in self._peer.items() if m[n] >= 0 and m[v] >= 0}
         self._fired = {(r, m[n]) for r, n in self._fired if m[n] >= 0}
         self._untrusted_files = {k: m[n] for k, n in self._untrusted_files.items() if m[n] >= 0}
         if "_net_nodes" in self.__dict__:
@@ -475,7 +585,13 @@ class TagEngine:
         order = np.argsort(w.t, kind="stable")
         src, dst, et, ts = w.src[order].tolist(), w.dst[order].tolist(), w.etype[order].tolist(), w.t[order].tolist()
         p, U = self.p, self.p.untrusted
+        ents = reg.entities
         for s, d, e, now in zip(src, dst, et, ts):
+            if self.socket_io and (e == READ or e == WRITE):
+                if e == READ and ents[s].ntype == "netflow":
+                    e = RECV_ID                             # read() on a socket = receive from its peer
+                elif e == WRITE and ents[d].ntype == "netflow":
+                    e = SEND_ID                             # write() on a socket = send to its peer
             if e in RECV:                                   # netflow -> process
                 n, q = self._tag(reg, s), self._tag(reg, d)
                 self._lower(q, n.data, s, now)
@@ -484,10 +600,27 @@ class TagEngine:
                                 f"{self._label(reg, d)} (loaded from untrusted {self._why(reg, q)}) receives from {self._label(reg, s)}")
             elif e == READ:                                 # file -> process
                 f, q = self._tag(reg, s), self._tag(reg, d)
+                if self.script_exec and not q.exec_script:
+                    scr = self._script_of(reg, d)
+                    if scr and ents[s].ntype == "file" and self._same_file(self._label(reg, s), scr):
+                        q.exec_script = True                # the interpreter loads its script: the script's content is code
+                        path = self._label(reg, s)
+                        if f.data < U:
+                            self._check(out, "untrusted_exec", path, f.data, (d, s), now,
+                                        f"{self._label(reg, d)} runs script {path}, whose content came from untrusted {self._why(reg, f)}")
+                        if f.data < q.code:
+                            q.code = f.data
+                            q.origin = f.origin
                 if f.data < 1.0:
                     self._lower(q, min(1.0, f.data + p.read_attenuation), f.origin, now)
                 if f.conf > q.conf:
+                    was = q.conf
                     q.conf = f.conf
+                    if self.late_exfil and was < p.sensitive <= q.conf and d in self._peer:
+                        peer = self._peer[d]
+                        prog = self._label(reg, d)
+                        self._check(out, "exfiltration", prog, max(1.0 - q.conf, self._tag(reg, peer).data), (d, peer), now,
+                                    f"{prog}, connected to untrusted {self._label(reg, peer)}, reads sensitive {self._label(reg, s)}")
             elif e == EXECUTE:                              # file -> process
                 f, q = self._tag(reg, s), self._tag(reg, d)
                 prog = self._label(reg, s)
@@ -536,10 +669,19 @@ class TagEngine:
                 if v < U and path.startswith("/") and (reg.gid(d) < self.n_pre if self.first_day is None else self.first_day.get(d, self.cur_day) < self.cur_day):
                     self._check(out, "tainted_modify", f"{self._label(reg, s)} @ {dir_key(canonical_path(path) if self.full_paths else path)}", v, (s, d), now,
                                 f"{self._label(reg, s)} with untrusted input from {self._why(reg, q)} modifies {path}")
+                if self.persistence and v < U and path.startswith("/"):
+                    cp = canonical_path(path) if self.full_paths else path
+                    if PERSISTENCE.search(cp):
+                        self._check(out, "untrusted_persistence", f"{self._label(reg, s)} @ {dir_key(cp, 3)}", v, (s, d), now,
+                                    f"{self._label(reg, s)} with untrusted input from {self._why(reg, q)} writes autostart location {path}")
                 if v < f.data:
                     f.data, f.origin = v, (q.origin if v < 1.0 else f.origin)
                 if self.image_exec and f.data < U and path not in ("None", ""):
-                    self._untrusted_files[canonical_path(path)] = d
+                    uf = self._untrusted_files
+                    uf.pop(canonical_path(path), None)
+                    uf[canonical_path(path)] = d
+                    if len(uf) > UNTRUSTED_FILES_CAP:       # bounded memory under a flood of distinct paths
+                        del uf[next(iter(uf))]
                 c = q.conf - p.conf_attenuation
                 if c > f.conf:
                     f.conf = c
@@ -549,7 +691,11 @@ class TagEngine:
                     lab = reg.entities[d].label
                     if is_private(remote_ip(lab)) and f"{self._label(reg, s)}|{remote_port(lab)}" in self.private_services:
                         continue                            # a known service of this program on a re-assigned address
+                if self.connect_receives and e == CONNECT_ID and n.data < 1.0:
+                    self._lower(q, n.data, d, now)          # a TCP connection carries data both ways
                 if n.data < U:
+                    if self.late_exfil:
+                        self._peer[s] = d
                     prog = self._label(reg, s)
                     if q.conf >= p.sensitive:
                         self._check(out, "exfiltration", prog, max(1.0 - q.conf, n.data), (s, d), now,
@@ -560,10 +706,13 @@ class TagEngine:
         return out
 
     # ---- calibration
-    def thresholds(self) -> dict[str, dict[str, float]]:
+    def thresholds(self, min_days: int = 1) -> dict[str, dict[str, float]]:
+        """Per-key thresholds. min_days (0.6, `relax_min_days`): a key is relaxed only if its benign alarm fired on at
+        least that many baseline days - one occurrence (or one poisoned day) does not switch an alarm off."""
         out: dict[str, dict[str, float]] = defaultdict(dict)
         for (rule, key), v in self.benign_min.items():
-            out[rule][key] = round(float(v) - self.p.benign_margin, 4)
+            if len(self.benign_days.get((rule, key), ())) >= min_days:
+                out[rule][key] = round(float(v) - self.p.benign_margin, 4)
         return dict(out)
 
 
@@ -588,6 +737,17 @@ class LayerConfig:
     full_paths: bool = True            # Windows path handling (programs with spaces, folders, credential stores)
     image_exec: bool = True            # a process started from an untrusted written file = untrusted exec
     local_multicast: bool = True       # multicast / broadcast addresses are local, not untrusted sources
+    # 0.6 (docs/DETECTION_LAYERS.md "0.6"): resistance to evasion and to a poisoned baseline. A layers.json fitted
+    # before 0.6 lacks the keys and keeps the earlier behaviour until re-fitted.
+    strict_program_key: bool = False   # case only for Windows programs; never collapse the file name itself
+    strict_addresses: bool = False     # '1.2.3.4%zone' / '[::1]' parsed, not treated as non-addresses (local)
+    script_exec: bool = False          # an interpreter loading its script argument executes that script
+    socket_io: bool = False            # read / write on a socket = receive / send
+    persistence: bool = False          # untrusted_persistence alarm on autostart locations
+    connect_receives: bool = False     # a connection to an untrusted address taints the process (downloads via read())
+    late_exfil: bool = False           # sensitive read while holding an untrusted connection = exfiltration
+    recurring_trust: bool = False      # retrain: an address new since the previous model is trusted only on >= 2 days
+    relax_min_days: int = 1            # retrain: a key new since the previous model is relaxed only on >= N days
 
 
 class DeterministicLayers:
@@ -599,12 +759,16 @@ class DeterministicLayers:
         self.spec = spec
         cfg = spec.get("config", {})
         self.novelty = (NoveltyLayer(set(spec["known_executables"]), approved, normalize=cfg.get("normalize_programs", False),
-                                     instances=cfg.get("novel_instances", 0), full_paths=cfg.get("full_paths", False))
+                                     instances=cfg.get("novel_instances", 0), full_paths=cfg.get("full_paths", False),
+                                     strict_keys=cfg.get("strict_program_key", False))
                         if cfg.get("novelty", True) else None)
         self.tags = (TagEngine(TagParams(**cfg.get("tags", {})), set(spec.get("trusted_ips", [])), spec.get("thresholds", {}),
                                n_preexisting, private_services=set(spec.get("private_services", [])),
                                full_paths=cfg.get("full_paths", False), image_exec=cfg.get("image_exec", False),
-                               local_multicast=cfg.get("local_multicast", False))
+                               local_multicast=cfg.get("local_multicast", False), strict_addresses=cfg.get("strict_addresses", False),
+                               script_exec=cfg.get("script_exec", False), socket_io=cfg.get("socket_io", False),
+                               persistence=cfg.get("persistence", False), connect_receives=cfg.get("connect_receives", False),
+                               late_exfil=cfg.get("late_exfil", False))
                      if cfg.get("rules", True) else None)
 
     @classmethod
@@ -651,14 +815,26 @@ class DeterministicLayers:
         return hits
 
 
-def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: LayerConfig = LayerConfig(), log=print) -> dict:
+def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: LayerConfig = LayerConfig(), log=print,
+               exclude: dict | None = None, prior: dict | None = None) -> dict:
     """Fit layers 1 and 2 on benign days (in order): known executables, trusted remote addresses, per-key alarm
     thresholds. Returns the layers.json document.
 
     The alarm thresholds must be learned under the novelty a deployment will see, not under the baseline's own
     hindsight (every baseline address is trusted by construction otherwise, and no benign alarm is ever observed).
     The calibration replay is therefore leave-one-day-out: an address is trusted on a day only if it also occurs
-    on another baseline day, and a file counts as pre-existing only if it was seen on an earlier day."""
+    on another baseline day, and a file counts as pre-existing only if it was seen on an earlier day.
+
+    exclude (0.6, learning integrity): what the endpoint's open or confirmed alerts point at must not become normal
+    by being in the baseline - {"programs": [...], "addresses": [...], "rule_keys": [[rule, key], ...]} are removed
+    from the known programs, the trusted addresses and the relaxed thresholds (a retrain on days an attacker was
+    active in otherwise learns the attack as benign).
+
+    prior (0.6): the layers.json of the model this fit replaces (a retrain). With `recurring_trust`, an address the
+    previous model did not trust becomes trusted only if it occurs on >= 2 of the days; with `relax_min_days` N, a
+    (rule, key) the previous model had not relaxed is relaxed only after benign alarms on >= N days. What was normal
+    before stays normal. A first fit (no prior) trusts every baseline address and relaxes on one day, as before -
+    stricter first fits cost 30-45 false positives on THEIA E3 (lab_v06) - and is covered by the exclusions."""
     known = NoveltyLayer.fit((store.windows(d) for d in days), reg, cfg.full_paths)
     ip_days: dict[str, set[int]] = defaultdict(set)
     first_day: dict[int, int] = {}
@@ -671,7 +847,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
             e = reg.entities[n]
             if e.ntype == "netflow":
                 ip = remote_ip(e.label)
-                if not is_local(ip, cfg.local_multicast):
+                if not is_local(ip, cfg.local_multicast, cfg.strict_addresses):
                     ip_days[ip].add(k)
     ips = set(ip_days)
     recurring = {ip for ip, ds in ip_days.items() if len(ds) >= 2}
@@ -686,20 +862,60 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
                 if e.ntype == "netflow" and is_private(remote_ip(e.label)) and reg.entities[s_].ntype == "subject":
                     svc_days[f"{executable(reg.entities[s_].label, cfg.full_paths)}|{remote_port(e.label)}"].add(k)
     private_services = sorted(k for k, ds in svc_days.items() if len(ds) >= 2 or len(days) == 1)
+    ex = exclude or {}
+    ex_ips = {str(x) for x in ex.get("addresses") or ()}
+    ex_progs = {str(x) for x in ex.get("programs") or ()}
+    ex_keys = {(str(r), str(k)) for r, k in ex.get("rule_keys") or ()}
+    if ex_ips:
+        recurring -= ex_ips
     eng = TagEngine(cfg.tags, recurring, None, n_preexisting, fit=True, private_services=set(private_services), full_paths=cfg.full_paths,
-                    image_exec=cfg.image_exec, local_multicast=cfg.local_multicast)
+                    image_exec=cfg.image_exec, local_multicast=cfg.local_multicast, strict_addresses=cfg.strict_addresses,
+                    script_exec=cfg.script_exec, socket_io=cfg.socket_io, persistence=cfg.persistence,
+                    connect_receives=cfg.connect_receives, late_exfil=cfg.late_exfil)
     eng.first_day = first_day
     for k, d in enumerate(days):
         eng.cur_day = k
         for w in store.windows(d):
             eng.process(w, reg)
-    thr = eng.thresholds()
+    if prior is not None and int(cfg.relax_min_days) > 1:
+        thr = eng.thresholds(1)
+        old_keys = {(r, k) for r, kv in (prior.get("thresholds") or {}).items() for k in kv}
+        strict = eng.thresholds(int(cfg.relax_min_days))
+        thr = {r: {k: v for k, v in kv.items() if (r, k) in old_keys or k in strict.get(r, {})} for r, kv in thr.items()}
+        thr = {r: kv for r, kv in thr.items() if kv}
+    else:
+        thr = eng.thresholds(1)
+    excluded = {"programs": 0, "addresses": 0, "rule_keys": 0}
+    if ex_progs:
+        pk = {program_key(x, cfg.strict_program_key) for x in ex_progs}
+        before = len(known)
+        known = {x for x in known if x not in ex_progs and program_key(x, cfg.strict_program_key) not in pk}
+        excluded["programs"] = before - len(known)
+    if cfg.recurring_trust and prior is not None:
+        runtime_ips = recurring | (ips & set(prior.get("trusted_ips") or ()))
+    else:
+        runtime_ips = ips
+    if ex_ips:
+        excluded["addresses"] = len(ips & ex_ips)
+        runtime_ips = runtime_ips - ex_ips
+        ips = ips - ex_ips
+    if ex_keys:
+        for r, k in ex_keys:
+            if k in thr.get(r, {}):
+                del thr[r][k]; excluded["rule_keys"] += 1
+    if ex_progs:   # private services of an excluded program are not a known service either
+        private_services = [x for x in private_services if x.rsplit("|", 1)[0] not in ex_progs]
     log(f"layers: {len(known)} known executables, {len(ips)} baseline remote addresses ({len(recurring)} recurring), "
         f"benign alarm keys " + (", ".join(f"{r}={len(v)}" for r, v in sorted(thr.items())) or "none"))
     return {"version": 1, "config": {"novelty": cfg.novelty, "rules": cfg.rules, "tags": asdict(cfg.tags), "evidence_rules": list(cfg.evidence_rules),
                                      "normalize_programs": cfg.normalize_programs, "novel_instances": cfg.novel_instances,
                                      "full_paths": cfg.full_paths, "image_exec": cfg.image_exec,
-                                     "local_multicast": cfg.local_multicast},
-            "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(ips), "thresholds": thr,
+                                     "local_multicast": cfg.local_multicast, "strict_program_key": cfg.strict_program_key,
+                                     "strict_addresses": cfg.strict_addresses, "script_exec": cfg.script_exec,
+                                     "socket_io": cfg.socket_io, "persistence": cfg.persistence,
+                                     "connect_receives": cfg.connect_receives, "late_exfil": cfg.late_exfil,
+                                     "recurring_trust": cfg.recurring_trust, "relax_min_days": cfg.relax_min_days},
+            "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(runtime_ips), "thresholds": thr,
             "private_services": private_services,
-            "benign_alarm_events": dict(eng.benign_count)}
+            "benign_alarm_events": dict(eng.benign_count),
+            **({"excluded": excluded} if exclude else {})}

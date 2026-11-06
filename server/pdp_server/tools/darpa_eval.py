@@ -37,6 +37,13 @@ DATASETS = {
     "OPTC_H201": {"database": "optc_201", "test": ["2019-09-23", "2019-09-24", "2019-09-25"], "gt": ["h201/node_h201_0923.csv"]},
     "OPTC_H501": {"database": "optc_501", "test": ["2019-09-23", "2019-09-24", "2019-09-25"], "gt": ["h501/node_h501_0924.csv"]},
     "OPTC_H051": {"database": "optc_051", "test": ["2019-09-23", "2019-09-24", "2019-09-25"], "gt": ["h051/node_h051_0925.csv"]},
+    # 0.6 held-out (docs/BENCHMARK_HELDOUT.md), chronological product split (train, then validation, then test).
+    # PIDSMaker's own lists: ClearScope 04-12 and FiveDirections 04-12 attacks left no malicious nodes in the data.
+    "CLEARSCOPE_E3": {"database": "clearscope_e3", "test": ["2018-04-11", "2018-04-12"],
+                      "gt": ["E3-CLEARSCOPE/node_clearscope_e3_firefox_0411.csv"]},
+    "FIVEDIRECTIONS_E3": {"database": "fivedirections_e3", "test": ["2018-04-09", "2018-04-10", "2018-04-11"],
+                          "gt": ["E3-FIVEDIRECTIONS/node_fivedirections_e3_excel_0409.csv",
+                                 "E3-FIVEDIRECTIONS/node_fivedirections_e3_firefox_0411.csv"]},
 }
 
 
