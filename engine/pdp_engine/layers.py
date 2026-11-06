@@ -817,6 +817,27 @@ class DeterministicLayers:
         return hits
 
 
+def telemetry_coverage(cov: dict, e, full_paths: bool = True) -> None:
+    """Count what the rule layers need from a collector (0.6): processes recorded with a program path (layer 1 tells
+    programs apart by path), network endpoints with a remote address (layer 2's untrusted sources). A collector that
+    records neither leaves layers 1-2 nearly blind (DARPA E3 ClearScope: no addresses, no execs, package names only;
+    docs/BENCHMARK_HELDOUT.md) - the endpoint's posture then says so instead of staying silently quiet."""
+    if e.ntype == "subject":
+        cov["processes"] += 1
+        exe = executable(e.label, full_paths)
+        if "/" in exe.replace("\\", "/"):
+            cov["processes_with_path"] += 1
+    elif e.ntype == "netflow":
+        cov["flows"] += 1
+        ip = remote_ip(e.label).strip("[]").split("%", 1)[0]
+        try:
+            ipaddress.ip_address(ip)
+            if ip not in ("0.0.0.0", "::"):
+                cov["flows_with_address"] += 1
+        except ValueError:
+            pass
+
+
 def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: LayerConfig = LayerConfig(), log=print,
                exclude: dict | None = None, prior: dict | None = None) -> dict:
     """Fit layers 1 and 2 on benign days (in order): known executables, trusted remote addresses, per-key alarm
@@ -838,6 +859,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
     before stays normal. A first fit (no prior) trusts every baseline address and relaxes on one day, as before -
     stricter first fits cost 30-45 false positives on THEIA E3 (lab_v06) - and is covered by the exclusions."""
     known = NoveltyLayer.fit((store.windows(d) for d in days), reg, cfg.full_paths)
+    cov = {"processes": 0, "processes_with_path": 0, "flows": 0, "flows_with_address": 0, "exec_events": 0}
     ip_days: dict[str, set[int]] = defaultdict(set)
     first_day: dict[int, int] = {}
     for k, d in enumerate(days):
@@ -845,12 +867,17 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
         for w in store.windows(d):
             seen.update(np.unique(np.concatenate([w.src, w.dst])).tolist())
         for n in seen:
+            fresh = n not in first_day
             first_day.setdefault(n, k)
             e = reg.entities[n]
+            if fresh:
+                telemetry_coverage(cov, e, cfg.full_paths)
             if e.ntype == "netflow":
                 ip = remote_ip(e.label)
                 if not is_local(ip, cfg.local_multicast, cfg.strict_addresses):
                     ip_days[ip].add(k)
+    ex_id = EDGE_TYPE_ID["EXECUTE"]
+    cov["exec_events"] = int(sum(int((w.etype == ex_id).sum()) for d in days for w in store.windows(d)))
     ips = set(ip_days)
     recurring = {ip for ip, ds in ip_days.items() if len(ds) >= 2}
     # program|port pairs sent to on private addresses (recurring on two baseline days, like trusted addresses)
@@ -920,4 +947,5 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
             "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(runtime_ips), "thresholds": thr,
             "private_services": private_services,
             "benign_alarm_events": dict(eng.benign_count),
+            "coverage": cov,
             **({"excluded": excluded} if exclude else {})}

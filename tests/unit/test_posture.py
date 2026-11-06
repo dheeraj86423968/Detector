@@ -260,5 +260,15 @@ check(B(t, 60, 10, 30)[0] is True, "refills at the hourly rate (30/h: one token 
 check(B(5, 10**6, 10, 30) == (True, 9), "never more than the burst")
 check(set(P.RATES) == {"export", "hunt", "sim"} and all(cap >= 1 for cap, _ in P.RATES.values()), "buckets for export, hunt, sim")
 
+# 0.6: telemetry coverage of the model's baseline
+from datetime import datetime as _dt, timezone as _tz
+_ep = {"id": "e", "phase": "protected", "kind": "live", "config": {}, "enrolled_at": _dt.now(_tz.utc), "current_bundle": "b"}
+def _cov(c):
+    return [p["key"] for p in P.compute(_ep, {"manifest": {"layers": {"novelty": True, "rules": True, "coverage": c}, "learned_policy": {}},
+                                                     "created_at": _dt.now(_tz.utc)}, [])["problems"]]
+thin = _cov({"processes": 800, "processes_with_path": 0, "flows": 1000, "flows_with_address": 0, "exec_events": 0})
+check("posture:telemetry_paths" in thin and "posture:telemetry_addresses" in thin, f"thin telemetry (no paths, no addresses) is a posture warning ({thin})")
+ok_ = _cov({"processes": 800, "processes_with_path": 790, "flows": 1000, "flows_with_address": 950, "exec_events": 0})
+check(not any(k.startswith("posture:telemetry") for k in ok_), "full telemetry without exec events (Windows) raises nothing")
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

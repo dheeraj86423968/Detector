@@ -1,0 +1,47 @@
+ALTER TABLE
+ALTER TABLE
+== CLEARSCOPE_E3 0.5 bundle ccf0269a-d2d8-40c9-a562-6e8c4ec6ddde 22:28:01
+CLEARSCOPE_E3 v05 rc=0 22:28:45
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import json,sys; print(json.load(sys.stdin)["bundles"][0])
+                           ~~~~~~~~~^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "/usr/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 2 column 1 (char 1)
+== CLEARSCOPE_E3 0.6 bundle  22:28:50
+CLEARSCOPE_E3 v06 rc=2 22:28:51
+== FIVEDIRECTIONS_E3 0.5 bundle edb4e825-79ca-4c07-9f12-ad32f6800d20 22:28:51
+FIVEDIRECTIONS_E3 v05 rc=0 22:33:03
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import json,sys; print(json.load(sys.stdin)["bundles"][0])
+                           ~~~~~~~~~^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "/usr/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 2 column 1 (char 1)
+== FIVEDIRECTIONS_E3 0.6 bundle  22:33:10
+FIVEDIRECTIONS_E3 v06 rc=2 22:33:11
+ALL-DONE

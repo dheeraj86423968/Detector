@@ -280,7 +280,8 @@ class Trainer:
             "layers": {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules,
                        "known_executables": len(spec["known_executables"]),
                        "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},
-                       **({"excluded": spec["excluded"]} if spec.get("excluded") else {})},
+                       **({"excluded": spec["excluded"]} if spec.get("excluded") else {}),
+                       **({"coverage": spec["coverage"]} if spec.get("coverage") else {})},
             "learned_policy": policy,
         })
         return self.out_dir

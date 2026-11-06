@@ -420,6 +420,8 @@ check("/usr/sbin/nginx -> /bin/sh" in sp1b["thresholds"].get("tainted_spawn", {}
 sp2 = fit_layers(Store(days6), ["d1", "d2", "d3"], reg, N_PRE, LayerConfig(),
                  exclude={"programs": ["/usr/sbin/nginx"], "addresses": ["198.51.100.7"], "rule_keys": [["tainted_spawn", "/usr/sbin/nginx -> /bin/sh"]]},
                  log=lambda m: None)
+check(sp0["coverage"]["processes"] == 2 and sp0["coverage"]["processes_with_path"] == 2 and sp0["coverage"]["flows"] == 2
+      and sp0["coverage"]["flows_with_address"] == 2 and sp0["coverage"]["exec_events"] == 1, f"fit records telemetry coverage ({sp0['coverage']})")
 check(sp2["known_executables"] == [] and "198.51.100.7" not in sp2["trusted_ips"]
       and "/usr/sbin/nginx -> /bin/sh" not in sp2["thresholds"].get("tainted_spawn", {}) and sp2["excluded"] == {"programs": 1, "addresses": 1, "rule_keys": 1},
       f"exclude: what unreleased alerts point at does not become known / trusted / relaxed ({sp2.get('excluded')})")

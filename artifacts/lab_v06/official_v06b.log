@@ -1,0 +1,9 @@
+NOTICE:  column "status_by" of relation "alerts" already exists, skipping
+NOTICE:  column "status_at" of relation "alerts" already exists, skipping
+ALTER TABLE
+ALTER TABLE
+== CLEARSCOPE_E3 0.6 bundle a34b8914-aec8-41b0-a021-bd3c2c3172bd 22:33:45
+CLEARSCOPE_E3 v06 rc=0 22:34:07
+== FIVEDIRECTIONS_E3 0.6 bundle 1feb4111-8e68-46a4-bd60-d5cf17ddb8b3 22:34:14
+FIVEDIRECTIONS_E3 v06 rc=0 22:36:24
+ALL-DONE

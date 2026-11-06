@@ -1,0 +1,39 @@
+{
+ "v04": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "strict_program_key": false,
+   "strict_addresses": false,
+   "script_exec": false,
+   "socket_io": false,
+   "persistence": false,
+   "late_exfil": false,
+   "connect_receives": false,
+   "recurring_trust": false,
+   "relax_min_days": 1
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "frozen-defaults": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ }
+}

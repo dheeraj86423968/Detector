@@ -48,10 +48,13 @@ def layer_bundle(eid: str, src: dict, deploy: bool = False) -> str:
     meta.update({"bundle_id": bid, "layers_added_to": str(src["id"]),
                  "layers": {"file": "layers.json", "novelty": True, "rules": True, "known_executables": len(spec["known_executables"]),
                             "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},
-                            **({"excluded": spec["excluded"]} if spec.get("excluded") else {})}})
+                            **({"excluded": spec["excluded"]} if spec.get("excluded") else {}),
+                            **({"coverage": spec["coverage"]} if spec.get("coverage") else {})}})
     # the current learned-alert default comes with the current layers (0.4: ranking only; an endpoint setting overrides it)
-    meta["learned_policy"] = dict({"daily_budget": TrainConfig.learned_daily_budget, "corroboration_percentile": TrainConfig.corroboration_percentile},
-                                  **(meta.get("learned_policy") or {}), learned_alerts=TrainConfig.learned_alerts)
+    lp = {"daily_budget": TrainConfig.learned_daily_budget, "corroboration_percentile": TrainConfig.corroboration_percentile}
+    lp.update(meta.get("learned_policy") or {})          # (a 0.4+ policy already has learned_alerts: dict(**, kw=) raised)
+    lp["learned_alerts"] = TrainConfig.learned_alerts
+    meta["learned_policy"] = lp
     write_manifest(out, meta)
     pki.sign_bundle(out)
     manifest = json.load(open(os.path.join(out, "manifest.json")))

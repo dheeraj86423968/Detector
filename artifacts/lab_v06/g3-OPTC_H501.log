@@ -1,0 +1,2 @@
+OPTC_H501  v04                          ADP 0.614 (min 0.571)  MCC 0.047  P 0.167  R 0.013  TP 10 FP 50  attacks 1-1/1  layers {'novelty': [41, 2], 'rules': [22, 9]} rules {'exfiltration': [22, 9], 'novel_executable': [41, 2], 'novel_executable_repeat': [46, 5]}
+OPTC_H501  frozen-defaults              ADP 0.614 (min 0.571)  MCC 0.047  P 0.167  R 0.013  TP 10 FP 50  attacks 1-1/1  layers {'novelty': [41, 2], 'rules': [22, 9]} rules {'exfiltration': [22, 9], 'novel_executable': [41, 2], 'novel_executable_repeat': [46, 5]}

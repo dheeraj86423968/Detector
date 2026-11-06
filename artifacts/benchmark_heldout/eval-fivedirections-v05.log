@@ -1,0 +1,205 @@
+time="2026-11-06T22:28:51Z" level=warning msg="Found orphan containers (pdp-agent-suite-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container pdp-bench-eval-run-bb0a32f4062c Creating 
+ Container pdp-bench-eval-run-bb0a32f4062c Created 
+22:29:39 ingested test day 2018-04-09: 95 windows, registry 267131
+22:30:11 ingested test day 2018-04-10: 95 windows, registry 338102
+22:30:55 ingested test day 2018-04-11: 95 windows, registry 389447
+22:32:58 bundle edb4e825-79ca-4c07-9f12-ad32f6800d20: re-scored 285 test windows, 282820 test nodes; layered alerts novelty=44, rules=0, corroborated=0, learned=0
+22:33:00 {"bundle": "edb4e825-79ca-4c07-9f12-ad32f6800d20", "train": {"mode": "mean", "weights": [0.2, 0.2, 0.2, 0.2, 0.2], "val_loss": [0.09727908621357995, 0.09797647297585495, 0.10011925312196826, 0.09703758588245312, 0.09727986973724431]}, "test_nodes": 282820, "gt_nodes_in_test": 108, "fused (learned ranker)": {"TP": 9, "FP": 229, "FN": 99, "TN": 282483, "precision": 0.038, "recall": 0.083, "MCC": 0.056, "attacks_detected": "2/2", "ADP": 0.05}, "detector-1 alone": {"TP": 3, "FP": 44, "FN": 105, "TN": 282668, "precision": 0.064, "recall": 0.028, "MCC": 0.042, "attacks_detected": "2/2", "ADP": 0.075}, "detector-2 alone": {"TP": 3, "FP": 66, "FN": 105, "TN": 282646, "precision": 0.043, "recall": 0.028, "MCC": 0.034, "attacks_detected": "1/2", "ADP": 0.06}, "either detector (post-hoc)": {"TP": 5, "FP": 106, "FN": 103, "TN": 282606, "precision": 0.045, "recall": 0.046, "MCC": 0.045, "attacks_detected": "2/2", "ADP": 0.05}, "both detectors (post-hoc)": {"TP": 1, "FP": 4, "FN": 107, "TN": 282708, "precision": 0.2, "recall": 0.009, "MCC": 0.043, "attacks_detected": "1/2", "ADP": 0.333}, "layer 1: novelty": {"TP": 1, "FP": 43, "FN": 107, "TN": 282669, "precision": 0.023, "recall": 0.009, "MCC": 0.014, "attacks_detected": "1/2"}, "layer 2: rules": {"TP": 0, "FP": 0, "FN": 108, "TN": 282712, "precision": 0.0, "recall": 0.0, "MCC": 0.0, "attacks_detected": "0/2"}, "layers 1+2 (deterministic)": {"TP": 1, "FP": 43, "FN": 107, "TN": 282669, "precision": 0.023, "recall": 0.009, "MCC": 0.014, "attacks_detected": "1/2"}, "layer 3 alone (budgeted)": {"TP": 0, "FP": 0, "FN": 108, "TN": 282712, "precision": 0.0, "recall": 0.0, "MCC": 0.0, "attacks_detected": "0/2"}, "layered product": {"TP": 1, "FP": 43, "FN": 107, "TN": 282669, "precision": 0.023, "recall": 0.009, "MCC": 0.014, "attacks_detected": "1/2", "ADP": 0.043, "ADP (0.3 ranking)": 0.043, "by_layer": {"novelty": {"alerts": 44, "TP": 1}, "rules": {"alerts": 0, "TP": 0}, "corroborated": {"alerts": 0, "TP": 0}, "learned": {"alerts": 0, "TP": 0}}}, "layer 2: rules (pre-registered: all rules alarm)": {"TP": 0, "FP": 0, "FN": 108, "TN": 282712, "precision": 0.0, "recall": 0.0, "MCC": 0.0, "attacks_detected": "0/2"}, "layered product (pre-registered policy)": {"TP": 9, "FP": 162, "FN": 99, "TN": 282550, "precision": 0.053, "recall": 0.083, "MCC": 0.066, "attacks_detected": "2/2", "ADP": 0.312}, "reported alerts (agent)": {"TP": 1, "FP": 43, "FN": 107, "TN": 282669, "precision": 0.023, "recall": 0.009, "MCC": 0.014, "attacks_detected": "1/2", "alerted_nodes_outside_rescored_set": 0}}
+{
+ "endpoint": "01ca45e0-721f-4181-a4cb-33682335812a",
+ "dataset": "FIVEDIRECTIONS_E3",
+ "test_days": [
+  "2018-04-09",
+  "2018-04-10",
+  "2018-04-11"
+ ],
+ "gt_nodes_total": 108,
+ "agent_windows": {
+  "n": 284,
+  "alerts": 44
+ },
+ "agent_scoring_bundle": "edb4e825-79ca-4c07-9f12-ad32f6800d20",
+ "agent_scoring_bundle_source": "window records",
+ "runs": [
+  {
+   "bundle": "edb4e825-79ca-4c07-9f12-ad32f6800d20",
+   "train": {
+    "mode": "mean",
+    "weights": [
+     0.2,
+     0.2,
+     0.2,
+     0.2,
+     0.2
+    ],
+    "val_loss": [
+     0.09727908621357995,
+     0.09797647297585495,
+     0.10011925312196826,
+     0.09703758588245312,
+     0.09727986973724431
+    ]
+   },
+   "test_nodes": 282820,
+   "gt_nodes_in_test": 108,
+   "fused (learned ranker)": {
+    "TP": 9,
+    "FP": 229,
+    "FN": 99,
+    "TN": 282483,
+    "precision": 0.038,
+    "recall": 0.083,
+    "MCC": 0.056,
+    "attacks_detected": "2/2",
+    "ADP": 0.05
+   },
+   "detector-1 alone": {
+    "TP": 3,
+    "FP": 44,
+    "FN": 105,
+    "TN": 282668,
+    "precision": 0.064,
+    "recall": 0.028,
+    "MCC": 0.042,
+    "attacks_detected": "2/2",
+    "ADP": 0.075
+   },
+   "detector-2 alone": {
+    "TP": 3,
+    "FP": 66,
+    "FN": 105,
+    "TN": 282646,
+    "precision": 0.043,
+    "recall": 0.028,
+    "MCC": 0.034,
+    "attacks_detected": "1/2",
+    "ADP": 0.06
+   },
+   "either detector (post-hoc)": {
+    "TP": 5,
+    "FP": 106,
+    "FN": 103,
+    "TN": 282606,
+    "precision": 0.045,
+    "recall": 0.046,
+    "MCC": 0.045,
+    "attacks_detected": "2/2",
+    "ADP": 0.05
+   },
+   "both detectors (post-hoc)": {
+    "TP": 1,
+    "FP": 4,
+    "FN": 107,
+    "TN": 282708,
+    "precision": 0.2,
+    "recall": 0.009,
+    "MCC": 0.043,
+    "attacks_detected": "1/2",
+    "ADP": 0.333
+   },
+   "layer 1: novelty": {
+    "TP": 1,
+    "FP": 43,
+    "FN": 107,
+    "TN": 282669,
+    "precision": 0.023,
+    "recall": 0.009,
+    "MCC": 0.014,
+    "attacks_detected": "1/2"
+   },
+   "layer 2: rules": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 108,
+    "TN": 282712,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/2"
+   },
+   "layers 1+2 (deterministic)": {
+    "TP": 1,
+    "FP": 43,
+    "FN": 107,
+    "TN": 282669,
+    "precision": 0.023,
+    "recall": 0.009,
+    "MCC": 0.014,
+    "attacks_detected": "1/2"
+   },
+   "layer 3 alone (budgeted)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 108,
+    "TN": 282712,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/2"
+   },
+   "layered product": {
+    "TP": 1,
+    "FP": 43,
+    "FN": 107,
+    "TN": 282669,
+    "precision": 0.023,
+    "recall": 0.009,
+    "MCC": 0.014,
+    "attacks_detected": "1/2",
+    "ADP": 0.043,
+    "ADP (0.3 ranking)": 0.043,
+    "by_layer": {
+     "novelty": {
+      "alerts": 44,
+      "TP": 1
+     },
+     "rules": {
+      "alerts": 0,
+      "TP": 0
+     },
+     "corroborated": {
+      "alerts": 0,
+      "TP": 0
+     },
+     "learned": {
+      "alerts": 0,
+      "TP": 0
+     }
+    }
+   },
+   "layer 2: rules (pre-registered: all rules alarm)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 108,
+    "TN": 282712,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/2"
+   },
+   "layered product (pre-registered policy)": {
+    "TP": 9,
+    "FP": 162,
+    "FN": 99,
+    "TN": 282550,
+    "precision": 0.053,
+    "recall": 0.083,
+    "MCC": 0.066,
+    "attacks_detected": "2/2",
+    "ADP": 0.312
+   },
+   "reported alerts (agent)": {
+    "TP": 1,
+    "FP": 43,
+    "FN": 107,
+    "TN": 282669,
+    "precision": 0.023,
+    "recall": 0.009,
+    "MCC": 0.014,
+    "attacks_detected": "1/2",
+    "alerted_nodes_outside_rescored_set": 0
+   }
+  }
+ ]
+}

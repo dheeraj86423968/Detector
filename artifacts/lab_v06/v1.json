@@ -1,0 +1,142 @@
+{
+ "v04": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "strict_key": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "strict_program_key": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "strict_addr": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "strict_addresses": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "script": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "script_exec": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "sockio": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "socket_io": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "persist": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "persistence": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "recurring": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "recurring_trust": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "relax2": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "relax_min_days": 2
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "all": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "strict_program_key": true,
+   "strict_addresses": true,
+   "script_exec": true,
+   "socket_io": true,
+   "persistence": true,
+   "recurring_trust": true,
+   "relax_min_days": 2
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ }
+}

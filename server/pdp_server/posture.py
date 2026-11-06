@@ -613,6 +613,16 @@ def compute(ep: dict, bundle: dict | None, entries: list[dict] | None = None, no
             for k, what in (("novelty", "novelty"), ("rules", "rules")):
                 if lay.get(k) is False:
                     add(f"model_{k}_off", "error", f"{LAYER_TEXT[what].capitalize()} is turned off in the current model")
+            cov = lay.get("coverage") or {}
+            if cov:   # 0.6: telemetry the rule layers need (pdp_engine.layers.telemetry_coverage)
+                P, F = int(cov.get("processes") or 0), int(cov.get("flows") or 0)
+                if P >= 20 and cov.get("processes_with_path", 0) < 0.5 * P:
+                    add("telemetry_paths", "warning", f"Only {100 * cov.get('processes_with_path', 0) / P:.0f} % of processes were recorded with a "
+                        "program path: new-program detection cannot tell programs apart (check the collector)")
+                # (no exec events is normal on Windows - process starts carry the image path, image_exec - so not a problem)
+                if F >= 20 and cov.get("flows_with_address", 0) < 0.05 * F:
+                    add("telemetry_addresses", "warning", "Network connections were recorded without remote addresses: the data-flow "
+                        "rules cannot tell untrusted sources (check the collector)")
         pol = man.get("learned_policy") or {}
         al = pol.get("alert_layers")
         if isinstance(al, list):

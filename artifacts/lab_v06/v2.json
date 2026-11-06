@@ -1,0 +1,122 @@
+{
+ "v04": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "connect_rx": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "connect_receives": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "late_exfil": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "late_exfil": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "all": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "strict_program_key": true,
+   "strict_addresses": true,
+   "script_exec": true,
+   "socket_io": true,
+   "persistence": true,
+   "recurring_trust": true,
+   "relax_min_days": 2
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "all+cr+le": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "strict_program_key": true,
+   "strict_addresses": true,
+   "script_exec": true,
+   "socket_io": true,
+   "persistence": true,
+   "recurring_trust": true,
+   "relax_min_days": 2,
+   "connect_receives": true,
+   "late_exfil": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "retrain-v04": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier",
+  "prior_drop": 2
+ },
+ "retrain-recur+relax2": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true,
+   "recurring_trust": true,
+   "relax_min_days": 2
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier",
+  "prior_drop": 2
+ }
+}
