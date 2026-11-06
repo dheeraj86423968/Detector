@@ -55,6 +55,24 @@ class State:
         if need_vacuum and not self.has_old_spool():
             self._vacuum()
         self._day_ids: dict[str, int] = {}
+        # 0.6: event ids never go back. `events.id` is a plain INTEGER PRIMARY KEY, so sqlite handed out max(id) + 1:
+        # once the spool emptied (all rows uploaded and scored) ids restarted at 1, and a later upload batch of the same
+        # day could get the id of an earlier one (`<day>-<first id>-<last id>`) and be dropped by the server as a
+        # duplicate. Ids are now assigned from a high-water mark kept in kv; batches of rows inserted from then on (ids
+        # above `event_id_base`) carry a suffix, so they cannot collide with any batch an older agent sent.
+        mx = self._max_event_id()
+        if self.get("event_id_hw") is None:
+            self.set("event_id_base", mx)
+            self.set("event_id_hw", mx)
+        self._event_id_base = int(self.get("event_id_base", 0) or 0)
+
+    def _max_event_id(self) -> int:
+        return int(self.c.execute("SELECT coalesce(max(id), 0) FROM events").fetchone()[0])
+
+    def batch_id(self, day: str, first_id: int, last_id: int) -> str:
+        """Upload batch id: stable for the same rows (a retried upload is recognised by the server), unique for ever."""
+        bid = f"{day}-{first_id}-{last_id}"
+        return bid + "-m" if int(last_id) > self._event_id_base else bid
 
     def _vacuum(self):
         self.c.execute("PRAGMA wal_checkpoint(TRUNCATE)")
@@ -204,8 +222,13 @@ class State:
 
     def add_events(self, evs: list[tuple]) -> None:
         """evs: (ts_ns, src registry id, op, dst registry id, event_uuid, day); op is an EDGE_TYPES name."""
-        rows = [(ts, s, EDGE_TYPE_ID[op], d, eid, self.day_id(day)) for ts, s, op, d, eid, day in evs]
-        self._tx(lambda: self.c.executemany("INSERT INTO events (ts_ns, src, op, dst, eid, day) VALUES (?,?,?,?,?,?)", rows))
+        def ins():
+            nxt = max(int(self.get("event_id_hw", 0) or 0), self._max_event_id()) + 1     # monotonic (see __init__)
+            rows = [(nxt + i, ts, s, EDGE_TYPE_ID[op], d, eid, self.day_id(day)) for i, (ts, s, op, d, eid, day) in enumerate(evs)]
+            self.c.executemany("INSERT INTO events (id, ts_ns, src, op, dst, eid, day) VALUES (?,?,?,?,?,?,?)", rows)
+            self.set("event_id_hw", nxt + len(rows) - 1)
+        if evs:
+            self._tx(ins)
 
     @staticmethod
     def _rows(cur) -> list[tuple]:

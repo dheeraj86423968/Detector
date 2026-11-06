@@ -209,10 +209,15 @@ def _boot_id() -> str:
         return "unknown"
 
 
-def follow(path: str, stop, poll: float = 0.5) -> Iterator[str]:
-    """Tail a log file across rotations (audit.log is renamed and recreated)."""
+def follow(path: str, stop, poll: float = 0.5, idle_tick: float | None = None) -> Iterator[str | None]:
+    """Tail a log file across rotations (audit.log is renamed and recreated). With `idle_tick`, None is yielded at
+    least that often while there is nothing to read, so the caller's loop never stalls on a quiet (or missing) log."""
     f, ino = None, None
+    last = time.time()
     while not stop():
+        if idle_tick is not None and time.time() - last >= idle_tick:
+            last = time.time()
+            yield None
         try:
             st = os.stat(path)
         except FileNotFoundError:
@@ -225,6 +230,7 @@ def follow(path: str, stop, poll: float = 0.5) -> Iterator[str]:
             f, ino = open(path, "r", errors="replace"), st.st_ino
         line = f.readline()
         if line:
+            last = time.time()
             yield line
         else:
             time.sleep(poll)

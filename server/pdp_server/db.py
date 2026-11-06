@@ -105,10 +105,11 @@ def is_partitioned(c, s: str) -> bool:
     return bool(r and r[0])
 
 
-def ensure_partitions(c, s: str, lo_ns: int, hi_ns: int) -> None:
+def ensure_partitions(c, s: str, lo_ns: int, hi_ns: int, days=None) -> None:
     """Daily partitions covering [lo_ns, hi_ns] (no-op for an unpartitioned table). Looked up in the catalog on every
-    upload (no cache: the worker drops partitions of days already cut into windows)."""
-    days = range(int(lo_ns) // DAY_NS, int(hi_ns) // DAY_NS + 1)
+    upload (no cache: the worker drops partitions of days already cut into windows). `days` (0.6): only the days the
+    rows actually fall on (an upload with two far-apart timestamps must not create every day in between)."""
+    days = range(int(lo_ns) // DAY_NS, int(hi_ns) // DAY_NS + 1) if days is None else sorted(set(days))
     if not is_partitioned(c, s):
         return
     with c.cursor() as cur:

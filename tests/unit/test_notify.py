@@ -144,6 +144,38 @@ for _ in range(50):
     time.sleep(0.05)
 check(lines and b"CEF:0|M.D Lab|M.D Lab Detector|0.3|pdp-incident|Remote shell opened by nginx|8|" in lines[0], "syslog: CEF incident event")
 
+# 5. agent health keys (0.6): drops per hour on the 1-hour delta, escalated while the endpoint raises alerts;
+#    integrity problems (tampering, blinding) per episode and high
+import time as _t
+from datetime import datetime as _dt, timezone as _tz
+_alerts_1h = {"n": 0}
+def _fake_q(c, sql, args=(), one=False):
+    if "agent_update FROM orgs" in sql:
+        r = {"agent_update": "manual"}
+    elif "FROM alerts WHERE endpoint_id" in sql:
+        r = {"n": _alerts_1h["n"]}
+    else:
+        r = None
+    return r if one else ([r] if r else [])
+N.db.q = _fake_q
+_now = _t.time()
+_ep = {"id": "e1", "name": "web-01", "hostname": "web-01", "phase": "protected", "kind": "live", "last_seen": _dt.fromtimestamp(_now - 5, _tz.utc),
+       "agent_version": "0.6.0", "current_bundle": None,
+       "health": {"agent_version": "0.6.0", "hb_seq": 7, "at": _now - 5, "collector_lost": 12, "collector_lost_1h": 12, "collector_behind": 0,
+                  "collector_behind_1h": 0, "counters": {"interval_s": 60},
+                  "integrity": {"active": [{"key": "collection_stopped:1700000000", "level": "error", "text": "The agent is running but ..."}],
+                                "findings": [{"key": "config_changed:1", "level": "info", "text": "The agent's local configuration ...", "at": _now - 60}]}}}
+_ch = {"id": 1, "org_id": "o1", "events": ["agent_health"], "min_severity": "high", "since_alert_id": 0}
+msgs = dict(N.pending_messages(None, _ch, [_ep], []))
+_hour = _t.strftime("%Y-%m-%dT%H", _t.gmtime())
+check(f"health:e1:collector_lost:{_hour}" in msgs and msgs[f"health:e1:collector_lost:{_hour}"]["severity"] == "medium",
+      f"collector drops keyed per hour, medium ({sorted(msgs)})")
+check(msgs.get("health:e1:collection_stopped:1700000000", {}).get("severity") == "high", "collection stopped: high, once per episode")
+check(msgs.get("health:e1:config_changed:1", {}).get("severity") == "low", "local configuration change: low")
+_alerts_1h["n"] = 2
+msgs = dict(N.pending_messages(None, _ch, [_ep], []))
+check(msgs[f"health:e1:collector_lost:{_hour}"]["severity"] == "high", "drops while the endpoint raises alerts: high")
+
 srv.shutdown(); smtp.shutdown(); sy.shutdown()
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

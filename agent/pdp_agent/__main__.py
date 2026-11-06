@@ -41,7 +41,8 @@ def main():
         from .sources.ebpf import EbpfLive
         source = EbpfLive(batch=int(src.get("batch", 2000)), ring_pages=int(src.get("ring_pages", 4096)), proc=src.get("proc", "/proc"),
                           engine=src.get("engine"),    # "core" (libbpf CO-RE, default) or "bcc" (header-compiled fallback)
-                          btf=a.kernel_btf)            # kernels without their own BTF: a file from the server
+                          btf=a.kernel_btf,            # kernels without their own BTF: a file from the server
+                          canary_s=float(src.get("canary_s", 60)), canary_dir=cfg.data_dir)   # 0.6: collector self-test (0 = off)
     elif src["kind"] == "etw":
         from .sources.windows_etw import EtwLive
         source = EtwLive(batch=int(src.get("batch", 2000)))

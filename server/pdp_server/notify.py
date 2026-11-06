@@ -353,17 +353,17 @@ def pending_messages(c, ch: dict, eps: list[dict], incidents: list[dict]) -> lis
             from .health import problems
             day = time.strftime("%Y-%m-%d", time.gmtime())
             h = ep["health"]
-            for p in problems(ep, target):
-                k = p["key"]
-                if k == "collector_lost":
-                    k += f":{10 ** int(math.log10(max(1, int(h.get('collector_lost') or 1))))}"
-                elif k == "spool_dropped":
-                    n = int(h.get("spool_dropped_unuploaded") or 0) + int(h.get("spool_dropped_unscored") or 0)
-                    k += f":{10 ** int(math.log10(max(1, n)))}"
-                elif k in ("disk", "behind", "queue", "no_updater"):
+            from .integrity import notify_key, recent_alerts
+            probs = problems(ep, target)
+            drops = any(p["key"] in ("collector_lost", "collector_behind", "spool_dropped") for p in probs)
+            a1h = recent_alerts(c, ep["id"]) if drops else 0      # drops while the endpoint raises alerts escalate
+            for p in probs:
+                # 0.6: drops keyed per hour on the 1-hour delta (not by a running total that resets), disk full /
+                # collector error once a day while they last, integrity problems per episode; severity from there
+                k, sev = notify_key(p, h, a1h)
+                if k in ("disk", "behind", "queue", "no_updater"):
                     k += f":{day}"           # at most once a day while it lasts
-                out.append((f"health:{ep['id']}:{k}", endpoint_message("agent_health", ep, p["text"][0].lower() + p["text"][1:],
-                                                                       "high" if p["level"] == "error" else "medium")))
+                out.append((f"health:{ep['id']}:{k}", endpoint_message("agent_health", ep, p["text"][0].lower() + p["text"][1:], sev)))
     return out
 
 

@@ -18,8 +18,11 @@ class AuditdLive:
 
     def batches(self, stop: Callable[[], bool]) -> Iterator[list]:
         buf, last = [], time.time()
-        for line in follow(self.log_path, stop):
-            buf.extend(self.norm.feed(line))
+        # idle ticks (None) while audit.log is quiet: the agent's loop keeps running (status, heartbeat, scoring) - before
+        # 0.6 a quiet log held it, so a quiet host stopped sending heartbeats
+        for line in follow(self.log_path, stop, idle_tick=1.0):
+            if line is not None:
+                buf.extend(self.norm.feed(line))
             if len(buf) >= self.batch or time.time() - last > 2:
                 yield buf; buf, last = [], time.time()
         buf.extend(self.norm.flush())

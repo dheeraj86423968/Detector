@@ -56,4 +56,6 @@ def problems(row: dict, target_version: str | None = None) -> list[dict]:
         how = ("apply the cluster's manifest again: Endpoints > Kubernetes clusters > Manifest" if isinstance(cfg, dict) and cfg.get("cluster")
                else "this host's service predates automatic updates (run the installer with --upgrade once)")
         out.append({"key": "no_updater", "level": "warning", "text": f"Agent {target_version} is available; {how}"})
+    from .integrity import problems as integrity_problems     # 0.6: tampering / blinding (agents 0.6+ only)
+    out += integrity_problems(row)
     return out
