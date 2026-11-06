@@ -59,6 +59,7 @@ class TrainConfig:
     layer_novelty: bool = True
     layer_rules: bool = True
     learned_daily_budget: int = 20    # at most this many learned-only alerts per day (highest scores first)
+    learned_alerts: bool = False      # 0.4: the learned layer ranks; it raises alerts only when the endpoint turns them on
     corroboration_percentile: str = "99.9"   # learned score (validation percentile) that alerts next to a layer 1/2 alert
     alert_layers: tuple | None = None        # layers allowed to alert (None = all); early models restrict this
     layers_only: bool = False                # rules-only model: layers 1-2 fitted, no learned detectors (early models
@@ -245,7 +246,8 @@ class Trainer:
         lcfg = LayerConfig(novelty=self.cfg.layer_novelty, rules=self.cfg.layer_rules, tags=TagParams())
         spec = fit_layers(self.store, self.train_days + [self.val_day], self.reg, self.N, lcfg, log=log)
         json.dump(spec, open(os.path.join(self.out_dir, "layers.json"), "w"))
-        policy = {"daily_budget": int(self.cfg.learned_daily_budget), "corroboration_percentile": self.cfg.corroboration_percentile}
+        policy = {"daily_budget": int(self.cfg.learned_daily_budget), "corroboration_percentile": self.cfg.corroboration_percentile,
+                  "learned_alerts": bool(self.cfg.learned_alerts)}
         if self.cfg.alert_layers is not None:
             policy["alert_layers"] = sorted(self.cfg.alert_layers)
         write_manifest(self.out_dir, {

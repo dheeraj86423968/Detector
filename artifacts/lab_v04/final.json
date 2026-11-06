@@ -1,0 +1,28 @@
+{
+ "v03": {},
+ "v04": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "v04-learned_alerts_on": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true,
+   "local_multicast": true
+  },
+  "rank": "tier"
+ }
+}

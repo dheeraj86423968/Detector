@@ -51,6 +51,7 @@ SEND = {EDGE_TYPE_ID["SENDTO"], EDGE_TYPE_ID["SENDMSG"], EDGE_TYPE_ID["CONNECT"]
 
 RULES = {
     "novel_executable": "runs a program that never ran during the baseline",
+    "novel_executable_repeat": "another run of a new program that already alerted today (evidence)",
     "untrusted_exec": "executes a file whose content came from an untrusted source",
     "tainted_spawn": "a process holding untrusted data starts a program",
     "tainted_modify": "a process with untrusted code or data modifies a file that existed in the baseline",
@@ -62,20 +63,71 @@ RULES = {
 SENSITIVE = re.compile(r"(^/etc/(shadow|gshadow|sudoers|master\.passwd|spwd\.db)$|^/etc/sudoers\.d/|/\.ssh/|"
                        r"\.(bash|zsh|sh)_history$|/\.gnupg/|/\.aws/credentials$|/\.netrc$|^/etc/ssl/private/|"
                        r"/(logins\.json|key[34]\.db|cookies\.sqlite|Login Data)$)")
+# Windows credential stores (full_paths, matched on canonical_path): SAM / SECURITY hives, the domain database, DPAPI
+# master keys, the credential manager and vault, browser password stores, password-manager databases.
+SENSITIVE_WIN = re.compile(r"(^/windows/system32/config/(sam|security)$|/ntds\.dit$|/appdata/(roaming|local)/microsoft/"
+                           r"(credentials|protect|vault)/|/login data$|/logins\.json$|/key[34]\.db$|\.kdbx$)")
 UNKNOWN_PROGRAM = {"None", "", "null"}
 LOCAL_ADDR = {"", "NA", "None", "null", "localhost", "0.0.0.0", "::", "::1", "*"}
 
 
 # ------------------------------------------------------------------------------------------------- label helpers
-def executable(label: str) -> str:
+_WIN_PATH = re.compile(r"^(?:/device/harddiskvolume\d+|/\?\?/[a-z]:|//\?/[a-z]:|[a-z]:)/", re.I)
+_HAS_EXT = re.compile(r"\.[A-Za-z0-9]{1,4}$")
+
+
+def executable(label: str, full_paths: bool = False) -> str:
     """The program of a process label 'subject <exe> <cmdline>': the exe path, or the first command-line token when
-    the collector recorded no path (DARPA CADETS records only the process name)."""
+    the collector recorded no path (DARPA CADETS records only the process name).
+
+    full_paths (0.4): the label separates path and command line by a space, so a Windows path with spaces
+    ('C:/Program Files (x86)/Google/Update/GoogleUpdate.exe') was cut at the first space and every program under
+    Program Files became the program '.../Program'. A Windows-style path whose last component has no extension is
+    continued with the following words until it ends in a file name with an extension (at most 8 words). Other
+    paths (Linux programs rarely have an extension) are unchanged."""
     parts = label.split(" ", 2)
     p = parts[1] if len(parts) > 1 else "None"
     if p in ("None", "", "null"):
         rest = parts[2].split() if len(parts) > 2 else []
         p = rest[0] if rest else "None"
+    elif full_paths and len(parts) > 2 and _WIN_PATH.match(p) and not _HAS_EXT.search(p.rsplit("/", 1)[-1]):
+        words = parts[2].split(" ")
+        for k, tok in enumerate(words[:8]):
+            if not tok or tok[0] in "\"'-":
+                break
+            cand = p + " " + " ".join(words[: k + 1])
+            if _HAS_EXT.search(cand.rsplit("/", 1)[-1]):
+                return cand
     return p
+
+
+# Program identity for layer 1 (normalize_programs). The same program is recorded under different spellings: Windows
+# paths in NT-namespace or drive form and in any letter case, inside per-install random directories (GUIDs, long hex
+# ids) or per-version directories, or with no path at all when the collector missed the image (only a name). Novelty
+# compares programs by this key, so a program counts as new only when it really is a new program.
+_NT_PREFIX = re.compile(r"^(?:/device/harddiskvolume\d+|/\?\?/[a-z]:|//\?/[a-z]:|/[a-z]:|[a-z]:)(?=/)")
+_GUID = re.compile(r"\{?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}?")
+_HEXID = re.compile(r"(?<![0-9a-z])[0-9a-f]{16,}(?![0-9a-z])")
+_VERSION_DIR = re.compile(r"^v?\d+(?:[._]\d+)+$")
+_EXE_SUFFIX = re.compile(r"\.(exe|com)$")
+
+
+def program_key(exe: str) -> str:
+    """Canonical program identity: '/Device/HarddiskVolume1/Windows/System32/PING.EXE' and 'C:\\Windows\\system32\\ping.exe'
+    -> '/windows/system32/ping.exe'; GUID / long hex directory names -> '{id}', version directories -> '{v}'."""
+    p = exe.replace("\\", "/").casefold()
+    p = p.replace("%systemroot%", "/windows").replace("%windir%", "/windows")
+    p = _NT_PREFIX.sub("", p)
+    if "/" not in p:
+        return p
+    p = _HEXID.sub("{id}", _GUID.sub("{id}", p))
+    parts = p.split("/")
+    return "/".join([("{v}" if _VERSION_DIR.match(s) else s) for s in parts[:-1]] + parts[-1:])
+
+
+def program_name(key: str) -> str:
+    """Bare program name of a key, for matching a process recorded without a path ('taskkill' ~ '.../taskkill.exe')."""
+    return _EXE_SUFFIX.sub("", key.rsplit("/", 1)[-1])
 
 
 def file_path(label: str) -> str:
@@ -87,12 +139,16 @@ def remote_ip(label: str) -> str:
     return parts[1] if len(parts) > 1 else "None"
 
 
-def is_local(ip: str) -> bool:
+def is_local(ip: str, multicast: bool = False) -> bool:
+    """Not a remote host: loopback, unspecified, link-local, non-addresses; with multicast=True (0.4) also multicast
+    and limited broadcast - group traffic of the local network (IPv6 neighbour discovery, mDNS, LLMNR, SSDP), which
+    0.3 treated as an untrusted remote source and so tainted every process that receives it."""
     if ip in LOCAL_ADDR:
         return True
     try:
         a = ipaddress.ip_address(ip)
-        return a.is_loopback or a.is_unspecified or a.is_link_local
+        return a.is_loopback or a.is_unspecified or a.is_link_local or (
+            multicast and (a.is_multicast or (a.version == 4 and int(a) == 0xFFFFFFFF)))
     except ValueError:
         return True          # not an address (unix socket names, 'NA') -> not a remote host
 
@@ -112,6 +168,16 @@ def is_private(ip: str) -> bool:
     except ValueError:
         return False
     return any(a.version == n.version and a in n for n in _PRIVATE_NETS)
+
+
+def canonical_path(path: str) -> str:
+    """Windows paths in one spelling ('/Device/HarddiskVolume1/Users/X/f', 'C:\\Users\\x\\f' -> '/users/x/f');
+    other paths unchanged."""
+    q = path.replace("\\", "/")
+    if _WIN_PATH.match(q) or q[:12].casefold().startswith("%systemroot%"):
+        q = q.casefold().replace("%systemroot%", "/windows")
+        return _NT_PREFIX.sub("", q)
+    return path
 
 
 def dir_key(path: str, depth: int = 2) -> str:
@@ -135,16 +201,47 @@ class Hit:
 
 # ------------------------------------------------------------------------------------------------- layer 1
 class NoveltyLayer:
-    def __init__(self, known: set[str], approved: set[str] | None = None):
+    def __init__(self, known: set[str], approved: set[str] | None = None, normalize: bool = False, instances: int = 0,
+                 full_paths: bool = False):
+        """normalize: compare programs by program_key (else by the raw path). instances > 0: only the first
+        `instances` processes of a new program per day alert; later ones are 'novel_executable_repeat' evidence (one
+        new tool run in a loop is one finding, not hundreds)."""
         self.known = set(known)
+        self.normalize = bool(normalize)
+        self.instances = int(instances or 0)
+        self.full_paths = bool(full_paths)
         self.approved = set(approved or ())
         self._checked: set[int] = set()
+        self._count: dict[tuple[str, int], int] = defaultdict(int)
+        if self.normalize:
+            self.known_keys = {program_key(k) for k in self.known if k not in UNKNOWN_PROGRAM}
+            self.known_names = {program_name(k) for k in self.known_keys}
+
+    @property
+    def approved(self) -> set[str]:
+        return self._approved
+
+    @approved.setter
+    def approved(self, v) -> None:
+        self._approved = set(v or ())
+        self._approved_keys = {program_key(k) for k in self._approved}
 
     def reset(self):
         self._checked = set()
+        self._count = defaultdict(int)
 
     def remap(self, old2new) -> None:
         self._checked = {old2new[n] for n in self._checked if old2new[n] >= 0}
+
+    def is_known(self, exe: str) -> bool:
+        if exe in self.known or exe in self._approved or exe in UNKNOWN_PROGRAM:
+            return True   # no program recorded (collector missed the exec) is missing data, not a new program
+        if not self.normalize:
+            return False
+        k = program_key(exe)
+        if k in self.known_keys or k in self._approved_keys:
+            return True
+        return "/" not in k and program_name(k) in self.known_names   # recorded without a path: match by name
 
     def process(self, w: Window, reg: Registry, ids: np.ndarray) -> list[Hit]:
         out = []
@@ -157,18 +254,25 @@ class NoveltyLayer:
             if e.ntype != "subject":
                 continue
             self._checked.add(n)
-            exe = executable(e.label)
-            if exe in self.known or exe in self.approved or exe in UNKNOWN_PROGRAM:
-                continue   # no program recorded (collector missed the exec) is missing data, not a new program
+            exe = executable(e.label, self.full_paths)
+            if self.is_known(exe):
+                continue
             if not first_t:
                 for s, d, t in zip(w.src.tolist(), w.dst.tolist(), w.t.tolist()):
                     first_t.setdefault(s, t); first_t.setdefault(d, t)
-            out.append(Hit("novelty", "novel_executable", exe, 0.0, (n,), int(first_t.get(n, w.start_ns)),
-                           f"runs {exe}, which never ran during the baseline"))
+            ts = int(first_t.get(n, w.start_ns))
+            rule = "novel_executable"
+            if self.instances:
+                ck = (program_key(exe) if self.normalize else exe, ts // 86_400_000_000_000)
+                self._count[ck] += 1
+                if self._count[ck] > self.instances:
+                    rule = "novel_executable_repeat"
+            out.append(Hit("novelty", rule, exe, 0.0, (n,), ts, f"runs {exe}, which never ran during the baseline"
+                           + ("" if rule == "novel_executable" else f" (repeat run #{self._count[ck]} today)")))
         return out
 
     @staticmethod
-    def fit(windows_by_day, reg: Registry) -> set[str]:
+    def fit(windows_by_day, reg: Registry, full_paths: bool = False) -> set[str]:
         ents = reg.entities
         known = set()
         seen = set()
@@ -178,7 +282,7 @@ class NoveltyLayer:
                     if n not in seen:
                         seen.add(n)
                         if ents[n].ntype == "subject":
-                            known.add(executable(ents[n].label))
+                            known.add(executable(ents[n].label, full_paths))
         return known
 
 
@@ -207,8 +311,16 @@ class _Tag:
 
 class TagEngine:
     def __init__(self, params: TagParams, trusted_ips: set[str], thresholds: dict[str, dict[str, float]] | None,
-                 n_preexisting: int, fit: bool = False, private_services: set[str] | None = None):
+                 n_preexisting: int, fit: bool = False, private_services: set[str] | None = None, full_paths: bool = False,
+                 image_exec: bool = False, local_multicast: bool = False):
+        """full_paths: Windows path handling (programs with spaces, canonical directories, Windows credential stores).
+        image_exec: a process whose program file was written with untrusted content in the stream counts as executing
+        it, for collectors that record no EXECUTE event (Windows). local_multicast: multicast / broadcast addresses
+        are local (see is_local)."""
         self.p = params
+        self.local_multicast = bool(local_multicast)
+        self.full_paths = bool(full_paths)
+        self.image_exec = bool(image_exec)
         self.trusted = set(trusted_ips)
         # private addresses are re-assigned (docker networks, DHCP): a private address in the /24 of a trusted private
         # address is trusted too. Public addresses must have been seen themselves.
@@ -236,6 +348,7 @@ class TagEngine:
     def reset(self):
         self.tags: dict[int, _Tag] = {}
         self.parent_exe: dict[int, str] = {}
+        self._untrusted_files: dict[str, int] = {}      # image_exec: canonical path -> file node with untrusted content
         self._fired: set[tuple[str, int]] = set()
         self._lbl: dict[int, str] = {}
 
@@ -244,7 +357,7 @@ class TagEngine:
         s = self._lbl.get(n)
         if s is None:
             e = reg.entities[n]
-            s = executable(e.label) if e.ntype == "subject" else (file_path(e.label) if e.ntype == "file" else remote_ip(e.label))
+            s = executable(e.label, self.full_paths) if e.ntype == "subject" else (file_path(e.label) if e.ntype == "file" else remote_ip(e.label))
             self._lbl[n] = s
         return s
 
@@ -254,10 +367,12 @@ class TagEngine:
             e = reg.entities[n]
             if e.ntype == "netflow":
                 ip = remote_ip(e.label)
-                t = _Tag(1.0 if (is_local(ip) or ip in self.trusted or self._allowed(ip) or self._private_trusted(ip)) else 0.0, 0.0, n)
+                t = _Tag(1.0 if (is_local(ip, self.local_multicast) or ip in self.trusted or self._allowed(ip) or self._private_trusted(ip)) else 0.0, 0.0, n)
                 self.__dict__.setdefault("_net_nodes", set()).add(n)
             elif e.ntype == "file":
-                t = _Tag(1.0, 1.0 if SENSITIVE.search(file_path(e.label)) else 0.0, n)
+                fp_ = file_path(e.label)
+                sens = SENSITIVE.search(fp_) or (self.full_paths and SENSITIVE_WIN.search(canonical_path(fp_)))
+                t = _Tag(1.0, 1.0 if sens else 0.0, n)
             else:
                 t = _Tag(1.0, 0.0, n)
             self.tags[n] = t
@@ -333,6 +448,7 @@ class TagEngine:
                 out.add(n)
                 if t.origin is not None and t.origin >= 0:
                     out.add(t.origin)
+        out.update(self._untrusted_files.values())
         return out
 
     def remap(self, old2new) -> None:
@@ -349,6 +465,7 @@ class TagEngine:
         self.parent_exe = {m[n]: v for n, v in self.parent_exe.items() if m[n] >= 0}
         self._lbl = {m[n]: v for n, v in self._lbl.items() if m[n] >= 0}
         self._fired = {(r, m[n]) for r, n in self._fired if m[n] >= 0}
+        self._untrusted_files = {k: m[n] for k, n in self._untrusted_files.items() if m[n] >= 0}
         if "_net_nodes" in self.__dict__:
             self._net_nodes = {m[n] for n in self._net_nodes if m[n] >= 0}
 
@@ -389,6 +506,17 @@ class TagEngine:
             elif e == CLONE:                                # parent process -> child process
                 a, c = self._tag(reg, s), self._tag(reg, d)
                 self.parent_exe[d] = self._label(reg, s)
+                if self.image_exec and not c.exec and self._untrusted_files:
+                    fid = self._untrusted_files.get(canonical_path(self._label(reg, d)))
+                    if fid is not None:
+                        f = self._tag(reg, fid)
+                        prog = self._label(reg, d)
+                        if f.data < U:
+                            self._check(out, "untrusted_exec", prog, f.data, (d, fid), now,
+                                        f"starts {prog}, whose content came from untrusted {self._why(reg, f)}")
+                        c.code, c.exec = min(c.code, f.data), True
+                        if f.data < 1.0:
+                            c.origin = f.origin
                 inherit = min(a.code, self._data(a, now))
                 self._lower(c, inherit, a.origin, now)
                 if a.conf > c.conf:
@@ -406,10 +534,12 @@ class TagEngine:
                 v = min(q.code, self._data(q, now))
                 path = self._label(reg, d)
                 if v < U and path.startswith("/") and (reg.gid(d) < self.n_pre if self.first_day is None else self.first_day.get(d, self.cur_day) < self.cur_day):
-                    self._check(out, "tainted_modify", f"{self._label(reg, s)} @ {dir_key(path)}", v, (s, d), now,
+                    self._check(out, "tainted_modify", f"{self._label(reg, s)} @ {dir_key(canonical_path(path) if self.full_paths else path)}", v, (s, d), now,
                                 f"{self._label(reg, s)} with untrusted input from {self._why(reg, q)} modifies {path}")
                 if v < f.data:
                     f.data, f.origin = v, (q.origin if v < 1.0 else f.origin)
+                if self.image_exec and f.data < U and path not in ("None", ""):
+                    self._untrusted_files[canonical_path(path)] = d
                 c = q.conf - p.conf_attenuation
                 if c > f.conf:
                     f.conf = c
@@ -442,6 +572,7 @@ class TagEngine:
 # received untrusted data, so their hits are evidence - the node alerts only when the learned score agrees.
 # Revision after the first DARPA E3 evaluation (docs/DETECTION_LAYERS.md, "pre-registered vs revised").
 EVIDENCE_RULES = ("tainted_modify", "tainted_spawn")
+ALWAYS_EVIDENCE = ("novel_executable_repeat",)      # by definition: the program's first runs already alerted
 
 
 @dataclass
@@ -450,6 +581,13 @@ class LayerConfig:
     rules: bool = True
     tags: TagParams = field(default_factory=TagParams)
     evidence_rules: tuple = EVIDENCE_RULES
+    # 0.4 (docs/DETECTION_LAYERS.md, "0.4"). Defaults for new fits; a layers.json fitted by 0.3 lacks the keys and
+    # keeps the 0.3 behaviour until it is re-fitted (tools.add_layers), since keys and thresholds depend on them.
+    normalize_programs: bool = True    # layer 1 compares programs by program_key
+    novel_instances: int = 1           # > 0: per new program and day, only the first N processes alert
+    full_paths: bool = True            # Windows path handling (programs with spaces, folders, credential stores)
+    image_exec: bool = True            # a process started from an untrusted written file = untrusted exec
+    local_multicast: bool = True       # multicast / broadcast addresses are local, not untrusted sources
 
 
 class DeterministicLayers:
@@ -460,9 +598,14 @@ class DeterministicLayers:
     def __init__(self, spec: dict, n_preexisting: int, approved: set[str] | None = None):
         self.spec = spec
         cfg = spec.get("config", {})
-        self.novelty = NoveltyLayer(set(spec["known_executables"]), approved) if cfg.get("novelty", True) else None
-        self.tags = TagEngine(TagParams(**cfg.get("tags", {})), set(spec.get("trusted_ips", [])), spec.get("thresholds", {}),
-                              n_preexisting, private_services=set(spec.get("private_services", []))) if cfg.get("rules", True) else None
+        self.novelty = (NoveltyLayer(set(spec["known_executables"]), approved, normalize=cfg.get("normalize_programs", False),
+                                     instances=cfg.get("novel_instances", 0), full_paths=cfg.get("full_paths", False))
+                        if cfg.get("novelty", True) else None)
+        self.tags = (TagEngine(TagParams(**cfg.get("tags", {})), set(spec.get("trusted_ips", [])), spec.get("thresholds", {}),
+                               n_preexisting, private_services=set(spec.get("private_services", [])),
+                               full_paths=cfg.get("full_paths", False), image_exec=cfg.get("image_exec", False),
+                               local_multicast=cfg.get("local_multicast", False))
+                     if cfg.get("rules", True) else None)
 
     @classmethod
     def load(cls, bundle_dir: str, n_preexisting: int, approved: set[str] | None = None) -> "DeterministicLayers | None":
@@ -503,8 +646,8 @@ class DeterministicLayers:
         if self.tags is not None:
             hits += self.tags.process(w, reg)
         sup = getattr(self, "suppressed", None)
-        if sup:
-            hits = [h for h in hits if (h.rule, h.key) not in sup]
+        if sup:   # a suppressed new program covers its repeat runs too
+            hits = [h for h in hits if (h.rule.replace("novel_executable_repeat", "novel_executable"), h.key) not in sup]
         return hits
 
 
@@ -516,7 +659,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
     hindsight (every baseline address is trusted by construction otherwise, and no benign alarm is ever observed).
     The calibration replay is therefore leave-one-day-out: an address is trusted on a day only if it also occurs
     on another baseline day, and a file counts as pre-existing only if it was seen on an earlier day."""
-    known = NoveltyLayer.fit((store.windows(d) for d in days), reg)
+    known = NoveltyLayer.fit((store.windows(d) for d in days), reg, cfg.full_paths)
     ip_days: dict[str, set[int]] = defaultdict(set)
     first_day: dict[int, int] = {}
     for k, d in enumerate(days):
@@ -528,7 +671,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
             e = reg.entities[n]
             if e.ntype == "netflow":
                 ip = remote_ip(e.label)
-                if not is_local(ip):
+                if not is_local(ip, cfg.local_multicast):
                     ip_days[ip].add(k)
     ips = set(ip_days)
     recurring = {ip for ip, ds in ip_days.items() if len(ds) >= 2}
@@ -541,9 +684,10 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
             for s_, d_ in zip(w.src[m].tolist(), w.dst[m].tolist()):
                 e = reg.entities[d_]
                 if e.ntype == "netflow" and is_private(remote_ip(e.label)) and reg.entities[s_].ntype == "subject":
-                    svc_days[f"{executable(reg.entities[s_].label)}|{remote_port(e.label)}"].add(k)
+                    svc_days[f"{executable(reg.entities[s_].label, cfg.full_paths)}|{remote_port(e.label)}"].add(k)
     private_services = sorted(k for k, ds in svc_days.items() if len(ds) >= 2 or len(days) == 1)
-    eng = TagEngine(cfg.tags, recurring, None, n_preexisting, fit=True, private_services=set(private_services))
+    eng = TagEngine(cfg.tags, recurring, None, n_preexisting, fit=True, private_services=set(private_services), full_paths=cfg.full_paths,
+                    image_exec=cfg.image_exec, local_multicast=cfg.local_multicast)
     eng.first_day = first_day
     for k, d in enumerate(days):
         eng.cur_day = k
@@ -552,7 +696,10 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
     thr = eng.thresholds()
     log(f"layers: {len(known)} known executables, {len(ips)} baseline remote addresses ({len(recurring)} recurring), "
         f"benign alarm keys " + (", ".join(f"{r}={len(v)}" for r, v in sorted(thr.items())) or "none"))
-    return {"version": 1, "config": {"novelty": cfg.novelty, "rules": cfg.rules, "tags": asdict(cfg.tags), "evidence_rules": list(cfg.evidence_rules)},
+    return {"version": 1, "config": {"novelty": cfg.novelty, "rules": cfg.rules, "tags": asdict(cfg.tags), "evidence_rules": list(cfg.evidence_rules),
+                                     "normalize_programs": cfg.normalize_programs, "novel_instances": cfg.novel_instances,
+                                     "full_paths": cfg.full_paths, "image_exec": cfg.image_exec,
+                                     "local_multicast": cfg.local_multicast},
             "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(ips), "thresholds": thr,
             "private_services": private_services,
             "benign_alarm_events": dict(eng.benign_count)}

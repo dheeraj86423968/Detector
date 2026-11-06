@@ -161,6 +161,104 @@ check("exfiltration" in leak("new", "curl"), "another program to that address st
 L3 = DeterministicLayers(sp, len(r3))
 check("exfiltration" in leak("pub"), "public addresses are never covered")
 
+# ---------------------------------------------------------------- 0.4: program identity, Windows paths, multicast
+from pdp_engine.layers import canonical_path, is_local, program_key, program_name
+check(program_key("/Device/HarddiskVolume1/Windows/system32/PING.EXE") == program_key("C:\\Windows\\System32\\ping.exe") == "/windows/system32/ping.exe",
+      "program_key: NT / drive form and letter case are one program")
+check(program_key("/Device/HarddiskVolume1/Users/u/AppData/Local/Temp/6AF1D27F-4E9B-4CC9-893B-A94562310056/dismhost.exe")
+      == program_key("/??/C:/Users/U/AppData/Local/Temp/DFA4EC0F-A962-458E-AEA8-7816754774A9/dismhost.exe") == "/users/u/appdata/local/temp/{id}/dismhost.exe",
+      "program_key: per-run GUID directories")
+check(program_key("C:/Windows/Microsoft.NET/Framework64/v4.0.30319/csc.exe") == "/windows/microsoft.net/framework64/{v}/csc.exe"
+      and program_key("/opt/app/1.2.3/bin/app") == "/opt/app/{v}/bin/app", "program_key: version directories")
+check(program_key("/usr/bin/python3") == "/usr/bin/python3" and program_key("/tmp/x/1.2") == "/tmp/x/1.2", "program_key: plain paths and file names unchanged")
+check(program_name(program_key("C:/Windows/System32/taskkill.exe")) == "taskkill", "program_name: bare name without .exe")
+pf = 'subject /Device/HarddiskVolume1/Program Files (x86)/Google/Update/GoogleUpdate.exe "C:/Program Files (x86)/Google/Update/GoogleUpdate.exe" /svc'
+check(executable(pf, True) == "/Device/HarddiskVolume1/Program Files (x86)/Google/Update/GoogleUpdate.exe" and executable(pf) == "/Device/HarddiskVolume1/Program",
+      "executable(full_paths): a Windows path with spaces is read in full (0.3 cut it at the first space)")
+check(executable("subject /Device/HarddiskVolume1/Program Files/Adobe/Reader 9.0/Reader/AcroRd32.exe None", True).endswith("Reader 9.0/Reader/AcroRd32.exe"),
+      "executable(full_paths): several spaces")
+check(executable("subject /usr/bin/python3 python3 -m x", True) == "/usr/bin/python3" and executable("subject None links http://x", True) == "links",
+      "executable(full_paths): Linux paths and path-less names unchanged")
+check(canonical_path("/Device/HarddiskVolume1/Users/X/f.txt") == canonical_path("C:\\Users\\x\\F.TXT") == "/users/x/f.txt"
+      and canonical_path("/home/A/f") == "/home/A/f", "canonical_path: Windows spellings unified, Linux paths unchanged")
+check(dir_key(canonical_path("/Device/HarddiskVolume1/Windows/System32/drivers/x.sys")) == "/windows/system32",
+      "dir_key on canonical Windows paths: the real folders, not '/Device/HarddiskVolume1'")
+check(not is_local("ff02::1:ffdb:8ae2") and not is_local("224.0.0.252") and is_local("ff02::1:ffdb:8ae2", True)
+      and is_local("224.0.0.252", True) and is_local("255.255.255.255", True) and not is_local("8.8.8.8", True),
+      "is_local(multicast=True): multicast and limited broadcast are local traffic, public addresses are not")
+
+# ---------------------------------------------------------------- 0.4: layer-1 program matching and repeat runs
+rw = Registry()
+K = {k: rw.add(e) for k, e in [
+    ("ping", Entity.process("w:ping", "/Device/HarddiskVolume1/Windows/system32/PING.EXE", None)),
+    ("dism", Entity.process("w:dism", "/Device/HarddiskVolume1/Windows/TEMP/4B6DC4D2-FC04-4FC2-B07D-0E9C719B7024/dismhost.exe", None)),
+    ("tk", Entity.process("w:tk", None, "taskkill /f /im x.exe")),
+    ("pf", Entity.process("w:pf", "/Device/HarddiskVolume1/Program Files/NewVendor/tool.exe", None)),
+    ("n1", Entity.process("w:n1", "/Device/HarddiskVolume1/Users/u/new.exe", None)),
+    ("n2", Entity.process("w:n2", "/Device/HarddiskVolume1/Users/u/new.exe", None)),
+    ("n3", Entity.process("w:n3", "/Device/HarddiskVolume1/Users/u/NEW.exe", None)),
+    ("n4", Entity.process("w:n4", "/Device/HarddiskVolume1/Users/u/new.exe", None)),
+    ("f", Entity.file("w:f", "/Device/HarddiskVolume1/x"))]}
+known = {"C:/Windows/System32/ping.exe", "/Device/HarddiskVolume1/Windows/TEMP/AFF50783-6B63-4309-8613-21C87FD93118/dismhost.exe",
+         "/Device/HarddiskVolume1/Windows/system32/taskkill.exe", "/Device/HarddiskVolume1/Program Files/OldVendor/app.exe"}
+wk = win([(K["f"], "READ", K[k]) for k in ("ping", "dism", "tk", "pf")])
+got03 = {h.key for h in NoveltyLayer(known).process(wk, rw, wk.nodes())}
+got04 = {h.key for h in NoveltyLayer(known, normalize=True, full_paths=True).process(wk, rw, wk.nodes())}
+check(got03 >= {"/Device/HarddiskVolume1/Windows/system32/PING.EXE", "taskkill"}, f"0.3: other spellings of known programs alert ({sorted(got03)})")
+check(got04 == {"/Device/HarddiskVolume1/Program Files/NewVendor/tool.exe"},
+      f"0.4: case, GUID directory and path-less name match known programs; a new Program Files program alerts ({sorted(got04)})")
+D = 86_400 * 10**9
+nv = NoveltyLayer(set(), normalize=True, instances=1)
+w1 = win([(K["f"], "READ", K["n1"], 1), (K["f"], "READ", K["n2"], 2), (K["f"], "READ", K["n3"], 3)])
+hr = nv.process(w1, rw, w1.nodes())
+check([h.rule for h in hr] == ["novel_executable", "novel_executable_repeat", "novel_executable_repeat"],
+      f"novel_instances=1: one alert per new program and day, later runs (any spelling) are repeats ({[h.rule for h in hr]})")
+w2 = win([(K["f"], "READ", K["n4"], D + 5)])
+check([h.rule for h in nv.process(w2, rw, w2.nodes())] == ["novel_executable"], "... and the program alerts again the next day")
+check(len(NoveltyLayer(set()).process(w1, rw, w1.nodes())) == 3 and all(h.rule == "novel_executable" for h in NoveltyLayer(set()).process(w1, rw, w1.nodes())),
+      "0.3 behaviour (instances=0): every process alerts")
+check(NoveltyLayer(set(), approved={"C:/Users/U/new.exe"}, normalize=True).process(w1, rw, w1.nodes()) == [],
+      "an approved program covers every spelling of it")
+dls = DeterministicLayers({"known_executables": [], "trusted_ips": [], "thresholds": {}, "config": {"normalize_programs": True, "novel_instances": 1}}, 0)
+dls.set_allowlist(suppressed=[("novel_executable", "/Device/HarddiskVolume1/Users/u/new.exe")])
+check([h.key for h in dls.process(w1, rw, w1.nodes())] == ["/Device/HarddiskVolume1/Users/u/NEW.exe"],
+      "a suppressed new program also suppresses its repeat runs (other spellings keep their own key)")
+
+# ---------------------------------------------------------------- 0.4: Windows-layout data flow (no EXECUTE events)
+rv = Registry()
+V = {k: rv.add(e) for k, e in [
+    ("c2", Entity.socket("v:c2", "203.0.113.50", 443)), ("mc", Entity.socket("v:mc", "ff02::1:ffdb:8ae2", 0)),
+    ("browser", Entity.process("v:br", "/Device/HarddiskVolume1/Program Files/Mozilla Firefox/firefox.exe", None)),
+    ("explorer", Entity.process("v:ex", "/Device/HarddiskVolume1/Windows/explorer.exe", None)),
+    ("svc", Entity.process("v:svc", "/Device/HarddiskVolume1/Windows/System32/svchost.exe", None)),
+    ("cfg", Entity.file("v:cfg", "/Device/HarddiskVolume1/Windows/System32/config.dat")),
+    ("cred", Entity.file("v:cred", "/Device/HarddiskVolume1/Users/u/AppData/Roaming/Microsoft/Credentials/DFBE70A7E5CC19A3")),
+    ("dl", Entity.file("v:dl", "/Device/HarddiskVolume1/Users/u/Downloads/invoice.exe")),
+    ("implant", Entity.process("v:im", "/Device/HarddiskVolume1/Users/u/Downloads/invoice.exe", None))]}
+NPV = V["dl"]      # files registered before the download existed in the baseline
+drop = [(V["c2"], "RECVMSG", V["browser"]), (V["browser"], "WRITE", V["dl"]), (V["explorer"], "CLONE", V["implant"]),
+        (V["implant"], "CONNECT", V["c2"])]
+te04 = lambda **kw: TagEngine(TagParams(), set(), {}, NPV, full_paths=True, **kw)
+r_img = {h.rule for h in te04(image_exec=True).process(win(drop), rv)}
+r_noimg = {h.rule for h in te04().process(win(drop), rv)}
+check({"untrusted_exec", "untrusted_code_network"} <= r_img and not ({"untrusted_exec", "untrusted_code_network"} & r_noimg),
+      f"image_exec: starting a downloaded program counts as executing it (with {sorted(r_img)}, without {sorted(r_noimg)})")
+mcast = [(V["mc"], "RECVMSG", V["svc"]), (V["svc"], "WRITE", V["cfg"])]
+check([h.rule for h in te04().process(win(mcast), rv)] == ["tainted_modify"] and te04(local_multicast=True).process(win(mcast), rv) == [],
+      "local_multicast: a process receiving IPv6 neighbour-discovery multicast is not tainted (0.3 flagged its writes)")
+cred = [(V["cred"], "READ", V["explorer"]), (V["explorer"], "CONNECT", V["c2"])]
+check([h.rule for h in te04().process(win(cred), rv)] == ["exfiltration"]
+      and TagEngine(TagParams(), set(), {}, NPV).process(win(cred), rv) == [],
+      "full_paths: Windows credential stores are sensitive (exfiltration), 0.3 knew only Linux stores")
+tm = [h for h in te04().process(win([(V["c2"], "RECVMSG", V["svc"]), (V["svc"], "WRITE", V["cfg"])]), rv) if h.rule == "tainted_modify"]
+check(tm and tm[0].key.endswith("@ /windows/system32"), f"full_paths: tainted_modify keys use the real folder ({tm[0].key if tm else None})")
+sp04 = fit_layers(Store({"d1": [win([(V["c2"], "RECVMSG", V["svc"])])]}), ["d1"], rv, NPV, log=lambda m: None)
+check(all(sp04["config"].get(k) for k in ("normalize_programs", "full_paths", "image_exec", "local_multicast")) and sp04["config"]["novel_instances"] == 1,
+      "new fits record the 0.4 settings in layers.json")
+old = DeterministicLayers({"known_executables": [], "trusted_ips": [], "thresholds": {}, "config": {}}, NPV)
+check(not old.novelty.normalize and old.novelty.instances == 0 and not old.tags.full_paths and not old.tags.image_exec and not old.tags.local_multicast,
+      "a layers.json fitted by 0.3 (no 0.4 keys) keeps the 0.3 behaviour until re-fitted")
+
 # ---------------------------------------------------------------- runtime alert policy (budget, corroboration)
 try:
     from pdp_engine.runtime import AlertPolicy  # noqa: F401
@@ -208,6 +306,24 @@ else:
           "alert_layers with every layer = the full policy")
     _, r_pre, _ = AlertPolicy(DeterministicLayers(bare, N_PRE), 0, 0.5, evidence_rules=()).apply(wl, reg, il, lo)
     check(r_pre.get(I["shproc"], [{}])[0].get("layer") == "rules", "pre-registered policy (no evidence rules): the rule alerts on its own")
+    # 0.4: repeat runs of a new program are evidence; triage severity; forward-only corroboration
+    from pdp_engine.runtime import alert_tier
+    pr = AlertPolicy(DeterministicLayers({"known_executables": [], "trusted_ips": [], "thresholds": {},
+                                          "config": {"normalize_programs": True, "novel_instances": 1}}, 0), 0, 0.5, evidence_rules=())
+    il1 = w1.nodes(); _, r_rep, _ = pr.apply(w1, rw, il1, np.zeros(len(il1)))
+    check(sorted(r_rep) == [K["n1"]], "novel_executable_repeat is evidence even with no evidence rules configured")
+    R = lambda layer, rule: {"layer": layer, "rule": rule}
+    check(alert_tier([R("rules", "exfiltration")]) == 4 and alert_tier([R("rules", "untrusted_code_network")]) == 4
+          and alert_tier([R("rules", "untrusted_exec")]) == 3 and alert_tier([R("novelty", "novel_executable"), R("rules", "tainted_spawn")]) == 3
+          and alert_tier([R("novelty", "novel_executable")]) == 2 and alert_tier([R("corroborated", "learned_near_alert")]) == 2
+          and alert_tier([R("learned", "learned_score")]) == 1 and alert_tier([]) == 0,
+          "alert_tier grades nodes like the console grades incidents (critical > high > medium > low)")
+    wf = win([(I["shadow"], "READ", I["cat"]), (I["cat"], "CONNECT", I["attacker"]), (I["client"], "RECVFROM", I["cat"])])
+    fi = wf.nodes(); hi_all = np.full(len(fi), 0.9)
+    pw = AlertPolicy(DeterministicLayers(bare, N_PRE), 0, 0.5); pf_ = AlertPolicy(DeterministicLayers(bare, N_PRE), 0, 0.5); pf_.corroboration_scope = "forward"
+    rw_, rf_ = pw.apply(wf, reg, fi, hi_all)[1], pf_.apply(wf, reg, fi, hi_all)[1]
+    check(I["shadow"] in rw_ and I["client"] in rw_ and I["shadow"] not in rf_ and I["client"] not in rf_,
+          "corroboration_scope=forward: only what the alerted process affected, not what flowed into it")
 
 # ---------------------------------------------------------------- detector-1 structural input
 try:

@@ -29,7 +29,7 @@ KINDS = ("program", "address", "detection")
 RULE_TEXT = {"novel_executable": "New program", "untrusted_exec": "Executes a downloaded file",
              "untrusted_code_network": "Downloaded program contacts an untrusted address",
              "exfiltration": "Sensitive data sent to an untrusted address", "tainted_modify": "Untrusted modification of a file",
-             "tainted_spawn": "Untrusted data starts a program",
+             "tainted_spawn": "Untrusted data starts a program", "novel_executable_repeat": "New program (another run)",
              "learned": "Unusual behaviour (or related activity) of a program"}
 
 

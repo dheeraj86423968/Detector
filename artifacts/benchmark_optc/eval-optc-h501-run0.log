@@ -1,0 +1,198 @@
+20:40:30 bundle b647f096-fd1c-430c-913d-4df75363d151: re-scored 247 test windows, 1488735 test nodes; layered alerts novelty=71, rules=22, corroborated=117, learned=10
+20:40:42 {"bundle": "b647f096-fd1c-430c-913d-4df75363d151", "train": {"mode": "mean", "weights": [0.2, 0.2, 0.2, 0.2, 0.2], "val_loss": [0.5436133282744527, 0.5386224391636374, 0.5420763048489107, 0.53804695658055, 0.5362045942977002]}, "test_nodes": 1488735, "gt_nodes_in_test": 749, "fused (learned ranker)": {"TP": 0, "FP": 10, "FN": 749, "TN": 1487976, "precision": 0.0, "recall": 0.0, "MCC": -0.0, "attacks_detected": "0/1", "ADP": 0.021}, "detector-1 alone": {"TP": 0, "FP": 0, "FN": 749, "TN": 1487986, "precision": 0.0, "recall": 0.0, "MCC": 0.0, "attacks_detected": "0/1", "ADP": 0.015}, "detector-2 alone": {"TP": 0, "FP": 0, "FN": 749, "TN": 1487986, "precision": 0.0, "recall": 0.0, "MCC": 0.0, "attacks_detected": "0/1", "ADP": 0.1}, "either detector (post-hoc)": {"TP": 0, "FP": 0, "FN": 749, "TN": 1487986, "precision": 0.0, "recall": 0.0, "MCC": 0.0, "attacks_detected": "0/1", "ADP": 0.026}, "both detectors (post-hoc)": {"TP": 0, "FP": 0, "FN": 749, "TN": 1487986, "precision": 0.0, "recall": 0.0, "MCC": 0.0, "attacks_detected": "0/1", "ADP": 0.04}, "layer 1: novelty": {"TP": 7, "FP": 64, "FN": 742, "TN": 1487922, "precision": 0.099, "recall": 0.009, "MCC": 0.03, "attacks_detected": "1/1"}, "layer 2: rules": {"TP": 9, "FP": 13, "FN": 740, "TN": 1487973, "precision": 0.409, "recall": 0.012, "MCC": 0.07, "attacks_detected": "1/1"}, "layers 1+2 (deterministic)": {"TP": 13, "FP": 76, "FN": 736, "TN": 1487910, "precision": 0.146, "recall": 0.017, "MCC": 0.05, "attacks_detected": "1/1"}, "layer 3 alone (budgeted)": {"TP": 7, "FP": 120, "FN": 742, "TN": 1487866, "precision": 0.055, "recall": 0.009, "MCC": 0.022, "attacks_detected": "1/1"}, "layered product": {"TP": 19, "FP": 195, "FN": 730, "TN": 1487791, "precision": 0.089, "recall": 0.025, "MCC": 0.047, "attacks_detected": "1/1", "ADP": 0.4, "by_layer": {"novelty": {"alerts": 71, "TP": 7}, "rules": {"alerts": 22, "TP": 9}, "corroborated": {"alerts": 117, "TP": 7}, "learned": {"alerts": 10, "TP": 0}}}, "layer 2: rules (pre-registered: all rules alarm)": {"TP": 15, "FP": 133, "FN": 734, "TN": 1487853, "precision": 0.101, "recall": 0.02, "MCC": 0.045, "attacks_detected": "1/1"}, "layered product (pre-registered policy)": {"TP": 23, "FP": 461, "FN": 726, "TN": 1487525, "precision": 0.048, "recall": 0.031, "MCC": 0.038, "attacks_detected": "1/1", "ADP": 0.262}, "reported alerts (agent)": {"TP": 18, "FP": 196, "FN": 731, "TN": 1487790, "precision": 0.084, "recall": 0.024, "MCC": 0.045, "attacks_detected": "1/1", "alerted_nodes_outside_rescored_set": 0}}
+{
+ "endpoint": "18978a51-ac8f-4afd-8f7a-c3003fa744c2",
+ "dataset": "OPTC_H501",
+ "test_days": [
+  "2019-09-23",
+  "2019-09-24",
+  "2019-09-25"
+ ],
+ "gt_nodes_total": 749,
+ "agent_windows": {
+  "n": 0,
+  "alerts": 0
+ },
+ "agent_scoring_bundle": "b647f096-fd1c-430c-913d-4df75363d151",
+ "agent_scoring_bundle_source": "inferred: newest bundle before the first test-day alert",
+ "runs": [
+  {
+   "bundle": "b647f096-fd1c-430c-913d-4df75363d151",
+   "train": {
+    "mode": "mean",
+    "weights": [
+     0.2,
+     0.2,
+     0.2,
+     0.2,
+     0.2
+    ],
+    "val_loss": [
+     0.5436133282744527,
+     0.5386224391636374,
+     0.5420763048489107,
+     0.53804695658055,
+     0.5362045942977002
+    ]
+   },
+   "test_nodes": 1488735,
+   "gt_nodes_in_test": 749,
+   "fused (learned ranker)": {
+    "TP": 0,
+    "FP": 10,
+    "FN": 749,
+    "TN": 1487976,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": -0.0,
+    "attacks_detected": "0/1",
+    "ADP": 0.021
+   },
+   "detector-1 alone": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 749,
+    "TN": 1487986,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/1",
+    "ADP": 0.015
+   },
+   "detector-2 alone": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 749,
+    "TN": 1487986,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/1",
+    "ADP": 0.1
+   },
+   "either detector (post-hoc)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 749,
+    "TN": 1487986,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/1",
+    "ADP": 0.026
+   },
+   "both detectors (post-hoc)": {
+    "TP": 0,
+    "FP": 0,
+    "FN": 749,
+    "TN": 1487986,
+    "precision": 0.0,
+    "recall": 0.0,
+    "MCC": 0.0,
+    "attacks_detected": "0/1",
+    "ADP": 0.04
+   },
+   "layer 1: novelty": {
+    "TP": 7,
+    "FP": 64,
+    "FN": 742,
+    "TN": 1487922,
+    "precision": 0.099,
+    "recall": 0.009,
+    "MCC": 0.03,
+    "attacks_detected": "1/1"
+   },
+   "layer 2: rules": {
+    "TP": 9,
+    "FP": 13,
+    "FN": 740,
+    "TN": 1487973,
+    "precision": 0.409,
+    "recall": 0.012,
+    "MCC": 0.07,
+    "attacks_detected": "1/1"
+   },
+   "layers 1+2 (deterministic)": {
+    "TP": 13,
+    "FP": 76,
+    "FN": 736,
+    "TN": 1487910,
+    "precision": 0.146,
+    "recall": 0.017,
+    "MCC": 0.05,
+    "attacks_detected": "1/1"
+   },
+   "layer 3 alone (budgeted)": {
+    "TP": 7,
+    "FP": 120,
+    "FN": 742,
+    "TN": 1487866,
+    "precision": 0.055,
+    "recall": 0.009,
+    "MCC": 0.022,
+    "attacks_detected": "1/1"
+   },
+   "layered product": {
+    "TP": 19,
+    "FP": 195,
+    "FN": 730,
+    "TN": 1487791,
+    "precision": 0.089,
+    "recall": 0.025,
+    "MCC": 0.047,
+    "attacks_detected": "1/1",
+    "ADP": 0.4,
+    "by_layer": {
+     "novelty": {
+      "alerts": 71,
+      "TP": 7
+     },
+     "rules": {
+      "alerts": 22,
+      "TP": 9
+     },
+     "corroborated": {
+      "alerts": 117,
+      "TP": 7
+     },
+     "learned": {
+      "alerts": 10,
+      "TP": 0
+     }
+    }
+   },
+   "layer 2: rules (pre-registered: all rules alarm)": {
+    "TP": 15,
+    "FP": 133,
+    "FN": 734,
+    "TN": 1487853,
+    "precision": 0.101,
+    "recall": 0.02,
+    "MCC": 0.045,
+    "attacks_detected": "1/1"
+   },
+   "layered product (pre-registered policy)": {
+    "TP": 23,
+    "FP": 461,
+    "FN": 726,
+    "TN": 1487525,
+    "precision": 0.048,
+    "recall": 0.031,
+    "MCC": 0.038,
+    "attacks_detected": "1/1",
+    "ADP": 0.262
+   },
+   "reported alerts (agent)": {
+    "TP": 18,
+    "FP": 196,
+    "FN": 731,
+    "TN": 1487790,
+    "precision": 0.084,
+    "recall": 0.024,
+    "MCC": 0.045,
+    "attacks_detected": "1/1",
+    "alerted_nodes_outside_rescored_set": 0
+   }
+  }
+ ]
+}

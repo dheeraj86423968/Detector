@@ -34,7 +34,7 @@ from .config import Config
 from .state import State, disk_full
 from .transport import Transport, TransportError
 
-VERSION = "0.3.22"
+VERSION = "0.4.0"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 
 
@@ -538,7 +538,7 @@ class Agent:
         restored = self._restore_seen(carried)
         if restored:
             log(f"entity ages restored for {restored} of {len(self.reg)} entities")
-        self.runtime.set_learned_alerts(bool(cfg.get("learned_alerts", True)))
+        self.runtime.set_learned_alerts(bool(cfg.get("learned_alerts", self.runtime.default_learned_alerts)))
         wns = int(self.runtime.m.get("window_ns") or 0)
         if wns and wns != self.builder.window_ns and not self.builder.pending:   # windows as long as the bundle was trained on
             self.builder.window_ns = wns
@@ -583,7 +583,7 @@ class Agent:
             if getattr(self, "_allow", None) is not None:
                 log(f"allow list updated ({len(allow[0])} addresses, {len(allow[1])} detections)")
             self._allow = allow
-        la = bool(cfg.get("learned_alerts", True))
+        la = bool(cfg.get("learned_alerts", self.runtime.default_learned_alerts))
         if self.runtime.policy is not None and la != self.runtime.policy.learned_alerts:
             self.runtime.set_learned_alerts(la)
             log(f"learned-layer alerts {'on' if la else 'off (ranking only)'}")

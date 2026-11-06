@@ -762,12 +762,15 @@ def endpoint_detail(endpoint_id: str, s=Depends(session)):
             raise HTTPException(404)
         jobs = db.q(c, "SELECT id, kind, state, params, progress, error, created_at, finished_at FROM jobs WHERE endpoint_id=%s ORDER BY created_at DESC LIMIT 20", (endpoint_id,))
         days = db.q(c, "SELECT date, events, windows, complete FROM baseline_days WHERE endpoint_id=%s ORDER BY date", (endpoint_id,))
+        pol = db.q(c, "SELECT manifest->'learned_policy' AS p FROM bundles WHERE id=%s", (ep["current_bundle"],), one=True) if ep["current_bundle"] else None
     from .allowlist import effective_config
     with db.conn() as c:
         ep = dict(ep, config=effective_config(c, endpoint_id, ep["config"]))
     return {"ok": True, "endpoint": _ep_out(ep),
             "jobs": [dict(j, id=str(j["id"])) for j in jobs], "baseline_days": [dict(d, date=str(d["date"])) for d in days],
-            "timeline": endpoint_timeline(endpoint_id)}
+            "timeline": endpoint_timeline(endpoint_id),
+            # what the agent does when the endpoint has no learned_alerts setting (the current bundle's policy)
+            "learned_alerts_default": bool(((pol or {}).get("p") or {}).get("learned_alerts", True))}
 
 
 class ConfigPatch(BaseModel):

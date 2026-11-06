@@ -1,0 +1,99 @@
+{
+ "v03": {},
+ "v03+tier": {
+  "rank": "tier"
+ },
+ "norm": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true
+  },
+  "rank": "tier"
+ },
+ "norm+rep1": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1
+  },
+  "rank": "tier"
+ },
+ "L=norm+rep1+img": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true
+  },
+  "rank": "tier"
+ },
+ "L+fwd": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true
+  },
+  "policy": {
+   "corroboration_scope": "forward"
+  },
+  "rank": "tier"
+ },
+ "L+thr": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true
+  },
+  "policy": {
+   "corroboration": "threshold"
+  },
+  "rank": "tier"
+ },
+ "L+rank_only": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "L+rank_only/r2": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "image_exec": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier",
+  "tiebreak": "r2"
+ },
+ "L(rep3)+rank_only": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 3,
+   "image_exec": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ }
+}

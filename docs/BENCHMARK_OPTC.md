@@ -194,8 +194,9 @@ Reading it honestly:
   minimum (0.50) is far above theirs (0.06-0.11).
 * **H201 and H501: more false alarms than the published systems.** Precision 0.02 and 0.08 against published means
   of 0.11-0.38. Mean ADP is below the best published systems (0.73 vs Velox 0.90 and Kairos 0.75 on H201; 0.37
-  vs Velox 0.39 on H501), above Orthrus on both. Most of H201's false alarms come from the novelty layer flagging Windows
-  pseudo-processes (`MemCompression`, `Idle`): a Windows allow-list would remove about 270 of its ~350.
+  vs Velox 0.39 on H501), above Orthrus on both. Most of H201's false alarms come from the novelty layer: 251 of its
+  270 novelty alerts are one new program, `PING.EXE`, run 251 times (an earlier version of this note blamed Windows
+  pseudo-processes such as `MemCompression`; that was wrong, they are 2 of the 270). Fixed in 0.4, below.
 * **The learned detectors alone are below the published Velox and Orthrus** on all three hosts (they find the
   attack in 3 of 30 detector-runs; ADP means 0.02-0.26 against 0.25-0.90). Differences from PIDSMaker: one shared
   256-d word2vec instead of per-system featurisation, the product's 15-minute windows and its seed ensembles, the
@@ -217,3 +218,36 @@ Reading it honestly:
   retention pass removed them. Retention now counts from when the server received them; `darpa_eval` infers the
   scoring bundle from the first test-day alert when the window records are missing (all three hosts here; every
   host had a single bundle, so the inference is exact).
+
+## 0.4 (2026-11-06; docs/DETECTION_LAYERS.md "0.4")
+
+Same 5 trained bundles per host as above; layers re-fitted with the 0.4 settings (`tools.add_layers`), learned
+detectors unchanged. **H201 was a development set; H501 and H051 were held out**: the 0.4 configuration was frozen
+on CADETS, THEIA and H201 and then run once on H501 / H051 (their 0.3 numbers above were known beforehand). Raw
+JSON: `artifacts/benchmark_optc/eval-optc-*-v04.json`.
+
+| host | version | ADP mean / min / max | MCC | precision | recall | TP / FP (mean) | attack found |
+|---|---|---|---|---|---|---|---|
+| H201 (dev) | 0.3 | 0.73 / 0.67 / 1.00 | 0.008 | 0.025 | 0.003 | 9 / 349 | 5/5 runs |
+| | **0.4** | **0.80 / 0.75 / 1.00** | **0.023** | **0.250** | 0.002 | 6 / **18** | 5/5 runs |
+| H501 (held out) | 0.3 | 0.37 / 0.25 / 0.45 | 0.044 | 0.081 | 0.024 | 18 / 208 | 5/5 runs |
+| | **0.4** | **0.61 / 0.57 / 0.62** | **0.047** | **0.167** | 0.013 | 10 / **50** | 5/5 runs |
+| H051 (held out) | 0.3 | 0.59 / 0.50 / 0.88 | 0.485 | 0.346 | 0.680 | 78 / 147 | 5/5 runs |
+| | **0.4** | **0.86 / 0.78 / 0.93** | **0.610** | **0.590** | 0.632 | 72 / **50** | 5/5 runs |
+
+Against Bilot et al. Table 6 (means; precision range of the published systems in brackets):
+
+* **H051: best ADP and precision** - 0.86 vs Orthrus 0.68 / Velox 0.57 / Kairos 0.50; worst run 0.78 vs their
+  0.06-0.11; precision 0.59 (0.08-0.14).
+* **H501: best ADP and precision** - 0.61 vs Velox 0.39 / Orthrus 0.25; worst run 0.57 vs 0.14-0.20; precision 0.17
+  (0.11-0.13).
+* **H201: still below Velox on ADP** (0.80 vs 0.90; Kairos 0.75, Orthrus 0.48), precision 0.25 now inside the published
+  range (0.14-0.38).
+
+What moved the numbers on Windows: one new-program alert per program per day (H201 `PING.EXE` x251), Program Files
+paths read in full, the multicast fix (IPv6 neighbour discovery and LLMNR had tainted most Windows processes,
+which fed the corroborated alerts: H201 corroborated 72 alerts / 4 attack nodes), and ranking-only learned alerts.
+Recall stays low: the OpTC ground truth is mostly network connections (H201: 2,858 of 2,905 nodes, 1,415 of them
+to one command-and-control address), and the rules flag a channel's first connection, not each beacon. Following an
+alarmed channel would raise recall here, but it added hundreds of false positives on THEIA (development data), so
+it was not adopted.

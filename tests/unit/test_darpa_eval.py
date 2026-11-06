@@ -33,5 +33,12 @@ check(a2 > 0.999, f"perfect ranking among {n} benign nodes -> ADP {a2:.4f}")
 m = metrics(scores > 0.75, labels, att, 2)
 check((m["TP"], m["FP"], m["FN"], m["TN"]) == (1, 1, 1, 1) and m["precision"] == 0.5 and m["attacks_detected"] == "1/2", f"metrics at threshold {m}")
 check(metrics(np.array([True, False]), np.array([True, False]), [{"A"}, set()], 1)["MCC"] == 1.0, "MCC of a perfect classifier = 1")
+from pdp_server.tools.darpa_eval import product_priority
+fl = {k: np.array(v) for k, v in {"novelty": [True, False, False], "rules": [False, True, False], "corroborated": [False, False, False],
+                                   "learned": [False, False, True]}.items()}
+fz = np.array([5.0, 1.0, 9.0])
+check(list(np.argsort(-product_priority(fz, fl))) == [0, 1, 2], "0.3 ranking: deterministic alerts first, ties by the learned score")
+check(list(np.argsort(-product_priority(fz, fl, np.array([2, 4, 1])))) == [1, 0, 2],
+      "0.4 ranking: severity tier first (critical rule above a new program), learned score only breaks ties")
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

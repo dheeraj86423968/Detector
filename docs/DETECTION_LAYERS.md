@@ -1,4 +1,43 @@
-# Layered detection (0.3)
+# Layered detection (0.3, revised in 0.4)
+
+## 0.4 (2026-11-06): what changed and why
+
+Every change is general (no program names, paths, addresses or dataset names in the detection logic). Each one comes
+from a failure seen in the 0.3 benchmarks and is either a bug fix or a change in how alerts are counted and ranked:
+
+| change | setting (layers.json / policy) | the 0.3 failure it fixes |
+|---|---|---|
+| Program identity: Windows NT and drive spellings, letter case, per-run GUID / hex directories and version directories are one program; a process recorded without a path matches a known program by name | `normalize_programs` | `PING.EXE` vs `ping.exe`, `.../Temp/<GUID>/dismhost.exe`, `taskkill` vs `.../taskkill.exe` alerted as new programs |
+| One new-program alert per program per day; later runs are evidence (`novel_executable_repeat`) | `novel_instances: 1` | one new tool run in a loop raised one alert per process: 251 for `PING.EXE` on OpTC H201, 31 for one installer on THEIA |
+| Windows paths with spaces read in full | `full_paths` | the process label separates path and command line by a space, so every program under `C:\Program Files` was the one program `.../Program` (1,902 of 60,275 processes on H201): layer 1 could never flag a new program there |
+| Windows paths in their real folders; Windows credential stores are sensitive | `full_paths` | `tainted_modify` keys were all `@ /Device/HarddiskVolume1`; only Linux credential stores were known |
+| Multicast and limited broadcast are local traffic | `local_multicast` | IPv6 neighbour discovery (`ff02::1:ff..`), LLMNR (`224.0.0.252`), mDNS and SSDP were untrusted remote sources: every Windows process receiving them was tainted (23,476 and 38,074 benign `tainted_modify` events on H201 / H051 baselines) |
+| A process started from a file written with untrusted content counts as executing it | `image_exec` | collectors without an EXECUTE event (Windows) never raised `untrusted_exec` |
+| The learned layer ranks; it raises no alerts of its own unless the endpoint turns them on | bundle `learned_policy.learned_alerts: false`; endpoint setting `learned_alerts` overrides | corroborated and learned-only alerts were 3-5 % precise on every dataset (e.g. THEIA: 232 alerts, 9 attack nodes) |
+| Triage order = the severity the console shows (critical data-flow rules, then untrusted exec / new program with a rule, then the other alerts, then learned-only), ties by the learned score | `pdp_engine.runtime.alert_tier` | 0.3 ranked new-program and rule alerts as one tier ordered by the learned score, so ADP depended on detector noise (THEIA min 0.77) |
+
+Existing bundles keep their 0.3 behaviour until their layers are re-fitted (`tools.add_layers`, seconds per
+endpoint, no retraining): the settings change keys and benign thresholds. Agents need 0.4.0 to apply them (0.3
+agents ignore the new keys). The learned detectors themselves are unchanged.
+
+**Tried and rejected on the development data**: following an alarmed channel (flagging later traffic between the
+alarmed process, or any process, and the alarmed address) added 372-714 false positives on THEIA, where a benign
+Firefox exfiltration alarm spread over all its traffic; `novel_instances: 3` and the corroboration variants
+(data-flow-forward neighbours only, the fusion threshold instead of the 99.9th percentile, evidence rules only,
+no learned-only budget) were all below ranking-only on MCC on all three development sets.
+
+### How it was evaluated
+
+Protocol fixed before any change was tried (artifacts/lab_v04/PROTOCOL.md, with the lab scripts and outputs): development sets CADETS E3, THEIA E3 and
+OpTC H201 (per-node inspection allowed); OpTC H501 and H051 held out, run once after the configuration was frozen.
+Their 0.3 aggregate results were already known (docs/BENCHMARK_OPTC.md). All numbers re-use the 25 trained bundles of
+the published 0.3 results (5 per dataset), so the differences come from the changes, not from retraining. A
+label-free check on the baseline days of all five datasets (leave-one-day-out) points the same way: new-program
+alarms on benign days fall 30-80 % (CADETS 54 -> 18, THEIA 293 -> 61, H201 32 -> 21, H501 35 -> 19, H051 17 -> 11).
+
+Results: docs/BENCHMARK_E3.md and docs/BENCHMARK_OPTC.md, "0.4".
+
+## Background (0.3)
 
 Why: the 0.2 product alerted on one signal, the fused score of two learned detectors (Velox, ORTHRUS) above the
 maximum benign validation score. On DARPA E3 that was not reliable (docs/BENCHMARK_E3.md): across five training runs

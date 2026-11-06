@@ -6,7 +6,8 @@ Layers 1 (executable novelty) and 2 (information-flow tags with benign-calibrate
 own baseline days (training + validation; pdp_engine.layers.fit_layers) - a few seconds per endpoint. The result is
 written into a copy of the bundle with the default learned-alert policy, signed and registered as a new bundle; with
 --deploy it becomes the endpoint's current bundle (the agent fetches and verifies it on its next poll). This is the
-upgrade path for endpoints protected by a pre-0.3 bundle.
+upgrade path for endpoints protected by a pre-0.3 bundle, and for 0.3 bundles to the 0.4 layers (re-fitted with the
+current defaults; the learned layer becomes ranking-only unless the endpoint turns its alerts on).
 """
 from __future__ import annotations
 
@@ -42,8 +43,9 @@ def layer_bundle(eid: str, src: dict, deploy: bool = False) -> str:
     meta.update({"bundle_id": bid, "layers_added_to": str(src["id"]),
                  "layers": {"file": "layers.json", "novelty": True, "rules": True, "known_executables": len(spec["known_executables"]),
                             "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()}}})
-    meta.setdefault("learned_policy", {"daily_budget": TrainConfig.learned_daily_budget,
-                                       "corroboration_percentile": TrainConfig.corroboration_percentile})
+    # the current learned-alert default comes with the current layers (0.4: ranking only; an endpoint setting overrides it)
+    meta["learned_policy"] = dict({"daily_budget": TrainConfig.learned_daily_budget, "corroboration_percentile": TrainConfig.corroboration_percentile},
+                                  **(meta.get("learned_policy") or {}), learned_alerts=TrainConfig.learned_alerts)
     write_manifest(out, meta)
     pki.sign_bundle(out)
     manifest = json.load(open(os.path.join(out, "manifest.json")))

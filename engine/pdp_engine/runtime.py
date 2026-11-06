@@ -24,7 +24,7 @@ import torch
 
 from .bundle import load_state_dict, verify_digests
 from .featurizer import Word2VecFeaturizer
-from .layers import EVIDENCE_RULES, DeterministicLayers, Hit
+from .layers import ALWAYS_EVIDENCE, EVIDENCE_RULES, DeterministicLayers, Hit
 from .models import DEG_DIM, OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, window_degrees
 from .schema import EDGE_TYPES, Registry
 from .scoring import Calibration, FusionCalibration, above, aggregate_weights, fill_missing, node_scores
@@ -233,6 +233,9 @@ class Runtime:
         self.policy = AlertPolicy(self.layers, self.daily_budget, self.corroboration, cp, ev) if self.layers is not None else None
         if self.policy is not None and pol.get("alert_layers") is not None:
             self.policy.alert_layers = set(pol["alert_layers"])
+        # learned-layer alerts by default (an endpoint setting overrides it): bundles from 0.4 on rank only
+        self.default_learned_alerts = bool(pol.get("learned_alerts", True))
+        self.set_learned_alerts(self.default_learned_alerts)
         # node features for the baseline registry + TGN state continuing from the end of the validation day
         self.N = self.m["num_nodes"]
         feat_dim = d1["in_dim"] - (DEG_DIM if self.deg1 else 0)   # node features; detector-1 adds the window degrees
@@ -314,6 +317,7 @@ class Runtime:
         self.policy = AlertPolicy(self.layers, self.daily_budget, self.corroboration, pol.get("corroboration_percentile", "99.9"), ev) if self.layers else None
         if self.policy is not None:
             self.policy.alert_layers = set(pol.get("alert_layers") or ("novelty", "rules"))
+        self.default_learned_alerts = bool(pol.get("learned_alerts", True))
         self.N0 = len(registry)
         self.last_seen = np.full(len(registry), int(seen_at_load_ns), dtype=np.int64)
 
@@ -447,6 +451,26 @@ class Runtime:
         return self.policy.apply(w, self.reg, ids, fused, hits)
 
 
+CRITICAL_RULES = ("exfiltration", "untrusted_code_network")
+
+
+def alert_tier(reasons: list[dict]) -> int:
+    """Triage severity of an alerted node, graded like the console grades incidents (pdp_server.incidents.summarise):
+    4 critical (exfiltration, untrusted-code network), 3 high (untrusted exec, or a new program that also breaks a
+    data-flow rule), 2 medium (new program, other rules, corroborated), 1 low (learned score alone), 0 not alerted."""
+    if not reasons:
+        return 0
+    layers = {x["layer"] for x in reasons}
+    rules = {x["rule"] for x in reasons if x["layer"] == "rules"}
+    if rules & set(CRITICAL_RULES):
+        return 4
+    if "untrusted_exec" in rules or ("novelty" in layers and rules):
+        return 3
+    if layers & {"novelty", "rules", "corroborated"}:
+        return 2
+    return 1 if "learned" in layers else 0
+
+
 class AlertPolicy:
     """How the layers' outputs become alerts (one call per window, in stream order; state = the daily budget)."""
 
@@ -458,7 +482,9 @@ class AlertPolicy:
         # full baseline, alert only from the layers that stay precise on so little data (manifest learned_policy)
         self.alert_layers: set | None = None
         self.label = corroboration_label
-        self.evidence_rules = set(evidence_rules or ())
+        self.evidence_rules = set(evidence_rules or ()) | set(ALWAYS_EVIDENCE)
+        self.corroboration_scope = "window"   # learned_near_alert candidates: "window" neighbours | "forward" data flow
+        self.near_alert = True                # False: the learned score corroborates evidence rules only
         self.reset()
 
     def reset(self):
@@ -498,10 +524,13 @@ class AlertPolicy:
                 reasons[n] = [{"layer": "corroborated", "rule": ev[0]["rule"], "value": round(f, 3), "key": ev[0]["key"],
                                "detail": f"{ev[0]['detail']}; learned score {f:.2f} corroborates"}] + [dict(x, layer="evidence") for x in ev]
         # corroborated: window neighbours of deterministic alerts with a high learned score
-        if det:
+        if det and self.near_alert:
             dset = np.array(det, dtype=np.int64)
-            m = np.isin(w.src, dset) | np.isin(w.dst, dset)
-            nb = np.setdiff1d(np.unique(np.concatenate([w.src[m], w.dst[m]])), dset)
+            if self.corroboration_scope == "forward":   # what the alerted nodes affected (data flows out of them)
+                nb = np.setdiff1d(np.unique(w.dst[np.isin(w.src, dset)]), dset)
+            else:                                        # "window": any neighbour in the window, either direction
+                m = np.isin(w.src, dset) | np.isin(w.dst, dset)
+                nb = np.setdiff1d(np.unique(np.concatenate([w.src[m], w.dst[m]])), dset)
             for n in nb.tolist():
                 if n in reasons:
                     continue

@@ -305,7 +305,7 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
   if (loading && !data) return <Loading block />;
   if (error && !data) return <ErrorState error={error} onRetry={reload} />;
   const act = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast(ok); reload(); } catch (e: any) { toast(e.message, "err"); } };
-  const learnedOn = cfg.learned_alerts ?? true;
+  const learnedOn = cfg.learned_alerts ?? data?.learned_alerts_default ?? true;
   return (
     <div className="settings">
       <AllowCard id={id} name={name} />

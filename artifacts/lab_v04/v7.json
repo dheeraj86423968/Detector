@@ -1,0 +1,86 @@
+{
+ "v03": {},
+ "N1": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1
+  },
+  "rank": "tier"
+ },
+ "N1+mc": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "local_multicast": true
+  },
+  "rank": "tier"
+ },
+ "N1+mc+img": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "local_multicast": true,
+   "image_exec": true
+  },
+  "rank": "tier"
+ },
+ "N1+mc+fwd": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "local_multicast": true
+  },
+  "policy": {
+   "corroboration_scope": "forward"
+  },
+  "rank": "tier"
+ },
+ "N1+mc+thr": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "local_multicast": true
+  },
+  "policy": {
+   "corroboration": "threshold"
+  },
+  "rank": "tier"
+ },
+ "N1+mc+rank_only": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "local_multicast": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ },
+ "N1+mc+img+rank_only": {
+  "refit": true,
+  "layers": {
+   "normalize_programs": true,
+   "full_paths": true,
+   "novel_instances": 1,
+   "local_multicast": true,
+   "image_exec": true
+  },
+  "policy": {
+   "learned_alerts": false
+  },
+  "rank": "tier"
+ }
+}

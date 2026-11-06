@@ -131,7 +131,7 @@ export type EndpointOverview = { ok: true; endpoint: Endpoint; lifecycle: Lifecy
   detection: { incidents_open: number; incidents_total: number; alerts_7d: number; by_type_7d: Record<string, number>;
     triaged: { true_positive: number; false_positive: number; open: number }; per_day: { date: string; alerts: number; incidents: number }[] };
   check: Check | null; can_run_check: boolean; check_blocked_reason: string | null };
-export type EndpointConfigResp = { ok: true; endpoint: { id: string; name: string; config?: Record<string, any> } };
+export type EndpointConfigResp = { ok: true; endpoint: { id: string; name: string; config?: Record<string, any> }; learned_alerts_default?: boolean };
 /** `install_command`: one line for a Linux server (`curl -fsSL https://<host>/install.sh | sudo bash -s -- --token <token>`);
  *  `docker_command`: hosts that only run containers; `enroll_command`: an agent that is already installed. */
 export type EnrollToken = { ok: true; token: string; expires_in_hours: number; ca_sha256: string; enroll_command: string;

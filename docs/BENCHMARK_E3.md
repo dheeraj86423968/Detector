@@ -222,3 +222,26 @@ all learned-corroborated executable files of system tools (`/bin/cat`, `/bin/ps`
 `suite_eval`), 80 are attack context. Finding fixed on this data before the scored run: layer 1 alerted on processes
 whose program the collector never recorded (`subject None None`, 27 nodes) - missing data is now not novelty
 (no effect on the DARPA numbers).
+
+## 0.4 (2026-11-06; docs/DETECTION_LAYERS.md "0.4")
+
+Same 5 trained bundles per dataset as the 0.3 results above; the layers re-fitted with the 0.4 settings
+(`tools.add_layers`), the learned detectors unchanged. CADETS and THEIA were development sets for 0.4 (the changes
+were chosen on them and on OpTC H201; OpTC H501 / H051 were held out, docs/BENCHMARK_OPTC.md). Raw JSON:
+`artifacts/benchmark_e3/eval-{cadets,theia}-v04.json`.
+
+| | ADP mean / min / max | MCC | precision | recall | TP / FP (mean) | attacks |
+|---|---|---|---|---|---|---|
+| CADETS 0.3 | 0.99 / 0.98 / 1.00 | 0.408 | 0.356 | 0.468 | 32 / 58 | 3/3 every run |
+| **CADETS 0.4** | **1.00 / 1.00 / 1.00** | **0.530** | **0.659** | 0.426 | 29 / **15** | 3/3 every run |
+| THEIA 0.3 | 0.91 / 0.77 / 1.00 | 0.449 | 0.222 | 0.924 | 109 / 412 | 2/2 every run |
+| **THEIA 0.4** | **1.00 / 1.00 / 1.00** | **0.684** | **0.552** | 0.847 | 100 / **81** | 2/2 every run |
+
+Where it comes from: one new-program alert per program per day (CADETS `links` x18 and `tr` x10, THEIA one Qt
+installer x31 and the Firefox crash reporter x19 are one alert each; the attack programs' further processes stay
+flagged by the data-flow rules), and the learned layer ranking instead of alerting (on CADETS / THEIA it had added 3 / 9
+attack nodes for about 20 / 210 false positives). The few attack nodes given up are nodes only the learned layer had flagged. All five
+runs now have the same alerts and the same ADP: the deterministic alerts are ranked by severity, so the learned
+score only orders alerts within a severity, and on E3 it no longer changes which attack node comes first.
+CADETS precision (0.66) now matches the lower end of the published precision (0.66-0.85), with ADP above both
+published systems in every run.

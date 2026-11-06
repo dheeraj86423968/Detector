@@ -124,6 +124,9 @@ def rescore(eid: str, ep: dict, bundle_dir: str, test_days: list[str], device: s
         from pdp_engine.runtime import AlertPolicy
         pre = AlertPolicy(DeterministicLayers(rt.layers.spec, rt.m["num_nodes"]), rt.daily_budget, rt.corroboration, evidence_rules=())
     flags_pre = {k: np.zeros(len(reg), dtype=bool) for k in LAYERS}
+    from pdp_engine.runtime import alert_tier
+    tiers = np.zeros(len(reg), dtype=np.int8)        # triage severity per node (as the console grades incidents)
+    tiers_pre = np.zeros(len(reg), dtype=np.int8)
     seen = np.zeros(len(reg), dtype=bool)
     nw = 0
     for d in test_days:
@@ -134,11 +137,13 @@ def rescore(eid: str, ep: dict, bundle_dir: str, test_days: list[str], device: s
             for k, v in (("fused", r.fused), ("r1", r.r1), ("r2", r.r2)):
                 np.maximum.at(best[k], ids, v.astype(np.float32))
             for n, rs in r.reasons.items():
+                tiers[n] = max(int(tiers[n]), alert_tier(rs))
                 for x in rs:
                     if x["layer"] in flags:          # "evidence" entries explain a corroborated alert, they are not one
                         flags[x["layer"]][n] = True
             if pre is not None:
                 for n, rs in pre.apply(w, reg, r.node_ids, r.fused)[1].items():
+                    tiers_pre[n] = max(int(tiers_pre[n]), alert_tier(rs))
                     for x in rs:
                         if x["layer"] in flags_pre:
                             flags_pre[x["layer"]][n] = True
@@ -147,6 +152,7 @@ def rescore(eid: str, ep: dict, bundle_dir: str, test_days: list[str], device: s
         + ", ".join(f"{k}={int(v.sum())}" for k, v in flags.items()) + ("" if rt.layers is not None else " (bundle without layers)"))
     best["layers"] = flags
     best["layers_pre"] = flags_pre
+    best["tiers"], best["tiers_pre"] = tiers, tiers_pre
     best["has_layers"] = rt.layers is not None
     return reg, seen, best
 
@@ -154,12 +160,15 @@ def rescore(eid: str, ep: dict, bundle_dir: str, test_days: list[str], device: s
 LAYERS = ("novelty", "rules", "corroborated", "learned")
 
 
-def product_priority(fused: np.ndarray, flags: dict) -> np.ndarray:
-    """The product's triage order as a ranking score: deterministic alerts (novelty / rules) first, then corroborated,
-    then budgeted learned alerts, then every other node; ties broken by the fused learned score."""
+def product_priority(fused: np.ndarray, flags: dict, tiers: np.ndarray | None = None) -> np.ndarray:
+    """The product's triage order as a ranking score; ties broken by the fused learned score.
+    0.4 (tiers given): the severity the console shows (pdp_engine.runtime.alert_tier: critical data-flow rules, then
+    untrusted exec / new program with a rule, then the other alerts, then learned-only), then every other node.
+    0.3 (tiers None): deterministic alerts (novelty / rules) first, then corroborated, then learned, then the rest."""
     f = np.where(np.isfinite(fused), fused, 0.0)
-    tier = np.where(flags["novelty"] | flags["rules"], 3, np.where(flags["corroborated"], 2, np.where(flags["learned"], 1, 0)))
-    return tier * 1e6 + np.clip(f, 0, 1e5)
+    if tiers is None:
+        tiers = np.where(flags["novelty"] | flags["rules"], 3, np.where(flags["corroborated"], 2, np.where(flags["learned"], 1, 0)))
+    return tiers * 1e6 + np.clip(f, 0, 1e5)
 
 
 def main():
@@ -244,7 +253,8 @@ def main():
             for name, pred in views.items():
                 m = metrics(pred, labels, node_attacks, n_att)
                 if name == "layered product":
-                    m["ADP"] = round(adp(product_priority(fused, fl), labels, node_attacks), 3)
+                    m["ADP"] = round(adp(product_priority(fused, fl, best["tiers"][ids]), labels, node_attacks), 3)
+                    m["ADP (0.3 ranking)"] = round(adp(product_priority(fused, fl), labels, node_attacks), 3)
                     m["by_layer"] = {k: {"alerts": int(v.sum()), "TP": int((v & labels).sum())} for k, v in fl.items()}
                 run[name] = m
             fp_ = {k: v[ids] for k, v in best["layers_pre"].items()}
@@ -252,7 +262,7 @@ def main():
                                ("layered product (pre-registered policy)", fp_["novelty"] | fp_["rules"] | fp_["corroborated"] | fp_["learned"])):
                 m = metrics(pred, labels, node_attacks, n_att)
                 if name.startswith("layered"):
-                    m["ADP"] = round(adp(product_priority(fused, fp_), labels, node_attacks), 3)
+                    m["ADP"] = round(adp(product_priority(fused, fp_, best["tiers_pre"][ids]), labels, node_attacks), 3)
                 run[name] = m
         if str(b["id"]) == scoring_bundle:
             # the product's own output: the alerts the agent reported (scored with the deployed bundle)

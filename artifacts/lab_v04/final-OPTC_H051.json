@@ -1,0 +1,565 @@
+{
+ "v03": {
+  "runs": [
+   {
+    "bundle": "3ab22e71",
+    "product": {
+     "TP": 78,
+     "FP": 145,
+     "precision": 0.35,
+     "recall": 0.684,
+     "MCC": 0.489,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.875
+    },
+    "by_layer": {
+     "novelty": [
+      91,
+      31
+     ],
+     "corroborated": [
+      61,
+      6
+     ],
+     "rules": [
+      97,
+      67
+     ],
+     "learned": [
+      7,
+      2
+     ]
+    },
+    "fused_ADP": 0.333
+   },
+   {
+    "bundle": "4543ccbe",
+    "product": {
+     "TP": 79,
+     "FP": 153,
+     "precision": 0.341,
+     "recall": 0.693,
+     "MCC": 0.486,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.565
+    },
+    "by_layer": {
+     "novelty": [
+      91,
+      31
+     ],
+     "corroborated": [
+      62,
+      6
+     ],
+     "learned": [
+      16,
+      2
+     ],
+     "rules": [
+      97,
+      67
+     ]
+    },
+    "fused_ADP": 0.2
+   },
+   {
+    "bundle": "43b7cb73",
+    "product": {
+     "TP": 77,
+     "FP": 145,
+     "precision": 0.347,
+     "recall": 0.675,
+     "MCC": 0.484,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.511
+    },
+    "by_layer": {
+     "novelty": [
+      91,
+      31
+     ],
+     "corroborated": [
+      61,
+      6
+     ],
+     "learned": [
+      5,
+      0
+     ],
+     "rules": [
+      97,
+      67
+     ]
+    },
+    "fused_ADP": 0.083
+   },
+   {
+    "bundle": "599d7009",
+    "product": {
+     "TP": 77,
+     "FP": 149,
+     "precision": 0.341,
+     "recall": 0.675,
+     "MCC": 0.48,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.5
+    },
+    "by_layer": {
+     "novelty": [
+      91,
+      31
+     ],
+     "corroborated": [
+      59,
+      6
+     ],
+     "learned": [
+      11,
+      0
+     ],
+     "rules": [
+      97,
+      67
+     ]
+    },
+    "fused_ADP": 0.147
+   },
+   {
+    "bundle": "c8153feb",
+    "product": {
+     "TP": 77,
+     "FP": 141,
+     "precision": 0.353,
+     "recall": 0.675,
+     "MCC": 0.488,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.511
+    },
+    "by_layer": {
+     "novelty": [
+      91,
+      31
+     ],
+     "corroborated": [
+      58,
+      6
+     ],
+     "learned": [
+      4,
+      0
+     ],
+     "rules": [
+      97,
+      67
+     ]
+    },
+    "fused_ADP": 0.149
+   }
+  ],
+  "summary": {
+   "ADP": [
+    0.592,
+    0.5,
+    0.875
+   ],
+   "MCC": [
+    0.485,
+    0.48,
+    0.489
+   ],
+   "precision": [
+    0.346,
+    0.341,
+    0.353
+   ],
+   "recall": [
+    0.68,
+    0.675,
+    0.693
+   ],
+   "TP": [
+    77.6,
+    77.0,
+    79.0
+   ],
+   "FP": [
+    146.6,
+    141.0,
+    153.0
+   ],
+   "attacks": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  }
+ },
+ "v04": {
+  "runs": [
+   {
+    "bundle": "3ab22e71",
+    "product": {
+     "TP": 72,
+     "FP": 50,
+     "precision": 0.59,
+     "recall": 0.632,
+     "MCC": 0.61,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.905
+    },
+    "by_layer": {
+     "novelty": [
+      51,
+      27
+     ],
+     "rules": [
+      100,
+      69
+     ]
+    },
+    "fused_ADP": 0.333
+   },
+   {
+    "bundle": "4543ccbe",
+    "product": {
+     "TP": 72,
+     "FP": 50,
+     "precision": 0.59,
+     "recall": 0.632,
+     "MCC": 0.61,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.778
+    },
+    "by_layer": {
+     "novelty": [
+      51,
+      27
+     ],
+     "rules": [
+      100,
+      69
+     ]
+    },
+    "fused_ADP": 0.2
+   },
+   {
+    "bundle": "43b7cb73",
+    "product": {
+     "TP": 72,
+     "FP": 50,
+     "precision": 0.59,
+     "recall": 0.632,
+     "MCC": 0.61,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.857
+    },
+    "by_layer": {
+     "novelty": [
+      51,
+      27
+     ],
+     "rules": [
+      100,
+      69
+     ]
+    },
+    "fused_ADP": 0.083
+   },
+   {
+    "bundle": "599d7009",
+    "product": {
+     "TP": 72,
+     "FP": 50,
+     "precision": 0.59,
+     "recall": 0.632,
+     "MCC": 0.61,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.818
+    },
+    "by_layer": {
+     "novelty": [
+      51,
+      27
+     ],
+     "rules": [
+      100,
+      69
+     ]
+    },
+    "fused_ADP": 0.147
+   },
+   {
+    "bundle": "c8153feb",
+    "product": {
+     "TP": 72,
+     "FP": 50,
+     "precision": 0.59,
+     "recall": 0.632,
+     "MCC": 0.61,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.933
+    },
+    "by_layer": {
+     "novelty": [
+      51,
+      27
+     ],
+     "rules": [
+      100,
+      69
+     ]
+    },
+    "fused_ADP": 0.149
+   }
+  ],
+  "summary": {
+   "ADP": [
+    0.858,
+    0.778,
+    0.933
+   ],
+   "MCC": [
+    0.61,
+    0.61,
+    0.61
+   ],
+   "precision": [
+    0.59,
+    0.59,
+    0.59
+   ],
+   "recall": [
+    0.632,
+    0.632,
+    0.632
+   ],
+   "TP": [
+    72.0,
+    72.0,
+    72.0
+   ],
+   "FP": [
+    50.0,
+    50.0,
+    50.0
+   ],
+   "attacks": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  }
+ },
+ "v04-learned_alerts_on": {
+  "runs": [
+   {
+    "bundle": "3ab22e71",
+    "product": {
+     "TP": 79,
+     "FP": 127,
+     "precision": 0.383,
+     "recall": 0.693,
+     "MCC": 0.515,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.905
+    },
+    "by_layer": {
+     "novelty": [
+      51,
+      27
+     ],
+     "corroborated": [
+      81,
+      7
+     ],
+     "rules": [
+      100,
+      69
+     ],
+     "learned": [
+      6,
+      1
+     ]
+    },
+    "fused_ADP": 0.333
+   },
+   {
+    "bundle": "4543ccbe",
+    "product": {
+     "TP": 80,
+     "FP": 139,
+     "precision": 0.365,
+     "recall": 0.702,
+     "MCC": 0.506,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.778
+    },
+    "by_layer": {
+     "learned": [
+      16,
+      2
+     ],
+     "novelty": [
+      51,
+      27
+     ],
+     "corroborated": [
+      85,
+      7
+     ],
+     "rules": [
+      100,
+      69
+     ]
+    },
+    "fused_ADP": 0.2
+   },
+   {
+    "bundle": "43b7cb73",
+    "product": {
+     "TP": 78,
+     "FP": 128,
+     "precision": 0.379,
+     "recall": 0.684,
+     "MCC": 0.509,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.857
+    },
+    "by_layer": {
+     "learned": [
+      5,
+      0
+     ],
+     "novelty": [
+      51,
+      27
+     ],
+     "corroborated": [
+      82,
+      7
+     ],
+     "rules": [
+      100,
+      69
+     ]
+    },
+    "fused_ADP": 0.083
+   },
+   {
+    "bundle": "599d7009",
+    "product": {
+     "TP": 78,
+     "FP": 133,
+     "precision": 0.37,
+     "recall": 0.684,
+     "MCC": 0.503,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.818
+    },
+    "by_layer": {
+     "novelty": [
+      51,
+      27
+     ],
+     "corroborated": [
+      81,
+      7
+     ],
+     "learned": [
+      11,
+      0
+     ],
+     "rules": [
+      100,
+      69
+     ]
+    },
+    "fused_ADP": 0.147
+   },
+   {
+    "bundle": "c8153feb",
+    "product": {
+     "TP": 78,
+     "FP": 122,
+     "precision": 0.39,
+     "recall": 0.684,
+     "MCC": 0.517,
+     "attacks": 1,
+     "n_attacks": 1,
+     "ADP": 0.933
+    },
+    "by_layer": {
+     "novelty": [
+      51,
+      27
+     ],
+     "corroborated": [
+      77,
+      7
+     ],
+     "learned": [
+      4,
+      0
+     ],
+     "rules": [
+      100,
+      69
+     ]
+    },
+    "fused_ADP": 0.149
+   }
+  ],
+  "summary": {
+   "ADP": [
+    0.858,
+    0.778,
+    0.933
+   ],
+   "MCC": [
+    0.51,
+    0.503,
+    0.517
+   ],
+   "precision": [
+    0.377,
+    0.365,
+    0.39
+   ],
+   "recall": [
+    0.689,
+    0.684,
+    0.702
+   ],
+   "TP": [
+    78.6,
+    78.0,
+    80.0
+   ],
+   "FP": [
+    129.8,
+    122.0,
+    139.0
+   ],
+   "attacks": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  }
+ }
+}
