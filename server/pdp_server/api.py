@@ -161,8 +161,8 @@ class EnrollReq(BaseModel):
 @app.post("/v1/enroll")
 def enroll(req: EnrollReq):
     with db.conn() as c:
-        tok = db.q(c, "SELECT * FROM enroll_tokens WHERE token=%s AND (used_by IS NULL OR max_uses IS NOT NULL) AND expires_at > now()",
-                   (req.token,), one=True)
+        tok = db.q(c, "SELECT * FROM enroll_tokens WHERE token=%s AND (used_by IS NULL OR max_uses IS NOT NULL) AND expires_at > now() FOR UPDATE",
+                   (req.token,), one=True)     # 0.6: locked, a concurrent enrolment with the same token waits and then fails
         if not tok:
             raise HTTPException(403, "invalid or expired token")
         fleet = tok.get("max_uses") is not None      # Kubernetes: one token for many nodes
@@ -185,18 +185,26 @@ def enroll(req: EnrollReq):
         db.q(c, "INSERT INTO endpoints (id, name, hostname, os, arch, agent_version, phase, kind, config, cert_serial, enrolled_at, org_id) "
                 "VALUES (%s,%s,%s,%s,%s,%s,'baseline',%s,%s,%s,now(),%s)",
              (eid, req.hostname[:128] if fleet else tok["name"], req.hostname, req.os, req.arch, req.agent_version, kind, json.dumps(cfg), serial, tok["org_id"]))
-        if not fleet:
-            db.q(c, "UPDATE enroll_tokens SET used_by=%s WHERE token=%s", (eid, req.token))
+        if not fleet and not db.q(c, "UPDATE enroll_tokens SET used_by=%s WHERE token=%s AND used_by IS NULL RETURNING token", (eid, req.token), one=True):
+            raise HTTPException(403, "invalid or expired token")        # used concurrently (single-use)
     db.init_telemetry(eid)
     return {"ok": True, "endpoint_id": eid, "cert_pem": cert, "ca_pem": pki.ca_pem(), "bundle_signing_pub": pki.signing_public_pem(), "config": cfg}
 
 
 async def ndjson_rows(request: Request):
+    from .integrity import MAX_ROWS, IngestError, bounded_decompress
     body = await request.body()
     if request.headers.get("content-encoding") == "gzip":
-        body = gzip.decompress(body)
+        try:          # 0.6: bounded (size and ratio), not gzip.decompress (a small upload could expand into gigabytes)
+            body = bounded_decompress(body)
+        except IngestError as e:
+            raise HTTPException(e.status, str(e))
+    n = 0
     for line in body.decode().splitlines():
         if line.strip():
+            n += 1
+            if n > MAX_ROWS:
+                raise HTTPException(413, f"at most {MAX_ROWS} rows per upload")
             yield json.loads(line)
 
 
@@ -221,10 +229,19 @@ async def upload_events(endpoint_id: str, request: Request, ep=Depends(agent_end
         if db.q(c, "SELECT 1 FROM upload_batches WHERE endpoint_id=%s AND batch_id=%s", (endpoint_id, x_batch_id), one=True):
             return {"ok": True, "batch_id": x_batch_id, "duplicate": True}
     rows = [r async for r in ndjson_rows(request)]
+    from . import integrity
+    rows, refused = integrity.filter_events(rows, *integrity.ts_bounds(ep))   # 0.6: impossible timestamps refused
+    try:
+        days = integrity.batch_days(rows)                                    # ... and a bounded number of partitions
+    except integrity.IngestError as e:
+        raise HTTPException(e.status, str(e))
+    if refused:
+        with db.conn() as c:
+            integrity.on_ingest_rejects(c, endpoint_id, refused, "their timestamps lie outside the endpoint's lifetime (wrong clock or forged data)")
     s = db.tschema(endpoint_id)
     with db.conn(db.TELEMETRY_DSN) as c:
         if rows:
-            db.ensure_partitions(c, s, min(r["ts_ns"] for r in rows), max(r["ts_ns"] for r in rows))
+            db.ensure_partitions(c, s, min(r["ts_ns"] for r in rows), max(r["ts_ns"] for r in rows), days=days)
         with c.cursor() as cur:
             psycopg2.extras.execute_values(   # batched multi-row INSERTs (row-by-row executemany was the upload bottleneck)
                 cur, f"INSERT INTO {s}.events (ts_ns, src, op, dst, event_uuid, batch_id) VALUES %s",
@@ -232,7 +249,7 @@ async def upload_events(endpoint_id: str, request: Request, ep=Depends(agent_end
     with db.conn() as c:
         db.q(c, "INSERT INTO upload_batches (endpoint_id, batch_id, kind, rows, bytes) VALUES (%s,%s,'events',%s,%s) ON CONFLICT DO NOTHING",
              (endpoint_id, x_batch_id, len(rows), int(request.headers.get("content-length") or 0) or None))
-    return {"ok": True, "batch_id": x_batch_id}
+    return {"ok": True, "batch_id": x_batch_id, **({"refused": refused} if refused else {})}
 
 
 class DayComplete(BaseModel):
@@ -314,9 +331,14 @@ async def upload_windows(endpoint_id: str, request: Request, ep=Depends(agent_en
     rows = [r async for r in ndjson_rows(request)]
     with db.conn() as c:
         with c.cursor() as cur:
-            cur.executemany("INSERT INTO windows (endpoint_id, start_ns, end_ns, edges, nodes, alerts, max_fused, max_r1, max_r2, bundle_id) "
-                            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (endpoint_id, start_ns) DO UPDATE SET alerts=EXCLUDED.alerts, max_fused=EXCLUDED.max_fused",
-                            [(endpoint_id, r["start_ns"], r["end_ns"], r["edges"], r["nodes"], r["alerts"], r["max_fused"], r["max_r1"], r["max_r2"], ep["current_bundle"]) for r in rows])
+            # 0.6: a later upload never lowers what a window reported (past summaries cannot be rewritten to hide alerts)
+            cur.executemany("INSERT INTO windows (endpoint_id, start_ns, end_ns, edges, nodes, alerts, max_fused, max_r1, max_r2, bundle_id, seq) "
+                            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (endpoint_id, start_ns) DO UPDATE SET alerts=GREATEST(windows.alerts, EXCLUDED.alerts), "
+                            "max_fused=GREATEST(windows.max_fused, EXCLUDED.max_fused), seq=COALESCE(windows.seq, EXCLUDED.seq)",
+                            [(endpoint_id, r["start_ns"], r["end_ns"], r["edges"], r["nodes"], r["alerts"], r["max_fused"], r["max_r1"], r["max_r2"], ep["current_bundle"],
+                              r.get("seq")) for r in rows])
+        from .integrity import record_seqs
+        record_seqs(c, endpoint_id, "w", rows)
     return {"ok": True, "rows": len(rows)}
 
 
@@ -325,11 +347,14 @@ async def upload_alerts(endpoint_id: str, request: Request, ep=Depends(agent_end
     rows = [r async for r in ndjson_rows(request)]
     with db.conn() as c:
         with c.cursor() as cur:
-            cur.executemany("INSERT INTO alerts (endpoint_id, window_start_ns, node_uuid, ntype, label, display, fused, r1, r2, context, layer, rule, reason, reasons) "
-                            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+            # 0.6: aid = the agent's idempotency key (a retried upload is stored once); seq = its alert sequence number
+            cur.executemany("INSERT INTO alerts (endpoint_id, window_start_ns, node_uuid, ntype, label, display, fused, r1, r2, context, layer, rule, reason, reasons, aid, seq) "
+                            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (endpoint_id, aid) WHERE aid IS NOT NULL DO NOTHING",
                             [(endpoint_id, r["window_start_ns"], r["node"]["uuid"], r["node"]["ntype"], r["node"]["label"], json.dumps(r["node"].get("display", {})),
                               r["fused"], r["r1"], r["r2"], json.dumps(r.get("context", {})), r.get("layer", "learned"), r.get("rule"), r.get("reason"),
-                              json.dumps(r.get("reasons", []))) for r in rows])
+                              json.dumps(r.get("reasons", [])), (str(r["aid"])[:64] if r.get("aid") else None), r.get("seq")) for r in rows])
+        from .integrity import record_seqs
+        record_seqs(c, endpoint_id, "a", rows)
         from .allowlist import mark_new_alerts
         new = [x["id"] for x in db.q(c, "SELECT id FROM alerts WHERE endpoint_id=%s AND created_at = now()", (endpoint_id,))]
         mark_new_alerts(c, endpoint_id, new)
@@ -360,14 +385,35 @@ class Heartbeat(BaseModel):
     data_mb: dict | None = None           # the agent's disk use by kind (0.3.20+): database, models, total
     spool_dropped_unscored_1h: int | None = None     # the spool drops over the last hour (0.3.22+)
     spool_dropped_unuploaded_1h: int | None = None
+    # 0.6: integrity of the endpoint signal (pdp_server/integrity.py)
+    hb_seq: int | None = None             # heartbeat sequence number (persisted on the agent; must increase)
+    run_id: str | None = Field(default=None, max_length=64)   # one per agent process start
+    started_at: float | None = None
+    agent_time: float | None = None       # the agent's wall clock when sending
+    counters: dict | None = None          # since the previous heartbeat: events, dropped, windows, alerts, interval_s
+    source: dict | None = None            # collector: kind, alive, events, canary {sent, seen, missed, last_seen_age_s}
+    bundle: dict | None = None            # loaded model: id, manifest_sha256, signing_key_fp, pinned_key_fp, refused
+    config_sha256: str | None = Field(default=None, max_length=64)   # the agent's effective local configuration
+    window_seq: int | None = None         # last window / alert sequence number assigned
+    alert_seq: int | None = None
+    unreported: int | None = None         # window/alert batches still waiting for delivery
+    lost_seqs: dict | None = None         # {"w"|"a": [[lo, hi], ...]} dropped by the agent's own queue limit
+    score_failures: int | None = None     # windows the detector failed on (skipped), since install / last 24 h
+    score_failures_24h: int | None = None
 
 
 @app.post("/v1/endpoints/{endpoint_id}/heartbeat")
 def heartbeat(endpoint_id: str, hb: Heartbeat, ep=Depends(agent_endpoint)):
+    from .integrity import on_heartbeat
     with db.conn() as c:
+        health, accept = on_heartbeat(c, ep, {**hb.dict(), "at": time.time()})   # 0.6: replay, liveness, model, delivery
+        if not accept:       # a replayed heartbeat does not refresh the endpoint's health (it goes stale); only the finding is kept
+            db.q(c, "UPDATE endpoints SET health = jsonb_set(coalesce(health, '{}'::jsonb), '{integrity}', %s::jsonb, true) WHERE id=%s",
+                 (json.dumps(health["integrity"]), endpoint_id))
+            return {"ok": True}
         db.q(c, "UPDATE endpoints SET agent_version_since = CASE WHEN agent_version IS DISTINCT FROM %s OR agent_version_since IS NULL "
                 "THEN now() ELSE agent_version_since END, agent_version=%s, health=%s WHERE id=%s",
-             (hb.agent_version, hb.agent_version, json.dumps({**hb.dict(), "at": time.time()}), endpoint_id))
+             (hb.agent_version, hb.agent_version, json.dumps(health), endpoint_id))
     return {"ok": True}
 
 

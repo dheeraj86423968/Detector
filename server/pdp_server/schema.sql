@@ -197,3 +197,17 @@ CREATE TABLE IF NOT EXISTS coverage_history (
 -- window summaries: when the server received them; retention counts from this, not from the endpoint's event clock
 -- (a replayed dataset or an endpoint with a wrong clock had its windows deleted at once)
 ALTER TABLE windows ADD COLUMN IF NOT EXISTS received_at TIMESTAMPTZ DEFAULT now();
+
+-- 0.6: integrity of the endpoint signal (pdp_server/integrity.py). Per-endpoint state of the checks (heartbeat
+-- sequence, silences, ongoing episodes, recent findings); sequence numbers of window summaries and alerts received
+-- and not yet verified contiguous; alert idempotency key (a retried upload is stored once) and sequence number
+CREATE TABLE IF NOT EXISTS endpoint_integrity (
+  endpoint_id UUID PRIMARY KEY REFERENCES endpoints(id) ON DELETE CASCADE, state JSONB NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS integrity_seqs (
+  endpoint_id UUID NOT NULL REFERENCES endpoints(id) ON DELETE CASCADE, kind CHAR(1) NOT NULL CHECK (kind IN ('w','a')),
+  seq BIGINT NOT NULL, PRIMARY KEY (endpoint_id, kind, seq));
+ALTER TABLE alerts ADD COLUMN IF NOT EXISTS aid TEXT;
+ALTER TABLE alerts ADD COLUMN IF NOT EXISTS seq BIGINT;
+CREATE UNIQUE INDEX IF NOT EXISTS alerts_aid ON alerts (endpoint_id, aid) WHERE aid IS NOT NULL;
+ALTER TABLE windows ADD COLUMN IF NOT EXISTS seq BIGINT;

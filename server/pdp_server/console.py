@@ -53,6 +53,11 @@ def endpoint_state(r: dict) -> dict:
     return {"state": state, "state_text": text, "baseline": {"done": min(done, need), "needed": need}, "online": online}
 
 
+def _integrity_posture(row: dict) -> str:
+    from .integrity import posture
+    return posture(row)
+
+
 def endpoint_rows(s: dict, endpoint_id: str | None = None) -> list[dict]:
     ids = scope_list(s)
     with db.conn() as c:
@@ -402,7 +407,7 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
     from .updates import target_version
     tgt = target_version(org["agent_update"] if org else "auto")
     probs = problems(row, tgt) if row["kind"] == "live" else []
-    issues += [p["text"] for p in probs]
+    issues += [p["text"] for p in probs if p["level"] != "info"]      # info (0.6 posture events) do not make it unhealthy
     if learning and days and not any(d["events"] for d in days) and ep["online"]:
         issues.append("No events have been received yet")
     build_failing = len(recent_builds) == 3 and all(b["state"] == "failed" for b in recent_builds)
@@ -417,7 +422,8 @@ def endpoint_overview(endpoint_id: str, s=Depends(session)):
               "events_dropped": h.get("collector_lost"), "queue_depth": h.get("queue_depth"), "cpu_pct": h.get("cpu_pct"), "rss_mb": h.get("rss_mb"),
               "events_24h": int(ev24) + int(w24), "status": status, "issues": issues,
               "disk_free_pct": h.get("disk_free_pct"), "disk_free_mb": h.get("disk_free_mb"), "spool_mb": h.get("spool_mb"),
-              "entities": h.get("entities"), "data_mb": h.get("data_mb"), "update": {**(h.get("update") or {}), "target": tgt}}
+              "entities": h.get("entities"), "data_mb": h.get("data_mb"), "update": {**(h.get("update") or {}), "target": tgt},
+              "integrity": _integrity_posture(row), "notes": [p["text"] for p in probs if p["level"] == "info"]}
     # ---- detection
     week = time.time_ns() - 7 * 86400 * 10**9
     a7 = [a for a in alerts if a["window_start_ns"] >= week]
