@@ -352,6 +352,19 @@ for b in src.batches(lambda: time.time() - t0 > 1.5):
 cs = src.canary_status()
 check(cs["sent"] >= 3 and cs["seen"] >= cs["sent"] - 1 and cs["missed"] == 0 and got == [] and len(_os2.listdir(d)) <= cs["pending"],
       f"canary seen, consumed (no events), files removed ({cs})")
+class SpoofTracer(CanaryTracer):    # another process names its file like a canary: it must stay visible
+    def poll(self, timeout_ms=200):
+        out = super().poll(timeout_ms)
+        if not getattr(self, "sent_spoof", False):
+            self.sent_spoof = True
+            out.append(Rec(_OPEN, 424242, ts_ns=time.time_ns(), s="/tmp/.pdp-canary-hidden", flags=0, ret=3))
+        return out
+src = EbpfLive(canary_s=0.2, canary_dir=d, run_id="t", proc="/nonexistent")
+src._tracer = SpoofTracer(src); src._canary_next = 0
+got, t0 = [], time.time()
+for b in src.batches(lambda: time.time() - t0 > 0.8):
+    got += b
+check(any(".pdp-canary-hidden" in str(x) for x in got), "a file named like a canary opened by another process is still an event")
 src = EbpfLive(canary_s=0.2, canary_dir=d, run_id="t", proc="/nonexistent")
 src._tracer = CanaryTracer(src, deliver=False); src._canary_next = 0; src.CANARY_DEADLINE_S = 0.3
 t0 = time.time()

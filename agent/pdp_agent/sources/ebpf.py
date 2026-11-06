@@ -905,7 +905,9 @@ class EbpfLive:
         out = []
         canary = self._canary_pids
         for r in recs:
-            if canary and (r.pid in canary or (r.kind == OPEN and ".pdp-canary-" in r.s)):
+            # only the canary child's own records are consumed: matching on the file name would let any process hide
+            # its opens by naming files '.pdp-canary-...'
+            if canary and r.pid in canary:
                 self._canary_record(r)
                 continue
             if track is not None:
