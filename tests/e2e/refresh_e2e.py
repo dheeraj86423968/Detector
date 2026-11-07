@@ -65,6 +65,10 @@ open(os.path.join(d, "k.pem"), "wb").write(key.private_bytes(serialization.Encod
 open(os.path.join(d, "c.pem"), "w").write(enr["cert_pem"])
 actx = ssl.create_default_context(cafile=caf.name); actx.load_cert_chain(os.path.join(d, "c.pem"), os.path.join(d, "k.pem"))
 eid = enr["endpoint_id"]
+# 0.6: a live endpoint's events may not predate its enrolment by more than a day (forged history is refused); this
+# test uploads days from the past week, so the endpoint is recorded as enrolled a week ago
+with db.conn() as c:
+    db.q(c, "UPDATE endpoints SET enrolled_at = now() - interval '7 days' WHERE id=%s", (eid,))
 B = f"/v1/endpoints/{eid}"
 
 
@@ -82,8 +86,8 @@ def agent(method, path, body=None, ndjson=None, batch=None):
 
 st, _ = console("POST", f"/api/endpoints/{eid}/config", {"config": {"baseline_days": 2, "early_models": False, "train": {
     "orthrus_epochs": 1, "velox_epochs": 1, "velox_runs": 1, "orthrus_seeds": [0], "w2v_epochs": 2, "emb_dim": 16,
-    "orthrus_hid_dim": 16, "orthrus_out_dim": 16, "velox_out_dim": 16}}})
-check(st == 200, "small training configuration (2 baseline days, tiny models)")
+    "orthrus_hid_dim": 16, "orthrus_out_dim": 16, "velox_out_dim": 16}}, "reason": "e2e: short baseline for a test endpoint"})
+check(st == 200, "small training configuration (2 baseline days, tiny models; weakening, so with a reason)")
 agent("POST", B + "/heartbeat", {"agent_version": "0.3.13"})
 rng = random.Random(1)
 progs = ["/usr/bin/bash", "/usr/bin/python3", "/usr/sbin/sshd", "/usr/bin/curl"]
@@ -146,6 +150,11 @@ st, stt = agent("GET", B + "/status")
 check((stt.get("config") or {}).get("refresh_days") == fresh, "the agent sees the requested days in its status")
 st, _ = console("POST", f"/api/endpoints/{eid}/retrain")
 check(st == 409, "a second request while collecting is refused")
+# the server asks for the next two whole days; this test cannot wait for them, and since 0.6 events more than a day
+# in the future are refused, so the request is moved to the two most recent past days (test only)
+fresh = [time.strftime("%Y-%m-%d", time.gmtime(time.time() - k * 86400)) for k in (2, 1)]
+with db.conn() as c:
+    db.q(c, "UPDATE endpoints SET config = config || jsonb_build_object('refresh_days', %s::jsonb) WHERE id=%s", (json.dumps(fresh), eid))
 
 # the agent pruned ids E..E+4 meanwhile (never uploaded); new entities follow with their own ids
 new = [{"uuid": f"p:new{k}", "ntype": "subject", "label": f"subject /usr/bin/python3 python3 job{k % 3}", "display": {}, "dense_id": E + 5 + k} for k in range(40)]

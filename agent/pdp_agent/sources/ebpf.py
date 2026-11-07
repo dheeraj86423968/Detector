@@ -10,7 +10,7 @@ moved on connected sockets (SOCKIO below), which the other collectors do not:
                         path + flags at entry, reported only on success; reads/writes are inferred from the open mode
   connect, sendto, sendmsg (destination address), recvfrom, recvmsg (address returned), accept, accept4 (peer)
                         IPv4 and IPv6, exactly as in the strace collector
-  data on connected sockets (SOCKIO, agent releases after 0.6.0; eBPF only - the strace and auditd collectors do not trace it)
+  data on connected sockets (SOCKIO, agent 0.7.0 and later; eBPF only - the strace and auditd collectors do not trace it)
                         read, readv, preadv2 -> READ (netflow -> process); write, writev, pwritev2, sendfile -> WRITE
                         (process -> netflow); splice -> READ / WRITE for whichever end is the socket; recvfrom /
                         recvmsg / recvmmsg returning no address -> RECVFROM / RECVMSG; sendto / sendmsg / sendmmsg

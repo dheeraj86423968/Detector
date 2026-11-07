@@ -34,7 +34,7 @@ from .config import Config
 from .state import State, disk_full
 from .transport import Transport, TransportError
 
-VERSION = "0.6.0"
+VERSION = "0.7.0"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 SCORE_MAX_ATTEMPTS = 2   # a window the detector fails on this many times (exception or crash) is skipped, not retried
 UNREPORTED_MAX = 500     # alert/window batches kept on disk while the server is unreachable

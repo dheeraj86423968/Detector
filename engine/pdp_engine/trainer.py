@@ -83,6 +83,9 @@ class TrainConfig:
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
 
 
+D3_MIN_THRESHOLD = 5.0     # nats (P < 1/150): detector-3 thresholds never go lower (0.7)
+
+
 def log(msg):
     print(time.strftime("%Y-%m-%d %H:%M:%S"), "-", msg, flush=True)
 
@@ -234,6 +237,9 @@ class Trainer:
         os.makedirs(self.out_dir, exist_ok=True)
         if self.cfg.layers_only:
             return self.run_layers_only(meta)
+        vdir = os.path.join(self.store.root, "windows", self.val_day)
+        if not os.path.isdir(vdir) or not self.store.count(self.val_day):
+            raise ValueError(f"validation day {self.val_day} has no activity: nothing to calibrate the thresholds on")
         self.fit_featurizer()
         self.feat.save(os.path.join(self.out_dir, "featurizer"))
         cal1s, ratios1 = [], []
@@ -329,7 +335,8 @@ class Trainer:
             seen[w.dst] = True
         isp = K.isproc[:n]
         b = self.cfg.calibration_budget
-        cal = {"proc": top_threshold(best[seen & isp], b), "obj": top_threshold(best[seen & ~isp], b), "budget": b,
+        floor = D3_MIN_THRESHOLD    # a near-empty validation day must not make every novelty an alert
+        cal = {"proc": max(top_threshold(best[seen & isp], b), floor), "obj": max(top_threshold(best[seen & ~isp], b), floor), "budget": b,
                "keys": len(m.vocab)}
         log(f"detector-3 thresholds proc {cal['proc']:.2f} obj {cal['obj']:.2f} (budget {b})")
         return cal

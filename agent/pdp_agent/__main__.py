@@ -43,7 +43,7 @@ def main():
                           engine=src.get("engine"),    # "core" (libbpf CO-RE, default) or "bcc" (header-compiled fallback)
                           btf=a.kernel_btf,            # kernels without their own BTF: a file from the server
                           canary_s=float(src.get("canary_s", 60)), canary_dir=cfg.data_dir,   # 0.6: collector self-test (0 = off)
-                          # after 0.6.0: data on connected sockets, one record per (process, edge, peer) per interval (0 = off)
+                          # 0.7.0: data on connected sockets, one record per (process, edge, peer) per interval (0 = off)
                           sockio_ms=int(src["sockio_interval_ms"]) if src.get("sockio_interval_ms") is not None else None)
     elif src["kind"] == "etw":
         from .sources.windows_etw import EtwLive

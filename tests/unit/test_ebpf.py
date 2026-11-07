@@ -170,7 +170,7 @@ for arch, tag in (("x86_64", "__TARGET_ARCH_x86"), ("aarch64", "__TARGET_ARCH_ar
     nrs = {k: (-1 if v == "NO_SYSCALL" else int(v)) for k, v in re.findall(r"#define SYS_(\w+) (\w+)", block)}
     check(nrs == _ARCH[arch][0], f"CO-RE syscall numbers for {arch} match the bcc program's")
 
-# ---- data on connected sockets (SOCKIO records, agent releases after 0.6.0) ----
+# ---- data on connected sockets (SOCKIO records, agent 0.7.0 and later) ----
 from pdp_agent.sources.ebpf import (BPF_PROGRAM, BPF_URING, SOCKIO, SOCKIO_MS, SOCKIO_OPS, SOCKIO_VARIANTS, EbpfLive)
 from pdp_agent.sources.common import ProvenanceMapper
 

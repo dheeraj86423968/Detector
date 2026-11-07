@@ -92,8 +92,9 @@ try:
     check(st == 400 and "allow list" in msg, "approved_executables refused with a pointer to the allow list")
     st, msg = status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": False}}), s=A)
     check(st == 400 and msg.startswith("Reason required"), "weakening without a reason: 400")
-    check(status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": False, "layer_novelty": False}}, reason="x"), s=A)[0] == 400,
-          "both deterministic layers off: refused even with a reason")
+    # 0.7 floor: the learned layer or the data-flow rules must be able to alert
+    check(status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": False, "learned_alerts": False}}, reason="x"), s=A)[0] == 400,
+          "data-flow rules and learned alerts both off: refused even with a reason")
     check(status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": False}}, reason="noisy build host"), s=A)[0] == 200,
           "weakening with a reason: accepted")
     with db.conn() as c:
