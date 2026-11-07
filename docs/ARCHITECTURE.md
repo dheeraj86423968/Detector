@@ -103,7 +103,10 @@ created from the console (`POST /api/sim/campaigns`), executed as `sim` jobs by 
   (ptrace, the portable fallback where eBPF/audit are unavailable, e.g. the WSL2 kernel), `auditd` (kernel audit log),
   `windows_etw` (Windows ETW), and `db-replay`/`sandbox` for benchmarks. All emit the same normalised Entity/Event
   stream with one syscall set (execve/open/connect/clone family; file reads and writes are inferred from the open
-  mode, not traced), so edge semantics are identical across collectors and OSes. The record->event mapping of each
+  mode, not traced), so edge semantics are identical across collectors and OSes. The eBPF collector additionally
+  reports data moved on connected INET sockets (read/write/send/recv without an address, sendfile, splice, io_uring)
+  as READ / WRITE / RECV* / SEND* edges to the connection's netflow node (next agent release; docs/DEPLOYMENT.md §1;
+  file I/O stays inferred from the open mode). The record->event mapping of each
   collector is unit-tested without a kernel (tests/unit/test_{strace,ebpf,windows_etw,auditd}.py).
 * Entity dense ids must be identical on the agent and in the server's window store (detector-2 neighbour state is
   keyed by them). The agent uploads each entity with its own registry index (`dense_id`) and the server builds the

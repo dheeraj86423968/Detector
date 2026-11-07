@@ -52,9 +52,12 @@ organisation as `detection_weakened`; program approvals only through the allow l
 with an explicit confirmation; per-endpoint detection posture; scoped hunts; bounded, audited exports; rate limits.
 
 **What remains** (no change in 0.6): a root attacker who fully emulates the agent is not detectable without host
-attestation; the live eBPF collector does not trace `read()` / `write()` on TCP sockets, so a download over HTTPS
-taints only through layer 1 (a new program) - the file it wrote is not untrusted content (follow-up: socket I/O in
-the collector); taint decays with a one-hour half-life and attenuates per file hop (Morse / CAPTAIN design: an
+attestation; the live eBPF collector of agent <= 0.6 does not trace `read()` / `write()` on TCP sockets, so a
+download over HTTPS taints only through layer 1 (a new program) - the file it wrote is not untrusted content (built
+for the next agent release on 2026-11-07, not yet released: read / write / send / recv on connected sockets become
+READ / WRITE / RECVFROM / SENDTO / ... edges to the connect's netflow node, which `socket_io` already treats as
+receive / send - docs/DEPLOYMENT.md §1 "Data on connected sockets"; the strace / auditd collectors still lack them);
+taint decays with a one-hour half-life and attenuates per file hop (Morse / CAPTAIN design: an
 attacker who waits, or copies a payload three times, launders layer-2 taint - layer 1 still flags a new program);
 approvals and known programs are by path, not by content hash.
 

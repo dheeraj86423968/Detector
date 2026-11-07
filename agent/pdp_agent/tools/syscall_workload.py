@@ -3,8 +3,9 @@
 
   exec (short and > 512-byte argv), file read / write / read-write, open through a symlink, fork (a child that
   writes and exits without exec), fd-relative opens (openat on a directory fd, on a dup()ed and an F_DUPFD_CLOEXEC
-  copy of it, and fts walkers: find, grep -r), TCP connect + accept on 127.0.0.1, UDP sendto/recvfrom and
-  sendmsg/recvmsg on 127.0.0.1, IPv6 loopback, connects to non-local TEST-NET addresses (RFC 5737 / RFC 3849:
+  copy of it, and fts walkers: find, grep -r), TCP connect + accept on 127.0.0.1 with data on the connected sockets
+  (send / recv without an address, write / read: eBPF socket-data edges, not traced by strace), UDP sendto/recvfrom
+  and sendmsg/recvmsg on 127.0.0.1, IPv6 loopback, connects to non-local TEST-NET addresses (RFC 5737 / RFC 3849:
   never routed, short timeout; at most a TCP SYN leaves the host, no payload).
 
   python -m pdp_agent.tools.syscall_workload --root DIR [--port 39100]
@@ -30,6 +31,13 @@ def _connect_out(family: int, ip: str, port: int):
         pass
     finally:
         s.close()
+
+
+def _serve_once(srv):
+    c, _ = srv.accept()
+    c.recv(16)                                   # recv() without an address: RECVFROM from the client's address
+    os.write(c.fileno(), b"ok")                  # write() on a socket: WRITE process -> netflow
+    c.close()
 
 
 def main(argv=None):
@@ -86,11 +94,14 @@ def main(argv=None):
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv.bind(("127.0.0.1", P)); srv.listen(1)
-    acc = threading.Thread(target=lambda: srv.accept()[0].close())
+    acc = threading.Thread(target=_serve_once, args=(srv,))
     acc.start()
     c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     c.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    c.bind(("127.0.0.1", P + 1)); c.connect(("127.0.0.1", P)); c.sendall(b"hi"); c.close()
+    c.bind(("127.0.0.1", P + 1)); c.connect(("127.0.0.1", P))
+    c.sendall(b"hi")                             # send() on a connected socket: SENDTO without an address
+    os.read(c.fileno(), 16)                      # read() on a socket: READ netflow -> process
+    c.close()
     acc.join(); srv.close()
 
     # UDP on loopback: sendto / recvfrom, sendmsg / recvmsg
