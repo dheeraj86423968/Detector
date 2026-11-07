@@ -153,6 +153,7 @@ class EntityKeys:
     def __init__(self, model: "BehaviourModel", reg: Registry):
         self.model, self.reg = model, reg
         self.isproc = np.zeros(0, bool)
+        self.isnet = np.zeros(0, bool)
         self.k = np.zeros((0, 5), np.int64)
         self.grow()
 
@@ -161,19 +162,22 @@ class EntityKeys:
         if n <= m:
             return
         isp = np.zeros(n - m, bool)
+        isn = np.zeros(n - m, bool)
         kk = np.empty((n - m, 5), np.int64)
         for j, i in enumerate(range(m, n)):
             e = self.reg.entities[i]
             isp[j] = e.ntype == "subject"
+            isn[j] = e.ntype == "netflow"
             kk[j] = [self.model.key_id(s) for s in entity_keys(e.ntype, e.label)]
         self.isproc = np.concatenate([self.isproc, isp])
+        self.isnet = np.concatenate([self.isnet, isn])
         self.k = np.concatenate([self.k, kk])
 
     def remap(self, old2new) -> None:
         o2n = np.asarray(old2new, dtype=np.int64)
         keep = o2n >= 0
         n = len(self.isproc)
-        self.isproc, self.k = self.isproc[:n][keep[:n]], self.k[:n][keep[:n]]
+        self.isproc, self.isnet, self.k = self.isproc[:n][keep[:n]], self.isnet[:n][keep[:n]], self.k[:n][keep[:n]]
 
 
 def edge_events(w, K: EntityKeys):
@@ -444,3 +448,49 @@ def propagate(level: np.ndarray, own: np.ndarray, w, edge_score: np.ndarray, del
         np.maximum.at(level, d[ok], delta * np.minimum(ps[ok], clip))
         if np.array_equal(level[d[ok]], before):
             break
+
+
+# 0.7b: per-activity thresholds. Different kinds of activity have very different amounts of benign novelty (a busy
+# host contacts new addresses all day; it rarely starts a program from a new place), so one threshold per node type
+# is set by the noisiest kind and hides the quiet ones. Groups by what the event touches:
+GROUP_NAMES = ("process", "network", "file-write", "file-read")
+_WRITE_ID = EDGE_TYPE_ID["WRITE"]
+
+
+def event_groups(K: EntityKeys, x: np.ndarray, r: np.ndarray) -> np.ndarray:
+    """Group id per event: 0 the object is a process (starts, the parent of a start), 1 a network endpoint, 2 a file
+    written to, 3 a file read / opened / executed."""
+    g = np.full(len(x), 3, np.int64)
+    g[K.isproc[x]] = 0
+    g[K.isnet[x]] = 1
+    g[(g == 3) & ((r // 2) == _WRITE_ID)] = 2
+    return g
+
+
+def grouped_node_scores(model: "BehaviourModel", w, K: EntityKeys, n: int, thr: np.ndarray):
+    """(node ratio, edge ratio): each event's score over its group's threshold; a node's ratio is the max over its
+    events (any group), an edge's the max over its events."""
+    p, x, e, s = model.edge_scores(w, K)
+    own = np.zeros(n)
+    es = np.zeros(w.num_edges)
+    if len(s):
+        r = edge_events(w, K)[2]
+        q = s / thr[event_groups(K, x, r)]
+        np.maximum.at(own, p, q)
+        np.maximum.at(own, x, q)
+        np.maximum.at(es, e, q)
+    return own, es
+
+
+def grouped_raw_scores(model: "BehaviourModel", w, K: EntityKeys, n: int) -> np.ndarray:
+    """(len(GROUP_NAMES), n): each node's max raw score per group (for calibration)."""
+    p, x, e, s = model.edge_scores(w, K)
+    out = np.zeros((len(GROUP_NAMES), n))
+    if len(s):
+        r = edge_events(w, K)[2]
+        g = event_groups(K, x, r)
+        for k in range(len(GROUP_NAMES)):
+            m = g == k
+            np.maximum.at(out[k], p[m], s[m])
+            np.maximum.at(out[k], x[m], s[m])
+    return out

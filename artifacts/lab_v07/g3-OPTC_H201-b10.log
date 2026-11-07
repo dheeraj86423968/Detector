@@ -1,0 +1,15 @@
+06:02:05 OPTC_H201: fitted
+06:02:07 own thr {'proc': 35.729925934118086, 'obj': 41.995238467805144} learned thr 1.0593980550765991
+06:02:13 chain thresholds {('bl', 'max', 0.0): 1.0511721651485473, ('bl', 'max', 0.7): 1.3164130755313466, ('bl', 'max', 0.85): 1.5985015917166352, ('bl', 'max', 0.9): 1.6925310971117316, ('learned', 'max', 0.0): 1.0, ('learned', 'max', 0.7): 1.0, ('learned', 'max', 0.85): 1.0, ('learned', 'max', 0.9): 1.0, ('both', 'max', 0.0): 1.0868586539137775, ('both', 'max', 0.7): 1.3164130755313466, ('both', 'max', 0.85): 1.5985015917166352, ('both', 'max', 0.9): 1.6925310971117316}
+bl|max|0.0 ADP 0.999 fp10/day:2/1 fp50/day:8/1 fp200/day:16/1 AT-THRESHOLD: {'TP': 12, 'FP': 313, 'recall': 0.004, 'attacks': 1}
+bl|max|0.7 ADP 0.999 fp10/day:1/1 fp50/day:1/1 fp200/day:1/1 AT-THRESHOLD: {'TP': 13, 'FP': 5415, 'recall': 0.004, 'attacks': 1}
+bl|max|0.85 ADP 0.999 fp10/day:1/1 fp50/day:1/1 fp200/day:1/1 AT-THRESHOLD: {'TP': 177, 'FP': 29089, 'recall': 0.061, 'attacks': 1}
+bl|max|0.9 ADP 0.999 fp10/day:1/1 fp50/day:1/1 fp200/day:1/1 AT-THRESHOLD: {'TP': 177, 'FP': 33194, 'recall': 0.061, 'attacks': 1}
+learned|max|0.0 ADP 0.098 fp10/day:2/1 fp50/day:3/1 fp200/day:6/1 AT-THRESHOLD: {'TP': 0, 'FP': 9, 'recall': 0.0, 'attacks': 0}
+learned|max|0.7 ADP 0.878 fp10/day:2/1 fp50/day:3/1 fp200/day:3/1 AT-THRESHOLD: {'TP': 0, 'FP': 13, 'recall': 0.0, 'attacks': 0}
+learned|max|0.85 ADP 0.933 fp10/day:2/1 fp50/day:3/1 fp200/day:3/1 AT-THRESHOLD: {'TP': 0, 'FP': 14, 'recall': 0.0, 'attacks': 0}
+learned|max|0.9 ADP 0.941 fp10/day:2/1 fp50/day:2/1 fp200/day:2/1 AT-THRESHOLD: {'TP': 0, 'FP': 14, 'recall': 0.0, 'attacks': 0}
+both|max|0.0 ADP 0.999 fp10/day:2/1 fp50/day:8/1 fp200/day:14/1 AT-THRESHOLD: {'TP': 9, 'FP': 287, 'recall': 0.003, 'attacks': 1}
+both|max|0.7 ADP 0.999 fp10/day:1/1 fp50/day:1/1 fp200/day:1/1 AT-THRESHOLD: {'TP': 13, 'FP': 5416, 'recall': 0.004, 'attacks': 1}
+both|max|0.85 ADP 0.999 fp10/day:1/1 fp50/day:1/1 fp200/day:1/1 AT-THRESHOLD: {'TP': 177, 'FP': 29089, 'recall': 0.061, 'attacks': 1}
+both|max|0.9 ADP 0.999 fp10/day:1/1 fp50/day:1/1 fp200/day:1/1 AT-THRESHOLD: {'TP': 177, 'FP': 33194, 'recall': 0.061, 'attacks': 1}

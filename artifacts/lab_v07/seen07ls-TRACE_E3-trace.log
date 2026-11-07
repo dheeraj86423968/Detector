@@ -1,0 +1,28 @@
+11:49:07 0.6-config bundle 0s
+11:49:07 0.7 upgrade 0s
+11:53:22 0.7: {'TP': 9, 'FP': 81, 'recall': 0.257, 'attacks': 3, 'FP/day': 20.2, 'by_layer': {'novelty': 78, 'learned': 11, 'corroborated': 1}, 'gt_in_test': 35}
+{
+ "dataset": "TRACE_E3",
+ "host": "trace",
+ "test_days": [
+  "2018-04-10",
+  "2018-04-11",
+  "2018-04-12",
+  "2018-04-13"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 35,
+ "0.7": {
+  "TP": 9,
+  "FP": 81,
+  "recall": 0.257,
+  "attacks": 3,
+  "FP/day": 20.2,
+  "by_layer": {
+   "novelty": 78,
+   "learned": 11,
+   "corroborated": 1
+  },
+  "gt_in_test": 35
+ }
+}

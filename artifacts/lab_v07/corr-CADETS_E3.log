@@ -1,0 +1,33 @@
+07:07:49 upgrade 0s; calibration final {'threshold': 1.0298424956177843, 'budget': 10, 'percentiles': {'99': 0.5797259829803532, '99.9': 0.9719525752797058, '99.99': 1.0170764047744516}, 'validation_nodes': 111331}
+07:08:00 corroboration threshold 0.944
+07:08:32 scored 43s, alerts 60 by layer {'learned': 27, 'rules': 30, 'corroborated': 3}
+{
+ "product": {
+  "TP": 32,
+  "FP": 28,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 7.0
+ },
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "layer:learned": {
+  "TP": 1,
+  "FP": 26,
+  "recall": 0.015,
+  "attacks": 1
+ },
+ "layer:rules": {
+  "TP": 29,
+  "FP": 1,
+  "recall": 0.426,
+  "attacks": 3
+ },
+ "layer:corroborated": {
+  "TP": 2,
+  "FP": 1,
+  "recall": 0.029,
+  "attacks": 2
+ }
+}

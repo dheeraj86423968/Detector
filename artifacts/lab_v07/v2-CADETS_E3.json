@@ -1,0 +1,400 @@
+{
+ "_meta": {
+  "gt_nodes": 68,
+  "test_nodes": 281585,
+  "thr": {
+   "proc": 73.19582127606856,
+   "obj": 73.19582127606856
+  }
+ },
+ "bl|d0.0": {
+  "ADP": 0.562,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 2,
+   "FP": 8,
+   "recall": 0.029,
+   "attacks": 2
+  }
+ },
+ "bl|d0.5": {
+  "ADP": 0.562,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 2,
+   "FP": 8,
+   "recall": 0.029,
+   "attacks": 2
+  }
+ },
+ "bl|d0.7": {
+  "ADP": 0.562,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 2,
+   "FP": 8,
+   "recall": 0.029,
+   "attacks": 2
+  }
+ },
+ "bl|d0.85": {
+  "ADP": 0.54,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 25,
+   "recall": 0.368,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 33,
+   "recall": 0.485,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 2,
+   "FP": 8,
+   "recall": 0.029,
+   "attacks": 2
+  }
+ },
+ "bl|d0.95": {
+  "ADP": 0.487,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 2,
+   "recall": 0.029,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp200/day": {
+   "TP": 6,
+   "recall": 0.088,
+   "attacks": 2
+  },
+  "thr:1.0": {
+   "TP": 2,
+   "FP": 10,
+   "recall": 0.029,
+   "attacks": 2
+  }
+ },
+ "learned|d0.0": {
+  "ADP": 0.966,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 23,
+   "recall": 0.338,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 28,
+   "recall": 0.412,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 31,
+   "recall": 0.456,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 23,
+   "FP": 11,
+   "recall": 0.338,
+   "attacks": 3
+  }
+ },
+ "learned|d0.5": {
+  "ADP": 0.966,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 23,
+   "recall": 0.338,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 28,
+   "recall": 0.412,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 35,
+   "recall": 0.515,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 23,
+   "FP": 11,
+   "recall": 0.338,
+   "attacks": 3
+  }
+ },
+ "learned|d0.7": {
+  "ADP": 0.966,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 23,
+   "recall": 0.338,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 37,
+   "recall": 0.544,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 40,
+   "recall": 0.588,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 23,
+   "FP": 11,
+   "recall": 0.338,
+   "attacks": 3
+  }
+ },
+ "learned|d0.85": {
+  "ADP": 0.97,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 34,
+   "recall": 0.5,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 40,
+   "recall": 0.588,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 31,
+   "FP": 12,
+   "recall": 0.456,
+   "attacks": 3
+  }
+ },
+ "learned|d0.95": {
+  "ADP": 0.999,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 30,
+   "recall": 0.441,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 38,
+   "recall": 0.559,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 41,
+   "recall": 0.603,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 40,
+   "FP": 300,
+   "recall": 0.588,
+   "attacks": 3
+  }
+ },
+ "both|d0.0": {
+  "ADP": 0.957,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 24,
+   "recall": 0.353,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 28,
+   "recall": 0.412,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 43,
+   "recall": 0.632,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 24,
+   "FP": 18,
+   "recall": 0.353,
+   "attacks": 3
+  }
+ },
+ "both|d0.5": {
+  "ADP": 0.957,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 24,
+   "recall": 0.353,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 28,
+   "recall": 0.412,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 43,
+   "recall": 0.632,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 24,
+   "FP": 18,
+   "recall": 0.353,
+   "attacks": 3
+  }
+ },
+ "both|d0.7": {
+  "ADP": 0.957,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 24,
+   "recall": 0.353,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 36,
+   "recall": 0.529,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 43,
+   "recall": 0.632,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 24,
+   "FP": 18,
+   "recall": 0.353,
+   "attacks": 3
+  }
+ },
+ "both|d0.85": {
+  "ADP": 0.971,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 33,
+   "recall": 0.485,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 41,
+   "recall": 0.603,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 43,
+   "recall": 0.632,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 32,
+   "FP": 19,
+   "recall": 0.471,
+   "attacks": 3
+  }
+ },
+ "both|d0.95": {
+  "ADP": 1.0,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 30,
+   "recall": 0.441,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 39,
+   "recall": 0.574,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "thr:1.0": {
+   "TP": 41,
+   "FP": 309,
+   "recall": 0.603,
+   "attacks": 3
+  }
+ }
+}

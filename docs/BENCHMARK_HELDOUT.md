@@ -1,11 +1,41 @@
-# Held-out benchmark: DARPA E3 ClearScope and FiveDirections (0.6, 2026-11-06)
+# Held-out benchmarks
+
+## 0.7 (2026-11-07): DARPA E3 TRACE and ATLASv2 (EDR telemetry)
+
+Three hosts nobody on this project had looked at, prepared by a separate step that ran no detector
+(`tools.heldout_prep` for ATLASv2 from its Carbon Black EDR database, `tools.heldout_stream` for TRACE, streamed
+from its dump - byte-identical to the normal replay on a sample). Chronological split (train, validation, test).
+CARBANAKv2 could not be downloaded (Google Drive quota, 7 attempts). Protocol and decision record:
+artifacts/lab_v07/PROTOCOL.md (the 0.7 configuration was frozen and committed, 54386cf, before this run).
+
+| host | platform | train / validation / test days | attacks (ground-truth nodes) |
+|---|---|---|---|
+| ATLASv2 h1 | Windows (Carbon Black EDR) | 07-15..17 / 07-18 / 07-19 | 10 (48) |
+| ATLASv2 h2 | Windows | same | none (false positives only) |
+| TRACE | Linux | 04-02..08 / 04-09 / 04-10..13 | 3 (35) |
+
+Per host: one 0.6-configured bundle trained on the baseline (GPU), then upgraded to 0.7 with `upgrade_bundle_07`
+(same detectors 1-2, so the comparison isolates the 0.7 changes); test days scored by the runtime. Run once:
+
+| host | 0.6: TP / FP / attacks | 0.7 (as frozen, layer 1 off): TP / FP / attacks |
+|---|---|---|
+| ATLASv2 h1 | 6 / 46 / 4 of 10 | 11 / 139 / 8 of 10 |
+| ATLASv2 h2 | 0 / 26 / - | 0 / 39 / - |
+| TRACE | 9 / 69 / 3 of 3 | 0 / 10 / 0 of 3 |
+
+0.7 doubled the attacks found on the Windows EDR host and lost all three on the Linux host, where 0.6 had found them
+only through layer 1 (new executable) - which 0.7 had turned off. Diagnosis and the configuration released after it
+(layer 1 kept as a safety net, decided by the user; on these hosts, now seen: ATLASv2 h1 8 of 10 with 125 false
+positives, h2 36, TRACE 3 of 3 with 81): docs/DETECTION_LAYERS.md "0.7". Results: artifacts/benchmark_heldout/eval-*-v07.json.
+
+## 0.6 (2026-11-06): DARPA E3 ClearScope and FiveDirections
 
 Two DARPA TC E3 datasets this project had never looked at, added so a change can be checked on data it was not
 developed on (CADETS, THEIA and OpTC H201 / H501 / H051 have all been used for development by now). Protocol written
 before any change or any look at the data: artifacts/lab_v06/PROTOCOL.md. Raw JSON:
 `artifacts/benchmark_heldout/eval-{clearscope,fivedirections}-{v05,v06}.json`.
 
-## Data and product cycle
+### Data and product cycle
 
 PIDSMaker's databases (`clearscope_e3`, `fivedirections_e3`) and its orthrus ground truth, replayed through the
 normal product path (`deploy/bench/run_heldout.sh`: enrolment token, replay agent, baseline upload, GPU training,
@@ -24,7 +54,7 @@ training run per dataset (the other benchmarks use five).
 0.5 = the bundle the product trained (0.5 learned detectors, 0.4 layer configuration). 0.6 = the same bundle with
 its layers re-fitted under the frozen 0.6 defaults (`tools.add_layers`). Run once each.
 
-## Results
+### Results
 
 | | product: TP / FP | attacks | MCC | product ADP | learned ranker alone: ADP, attacks |
 |---|---|---|---|---|---|

@@ -1,0 +1,2484 @@
+{
+ "flow_only": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 59,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 19.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 72,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 0,
+   "FP": 45,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 22.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 48,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 16.0,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.0|0.0|topk5": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 14,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 4.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 3,
+   "FP": 12,
+   "recall": 0.026,
+   "attacks": 1,
+   "FP/day": 4.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.0|0.0|topk5": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 72,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 82,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 54,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 62,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.7,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.0|0.0|topk10": {
+  "OPTC_H501": {
+   "TP": 2,
+   "FP": 28,
+   "recall": 0.003,
+   "attacks": 1,
+   "FP/day": 9.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 4,
+   "FP": 26,
+   "recall": 0.035,
+   "attacks": 1,
+   "FP/day": 8.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 9.7,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.0|0.0|topk10": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 84,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 28.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 90,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 30.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 64,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 32.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 75,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 25.0,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.0|0.0|topk20": {
+  "OPTC_H501": {
+   "TP": 4,
+   "FP": 56,
+   "recall": 0.005,
+   "attacks": 1,
+   "FP/day": 18.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 9,
+   "FP": 51,
+   "recall": 0.079,
+   "attacks": 1,
+   "FP/day": 17.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 4,
+   "FP": 56,
+   "recall": 0.037,
+   "attacks": 2,
+   "FP/day": 18.7,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.0|0.0|topk20": {
+  "OPTC_H501": {
+   "TP": 18,
+   "FP": 111,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 37.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 110,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 36.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 84,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 42.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 4,
+   "FP": 102,
+   "recall": 0.037,
+   "attacks": 2,
+   "FP/day": 34.0,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.0|0.0|cap5": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 14,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 4.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 3,
+   "FP": 12,
+   "recall": 0.026,
+   "attacks": 1,
+   "FP/day": 4.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.0|0.0|cap5": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 72,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 82,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 54,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 62,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.7,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.0|0.0|cap10": {
+  "OPTC_H501": {
+   "TP": 2,
+   "FP": 28,
+   "recall": 0.003,
+   "attacks": 1,
+   "FP/day": 9.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 4,
+   "FP": 26,
+   "recall": 0.035,
+   "attacks": 1,
+   "FP/day": 8.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 9.7,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.0|0.0|cap10": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 84,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 28.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 90,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 30.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 64,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 32.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 75,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 25.0,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.0|0.0|cap20": {
+  "OPTC_H501": {
+   "TP": 4,
+   "FP": 51,
+   "recall": 0.005,
+   "attacks": 1,
+   "FP/day": 17.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 9,
+   "FP": 51,
+   "recall": 0.079,
+   "attacks": 1,
+   "FP/day": 17.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 4,
+   "FP": 56,
+   "recall": 0.037,
+   "attacks": 2,
+   "FP/day": 18.7,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.0|0.0|cap20": {
+  "OPTC_H501": {
+   "TP": 18,
+   "FP": 106,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 35.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 110,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 36.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 84,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 42.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 4,
+   "FP": 102,
+   "recall": 0.037,
+   "attacks": 2,
+   "FP/day": 34.0,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.95|0.4|topk5": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 14,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 4.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 2,
+   "FP": 13,
+   "recall": 0.018,
+   "attacks": 1,
+   "FP/day": 4.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.95|0.4|topk5": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 72,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 82,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 54,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 62,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.7,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.95|0.4|topk10": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 9.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 5,
+   "FP": 25,
+   "recall": 0.044,
+   "attacks": 1,
+   "FP/day": 8.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 30,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 10.0,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.95|0.4|topk10": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 87,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 29.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 75,
+   "FP": 93,
+   "recall": 0.658,
+   "attacks": 1,
+   "FP/day": 31.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 64,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 32.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 75,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 25.0,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.95|0.4|topk20": {
+  "OPTC_H501": {
+   "TP": 2,
+   "FP": 58,
+   "recall": 0.003,
+   "attacks": 1,
+   "FP/day": 19.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 5,
+   "FP": 55,
+   "recall": 0.044,
+   "attacks": 1,
+   "FP/day": 18.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 59,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 19.7,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.95|0.4|topk20": {
+  "OPTC_H501": {
+   "TP": 18,
+   "FP": 116,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 38.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 75,
+   "FP": 121,
+   "recall": 0.658,
+   "attacks": 1,
+   "FP/day": 40.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 84,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 42.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 102,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 34.0,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.95|0.4|cap5": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 14,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 4.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 2,
+   "FP": 9,
+   "recall": 0.018,
+   "attacks": 1,
+   "FP/day": 3.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.95|0.4|cap5": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 72,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 78,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 26.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 54,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 62,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.7,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.95|0.4|cap10": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 9.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 5,
+   "FP": 16,
+   "recall": 0.044,
+   "attacks": 1,
+   "FP/day": 5.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 30,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 10.0,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.95|0.4|cap10": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 87,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 29.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 75,
+   "FP": 84,
+   "recall": 0.658,
+   "attacks": 1,
+   "FP/day": 28.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 64,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 32.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 75,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 25.0,
+   "n_att": 2
+  }
+ },
+ "bl|max|0.95|0.4|cap20": {
+  "OPTC_H501": {
+   "TP": 2,
+   "FP": 58,
+   "recall": 0.003,
+   "attacks": 1,
+   "FP/day": 19.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 5,
+   "FP": 36,
+   "recall": 0.044,
+   "attacks": 1,
+   "FP/day": 12.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 59,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 19.7,
+   "n_att": 2
+  }
+ },
+ "flow+bl|max|0.95|0.4|cap20": {
+  "OPTC_H501": {
+   "TP": 18,
+   "FP": 116,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 38.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 75,
+   "FP": 102,
+   "recall": 0.658,
+   "attacks": 1,
+   "FP/day": 34.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 84,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 42.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 102,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 34.0,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.0|0.0|topk5": {
+  "OPTC_H501": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.0|0.0|topk5": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 68,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 22.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 78,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 26.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 50,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 25.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 61,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.3,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.0|0.0|topk10": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 9.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.009,
+   "attacks": 1,
+   "FP/day": 9.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 30,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 10.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.0|0.0|topk10": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 82,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 88,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 29.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 55,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 68,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 22.7,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.0|0.0|topk20": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 59,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 19.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 3,
+   "FP": 57,
+   "recall": 0.026,
+   "attacks": 1,
+   "FP/day": 19.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 60,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.0|0.0|topk20": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 112,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 37.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 112,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 37.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 68,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 34.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 90,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 30.0,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.0|0.0|cap5": {
+  "OPTC_H501": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 0,
+   "FP": 4,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 1.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.0|0.0|cap5": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 68,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 22.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 72,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 50,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 25.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 61,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.3,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.0|0.0|cap10": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 23,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 7.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 0,
+   "FP": 4,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 1.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 30,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 10.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.0|0.0|cap10": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 76,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 25.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 72,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 55,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 68,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 22.7,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.0|0.0|cap20": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 23,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 7.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 0,
+   "FP": 4,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 1.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 60,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.0|0.0|cap20": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 76,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 25.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 72,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 68,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 34.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 90,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 30.0,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.95|0.4|topk5": {
+  "OPTC_H501": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.95|0.4|topk5": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 70,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 23.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 78,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 26.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 50,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 25.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 61,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.3,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.95|0.4|topk10": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 9.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.009,
+   "attacks": 1,
+   "FP/day": 9.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 30,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 10.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.95|0.4|topk10": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 82,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 87,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 29.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 55,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 73,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 24.3,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.95|0.4|topk20": {
+  "OPTC_H501": {
+   "TP": 5,
+   "FP": 55,
+   "recall": 0.007,
+   "attacks": 1,
+   "FP/day": 18.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 4,
+   "FP": 56,
+   "recall": 0.035,
+   "attacks": 1,
+   "FP/day": 18.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 60,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.95|0.4|topk20": {
+  "OPTC_H501": {
+   "TP": 18,
+   "FP": 106,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 35.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 75,
+   "FP": 110,
+   "recall": 0.658,
+   "attacks": 1,
+   "FP/day": 36.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 68,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 34.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 100,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 33.3,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.95|0.4|cap5": {
+  "OPTC_H501": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 0,
+   "FP": 6,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 2.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.95|0.4|cap5": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 70,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 23.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 73,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 24.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 50,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 25.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 61,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.3,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.95|0.4|cap10": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 9.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 0,
+   "FP": 6,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 2.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 30,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 10.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.95|0.4|cap10": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 82,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 73,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 24.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 55,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 73,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 24.3,
+   "n_att": 2
+  }
+ },
+ "learned|max|0.95|0.4|cap20": {
+  "OPTC_H501": {
+   "TP": 2,
+   "FP": 41,
+   "recall": 0.003,
+   "attacks": 1,
+   "FP/day": 13.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 0,
+   "FP": 6,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 2.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 60,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.0,
+   "n_att": 2
+  }
+ },
+ "flow+learned|max|0.95|0.4|cap20": {
+  "OPTC_H501": {
+   "TP": 16,
+   "FP": 92,
+   "recall": 0.021,
+   "attacks": 1,
+   "FP/day": 30.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 73,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 24.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 68,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 34.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 100,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 33.3,
+   "n_att": 2
+  }
+ },
+ "both|max|0.0|0.0|topk5": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 14,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 4.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 3,
+   "FP": 12,
+   "recall": 0.026,
+   "attacks": 1,
+   "FP/day": 4.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.0|0.0|topk5": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 70,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 23.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 82,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 54,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 62,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.7,
+   "n_att": 2
+  }
+ },
+ "both|max|0.0|0.0|topk10": {
+  "OPTC_H501": {
+   "TP": 2,
+   "FP": 28,
+   "recall": 0.003,
+   "attacks": 1,
+   "FP/day": 9.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 4,
+   "FP": 26,
+   "recall": 0.035,
+   "attacks": 1,
+   "FP/day": 8.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 9.7,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.0|0.0|topk10": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 82,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 90,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 30.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 64,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 32.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 75,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 25.0,
+   "n_att": 2
+  }
+ },
+ "both|max|0.0|0.0|topk20": {
+  "OPTC_H501": {
+   "TP": 4,
+   "FP": 56,
+   "recall": 0.005,
+   "attacks": 1,
+   "FP/day": 18.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 9,
+   "FP": 51,
+   "recall": 0.079,
+   "attacks": 1,
+   "FP/day": 17.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 4,
+   "FP": 56,
+   "recall": 0.037,
+   "attacks": 2,
+   "FP/day": 18.7,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.0|0.0|topk20": {
+  "OPTC_H501": {
+   "TP": 18,
+   "FP": 109,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 36.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 110,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 36.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 84,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 42.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 4,
+   "FP": 102,
+   "recall": 0.037,
+   "attacks": 2,
+   "FP/day": 34.0,
+   "n_att": 2
+  }
+ },
+ "both|max|0.0|0.0|cap5": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 14,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 4.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 3,
+   "FP": 12,
+   "recall": 0.026,
+   "attacks": 1,
+   "FP/day": 4.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.0|0.0|cap5": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 70,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 23.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 82,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 54,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 62,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.7,
+   "n_att": 2
+  }
+ },
+ "both|max|0.0|0.0|cap10": {
+  "OPTC_H501": {
+   "TP": 2,
+   "FP": 28,
+   "recall": 0.003,
+   "attacks": 1,
+   "FP/day": 9.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 4,
+   "FP": 26,
+   "recall": 0.035,
+   "attacks": 1,
+   "FP/day": 8.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 9.7,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.0|0.0|cap10": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 82,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 90,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 30.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 64,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 32.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 75,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 25.0,
+   "n_att": 2
+  }
+ },
+ "both|max|0.0|0.0|cap20": {
+  "OPTC_H501": {
+   "TP": 4,
+   "FP": 47,
+   "recall": 0.005,
+   "attacks": 1,
+   "FP/day": 15.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 9,
+   "FP": 42,
+   "recall": 0.079,
+   "attacks": 1,
+   "FP/day": 14.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 4,
+   "FP": 56,
+   "recall": 0.037,
+   "attacks": 2,
+   "FP/day": 18.7,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.0|0.0|cap20": {
+  "OPTC_H501": {
+   "TP": 18,
+   "FP": 100,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 33.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 74,
+   "FP": 101,
+   "recall": 0.649,
+   "attacks": 1,
+   "FP/day": 33.7,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 84,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 42.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 4,
+   "FP": 102,
+   "recall": 0.037,
+   "attacks": 2,
+   "FP/day": 34.0,
+   "n_att": 2
+  }
+ },
+ "both|max|0.95|0.4|topk5": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 14,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 4.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 2,
+   "FP": 13,
+   "recall": 0.018,
+   "attacks": 1,
+   "FP/day": 4.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.95|0.4|topk5": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 72,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 82,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 27.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 54,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 62,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.7,
+   "n_att": 2
+  }
+ },
+ "both|max|0.95|0.4|topk10": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 9.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 5,
+   "FP": 25,
+   "recall": 0.044,
+   "attacks": 1,
+   "FP/day": 8.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 30,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 10.0,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.95|0.4|topk10": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 87,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 29.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 75,
+   "FP": 93,
+   "recall": 0.658,
+   "attacks": 1,
+   "FP/day": 31.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 64,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 32.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 75,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 25.0,
+   "n_att": 2
+  }
+ },
+ "both|max|0.95|0.4|topk20": {
+  "OPTC_H501": {
+   "TP": 2,
+   "FP": 58,
+   "recall": 0.003,
+   "attacks": 1,
+   "FP/day": 19.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 5,
+   "FP": 55,
+   "recall": 0.044,
+   "attacks": 1,
+   "FP/day": 18.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 59,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 19.7,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.95|0.4|topk20": {
+  "OPTC_H501": {
+   "TP": 18,
+   "FP": 116,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 38.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 75,
+   "FP": 121,
+   "recall": 0.658,
+   "attacks": 1,
+   "FP/day": 40.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 84,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 42.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 102,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 34.0,
+   "n_att": 2
+  }
+ },
+ "both|max|0.95|0.4|cap5": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 14,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 4.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 2,
+   "FP": 9,
+   "recall": 0.018,
+   "attacks": 1,
+   "FP/day": 3.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 4.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 15,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 5.0,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.95|0.4|cap5": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 72,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 24.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 73,
+   "FP": 78,
+   "recall": 0.64,
+   "attacks": 1,
+   "FP/day": 26.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 54,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 27.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 62,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 20.7,
+   "n_att": 2
+  }
+ },
+ "both|max|0.95|0.4|cap10": {
+  "OPTC_H501": {
+   "TP": 1,
+   "FP": 29,
+   "recall": 0.001,
+   "attacks": 1,
+   "FP/day": 9.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 5,
+   "FP": 16,
+   "recall": 0.044,
+   "attacks": 1,
+   "FP/day": 5.3,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 19,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 9.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 30,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 10.0,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.95|0.4|cap10": {
+  "OPTC_H501": {
+   "TP": 17,
+   "FP": 87,
+   "recall": 0.023,
+   "attacks": 1,
+   "FP/day": 29.0,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 75,
+   "FP": 84,
+   "recall": 0.658,
+   "attacks": 1,
+   "FP/day": 28.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 64,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 32.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 0,
+   "FP": 75,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 25.0,
+   "n_att": 2
+  }
+ },
+ "both|max|0.95|0.4|cap20": {
+  "OPTC_H501": {
+   "TP": 2,
+   "FP": 58,
+   "recall": 0.003,
+   "attacks": 1,
+   "FP/day": 19.3,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 5,
+   "FP": 36,
+   "recall": 0.044,
+   "attacks": 1,
+   "FP/day": 12.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 39,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 19.5,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 59,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 19.7,
+   "n_att": 2
+  }
+ },
+ "flow+both|max|0.95|0.4|cap20": {
+  "OPTC_H501": {
+   "TP": 18,
+   "FP": 116,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 38.7,
+   "n_att": 1
+  },
+  "OPTC_H051": {
+   "TP": 75,
+   "FP": 102,
+   "recall": 0.658,
+   "attacks": 1,
+   "FP/day": 34.0,
+   "n_att": 1
+  },
+  "CLEARSCOPE_E3": {
+   "TP": 1,
+   "FP": 84,
+   "recall": 0.024,
+   "attacks": 1,
+   "FP/day": 42.0,
+   "n_att": 1
+  },
+  "FIVEDIRECTIONS_E3": {
+   "TP": 1,
+   "FP": 102,
+   "recall": 0.009,
+   "attacks": 2,
+   "FP/day": 34.0,
+   "n_att": 2
+  }
+ }
+}

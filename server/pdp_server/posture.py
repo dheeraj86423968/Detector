@@ -100,7 +100,8 @@ TRAIN_SCHEMA = {
     "fusion_mode": ("enum", ("max", "weighted")),                              # pdp_engine.scoring.fuse_ratios
     "orthrus_aggregate": ("enum", ("best_val_loss", "mean", "weighted")),      # pdp_engine.scoring.aggregate_weights
     "detector3": ("bool",),                     # 0.7 behavioural-likelihood detector (pdp_engine.behaviour)
-    "calibration_budget": ("int", 0, 200),      # benign validation nodes allowed over the learned thresholds
+    "calibration_budget": ("int", 0, 200),
+    "d3_grouped": ("bool",),                    # detector-3 thresholds per kind of activity      # benign validation nodes allowed over the learned thresholds
     "propagation": ("bool",),
     "propagation_delta": ("num", 0.0, 1.0),
     "propagation_gate": ("num", 0.0, 10.0),
@@ -108,6 +109,8 @@ TRAIN_SCHEMA = {
     "propagation_seed": ("num", 0.0, 10.0),
     "propagation_passes": ("int", 1, 5),
     "layer_novelty": ("bool",),
+    "novelty_as_evidence": ("bool",),
+    "corroboration_at_threshold": ("bool",),           # 0.7: new programs alert only when the learned score corroborates
     "layer_rules": ("bool",),
     "learned_daily_budget": ("int", 0, 1000),
     "learned_alerts": ("bool",),
@@ -211,9 +214,9 @@ def detection_settings(cfg: dict | None) -> dict:
     cfg = cfg or {}
     t = cfg.get("train") if isinstance(cfg.get("train"), dict) else {}
     al = t.get("alert_layers")
-    # defaults = TrainConfig's (0.7: layer 1 does not alert on its own, the learned layer does, detector-3 and
+    # defaults = TrainConfig's (0.7: layer 1 alerts (safety net), the learned layer alerts too, detector-3 and
     # propagation on, thresholds at a validation budget of 10)
-    return {"layer_novelty": t.get("layer_novelty", False) is True, "layer_rules": t.get("layer_rules", True) is not False,
+    return {"layer_novelty": t.get("layer_novelty", True) is not False, "layer_rules": t.get("layer_rules", True) is not False,
             "detector3": t.get("detector3", True) is not False, "propagation": t.get("propagation", True) is not False,
             "calibration_budget": t.get("calibration_budget", 10),
             "alert_layers": set(LAYERS) if al is None else set(al) if isinstance(al, list) else set(LAYERS),

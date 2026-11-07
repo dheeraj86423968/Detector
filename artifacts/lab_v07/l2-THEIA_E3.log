@@ -1,0 +1,4 @@
+06:10:19 layers: 130 known executables, 158 baseline remote addresses (144 recurring), benign alarm keys exfiltration=1
+06:10:29 THEIA_E3 prod06: 244 alerted nodes
+06:10:37 layers: 130 known executables, 158 baseline remote addresses (144 recurring), benign alarm keys exfiltration=1
+06:10:46 THEIA_E3 prod06_nonovelty: 219 alerted nodes

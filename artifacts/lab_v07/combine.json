@@ -1,0 +1,324 @@
+{
+ "prod06": {
+  "CADETS_E3": {
+   "TP": 33,
+   "FP": 40,
+   "recall": 0.485,
+   "attacks": 3,
+   "FP/day": 10.0
+  },
+  "THEIA_E3": {
+   "TP": 108,
+   "FP": 136,
+   "recall": 0.915,
+   "attacks": 2,
+   "FP/day": 45.3
+  },
+  "OPTC_H201": {
+   "TP": 18,
+   "FP": 193,
+   "recall": 0.006,
+   "attacks": 1,
+   "FP/day": 64.3
+  }
+ },
+ "flow_only": {
+  "CADETS_E3": {
+   "TP": 33,
+   "FP": 13,
+   "recall": 0.485,
+   "attacks": 3,
+   "FP/day": 3.2
+  },
+  "THEIA_E3": {
+   "TP": 107,
+   "FP": 112,
+   "recall": 0.907,
+   "attacks": 2,
+   "FP/day": 37.3
+  },
+  "OPTC_H201": {
+   "TP": 18,
+   "FP": 25,
+   "recall": 0.006,
+   "attacks": 1,
+   "FP/day": 8.3
+  }
+ },
+ "learned[bl|max|0.0|0.0]": {
+  "CADETS_E3": {
+   "TP": 18,
+   "FP": 42,
+   "recall": 0.265,
+   "attacks": 3,
+   "FP/day": 10.5
+  },
+  "THEIA_E3": {
+   "TP": 24,
+   "FP": 638,
+   "recall": 0.203,
+   "attacks": 2,
+   "FP/day": 212.7
+  },
+  "OPTC_H201": {
+   "TP": 12,
+   "FP": 417,
+   "recall": 0.004,
+   "attacks": 1,
+   "FP/day": 139.0
+  }
+ },
+ "flow_only+learned[bl|max|0.0|0.0]": {
+  "CADETS_E3": {
+   "TP": 37,
+   "FP": 52,
+   "recall": 0.544,
+   "attacks": 3,
+   "FP/day": 13.0
+  },
+  "THEIA_E3": {
+   "TP": 108,
+   "FP": 738,
+   "recall": 0.915,
+   "attacks": 2,
+   "FP/day": 246.0
+  },
+  "OPTC_H201": {
+   "TP": 23,
+   "FP": 436,
+   "recall": 0.008,
+   "attacks": 1,
+   "FP/day": 145.3
+  }
+ },
+ "learned[bl|max|0.95|0.4]": {
+  "CADETS_E3": {
+   "TP": 32,
+   "FP": 42,
+   "recall": 0.471,
+   "attacks": 3,
+   "FP/day": 10.5
+  },
+  "THEIA_E3": {
+   "TP": 30,
+   "FP": 743,
+   "recall": 0.254,
+   "attacks": 2,
+   "FP/day": 247.7
+  },
+  "OPTC_H201": {
+   "TP": 1,
+   "FP": 69,
+   "recall": 0.0,
+   "attacks": 1,
+   "FP/day": 23.0
+  }
+ },
+ "flow_only+learned[bl|max|0.95|0.4]": {
+  "CADETS_E3": {
+   "TP": 37,
+   "FP": 52,
+   "recall": 0.544,
+   "attacks": 3,
+   "FP/day": 13.0
+  },
+  "THEIA_E3": {
+   "TP": 111,
+   "FP": 842,
+   "recall": 0.941,
+   "attacks": 2,
+   "FP/day": 280.7
+  },
+  "OPTC_H201": {
+   "TP": 19,
+   "FP": 93,
+   "recall": 0.007,
+   "attacks": 1,
+   "FP/day": 31.0
+  }
+ },
+ "learned[learned|max|0.0|0.0]": {
+  "CADETS_E3": {
+   "TP": 23,
+   "FP": 25,
+   "recall": 0.338,
+   "attacks": 3,
+   "FP/day": 6.2
+  },
+  "THEIA_E3": {
+   "TP": 19,
+   "FP": 91,
+   "recall": 0.161,
+   "attacks": 2,
+   "FP/day": 30.3
+  },
+  "OPTC_H201": {
+   "TP": 0,
+   "FP": 9,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 3.0
+  }
+ },
+ "flow_only+learned[learned|max|0.0|0.0]": {
+  "CADETS_E3": {
+   "TP": 33,
+   "FP": 27,
+   "recall": 0.485,
+   "attacks": 3,
+   "FP/day": 6.8
+  },
+  "THEIA_E3": {
+   "TP": 108,
+   "FP": 167,
+   "recall": 0.915,
+   "attacks": 2,
+   "FP/day": 55.7
+  },
+  "OPTC_H201": {
+   "TP": 18,
+   "FP": 25,
+   "recall": 0.006,
+   "attacks": 1,
+   "FP/day": 8.3
+  }
+ },
+ "learned[learned|max|0.95|0.4]": {
+  "CADETS_E3": {
+   "TP": 38,
+   "FP": 27,
+   "recall": 0.559,
+   "attacks": 3,
+   "FP/day": 6.8
+  },
+  "THEIA_E3": {
+   "TP": 29,
+   "FP": 94,
+   "recall": 0.246,
+   "attacks": 2,
+   "FP/day": 31.3
+  },
+  "OPTC_H201": {
+   "TP": 0,
+   "FP": 9,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 3.0
+  }
+ },
+ "flow_only+learned[learned|max|0.95|0.4]": {
+  "CADETS_E3": {
+   "TP": 38,
+   "FP": 29,
+   "recall": 0.559,
+   "attacks": 3,
+   "FP/day": 7.2
+  },
+  "THEIA_E3": {
+   "TP": 110,
+   "FP": 170,
+   "recall": 0.932,
+   "attacks": 2,
+   "FP/day": 56.7
+  },
+  "OPTC_H201": {
+   "TP": 18,
+   "FP": 25,
+   "recall": 0.006,
+   "attacks": 1,
+   "FP/day": 8.3
+  }
+ },
+ "learned[both|max|0.0|0.0]": {
+  "CADETS_E3": {
+   "TP": 17,
+   "FP": 20,
+   "recall": 0.25,
+   "attacks": 3,
+   "FP/day": 5.0
+  },
+  "THEIA_E3": {
+   "TP": 30,
+   "FP": 652,
+   "recall": 0.254,
+   "attacks": 2,
+   "FP/day": 217.3
+  },
+  "OPTC_H201": {
+   "TP": 12,
+   "FP": 294,
+   "recall": 0.004,
+   "attacks": 1,
+   "FP/day": 98.0
+  }
+ },
+ "flow_only+learned[both|max|0.0|0.0]": {
+  "CADETS_E3": {
+   "TP": 34,
+   "FP": 29,
+   "recall": 0.5,
+   "attacks": 3,
+   "FP/day": 7.2
+  },
+  "THEIA_E3": {
+   "TP": 108,
+   "FP": 738,
+   "recall": 0.915,
+   "attacks": 2,
+   "FP/day": 246.0
+  },
+  "OPTC_H201": {
+   "TP": 23,
+   "FP": 310,
+   "recall": 0.008,
+   "attacks": 1,
+   "FP/day": 103.3
+  }
+ },
+ "learned[both|max|0.95|0.4]": {
+  "CADETS_E3": {
+   "TP": 23,
+   "FP": 16,
+   "recall": 0.338,
+   "attacks": 3,
+   "FP/day": 4.0
+  },
+  "THEIA_E3": {
+   "TP": 39,
+   "FP": 757,
+   "recall": 0.331,
+   "attacks": 2,
+   "FP/day": 252.3
+  },
+  "OPTC_H201": {
+   "TP": 1,
+   "FP": 69,
+   "recall": 0.0,
+   "attacks": 1,
+   "FP/day": 23.0
+  }
+ },
+ "flow_only+learned[both|max|0.95|0.4]": {
+  "CADETS_E3": {
+   "TP": 34,
+   "FP": 27,
+   "recall": 0.5,
+   "attacks": 3,
+   "FP/day": 6.8
+  },
+  "THEIA_E3": {
+   "TP": 111,
+   "FP": 842,
+   "recall": 0.941,
+   "attacks": 2,
+   "FP/day": 280.7
+  },
+  "OPTC_H201": {
+   "TP": 19,
+   "FP": 93,
+   "recall": 0.007,
+   "attacks": 1,
+   "FP/day": 31.0
+  }
+ }
+}

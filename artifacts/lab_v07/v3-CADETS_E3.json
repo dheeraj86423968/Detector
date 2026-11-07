@@ -1,0 +1,147 @@
+{
+ "_meta": {
+  "gt_nodes": 68,
+  "test_nodes": 281585,
+  "own_thr": {
+   "proc": 65.92865817883096,
+   "obj": 65.92865817883096
+  },
+  "cal": {
+   "('bl', 'max', 0.0)": 1.0,
+   "('bl', 'max', 0.85)": 1.0,
+   "('bl', 'add', 0.3)": 1.3,
+   "('bl', 'add', 0.5)": 1.6848641195212286,
+   "('bl', 'add', 0.7)": 2.807338656856402
+  }
+ },
+ "bl|max|0.0": {
+  "ADP": 0.559,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 33,
+   "recall": 0.485,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "thr:cal": {
+   "TP": 2,
+   "FP": 8,
+   "recall": 0.029,
+   "attacks": 2
+  }
+ },
+ "bl|max|0.85": {
+  "ADP": 0.54,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 25,
+   "recall": 0.368,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 33,
+   "recall": 0.485,
+   "attacks": 3
+  },
+  "thr:cal": {
+   "TP": 2,
+   "FP": 8,
+   "recall": 0.029,
+   "attacks": 2
+  }
+ },
+ "bl|add|0.3": {
+  "ADP": 0.336,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 41,
+   "recall": 0.603,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "thr:cal": {
+   "TP": 4,
+   "FP": 7,
+   "recall": 0.059,
+   "attacks": 2
+  }
+ },
+ "bl|add|0.5": {
+  "ADP": 0.469,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 39,
+   "recall": 0.574,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 42,
+   "recall": 0.618,
+   "attacks": 3
+  },
+  "thr:cal": {
+   "TP": 5,
+   "FP": 4,
+   "recall": 0.074,
+   "attacks": 2
+  }
+ },
+ "bl|add|0.7": {
+  "ADP": 0.162,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 0,
+   "recall": 0.0,
+   "attacks": 0
+  },
+  "fp50/day": {
+   "TP": 26,
+   "recall": 0.382,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 40,
+   "recall": 0.588,
+   "attacks": 3
+  },
+  "thr:cal": {
+   "TP": 0,
+   "FP": 54,
+   "recall": 0.0,
+   "attacks": 0
+  }
+ }
+}

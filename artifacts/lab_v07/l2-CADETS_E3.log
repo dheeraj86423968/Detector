@@ -1,0 +1,4 @@
+06:09:47 layers: 112 known executables, 844 baseline remote addresses (26 recurring), benign alarm keys exfiltration=2, tainted_modify=4
+06:09:49 CADETS_E3 prod06: 73 alerted nodes
+06:09:58 layers: 112 known executables, 844 baseline remote addresses (26 recurring), benign alarm keys exfiltration=2, tainted_modify=4
+06:09:59 CADETS_E3 prod06_nonovelty: 46 alerted nodes

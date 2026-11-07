@@ -1,0 +1,34 @@
+{
+ "dataset": "ATLASV2_EDR",
+ "host": "h1",
+ "test_days": [
+  "2022-07-19"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "0.6": {
+  "TP": 6,
+  "FP": 46,
+  "recall": 0.125,
+  "attacks": 4,
+  "FP/day": 46.0,
+  "by_layer": {
+   "novelty": 13,
+   "rules": 39
+  },
+  "gt_in_test": 48
+ },
+ "0.7": {
+  "TP": 11,
+  "FP": 139,
+  "recall": 0.229,
+  "attacks": 8,
+  "FP/day": 139.0,
+  "by_layer": {
+   "learned": 38,
+   "corroborated": 71,
+   "rules": 41
+  },
+  "gt_in_test": 48
+ }
+}

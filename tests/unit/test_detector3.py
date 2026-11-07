@@ -204,8 +204,11 @@ cal = man["calibration"]
 check("detector-3" in man["detectors"] and "detector-3" in man["requires"] and "propagation" in man["requires"],
       "0.7 bundle: detector-3 + propagation required of the runtime")
 check(cal.get("final", {}).get("pending") is None and cal["final"]["threshold"] > 0, f"final threshold calibrated after propagation ({cal['final']['threshold']:.3f})")
-check(man["layers"]["novelty"] is False and man["learned_policy"]["learned_alerts"] is True,
-      "0.7 defaults: layer 1 does not alert on its own; learned alerts on (daily budget)")
+check(man["layers"]["novelty"] is True and man["learned_policy"]["learned_alerts"] is True
+      and man["learned_policy"].get("corroboration") == "threshold",
+      "0.7 defaults: layer 1 kept as a safety net, learned alerts on, corroboration at the learned threshold")
+rtc = Runtime(out, st.load_registry(), device="cpu")
+check(abs(rtc.corroboration - 1.0) < 1e-3 and abs(rtc.policy.corroboration - 1.0) < 1e-3, "the runtime corroborates only above the learned threshold")
 check(os.path.exists(os.path.join(out, "detector-3.npz")) and "detector-3.npz" in man["sha256"], "detector-3 tables are in the signed digests")
 
 # score an attack day with the runtime
@@ -228,7 +231,7 @@ check(len(alerted) <= 25, f"few alerts on an otherwise ordinary day ({len(alerte
 check(r3max > 1.0, f"detector-3 scores the attack above its threshold (max ratio {r3max:.1f})")
 
 # upgrade path: a 0.6-style bundle (no detector-3) upgraded without retraining
-cfg6 = TrainConfig(**{**cfg.__dict__, "detector3": False, "layer_novelty": True, "learned_alerts": False})
+cfg6 = TrainConfig(**{**cfg.__dict__, "detector3": False, "layer_novelty": True, "novelty_as_evidence": False, "learned_alerts": False})
 b6 = os.path.join(tmp2, "b6")
 Trainer(st, days[:2], days[2], cfg6, b6).run({"endpoint": "t"})
 check("detector-3" not in json.load(open(os.path.join(b6, "manifest.json")))["detectors"], "0.6-style bundle has no detector-3")
@@ -238,6 +241,23 @@ m7 = json.load(open(os.path.join(b7, "manifest.json")))
 check("detector-3" in m7["detectors"] and m7["calibration"]["final"].get("pending") is None, "upgrade_bundle_07 adds detector-3 and calibrates")
 rt7 = Runtime(b7, st.load_registry(), device="cpu")
 check(rt7.bm is not None and rt7.prop is not None, "the runtime loads the upgraded bundle")
+
+# 0.7b option: per-activity detector-3 thresholds
+bg = os.path.join(tmp2, "bg")
+Trainer(st, days[:2], days[2], TrainConfig(**{**cfg.__dict__, "d3_grouped": True}), bg).run({"endpoint": "t"})
+cg = json.load(open(os.path.join(bg, "calibration.json")))["detector-3"]
+check(len(cg.get("groups", [])) == 4 and min(cg["groups"]) >= 5.0, f"per-activity thresholds calibrated ({[round(x, 1) for x in cg.get('groups', [])]})")
+regg = st.load_registry()
+for ents, _ in ev:
+    for x in ents:
+        regg.add(x)
+rtg = Runtime(bg, regg, device="cpu")
+alg = set()
+st3 = WindowStore(os.path.join(tmp2, "test3"))
+st3.add_day("2026-01-06", ingest_day(regg, [e for _, e in ev], lookup, window_ns=10 * MIN))
+for w in st3.windows("2026-01-06"):
+    alg |= {regg.entities[n].uuid for n in rtg.score(w).alerts.tolist()}
+check(rtg.thr3g is not None and "p:t:run" in alg, f"per-activity thresholds: the dropped program still alerts ({len(alg)} alerts)")
 
 shutil.rmtree(tmp, ignore_errors=True)
 shutil.rmtree(tmp2, ignore_errors=True)

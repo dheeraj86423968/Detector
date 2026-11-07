@@ -1,0 +1,43 @@
+2026-11-07 11:07:21 - detector-3: 5436233 edges, 15332 keys, 118194 table rows
+2026-11-07 11:07:24 - detector-3 thresholds proc 36.98 obj 40.93 (budget 10)
+2026-11-07 11:07:58 - layers: 134 known executables, 125 baseline remote addresses (114 recurring), benign alarm keys exfiltration=3
+2026-11-07 11:09:28 - final threshold 1.260 (validation nodes 624218, budget 10)
+11:09:28 upgrade 214s; calibration final {'threshold': 1.2602658266951239, 'budget': 10, 'percentiles': {'99': 0.5111806723416092, '99.9': 0.8112663641791675, '99.99': 1.1483785764414542}, 'validation_nodes': 624218}
+11:10:27 corroboration threshold 0.644
+11:12:06 scored 372s, alerts 256 by layer {'learned': 4, 'novelty': 51, 'corroborated': 131, 'rules': 70}
+{
+ "product": {
+  "TP": 81,
+  "FP": 175,
+  "recall": 0.711,
+  "attacks": 1,
+  "FP/day": 58.3
+ },
+ "n_attacks": 1,
+ "gt_nodes": 114,
+ "days": 3,
+ "layer:corroborated": {
+  "TP": 9,
+  "FP": 122,
+  "recall": 0.079,
+  "attacks": 1
+ },
+ "layer:rules": {
+  "TP": 45,
+  "FP": 25,
+  "recall": 0.395,
+  "attacks": 1
+ },
+ "layer:novelty": {
+  "TP": 27,
+  "FP": 24,
+  "recall": 0.237,
+  "attacks": 1
+ },
+ "layer:learned": {
+  "TP": 0,
+  "FP": 4,
+  "recall": 0.0,
+  "attacks": 0
+ }
+}

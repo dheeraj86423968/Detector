@@ -1,0 +1,31 @@
+10:36:12 0.6-config bundle 0s
+2026-11-07 10:39:15 - detector-3: 10867323 edges, 389902 keys, 1163446 table rows
+2026-11-07 10:39:24 - detector-3 group thresholds process 25.8, network 23.6, file-write 40.6, file-read 53.5
+2026-11-07 10:39:24 - detector-3 thresholds proc 53.50 obj 53.50 (budget 10)
+2026-11-07 10:40:12 - layers: 291 known executables, 0 baseline remote addresses (0 recurring), benign alarm keys none
+2026-11-07 10:43:17 - final threshold 1.727 (validation nodes 867247, budget 10)
+10:43:18 0.7 upgrade 427s
+10:47:19 0.7: {'TP': 0, 'FP': 4, 'recall': 0.0, 'attacks': 0, 'FP/day': 1.0, 'by_layer': {'learned': 4}, 'gt_in_test': 35}
+{
+ "dataset": "TRACE_E3",
+ "host": "trace",
+ "test_days": [
+  "2018-04-10",
+  "2018-04-11",
+  "2018-04-12",
+  "2018-04-13"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 35,
+ "0.7": {
+  "TP": 0,
+  "FP": 4,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 1.0,
+  "by_layer": {
+   "learned": 4
+  },
+  "gt_in_test": 35
+ }
+}

@@ -1,0 +1,144 @@
+{
+ "bl_raw": {
+  "ADP": 0.554,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 40,
+   "recall": 0.588,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 43,
+   "recall": 0.632,
+   "attacks": 3
+  }
+ },
+ "bl_ratio": {
+  "ADP": 0.554,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 40,
+   "recall": 0.588,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 43,
+   "recall": 0.632,
+   "attacks": 3
+  },
+  "thr:valmax": {
+   "TP": 2,
+   "FP": 8,
+   "recall": 0.029,
+   "attacks": 2
+  }
+ },
+ "bl_ratio9999": {
+  "ADP": 0.484,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 40,
+   "recall": 0.588,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 43,
+   "recall": 0.632,
+   "attacks": 3
+  },
+  "thr:p99.99": {
+   "TP": 5,
+   "FP": 54,
+   "recall": 0.074,
+   "attacks": 2
+  }
+ },
+ "learned_fused": {
+  "ADP": 0.316,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 16,
+   "recall": 0.235,
+   "attacks": 3
+  },
+  "fp50/day": {
+   "TP": 30,
+   "recall": 0.441,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 36,
+   "recall": 0.529,
+   "attacks": 3
+  },
+  "thr:valmax": {
+   "TP": 0,
+   "FP": 1,
+   "recall": 0.0,
+   "attacks": 0
+  }
+ },
+ "max(bl,learned)": {
+  "ADP": 0.553,
+  "n_attacks": 3,
+  "gt_nodes": 68,
+  "fp10/day": {
+   "TP": 5,
+   "recall": 0.074,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 40,
+   "recall": 0.588,
+   "attacks": 3
+  },
+  "fp200/day": {
+   "TP": 43,
+   "recall": 0.632,
+   "attacks": 3
+  },
+  "thr:valmax": {
+   "TP": 2,
+   "FP": 9,
+   "recall": 0.029,
+   "attacks": 2
+  }
+ },
+ "_meta": {
+  "test_nodes": 281585,
+  "gt_nodes": 68,
+  "thr": {
+   "proc": {
+    "max": 73.19582127606856,
+    "99.99": 65.27718681924108,
+    "99.9": 48.761814413709835,
+    "n": 18155
+   },
+   "obj": {
+    "max": 73.19582127606856,
+    "99.99": 61.209364077898876,
+    "99.9": 51.040648061598006,
+    "n": 93176
+   }
+  }
+ }
+}

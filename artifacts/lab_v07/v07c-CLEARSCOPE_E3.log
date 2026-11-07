@@ -1,0 +1,26 @@
+2026-11-07 10:27:48 - detector-3: 381723 edges, 778 keys, 9394 table rows
+2026-11-07 10:27:48 - detector-3 group thresholds process 6.4, network 5.0, file-write 6.4, file-read 9.9
+2026-11-07 10:27:48 - detector-3 thresholds proc 9.89 obj 9.66 (budget 10)
+2026-11-07 10:27:51 - layers: 33 known executables, 0 baseline remote addresses (0 recurring), benign alarm keys none
+2026-11-07 10:27:58 - final threshold 1.852 (validation nodes 32059, budget 10)
+10:27:58 upgrade 18s; calibration final {'threshold': 1.8519361701760981, 'budget': 10, 'percentiles': {'99': 0.834290912485905, '99.9': 1.5610370972216057, '99.99': 1.8519361701760981}, 'validation_nodes': 32059}
+10:28:04 corroboration threshold 0.843
+10:28:15 scored 35s, alerts 55 by layer {'learned': 55}
+{
+ "product": {
+  "TP": 0,
+  "FP": 55,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 27.5
+ },
+ "n_attacks": 1,
+ "gt_nodes": 41,
+ "days": 2,
+ "layer:learned": {
+  "TP": 0,
+  "FP": 55,
+  "recall": 0.0,
+  "attacks": 0
+ }
+}

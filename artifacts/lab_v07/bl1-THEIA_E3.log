@@ -1,0 +1,147 @@
+05:42:20 THEIA_E3: baseline registry 446804; train ['2018-04-03', '2018-04-04', '2018-04-05'] val 2018-04-09
+05:42:21 fit 2919135 edges 1s; vocab 79201
+05:42:23 val thresholds {'proc': {'max': 70.06492364761898, '99.99': 66.0986765956664, '99.9': 55.04082288769467, 'n': 13592}, 'obj': {'max': 70.06492364761898, '99.99': 58.778409645881375, '99.9': 55.04082288769467, 'n': 20796}}
+{
+ "bl_raw": {
+  "ADP": 0.972,
+  "n_attacks": 2,
+  "gt_nodes": 118,
+  "fp10/day": {
+   "TP": 22,
+   "recall": 0.186,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 22,
+   "recall": 0.186,
+   "attacks": 2
+  },
+  "fp200/day": {
+   "TP": 26,
+   "recall": 0.22,
+   "attacks": 2
+  }
+ },
+ "bl_ratio": {
+  "ADP": 0.972,
+  "n_attacks": 2,
+  "gt_nodes": 118,
+  "fp10/day": {
+   "TP": 22,
+   "recall": 0.186,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 22,
+   "recall": 0.186,
+   "attacks": 2
+  },
+  "fp200/day": {
+   "TP": 26,
+   "recall": 0.22,
+   "attacks": 2
+  },
+  "thr:valmax": {
+   "TP": 22,
+   "FP": 20,
+   "recall": 0.186,
+   "attacks": 2
+  }
+ },
+ "bl_ratio9999": {
+  "ADP": 1.0,
+  "n_attacks": 2,
+  "gt_nodes": 118,
+  "fp10/day": {
+   "TP": 20,
+   "recall": 0.169,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 20,
+   "recall": 0.169,
+   "attacks": 2
+  },
+  "fp200/day": {
+   "TP": 24,
+   "recall": 0.203,
+   "attacks": 2
+  },
+  "thr:p99.99": {
+   "TP": 23,
+   "FP": 243,
+   "recall": 0.195,
+   "attacks": 2
+  }
+ },
+ "learned_fused": {
+  "ADP": 0.866,
+  "n_attacks": 2,
+  "gt_nodes": 118,
+  "fp10/day": {
+   "TP": 8,
+   "recall": 0.068,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 13,
+   "recall": 0.11,
+   "attacks": 2
+  },
+  "fp200/day": {
+   "TP": 20,
+   "recall": 0.169,
+   "attacks": 2
+  },
+  "thr:valmax": {
+   "TP": 8,
+   "FP": 45,
+   "recall": 0.068,
+   "attacks": 2
+  }
+ },
+ "max(bl,learned)": {
+  "ADP": 1.0,
+  "n_attacks": 2,
+  "gt_nodes": 118,
+  "fp10/day": {
+   "TP": 29,
+   "recall": 0.246,
+   "attacks": 2
+  },
+  "fp50/day": {
+   "TP": 29,
+   "recall": 0.246,
+   "attacks": 2
+  },
+  "fp200/day": {
+   "TP": 32,
+   "recall": 0.271,
+   "attacks": 2
+  },
+  "thr:valmax": {
+   "TP": 29,
+   "FP": 65,
+   "recall": 0.246,
+   "attacks": 2
+  }
+ },
+ "_meta": {
+  "test_nodes": 700902,
+  "gt_nodes": 118,
+  "thr": {
+   "proc": {
+    "max": 70.06492364761898,
+    "99.99": 66.0986765956664,
+    "99.9": 55.04082288769467,
+    "n": 13592
+   },
+   "obj": {
+    "max": 70.06492364761898,
+    "99.99": 58.778409645881375,
+    "99.9": 55.04082288769467,
+    "n": 20796
+   }
+  }
+ }
+}

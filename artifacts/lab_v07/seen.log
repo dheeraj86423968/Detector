@@ -1,0 +1,17 @@
+5ef60025 a34b8914: 162 windows, 177484 node-windows, 16s
+test 5ef60025-b74e-417a-8e48-7ab1c7dbcd67 rc=0
+5ef60025 a34b8914: 79 windows, 42636 node-windows, 6s
+val 5ef60025-b74e-417a-8e48-7ab1c7dbcd67 rc=0
+01ca45e0 1feb4111: 285 windows, 1856059 node-windows, 120s
+test 01ca45e0-721f-4181-a4cb-33682335812a rc=0
+01ca45e0 1feb4111: 72 windows, 347369 node-windows, 28s
+val 01ca45e0-721f-4181-a4cb-33682335812a rc=0
+l2 OPTC_H501 rc=0
+s6 OPTC_H501 rc=0
+l2 OPTC_H051 rc=0
+s6 OPTC_H051 rc=0
+l2 CLEARSCOPE_E3 rc=0
+s6 CLEARSCOPE_E3 rc=0
+l2 FIVEDIRECTIONS_E3 rc=0
+s6 FIVEDIRECTIONS_E3 rc=0
+SEEN-DONE

@@ -1,0 +1,21 @@
+06:05:01 THEIA_E3: fitted
+06:05:02 own thr {'proc': 52.575169397867064, 'obj': 48.682279133944725} learned thr 0.9532966613769531
+06:05:02 chain thresholds {('bl', 'max', 0.0, 0.0): 1.0799652426545483, ('bl', 'max', 0.85, 0.2): 1.0799652426545483, ('bl', 'max', 0.85, 0.4): 1.0799652426545483, ('bl', 'max', 0.95, 0.2): 1.0799652426545483, ('bl', 'max', 0.95, 0.4): 1.0799652426545483, ('bl', 'max', 0.95, 0.6): 1.0799652426545483, ('learned', 'max', 0.0, 0.0): 1.0, ('learned', 'max', 0.85, 0.2): 1.0, ('learned', 'max', 0.85, 0.4): 1.0, ('learned', 'max', 0.95, 0.2): 1.0, ('learned', 'max', 0.95, 0.4): 1.0, ('learned', 'max', 0.95, 0.6): 1.0, ('both', 'max', 0.0, 0.0): 1.0799652426545483, ('both', 'max', 0.85, 0.2): 1.0799652426545483, ('both', 'max', 0.85, 0.4): 1.0799652426545483, ('both', 'max', 0.95, 0.2): 1.0799652426545483, ('both', 'max', 0.95, 0.4): 1.0799652426545483, ('both', 'max', 0.95, 0.6): 1.0799652426545483}
+bl|max|0.0|0.0 ADP 0.999 fp10/day:22/2 fp50/day:23/2 fp200/day:28/2 AT-THRESHOLD: {'TP': 24, 'FP': 204, 'recall': 0.203, 'attacks': 2}
+bl|max|0.85|0.2 ADP 0.999 fp10/day:12/2 fp50/day:28/2 fp200/day:30/2 AT-THRESHOLD: {'TP': 29, 'FP': 250, 'recall': 0.246, 'attacks': 2}
+bl|max|0.85|0.4 ADP 0.999 fp10/day:25/2 fp50/day:28/2 fp200/day:30/2 AT-THRESHOLD: {'TP': 29, 'FP': 227, 'recall': 0.246, 'attacks': 2}
+bl|max|0.95|0.2 ADP 0.999 fp10/day:12/2 fp50/day:30/2 fp200/day:30/2 AT-THRESHOLD: {'TP': 30, 'FP': 288, 'recall': 0.254, 'attacks': 2}
+bl|max|0.95|0.4 ADP 0.999 fp10/day:26/2 fp50/day:30/2 fp200/day:30/2 AT-THRESHOLD: {'TP': 30, 'FP': 257, 'recall': 0.254, 'attacks': 2}
+bl|max|0.95|0.6 ADP 0.999 fp10/day:28/2 fp50/day:30/2 fp200/day:32/2 AT-THRESHOLD: {'TP': 30, 'FP': 224, 'recall': 0.254, 'attacks': 2}
+learned|max|0.0|0.0 ADP 1.0 fp10/day:18/2 fp50/day:19/2 fp200/day:19/2 AT-THRESHOLD: {'TP': 19, 'FP': 91, 'recall': 0.161, 'attacks': 2}
+learned|max|0.85|0.2 ADP 0.983 fp10/day:55/2 fp50/day:56/2 fp200/day:56/2 AT-THRESHOLD: {'TP': 56, 'FP': 119, 'recall': 0.475, 'attacks': 2}
+learned|max|0.85|0.4 ADP 1.0 fp10/day:28/2 fp50/day:29/2 fp200/day:29/2 AT-THRESHOLD: {'TP': 29, 'FP': 92, 'recall': 0.246, 'attacks': 2}
+learned|max|0.95|0.2 ADP 0.973 fp10/day:55/2 fp50/day:55/2 fp200/day:56/2 AT-THRESHOLD: {'TP': 56, 'FP': 324, 'recall': 0.475, 'attacks': 2}
+learned|max|0.95|0.4 ADP 1.0 fp10/day:28/2 fp50/day:29/2 fp200/day:29/2 AT-THRESHOLD: {'TP': 29, 'FP': 94, 'recall': 0.246, 'attacks': 2}
+learned|max|0.95|0.6 ADP 0.999 fp10/day:28/2 fp50/day:29/2 fp200/day:29/2 AT-THRESHOLD: {'TP': 29, 'FP': 92, 'recall': 0.246, 'attacks': 2}
+both|max|0.0|0.0 ADP 0.999 fp10/day:29/2 fp50/day:30/2 fp200/day:32/2 AT-THRESHOLD: {'TP': 31, 'FP': 220, 'recall': 0.263, 'attacks': 2}
+both|max|0.85|0.2 ADP 0.967 fp10/day:26/2 fp50/day:65/2 fp200/day:67/2 AT-THRESHOLD: {'TP': 66, 'FP': 291, 'recall': 0.559, 'attacks': 2}
+both|max|0.85|0.4 ADP 0.999 fp10/day:38/2 fp50/day:39/2 fp200/day:40/2 AT-THRESHOLD: {'TP': 39, 'FP': 243, 'recall': 0.331, 'attacks': 2}
+both|max|0.95|0.2 ADP 0.967 fp10/day:23/2 fp50/day:65/2 fp200/day:66/2 AT-THRESHOLD: {'TP': 66, 'FP': 445, 'recall': 0.559, 'attacks': 2}
+both|max|0.95|0.4 ADP 0.999 fp10/day:38/2 fp50/day:39/2 fp200/day:40/2 AT-THRESHOLD: {'TP': 39, 'FP': 273, 'recall': 0.331, 'attacks': 2}
+both|max|0.95|0.6 ADP 0.999 fp10/day:38/2 fp50/day:39/2 fp200/day:40/2 AT-THRESHOLD: {'TP': 39, 'FP': 240, 'recall': 0.331, 'attacks': 2}

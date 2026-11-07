@@ -1,0 +1,44 @@
+18978a51 b0e9bd09: 71 windows, 696126 node-windows, 53s
+18978a51-ac8f-4afd-8f7a-c3003fa744c2 rc=0
+5eafc637 911ee6b3: 93 windows, 127446 node-windows, 15s
+5eafc637-14c7-4074-b4d3-4e611dea925e rc=0
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/numpy/lib/npyio.py", line 743, in _savez
+    format.write_array(fid, val,
+  File "/opt/conda/lib/python3.10/site-packages/numpy/lib/format.py", line 735, in write_array
+    fp.write(chunk.tobytes('C'))
+  File "/opt/conda/lib/python3.10/zipfile.py", line 1141, in write
+    self._fileobj.write(data)
+OSError: [Errno 28] No space left on device
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/lab/cache_val.py", line 24, in <module>
+    np.savez(out + ".tmp.npz", ids=np.concatenate(ids), fused=np.concatenate(fu), r1=np.concatenate(r1), r2=np.concatenate(r2),
+  File "/opt/conda/lib/python3.10/site-packages/numpy/lib/npyio.py", line 639, in savez
+    _savez(file, args, kwds, False)
+  File "/opt/conda/lib/python3.10/site-packages/numpy/lib/npyio.py", line 742, in _savez
+    with zipf.open(fname, 'w', force_zip64=True) as fid:
+  File "/opt/conda/lib/python3.10/zipfile.py", line 1180, in close
+    self._fileobj.seek(self._zinfo.header_offset)
+OSError: [Errno 28] No space left on device
+Exception ignored in: <function ZipFile.__del__ at 0x765dc43f5750>
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/zipfile.py", line 1821, in __del__
+    self.close()
+  File "/opt/conda/lib/python3.10/zipfile.py", line 1843, in close
+    self._fpclose(fp)
+  File "/opt/conda/lib/python3.10/zipfile.py", line 1943, in _fpclose
+    fp.close()
+OSError: [Errno 28] No space left on device
+6ca8a927-9474-45be-870a-52bd56133b0e rc=1
+docker: Error response from daemon: failed to create prepare snapshot dir: failed to create temp dir: mkdir /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/new-295341511: no space left on device
+
+Run 'docker run --help' for more information
+b4021490-6dd4-4dfb-8628-b3e55af27b90 rc=125
+docker: Error response from daemon: failed to create prepare snapshot dir: failed to create temp dir: mkdir /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/new-2138825914: no space left on device
+
+Run 'docker run --help' for more information
+f85bab6a-0fce-4b21-81d8-dd967b8d4395 rc=125
+CACHEVAL-DONE

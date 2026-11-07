@@ -1,0 +1,113 @@
+2026-11-07 07:14:58 - fitting word2vec on 308755 baseline nodes
+2026-11-07 07:20:29 - computing node features
+2026-11-07 07:21:29 - detector-1 seed 0 epoch 0: train 0.2024 val 0.1662
+2026-11-07 07:21:31 - detector-1 seed 0 epoch 1: train 0.1715 val 0.1423
+2026-11-07 07:21:33 - detector-1 seed 0 epoch 2: train 0.1563 val 0.1399
+2026-11-07 07:21:36 - detector-1 seed 0 epoch 3: train 0.1521 val 0.1481
+2026-11-07 07:21:38 - detector-1 seed 0 epoch 4: train 0.1541 val 0.1397
+2026-11-07 07:21:40 - detector-1 seed 0 epoch 5: train 0.1542 val 0.2172
+2026-11-07 07:21:42 - detector-1 seed 0 epoch 6: train 0.1933 val 0.1540
+2026-11-07 07:21:45 - detector-1 seed 0 epoch 7: train 0.1583 val 0.1425
+2026-11-07 07:21:45 - detector-1 seed 0 threshold 7.272
+2026-11-07 07:21:47 - detector-1 seed 1 epoch 0: train 0.2052 val 0.1767
+2026-11-07 07:21:50 - detector-1 seed 1 epoch 1: train 0.1694 val 0.1530
+2026-11-07 07:21:52 - detector-1 seed 1 epoch 2: train 0.1541 val 0.1377
+2026-11-07 07:21:54 - detector-1 seed 1 epoch 3: train 0.1546 val 0.1588
+2026-11-07 07:21:57 - detector-1 seed 1 epoch 4: train 0.1751 val 0.1892
+2026-11-07 07:21:59 - detector-1 seed 1 epoch 5: train 0.1619 val 0.1428
+2026-11-07 07:21:59 - detector-1 seed 1 threshold 8.452
+2026-11-07 07:22:02 - detector-1 seed 2 epoch 0: train 0.2063 val 0.1759
+2026-11-07 07:22:04 - detector-1 seed 2 epoch 1: train 0.1693 val 0.1576
+2026-11-07 07:22:06 - detector-1 seed 2 epoch 2: train 0.1567 val 0.1472
+2026-11-07 07:22:08 - detector-1 seed 2 epoch 3: train 0.1528 val 0.1420
+2026-11-07 07:22:11 - detector-1 seed 2 epoch 4: train 0.1534 val 0.1415
+2026-11-07 07:22:13 - detector-1 seed 2 epoch 5: train 0.1642 val 0.1424
+2026-11-07 07:22:15 - detector-1 seed 2 epoch 6: train 0.1547 val 0.1659
+2026-11-07 07:22:18 - detector-1 seed 2 epoch 7: train 0.1503 val 0.1389
+2026-11-07 07:22:20 - detector-1 seed 2 epoch 8: train 0.1505 val 0.1345
+2026-11-07 07:22:22 - detector-1 seed 2 epoch 9: train 0.1601 val 0.1445
+2026-11-07 07:22:24 - detector-1 seed 2 epoch 10: train 0.1664 val 0.1407
+2026-11-07 07:22:27 - detector-1 seed 2 epoch 11: train 0.1714 val 0.1420
+2026-11-07 07:22:27 - detector-1 seed 2 threshold 5.561
+2026-11-07 07:22:35 - detector-2 seed 0 epoch 0: train 0.1896 val 0.1492
+2026-11-07 07:22:42 - detector-2 seed 0 epoch 1: train 0.1630 val 0.1556
+2026-11-07 07:22:50 - detector-2 seed 0 epoch 2: train 0.7451 val 0.1990
+2026-11-07 07:22:57 - detector-2 seed 0 epoch 3: train 0.1644 val 0.1535
+2026-11-07 07:23:02 - detector-2 seed 0 threshold 11.765 val-loss 0.1492
+2026-11-07 07:23:09 - detector-2 seed 1 epoch 0: train 0.1949 val 0.1463
+2026-11-07 07:23:17 - detector-2 seed 1 epoch 1: train 0.1636 val 0.1375
+2026-11-07 07:23:24 - detector-2 seed 1 epoch 2: train 0.1639 val 0.1476
+2026-11-07 07:23:32 - detector-2 seed 1 epoch 3: train 0.1558 val 0.1387
+2026-11-07 07:23:39 - detector-2 seed 1 epoch 4: train 0.1735 val 0.1433
+2026-11-07 07:23:44 - detector-2 seed 1 threshold 7.627 val-loss 0.1375
+2026-11-07 07:23:51 - detector-2 seed 2 epoch 0: train 2.0621 val 0.2126
+2026-11-07 07:23:59 - detector-2 seed 2 epoch 1: train 0.2058 val 0.1446
+2026-11-07 07:24:06 - detector-2 seed 2 epoch 2: train 0.1667 val 0.1487
+2026-11-07 07:24:14 - detector-2 seed 2 epoch 3: train 0.2482 val 0.1900
+2026-11-07 07:24:21 - detector-2 seed 2 epoch 4: train 0.1655 val 0.1401
+2026-11-07 07:24:29 - detector-2 seed 2 epoch 5: train 0.1587 val 0.1422
+2026-11-07 07:24:36 - detector-2 seed 2 epoch 6: train 0.1563 val 0.1460
+2026-11-07 07:24:44 - detector-2 seed 2 epoch 7: train 0.1657 val 0.1819
+2026-11-07 07:24:48 - detector-2 seed 2 threshold 40.650 val-loss 0.1401
+2026-11-07 07:24:56 - detector-2 seed 3 epoch 0: train 0.1893 val 0.1742
+2026-11-07 07:25:04 - detector-2 seed 3 epoch 1: train 0.1879 val 0.2128
+2026-11-07 07:25:11 - detector-2 seed 3 epoch 2: train 0.1685 val 0.1473
+2026-11-07 07:25:19 - detector-2 seed 3 epoch 3: train 0.1582 val 0.1386
+2026-11-07 07:25:26 - detector-2 seed 3 epoch 4: train 0.2062 val 0.1776
+2026-11-07 07:25:34 - detector-2 seed 3 epoch 5: train 0.1641 val 0.1417
+2026-11-07 07:25:41 - detector-2 seed 3 epoch 6: train 0.1585 val 0.1467
+2026-11-07 07:25:46 - detector-2 seed 3 threshold 8.302 val-loss 0.1386
+2026-11-07 07:25:53 - detector-2 seed 4 epoch 0: train 0.1908 val 0.1650
+2026-11-07 07:26:01 - detector-2 seed 4 epoch 1: train 0.2243 val 0.1778
+2026-11-07 07:26:08 - detector-2 seed 4 epoch 2: train 0.1596 val 0.1509
+2026-11-07 07:26:16 - detector-2 seed 4 epoch 3: train 0.1572 val 0.1572
+2026-11-07 07:26:23 - detector-2 seed 4 epoch 4: train 0.1594 val 0.1414
+2026-11-07 07:26:31 - detector-2 seed 4 epoch 5: train 0.1576 val 0.1453
+2026-11-07 07:26:38 - detector-2 seed 4 epoch 6: train 0.1599 val 0.1544
+2026-11-07 07:26:46 - detector-2 seed 4 epoch 7: train 0.3181 val 1.1531
+2026-11-07 07:26:51 - detector-2 seed 4 threshold 8.977 val-loss 0.1414
+2026-11-07 07:26:51 - detector-2 aggregate 'mean' weights [0.2, 0.2, 0.2, 0.2, 0.2]
+2026-11-07 07:26:51 - fusion threshold 0.826
+2026-11-07 07:26:58 - layers: 67 known executables, 3226 baseline remote addresses (1287 recurring), benign alarm keys exfiltration=4, tainted_spawn=3, untrusted_code_network=1, untrusted_exec=3
+07:26:58 0.6-config bundle 723s
+2026-11-07 07:28:06 - detector-3: 749685 edges, 16859 keys, 107192 table rows
+2026-11-07 07:28:06 - detector-3 thresholds proc 19.29 obj 41.08 (budget 10)
+2026-11-07 07:28:14 - layers: 67 known executables, 3226 baseline remote addresses (1287 recurring), benign alarm keys exfiltration=4, tainted_spawn=3, untrusted_code_network=1, untrusted_exec=3
+2026-11-07 07:29:24 - final threshold 2.041 (validation nodes 113874, budget 10)
+07:29:24 0.7 upgrade 868s
+07:30:37 0.6: {'TP': 6, 'FP': 46, 'recall': 0.125, 'attacks': 4, 'FP/day': 46.0, 'by_layer': {'novelty': 13, 'rules': 39}, 'gt_in_test': 48}
+07:31:57 0.7: {'TP': 11, 'FP': 139, 'recall': 0.229, 'attacks': 8, 'FP/day': 139.0, 'by_layer': {'learned': 38, 'corroborated': 71, 'rules': 41}, 'gt_in_test': 48}
+{
+ "dataset": "ATLASV2_EDR",
+ "host": "h1",
+ "test_days": [
+  "2022-07-19"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "0.6": {
+  "TP": 6,
+  "FP": 46,
+  "recall": 0.125,
+  "attacks": 4,
+  "FP/day": 46.0,
+  "by_layer": {
+   "novelty": 13,
+   "rules": 39
+  },
+  "gt_in_test": 48
+ },
+ "0.7": {
+  "TP": 11,
+  "FP": 139,
+  "recall": 0.229,
+  "attacks": 8,
+  "FP/day": 139.0,
+  "by_layer": {
+   "learned": 38,
+   "corroborated": 71,
+   "rules": 41
+  },
+  "gt_in_test": 48
+ }
+}

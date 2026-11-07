@@ -19,7 +19,7 @@ from .behaviour import BehaviourModel, top_threshold
 from .bundle import detector1_file, requirements, save_state_dict, write_manifest
 from .data import WindowStore, nodes_in_days
 from .featurizer import Word2VecFeaturizer
-from .layers import LayerConfig, TagParams, fit_layers
+from .layers import EVIDENCE_RULES, LayerConfig, TagParams, fit_layers
 from .models import (OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, save_tgn_state, seed_everything,
                      velox_input_dim, velox_window_inputs)
 from .schema import NUM_NODE_TYPES
@@ -64,6 +64,7 @@ class TrainConfig:
     # set so that `calibration_budget` benign validation nodes would alert (0 = the validation maximum, 0.3-0.6).
     detector3: bool = True
     calibration_budget: int = 10
+    d3_grouped: bool = False              # 0.7b: detector-3 thresholds per kind of activity (behaviour.GROUP_NAMES)
     propagation: bool = True
     propagation_delta: float = 0.95       # suspicion kept per hop
     propagation_gate: float = 0.4         # an edge carries suspicion only if its detector-3 score >= 0.4 x the threshold
@@ -71,7 +72,13 @@ class TrainConfig:
     propagation_seed: float = 0.3         # only nodes at >= 0.3 of the threshold pass suspicion on
     propagation_passes: int = 2           # hops per window
     # deterministic layers (pdp_engine.layers) and the learned layer's alerting policy
-    layer_novelty: bool = False       # 0.7: the "new executable" rule no longer alerts on its own (detector-3 covers it)
+    layer_novelty: bool = True        # layer 1 (new executable) alerts: kept in 0.7 as a safety net - on the TRACE
+                                      # held-out host it was the only layer that caught the attacks (artifacts/lab_v07)
+    novelty_as_evidence: bool = False # True: its hits are evidence only (alert when the learned score corroborates);
+                                      # measured in 0.7 and rejected (+250 false positives on OpTC H201)
+    corroboration_at_threshold: bool = True   # 0.7: a learned score corroborates a rule hit / sits next to an alert
+                                              # only above the learned threshold itself (the 99.9th percentile of the
+                                              # 0.7 score added hundreds of false positives next to layer-1 alerts)
     layer_rules: bool = True
     learned_daily_budget: int = 20    # at most this many learned-only alerts per day (highest scores first)
     learned_alerts: bool = True       # 0.7: the learned layer alerts (recall first, within the daily budget);
@@ -81,6 +88,13 @@ class TrainConfig:
     layers_only: bool = False                # rules-only model: layers 1-2 fitted, no learned detectors (early models
                                              # below one day of baseline: seconds on a CPU instead of a GPU run)
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def layer_config(cfg: "TrainConfig") -> LayerConfig:
+    """Layers 1-2 for a learned bundle. 0.7: new-program hits are evidence (they alert when the learned score
+    corroborates them) unless novelty_as_evidence is off."""
+    ev = tuple(EVIDENCE_RULES) + (("novel_executable",) if cfg.layer_novelty and cfg.novelty_as_evidence else ())
+    return LayerConfig(novelty=cfg.layer_novelty, rules=cfg.layer_rules, tags=TagParams(), evidence_rules=ev)
 
 
 D3_MIN_THRESHOLD = 5.0     # nats (P < 1/150): detector-3 thresholds never go lower (0.7)
@@ -289,11 +303,13 @@ class Trainer:
             calibration["final"] = {"threshold": 1.0, "budget": self.cfg.calibration_budget, "pending": True}
         json.dump(calibration, open(os.path.join(self.out_dir, "calibration.json"), "w"), indent=1)
         # layers 1 + 2: fitted on the same benign days (training + validation), no attack data
-        lcfg = LayerConfig(novelty=self.cfg.layer_novelty, rules=self.cfg.layer_rules, tags=TagParams())
+        lcfg = layer_config(self.cfg)
         spec = fit_layers(self.store, self.train_days + [self.val_day], self.reg, self.N, lcfg, log=log, exclude=self.layer_exclude, prior=self.layer_prior)
         json.dump(spec, open(os.path.join(self.out_dir, "layers.json"), "w"))
         policy = {"daily_budget": int(self.cfg.learned_daily_budget), "corroboration_percentile": self.cfg.corroboration_percentile,
                   "learned_alerts": bool(self.cfg.learned_alerts)}
+        if d3 is not None and self.cfg.corroboration_at_threshold:
+            policy["corroboration"] = "threshold"
         if self.cfg.alert_layers is not None:
             policy["alert_layers"] = sorted(self.cfg.alert_layers)
         write_manifest(self.out_dir, {
@@ -309,6 +325,7 @@ class Trainer:
             "requires": requirements(self.velox_input, self.cfg.fusion_mode, detector3=d3 is not None,
                                      propagation=d3 is not None and self.cfg.propagation),
             "layers": {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules,
+                       "evidence_rules": list(lcfg.evidence_rules),
                        "known_executables": len(spec["known_executables"]),
                        "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},
                        **({"excluded": spec["excluded"]} if spec.get("excluded") else {}),
@@ -335,9 +352,19 @@ class Trainer:
             seen[w.dst] = True
         isp = K.isproc[:n]
         b = self.cfg.calibration_budget
+        groups = None
+        if self.cfg.d3_grouped:
+            from .behaviour import GROUP_NAMES, grouped_raw_scores
+            gb = np.zeros((len(GROUP_NAMES), n))
+            for w in self.store.windows(self.val_day):
+                np.maximum(gb, grouped_raw_scores(m, w, K, n), out=gb)
+            groups = [max(top_threshold(gb[k][seen], b), D3_MIN_THRESHOLD) for k in range(len(GROUP_NAMES))]
+            log("detector-3 group thresholds " + ", ".join(f"{g} {t:.1f}" for g, t in zip(GROUP_NAMES, groups)))
         floor = D3_MIN_THRESHOLD    # a near-empty validation day must not make every novelty an alert
         cal = {"proc": max(top_threshold(best[seen & isp], b), floor), "obj": max(top_threshold(best[seen & ~isp], b), floor), "budget": b,
                "keys": len(m.vocab)}
+        if groups is not None:
+            cal["groups"] = groups
         log(f"detector-3 thresholds proc {cal['proc']:.2f} obj {cal['obj']:.2f} (budget {b})")
         return cal
 
@@ -429,7 +456,7 @@ def upgrade_bundle_07(src_dir: str, out_dir: str, store: WindowStore, cfg: Train
                               "seed": cfg.propagation_seed, "passes": cfg.propagation_passes}
     cal["final"] = {"threshold": 1.0, "budget": cfg.calibration_budget, "pending": True}
     json.dump(cal, open(os.path.join(out_dir, "calibration.json"), "w"), indent=1)
-    lcfg = LayerConfig(novelty=cfg.layer_novelty, rules=cfg.layer_rules, tags=TagParams())
+    lcfg = layer_config(cfg)
     spec = fit_layers(store, tr.train_days + [tr.val_day], tr.reg, int(man["num_nodes"]), lcfg, log=log,
                       exclude=layer_exclude, prior=layer_prior)
     json.dump(spec, open(os.path.join(out_dir, "layers.json"), "w"))
@@ -438,13 +465,14 @@ def upgrade_bundle_07(src_dir: str, out_dir: str, store: WindowStore, cfg: Train
     meta["detectors"] = {"detector-3": {"kind": "behavioural-likelihood", "budget": cfg.calibration_budget}, **man["detectors"]}
     req = list(man.get("requires") or [])
     meta["requires"] = req + [f for f in (["detector-3"] + (["propagation"] if cfg.propagation else [])) if f not in req]
-    meta["layers"] = {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules,
+    meta["layers"] = {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules, "evidence_rules": list(lcfg.evidence_rules),
                       "known_executables": len(spec["known_executables"]),
                       "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},
                       **({"excluded": spec["excluded"]} if spec.get("excluded") else {}),
                       **({"coverage": spec["coverage"]} if spec.get("coverage") else {})}
     meta["learned_policy"] = {"daily_budget": int(cfg.learned_daily_budget), "corroboration_percentile": cfg.corroboration_percentile,
-                              "learned_alerts": bool(cfg.learned_alerts)}
+                              "learned_alerts": bool(cfg.learned_alerts),
+                              **({"corroboration": "threshold"} if cfg.corroboration_at_threshold else {})}
     meta["upgraded_from"] = man.get("bundle_id")
     write_manifest(out_dir, meta)
     tr.calibrate_final()

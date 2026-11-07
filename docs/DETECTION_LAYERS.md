@@ -1,4 +1,93 @@
-# Layered detection (0.3, revised in 0.4, 0.5 and 0.6)
+# Layered detection (0.3, revised in 0.4, 0.5, 0.6 and 0.7)
+
+## 0.7 (2026-11-07): learned detection first, rules on top
+
+Asked for: the learned part as the primary detector, recall first, and no stand-alone naive rules such as "new
+executable seen" - the learned model has to catch that. Lab, protocol and decision record: artifacts/lab_v07
+(PROTOCOL.md was written before any result and records, before the held-out run, that one acceptance rule failed).
+
+**Detector-3: behavioural likelihood** (`pdp_engine.behaviour`, bundle files detector-3.npz / -vocab.json). Per
+endpoint, from its own baseline, a hierarchical Witten-Bell model of P(object | program, operation, direction):
+programs back off exact program -> program directory -> any program, objects back off exact object -> directory or
+remote address -> class (top directory + extension, address class + port bucket, "process"). A known program doing
+what it has done before scores ~0; a program doing something new for it scores by how new it is and by how often this
+program does new things at all (an installer writes new files all the time; a web server never starts a program from
+/tmp). A program with plenty of history doing an operation it has never done (a web server starting a process) pays
+for that once per process instance. Novelty is paid once per process instance and window: the j-th new file the same
+installer run writes into one directory costs at most log(1 + j). GUIDs, hex ids, random tokens and digit runs are
+generalised. A never-seen program is judged by its directory and the endpoint - this is how the new-executable case
+is covered without alerting on every update. Fitting is counting (seconds to minutes on a CPU); unreleased alerts'
+programs and addresses stay out of the counts (`learning.exclude_nodes`).
+
+**One learned score.** max(detector-1/2 fusion, detector-3), each in units of a threshold that lets 10 benign
+validation nodes through (`calibration_budget`, 0.3-0.6 used the validation maximum), then **learned-seeded
+propagation**: every unusual data-flow edge (detector-3 edge score >= 0.4 x its threshold; OPEN excluded) carries
+0.95 x the source's suspicion (clipped at 3x) to its destination, two hops per window, carried across windows - a
+download, the file it wrote and the process that ran it rise together, while a suspicious process does not taint every
+library it reads. The final threshold is calibrated after propagation by replaying the validation day through the
+runtime itself (`Trainer.calibrate_final`).
+
+**Alerting (released configuration).** Learned alerts are on (at most 20 per endpoint per day, in stream order).
+Layer 2 (the information-flow rules) alerts as before. A learned score corroborates a rule hit, or alerts next to a
+rule alert, only above the learned threshold itself (`corroboration_at_threshold`; the 99.9th percentile of the 0.7
+score added hundreds of false positives next to rule alerts). Layer 1 (new executable) was to be dropped - it was
+the source of most false positives on the development sets (CADETS 14 of 15, OpTC H201 14 of 18) and added no
+attack there - but on the held-out TRACE host it was the only layer that caught the attacks (below), so it stays as a
+safety net (decision by the user, 2026-11-07). Console setting changes that turn detector-3, propagation, layer 1
+or learned alerts off, or raise the learned thresholds, are weakening changes (reason required, audited); the floor
+is "the learned layer or the data-flow rules can alert".
+
+**Collector.** The eBPF collector traces data on connected sockets (read/write/send/recv/sendfile/splice/io_uring,
+agent 0.7.0; docs/DEPLOYMENT.md): a download over HTTPS now links the remote endpoint to the process that read it.
+
+### Result of the configuration frozen before the held-out run (layer 1 off; end to end: bundle upgraded with
+`upgrade_bundle_07`, test days scored by the runtime, streaming)
+
+0.6 = the 0.6 layer defaults on the same bundles, scored by the same code.
+
+| set | 0.7 TP / FP (per day) / attacks | 0.6 TP / FP / attacks |
+|---|---|---|
+| CADETS (development) | 33 / 28 (7.0) / 3 of 3 | 33 / 40 / 3 of 3 |
+| THEIA (development) | 112 / 113 (37.7) / 2 of 2 | 108 / 136 / 2 of 2 |
+| OpTC H201 (development) | 14 / 52 (17.3) / 1 of 1 | 18 / 193 / 1 of 1 |
+| OpTC H501 (seen before) | 18 / 132 / 1 of 1 | 16 / 59 / 1 of 1 |
+| OpTC H051 (seen before) | 78 / 105 / 1 of 1 | 73 / 72 / 1 of 1 |
+| ClearScope (seen before) | 0 / 51 / 0 of 1 | 0 / 45 / 0 of 1 |
+| FiveDirections (seen before) | 5 / 45 / 2 of 2 | 1 / 47 / 1 of 2 |
+
+What it achieved: the same attacks on the development sets with about half the false positives (20.7 vs 39.9 per day
+on average), and one more attack on the telemetry-poor sets, which detector-3 reaches where the rules see nothing.
+What it did not achieve: the recall gain that was the goal. Mean ground-truth node recall on the development sets is
+0.480 vs 0.469 (the pre-registered target was 1.5x); the learned detectors find few attack nodes the data-flow layer
+misses. Known weaknesses: corroboration adds many false positives on OpTC H501/H051 (96 and 70); the streaming daily
+budget can be used up by benign anomalies before an attack arrives (ClearScope: found by an after-the-fact top-20,
+missed live).
+
+### Held-out (run once, docs/BENCHMARK_HELDOUT.md "0.7") and the released configuration
+
+| | ATLASv2 h1 (Windows EDR, 10 attacks) | ATLASv2 h2 (no attack) | TRACE (Linux, 3 attacks) |
+|---|---|---|---|
+| 0.6 | 4 of 10, 46 FP | 26 FP | 3 of 3, 69 FP (4 days) |
+| 0.7 as frozen (layer 1 off) | 8 of 10, 139 FP | 39 FP | **0 of 3**, 10 FP |
+
+TRACE: 0.6 caught all three attacks through layer 1; the information-flow layer had no baseline addresses there, and
+detector-3 scored the attack processes (programs started from /tmp, a dropped `tcexec` running `uname` and `sh`) in
+the top 0.1% of nodes but at 0.4-0.8 of a threshold set by a busy host's ten most unusual benign nodes per day - one
+maximum score per node cannot tell one strange benign event from a chain of moderately strange attack steps. Three
+changes were then measured on all sets (TRACE and ATLASv2 count as seen from here on, so their numbers below are no
+longer held-out results): new-program hits as evidence only (false positives exploded through corroboration),
+per-activity detector-3 thresholds (`d3_grouped`, no TRACE detection, 635 false positives on THEIA), and the released
+one, layer 1 alerting with corroboration at the learned threshold:
+
+| set | released 0.7: TP / FP / attacks |
+|---|---|
+| CADETS / THEIA / OpTC H201 (development) | 32 / 42 / 3 of 3; 111 / 127 / 2 of 2; 7 / 42 / 1 of 1 (22.3 FP per day on average; 0.6: 39.9) |
+| OpTC H501 / H051, ClearScope, FiveDirections (seen) | 1 of 1 (132 FP), 1 of 1 (58), 0 of 1 (51), 2 of 2 (225) |
+| ATLASv2 h1 / h2, TRACE (seen after the held-out run) | 8 of 10 (125 FP), 0 FP-only (36), 3 of 3 (81) |
+
+Open: the learned layer does not yet catch TRACE-style new-program attacks on a busy host by itself (evidence
+accumulation along a process chain, instead of one maximum per node, is the next thing to try); corroboration and the
+daily budget still produce many false positives on FiveDirections and ATLASv2 h1.
 
 ## 0.6 (2026-11-06): resistance to evasion, poisoning, tampering and misuse
 
@@ -266,3 +355,11 @@ old agent but is scored without the layers - upgrade the agent first.
 
 Agents must be 0.5.0 to load a bundle trained (or upgraded with `retrain_detector1`) by 0.5: detector-1's weight
 files are renamed and the manifest's `requires` lists the new features; an older agent keeps its previous bundle.
+
+Agents must be 0.7.0 to load a 0.7 bundle (manifest `requires`: `detector-3`, `propagation`); an older agent keeps its
+previous bundle. Bundles trained from 0.7 on are 0.7 bundles; an existing bundle is upgraded without GPU retraining
+(detector-3 fitted on the bundle's training days, thresholds and propagation calibrated on its validation day, layers
+re-fitted with the 0.7 defaults) with:
+```
+docker exec pdp-worker-train-1 python -m pdp_server.tools.upgrade_07 --endpoint <id> --deploy
+```

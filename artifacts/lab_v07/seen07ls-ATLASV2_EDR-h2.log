@@ -1,0 +1,25 @@
+11:48:49 0.6-config bundle 0s
+11:48:49 0.7 upgrade 0s
+11:49:05 0.7: {'TP': 0, 'FP': 36, 'recall': 0.0, 'attacks': 0, 'FP/day': 36.0, 'by_layer': {'learned': 10, 'novelty': 4, 'rules': 22}, 'gt_in_test': 0}
+{
+ "dataset": "ATLASV2_EDR",
+ "host": "h2",
+ "test_days": [
+  "2022-07-19"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "0.7": {
+  "TP": 0,
+  "FP": 36,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 36.0,
+  "by_layer": {
+   "learned": 10,
+   "novelty": 4,
+   "rules": 22
+  },
+  "gt_in_test": 0
+ }
+}

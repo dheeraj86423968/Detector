@@ -28,7 +28,7 @@ from .featurizer import Word2VecFeaturizer
 from .layers import ALWAYS_EVIDENCE, EVIDENCE_RULES, DeterministicLayers, Hit
 from .models import OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, velox_input_dim, velox_window_inputs
 from .schema import EDGE_TYPES, Registry
-from .scoring import Calibration, FusionCalibration, above, aggregate_weights, fill_missing, node_scores
+from .scoring import ALERT_MARGIN, Calibration, FusionCalibration, above, aggregate_weights, fill_missing, node_scores
 from .windows import Window, batches
 
 
@@ -201,6 +201,7 @@ class Runtime:
         self.featdev = torch.device(feat_device) if feat_device else self.dev
         self.reg = registry
         self.bm = self.bk = self.prop = None     # 0.7 detector-3 / propagation (set below for bundles that have them)
+        self.thr3g = None
         self.susp = np.zeros(0)
         self.final_thr = 1.0
         self.layers_only = bool(self.m.get("layers_only"))
@@ -239,6 +240,7 @@ class Runtime:
             self.bk = self.bm.keys(registry)
             c3 = cal["detector-3"]
             self.thr3 = (float(c3["proc"]), float(c3["obj"]))
+            self.thr3g = np.asarray(c3["groups"], dtype=np.float64) if c3.get("groups") else None   # 0.7b
             self.learned_unit = float(cal["fusion"].get("budget_threshold", 1.0))
         self.prop = cal.get("propagation") if d3 else None
         self.final_thr = float((cal.get("final") or {}).get("threshold", 1.0)) if d3 else 1.0
@@ -250,6 +252,8 @@ class Runtime:
         self.corroboration = float(cal["fusion"]["percentiles"].get(cp, self.fcal.threshold)) / self.fcal.threshold
         if d3 and (cal.get("final") or {}).get("percentiles", {}).get(cp) is not None:   # 0.7: on the final scale
             self.corroboration = float(cal["final"]["percentiles"][cp]) / self.final_thr
+        if d3 and pol.get("corroboration") == "threshold":     # 0.7 default: only above the learned threshold itself
+            self.corroboration = 1.0 + ALERT_MARGIN
         ev = (self.layers.spec.get("config", {}).get("evidence_rules", EVIDENCE_RULES) if self.layers is not None else ())
         self.policy = AlertPolicy(self.layers, self.daily_budget, self.corroboration, cp, ev) if self.layers is not None else None
         if self.policy is not None and pol.get("alert_layers") is not None:
@@ -438,14 +442,18 @@ class Runtime:
         if len(self.susp) < n:
             self.susp = np.concatenate([self.susp, np.zeros(n - len(self.susp))])
         self.bk.grow()
-        own, es = self.bm.node_scores(w, self.bk, n)
-        tn = np.where(self.bk.isproc[:n], self.thr3[0], self.thr3[1])
-        r3_all = own / tn
+        if self.thr3g is not None:                  # 0.7b: per-activity thresholds (already ratios)
+            from .behaviour import grouped_node_scores
+            r3_all, er = grouped_node_scores(self.bm, w, self.bk, n, self.thr3g)
+        else:
+            own, es = self.bm.node_scores(w, self.bk, n)
+            tn = np.where(self.bk.isproc[:n], self.thr3[0], self.thr3[1])
+            r3_all, er = own / tn, es / self.thr3[0]
         base = r3_all.copy()
         np.maximum.at(base, ids, fill_missing(fused) / self.learned_unit)
         if self.prop:
             p = self.prop
-            propagate(self.susp[:n], base, w, es / self.thr3[0], float(p["delta"]), float(p["gate"]), float(p["clip"]),
+            propagate(self.susp[:n], base, w, er, float(p["delta"]), float(p["gate"]), float(p["clip"]),
                       float(p["seed"]), int(p["passes"]))
             final = self.susp[ids] / self.final_thr
         else:

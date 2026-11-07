@@ -1,0 +1,36 @@
+{
+ "product": {
+  "TP": 112,
+  "FP": 150,
+  "recall": 0.949,
+  "attacks": 2,
+  "FP/day": 50.0
+ },
+ "n_attacks": 2,
+ "gt_nodes": 118,
+ "days": 3,
+ "layer:learned": {
+  "TP": 0,
+  "FP": 28,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "layer:rules": {
+  "TP": 95,
+  "FP": 74,
+  "recall": 0.805,
+  "attacks": 2
+ },
+ "layer:novelty": {
+  "TP": 5,
+  "FP": 7,
+  "recall": 0.042,
+  "attacks": 2
+ },
+ "layer:corroborated": {
+  "TP": 12,
+  "FP": 41,
+  "recall": 0.102,
+  "attacks": 2
+ }
+}

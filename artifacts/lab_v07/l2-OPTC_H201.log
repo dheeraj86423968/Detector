@@ -1,0 +1,4 @@
+06:11:56 layers: 141 known executables, 123 baseline remote addresses (104 recurring), benign alarm keys exfiltration=3
+06:12:08 OPTC_H201 prod06: 211 alerted nodes
+06:12:40 layers: 141 known executables, 123 baseline remote addresses (104 recurring), benign alarm keys exfiltration=3
+06:12:53 OPTC_H201 prod06_nonovelty: 43 alerted nodes

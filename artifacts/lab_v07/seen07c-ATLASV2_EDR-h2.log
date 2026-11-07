@@ -1,0 +1,30 @@
+10:35:27 0.6-config bundle 0s
+2026-11-07 10:35:39 - detector-3: 407105 edges, 15582 keys, 85848 table rows
+2026-11-07 10:35:40 - detector-3 group thresholds process 21.5, network 20.0, file-write 47.9, file-read 66.8
+2026-11-07 10:35:40 - detector-3 thresholds proc 37.38 obj 66.83 (budget 10)
+2026-11-07 10:35:42 - layers: 67 known executables, 1589 baseline remote addresses (406 recurring), benign alarm keys exfiltration=5, tainted_spawn=3, untrusted_code_network=1, untrusted_exec=3
+2026-11-07 10:35:54 - final threshold 1.414 (validation nodes 29729, budget 10)
+10:35:54 0.7 upgrade 27s
+10:36:09 0.7: {'TP': 0, 'FP': 70, 'recall': 0.0, 'attacks': 0, 'FP/day': 70.0, 'by_layer': {'learned': 31, 'corroborated': 15, 'rules': 24}, 'gt_in_test': 0}
+{
+ "dataset": "ATLASV2_EDR",
+ "host": "h2",
+ "test_days": [
+  "2022-07-19"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "0.7": {
+  "TP": 0,
+  "FP": 70,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 70.0,
+  "by_layer": {
+   "learned": 31,
+   "corroborated": 15,
+   "rules": 24
+  },
+  "gt_in_test": 0
+ }
+}
