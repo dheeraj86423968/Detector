@@ -52,10 +52,49 @@ endpoint's own BTF at load). `bpftool gen skeleton` embeds it in a small statica
 `/opt/pdp/bin/pdp-ebpf` (2.2 MB, `agent/bpf/pdp_ebpf.c`), which attaches it and streams the raw ring-buffer records
 to the agent over a pipe; the agent decodes them with the same code as before (`EbpfNormaliser`). Build stage:
 `deploy/docker/agent.Dockerfile` (clang, libbpf-dev, bpftool from linux-tools); outside Docker, `make -C agent/bpf`.
-All hooks are raw tracepoints (`sys_enter`, `sys_exit`, `sched_process_exec/fork/exit`), so nothing reads tracefs.
+All hooks are raw tracepoints (`sys_enter`, `sys_exit`, `sched_process_exec/fork/exit`, and the optional
+`io_uring_submit_req`), so nothing reads tracefs.
 The loader and the agent are both excluded in-kernel. To check a host without starting the agent,
 `docker run --rm --privileged --entrypoint /opt/pdp/bin/pdp-ebpf pdp/agent:<version> --check` prints `ok` once the
 program has loaded and attached (~25 ms).
+
+**Data on connected sockets (next agent release; built 2026-11-07, not yet released or deployed).** Before this,
+a payload downloaded over a connected TCP socket (curl / wget / python reading with read() / recv()) produced only
+the CONNECT edge, and exfiltration with write() / send() produced none. The collector now reports successful
+transfers on INET/INET6 sockets (TCP, UDP) at syscall exit (ret > 0), as SOCKIO records mapped to the existing edge
+types: read / readv / preadv2 -> `READ` netflow -> process; write / writev / pwritev2 / sendfile -> `WRITE` process ->
+netflow; splice -> READ or WRITE for whichever end is the socket; recvfrom / recvmsg / recvmmsg that return no
+address -> `RECVFROM` / `RECVMSG`; sendto / sendmsg / sendmmsg without a destination -> `SENDTO` / `SENDMSG`. The
+netflow node is the one connect() creates (`netflow <remote ip> <remote port>`), so a download is
+`connect -> READ -> WRITE file -> EXECUTE` in one graph (layer 1-2 treat READ / WRITE on a netflow as receive / send,
+`socket_io`). Unix, netlink and packet sockets, pipes, files and unconnected UDP without an address produce nothing.
+The kernel decides socket-ness and the peer from the fd itself (`task->files->fdt->fd[fd]` -> S_IFSOCK inode ->
+`socket->sk->__sk_common` daddr / dport / v6_daddr), so inherited, dup'ed and passed fds work without user-space fd
+tracking. Volume: at most one record per (process image, edge, peer) per 2 s (in-kernel LRU map, 64k entries; loader
+`--sockio-interval-ms`, agent source config `"sockio_interval_ms"`, 0 = off); the first transfer is always reported at
+once, and each record carries the bytes / calls summed since the previous one of its key. A recvfrom / recvmsg whose
+kernel-returned address length is 0 (TCP) now uses the socket's peer instead of whatever was in the caller's buffer.
+io_uring: IORING_OP_READ(V) / WRITE(V) / *_FIXED / READ_MULTISHOT / SEND(_ZC) / RECV(_ZC) / SENDMSG(_ZC) / RECVMSG on a
+socket fd give the same edges, from the `io_uring:io_uring_submit_req` tracepoint (5.19+; the loader skips it with a
+note where absent), reported at submission (ret = 0, the result is not known yet); SQPOLL rings are covered (the
+poller is a thread of the owning process). Not covered: registered ("fixed") files, and IORING_OP_CONNECT / ACCEPT /
+OPENAT, which bypass connect / accept / open (no CONNECT / OPEN edge for those), and 32-bit compat syscalls (as for
+all record kinds). The strace and auditd collectors do not trace socket data (`crosscheck` leaves SOCKIO out of
+strace comparisons).
+Verified on this host (kernel 7.0, 2026-11-07, benign loopback traffic and one HTTPS GET of example.com): curl, wget
+and python urllib downloads give `netflow 127.0.0.1 <port> -RECVFROM/READ-> curl|wget|python` plus the SENDTO / WRITE
+of the request, `curl https://example.com` gives `netflow 172.66.147.243 443 -RECVFROM-> curl` and the DNS
+`SENDMSG` (sendmmsg) / `RECVFROM` to 127.0.0.53:53; a scripted workload produced every variant above (incl. a dup'ed
+fd, a forked child writing on an inherited socket, IPv6, connected and unconnected UDP mmsg) and io_uring SEND /
+WRITE / RECV / READ (plain and SQPOLL); `cat` / `dd` of files produced no socket records. Both engines attached at once
+(`crosscheck --compare bcc,core`, 9 scenarios): the raw records were identical (2259 per run); strace vs CO-RE edge
+counts unchanged with SOCKIO excluded. Cost (median of 5 runs, 2M calls each, against the previous loader):
+a successful read / write on a non-socket +51 ns (199 -> 250 ns; the in-kernel rejection is 7 probe reads), a 64-byte
+write on a TCP socket +215 ns (3.71 -> 3.93 us, ~6 %), 64 MB loopback downloads unchanged; `pdp_sys_exit` grows
+from 3.3 to 9.7 KB of instructions. Volume: 2M socket writes + 5 downloads -> ~130 records; the worst case, 10,000
+short connections (every accepted socket a new peer), 10.0k -> 25.5k records, none lost even with a 256 KB ring;
+whole host for 30 s under its normal load ~290 socket records (~10/s, 1-3 % of all records). bcc engine: compiles on
+7.0 only with the header settings in sources/ebpf.py (bcc 0.35's bundled uapi bpf.h predates 7.0).
 
 **Engines.** `"source": {"kind": "ebpf", "engine": "core"}` is the default (also `$PDP_EBPF_ENGINE`).
 `"engine": "bcc"` is the previous header-compiled engine, kept as a fallback for kernels without BTF and for

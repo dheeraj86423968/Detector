@@ -8,7 +8,9 @@ the edge semantics are defined once and are identical across collectors:
   open(pid, path, flags)    OPEN file -> process; READ file -> process unless O_WRONLY; WRITE process -> file if
                             O_WRONLY / O_RDWR (file reads/writes are inferred from the open mode, as in the research
                             pipeline, not traced per read/write call)
-  socket(pid, op, ip, port) CONNECT / SENDTO / SENDMSG process -> socket;  RECVFROM / RECVMSG socket -> process
+  socket(pid, op, ip, port) CONNECT / SENDTO / SENDMSG process -> socket;  RECVFROM / RECVMSG socket -> process;
+                            READ socket -> process and WRITE process -> socket (data on a connected socket: read /
+                            write / sendfile; the eBPF collector only, recv/send without an address keep their names)
   exit(pid)                 forget the pid (a reused pid becomes a new process)
 
 Entities: one process node per (run, pid, exec generation) 'subject <exe> <argv>'; one file node per path
@@ -23,8 +25,8 @@ from pdp_engine.schema import Entity, Event
 from .auditd import ProcessTable
 
 O_ACCMODE, O_WRONLY, O_RDWR, O_CREAT, O_TRUNC = 0o3, 0o1, 0o2, 0o100, 0o1000
-SOCKET_OPS = {"CONNECT", "SENDTO", "SENDMSG", "RECVFROM", "RECVMSG"}
-INBOUND = {"RECVFROM", "RECVMSG"}
+SOCKET_OPS = {"CONNECT", "SENDTO", "SENDMSG", "RECVFROM", "RECVMSG", "READ", "WRITE"}
+INBOUND = {"RECVFROM", "RECVMSG", "READ"}
 
 
 class ProvenanceMapper:

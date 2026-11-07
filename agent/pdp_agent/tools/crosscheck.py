@@ -6,7 +6,8 @@
 --compare picks the two collectors: `strace`, `ebpf` (the default eBPF engine), `core` (libbpf CO-RE) or `bcc`.
 * strace vs an eBPF engine: each scenario runs once per collector in a fresh scratch directory at the same path with
   the same seed. Timing-dependent noise (e.g. a library probed by the dynamic loader in one run only) shows up as a
-  small non-overlap; a mapping bug shows up as a missing edge class.
+  small non-overlap; a mapping bug shows up as a missing edge class. The eBPF side's socket-data (SOCKIO) records
+  are left out here: strace does not trace read/write/send/recv on connected sockets.
 * two eBPF engines (`--compare bcc,core`): both kernel programs are attached at once and each scenario runs ONCE, so
   both engines see the very same syscalls. Compared: the raw kernel records (every field but the timestamp, as
   multisets) - exact equality is expected - and the provenance edges (op, src type+label, dst type+label), where
@@ -136,7 +137,10 @@ def main():
             for name in (A, B):
                 shutil.rmtree(a.root, ignore_errors=True); os.makedirs(a.root)
                 cmd = command(sc, a.root, a.scale)
-                live = StraceLive(command=cmd, batch=10**9) if name == "strace" else EbpfLive(command=cmd, tracer=tracer, batch=10**9)
+                # strace does not trace data on connected sockets (read/write/send/recv without an address): the eBPF
+                # side's SOCKIO records are left out of this comparison (--compare bcc,core compares them)
+                live = (StraceLive(command=cmd, batch=10**9) if name == "strace"
+                        else EbpfLive(command=cmd, tracer=tracer, batch=10**9, socket_data=False))
                 res[name] = edges(run(live))
                 total[name].update(res[name])
             row = {"scenario": sc, **compare(res[A], res[B]),

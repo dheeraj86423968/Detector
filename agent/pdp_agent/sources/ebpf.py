@@ -2,15 +2,42 @@
 
 This is the high-volume Linux endpoint collector. It traces the same syscall set as the strace and auditd
 collectors and maps it through the same code (sources/common.py), so the event stream - node labels, edge types,
-directions - is identical across collectors and everything downstream is unchanged:
+directions - is identical across collectors and everything downstream is unchanged; on top of that it traces data
+moved on connected sockets (SOCKIO below), which the other collectors do not:
 
   exec                  sched_process_exec (successful execs only): filename + argv read from the new image
   open / openat / openat2 / creat
                         path + flags at entry, reported only on success; reads/writes are inferred from the open mode
-  connect, sendto, sendmsg (destination address), recvfrom, recvmsg, accept, accept4 (peer address)
-                        IPv4 and IPv6; a socket op without an address (connected TCP send/recv) is not an edge,
-                        exactly as in the strace collector
-  process fork          raw tracepoint sched_process_fork; new threads are not processes and are filtered in-kernel.
+  connect, sendto, sendmsg (destination address), recvfrom, recvmsg (address returned), accept, accept4 (peer)
+                        IPv4 and IPv6, exactly as in the strace collector
+  data on connected sockets (SOCKIO, agent releases after 0.6.0; eBPF only - the strace and auditd collectors do not trace it)
+                        read, readv, preadv2 -> READ (netflow -> process); write, writev, pwritev2, sendfile -> WRITE
+                        (process -> netflow); splice -> READ / WRITE for whichever end is the socket; recvfrom /
+                        recvmsg / recvmmsg returning no address -> RECVFROM / RECVMSG; sendto / sendmsg / sendmmsg
+                        without a destination -> SENDTO / SENDMSG. Same netflow node (remote ip, port) as connect.
+                        Reported at syscall exit when ret > 0, for INET/INET6 sockets (TCP, UDP) that have a peer;
+                        unix, netlink and packet sockets and unconnected UDP without an address are not edges.
+                        Socket-ness and peer are decided in the kernel from the fd (task->files->fdt->fd[fd]: an
+                        S_IFSOCK inode -> socket -> sk->__sk_common daddr/dport/v6_daddr), so inherited, dup'ed and
+                        passed fds need no user-space tracking; a non-socket read/write costs 7 probe reads.
+                        Volume: one record per (process image, edge, peer) per re-emit interval (default 2 s, loader
+                        --sockio-interval-ms, source config `sockio_interval_ms`; 0 = off), kept in an in-kernel LRU
+                        map; the record's ret/flags carry the bytes/calls summed since the previous record of the
+                        key. The first transfer is always reported at once (its timestamp orders a download before
+                        the file write and exec that follow); repeats within the interval could only repeat an edge
+                        the window already has (windows fuse consecutive same-op edges per pair), and 2 s keeps a
+                        long-lived connection (a C2 session) visibly active without a record per read.
+                        Limits: the byte/call sums of transfers after a key's last record are not flushed (no close
+                        hook), so they are a lower bound; 32-bit (compat) syscalls are not traced (as for every
+                        other record kind); the peer is the address the socket sees in its own network namespace
+                        (as for connect); a non-socket read/write costs ~50 ns, a socket one ~0.2 us (measured on
+                        kernel 7.0, docs/DEPLOYMENT.md §1).
+  io_uring             IORING_OP_READ(V)/WRITE(V)(_FIXED)/READ_MULTISHOT/SEND(_ZC)/RECV(_ZC)/SENDMSG(_ZC)/RECVMSG on a
+                        socket fd -> the same SOCKIO edges, from the io_uring:io_uring_submit_req tracepoint (5.19+,
+                        optional: skipped with a note where absent). Reported at submission (the result is unknown
+                        then; ret = 0). Gaps: registered ("fixed") files (IOSQE_FIXED_FILE), and IORING_OP_CONNECT /
+                        ACCEPT / OPENAT, which bypass the connect / accept / open syscalls (no CONNECT / OPEN edge).
+  process fork         raw tracepoint sched_process_fork; new threads are not processes and are filtered in-kernel.
                         It fires before the child can run, so a child's syscalls are never seen before its fork.
   process exit          sched_process_exit with group_dead: the pid is forgotten (a reused pid is a new process)
   dup / dup2 / dup3 / fcntl(F_DUPFD*)
@@ -36,7 +63,11 @@ Two engines load the same kernel program (same hooks, filters and record layout)
   bcc (fallback)  the original in-process bcc program (BPF_PROGRAM below), compiled at start against the running
                   kernel's headers: needs python3-bpfcc, /lib/modules + /usr/src (linux-headers-$(uname -r)) and
                   tracefs. Not shipped in the agent image; kept for hosts without BTF and for differential checks
-                  (`python -m pdp_agent.tools.crosscheck --compare bcc,core`).
+                  (`python -m pdp_agent.tools.crosscheck --compare bcc,core`). The socket-data code includes
+                  net/sock.h and linux/fs.h: on kernels >= 6.19 (headers built with -fms-extensions) the program is
+                  compiled with -fms-extensions and without the kernel-internal linux/bpf.h, which needs a newer uapi
+                  bpf.h than bcc bundles (verified with bcc 0.35 on 7.0). The io_uring probe is added when the
+                  tracepoint and include/linux/io_uring_types.h exist.
 
 Both need CAP_BPF + CAP_PERFMON (+ CAP_SYS_ADMIN for bcc; or a privileged container) and the host pid namespace so
 pids and /proc agree. `decode` and the record parser are pure Python and unit-tested without a kernel
@@ -64,8 +95,13 @@ from pdp_engine.schema import Entity, Event
 from .common import ProvenanceMapper
 
 # record kinds emitted by the kernel program (keep in sync with BPF_PROGRAM and agent/bpf/pdp_ebpf.h)
-EXEC, EXEC_ARGV, OPEN, CONNECT, SEND, RECV, ACCEPT, FORK, EXIT, DUP = range(10)
-STATS = 255           # CO-RE loader only: ret = records lost in-kernel (ring buffer full) so far, flags = over its spool limit
+EXEC, EXEC_ARGV, OPEN, CONNECT, SEND, RECV, ACCEPT, FORK, EXIT, DUP, SOCKIO = range(11)
+# SOCKIO aux (IO_* in pdp_ebpf.h) -> edge type; flags = variant (SV_*) | io_uring opcode << 8 | calls << 32
+SOCKIO_OPS = ("READ", "WRITE", "RECVFROM", "RECVMSG", "SENDTO", "SENDMSG")
+SOCKIO_VARIANTS = ("read", "readv", "write", "writev", "recvfrom", "recvmsg", "recvmmsg", "sendto", "sendmsg", "sendmmsg",
+                   "sendfile", "splice", "io_uring")
+SOCKIO_MS = 2000      # default re-emit interval per (process image, edge, peer), as SOCKIO_MS in pdp_ebpf.h
+STATS = 255          # CO-RE loader only: ret = records lost in-kernel (ring buffer full) so far, flags = over its spool limit
 EXEC_ARG = EXEC   # old name
 AT_FDCWD = -100
 STRLEN = 512          # bytes per record string (kernel side)
@@ -82,6 +118,11 @@ BPF_PROGRAM = r"""
 #include <uapi/linux/ptrace.h>
 #include <linux/sched.h>
 #include <linux/mm_types.h>
+#include <linux/fs.h>
+#include <linux/fdtable.h>
+#include <linux/net.h>
+#include <net/sock.h>
+/*__URING_INCLUDE__*/
 
 #define K_EXEC_ARG 0
 #define K_EXEC_ARGV 1
@@ -93,6 +134,27 @@ BPF_PROGRAM = r"""
 #define K_FORK     7
 #define K_EXIT     8
 #define K_DUP      9
+#define K_SOCKIO   10
+#define IO_READ     0
+#define IO_WRITE    1
+#define IO_RECVFROM 2
+#define IO_RECVMSG  3
+#define IO_SENDTO   4
+#define IO_SENDMSG  5
+#define SV_READ 0
+#define SV_READV 1
+#define SV_WRITE 2
+#define SV_WRITEV 3
+#define SV_RECVFROM 4
+#define SV_RECVMSG 5
+#define SV_RECVMMSG 6
+#define SV_SENDTO 7
+#define SV_SENDMSG 8
+#define SV_SENDMMSG 9
+#define SV_SENDFILE 10
+#define SV_SPLICE 11
+#define SV_URING 12
+#define SOCKIO_NS __SOCKIO_NS__ULL
 
 #define STRLEN   512
 #define ARGCHUNKS 2
@@ -106,10 +168,10 @@ struct event_t {
     u32 kind;
     u32 pid;          /* thread-group id (the process) */
     u32 tid;
-    u32 aux;          /* FORK: child pid; EXEC_ARGV: chunk index; SEND/RECV: 1 = *msg variant */
-    s64 ret;
-    u64 flags;
-    s32 dirfd;
+    u32 aux;          /* FORK: child pid; EXEC_ARGV: chunk index; SEND/RECV: 1 = *msg variant; SOCKIO: IO_* */
+    s64 ret;          /* SOCKIO: bytes (messages for *mmsg) since the previous record of the same key */
+    u64 flags;        /* SOCKIO: variant (SV_*) | io_uring opcode << 8 | calls << 32 */
+    s32 dirfd;        /* SOCKIO: the fd */
     u16 family;
     u16 port;         /* network byte order */
     u8  addr[16];
@@ -149,6 +211,179 @@ static __always_inline int read_sockaddr(struct event_t *e, const void *uaddr) {
         e->family = fam; e->port = a.port; __builtin_memcpy(e->addr, a.addr, 16);
         return 1;
     }
+    return 0;
+}
+
+/* ---- data on connected sockets (K_SOCKIO): same logic as pdp_ebpf.bpf.c (fd_sock, sock_peer, sockio_out ...) ---- */
+struct io_key { u32 tgid; u32 op; u64 gen; u16 family; u16 port; u32 pad; u8 addr[16]; };
+struct io_val { u64 ts; u64 bytes; u64 calls; };
+BPF_TABLE("lru_hash", struct io_key, struct io_val, iolast, 65536);
+struct peer_t { u16 family; u16 port; u8 addr[16]; };
+
+static __always_inline struct sock *fd_sock(int fd) {
+    if (fd < 0) return 0;
+    struct task_struct *t = (struct task_struct *)bpf_get_current_task();
+    struct files_struct *files = 0;
+    bpf_probe_read_kernel(&files, sizeof(files), &t->files);
+    if (!files) return 0;
+    struct fdtable *fdt = 0;
+    bpf_probe_read_kernel(&fdt, sizeof(fdt), &files->fdt);
+    if (!fdt) return 0;
+    unsigned int max = 0;
+    bpf_probe_read_kernel(&max, sizeof(max), &fdt->max_fds);
+    if ((unsigned int)fd >= max) return 0;
+    struct file **arr = 0;
+    bpf_probe_read_kernel(&arr, sizeof(arr), &fdt->fd);
+    struct file *f = 0;
+    bpf_probe_read_kernel(&f, sizeof(f), &arr[fd]);
+    if (!f) return 0;
+    struct inode *ino = 0;
+    bpf_probe_read_kernel(&ino, sizeof(ino), &f->f_inode);
+    if (!ino) return 0;
+    umode_t mode = 0;
+    bpf_probe_read_kernel(&mode, sizeof(mode), &ino->i_mode);
+    if ((mode & S_IFMT) != S_IFSOCK) return 0;
+    struct socket *so = 0;
+    bpf_probe_read_kernel(&so, sizeof(so), &f->private_data);
+    if (!so) return 0;
+    struct sock *sk = 0;
+    bpf_probe_read_kernel(&sk, sizeof(sk), &so->sk);
+    return sk;
+}
+
+static __always_inline int sock_peer(struct sock *sk, struct peer_t *p) {
+    if (!sk) return 0;
+    u16 fam = 0;
+    bpf_probe_read_kernel(&fam, sizeof(fam), &sk->__sk_common.skc_family);
+    if (fam == AF_INET_) {
+        bpf_probe_read_kernel(p->addr, 4, &sk->__sk_common.skc_daddr);
+    } else if (fam == AF_INET6_) {
+#if IS_ENABLED(CONFIG_IPV6)
+        bpf_probe_read_kernel(p->addr, 16, &sk->__sk_common.skc_v6_daddr);
+#else
+        return 0;
+#endif
+    } else {
+        return 0;
+    }
+    p->family = fam;
+    bpf_probe_read_kernel(&p->port, sizeof(p->port), &sk->__sk_common.skc_dport);
+    return 1;
+}
+
+static __always_inline int user_peer(struct peer_t *p, const void *uaddr) {
+    u16 fam = 0;
+    if (!uaddr) return 0;
+    bpf_probe_read_user(&fam, sizeof(fam), uaddr);
+    if (fam == AF_INET_) {
+        struct sa4 a = {};
+        bpf_probe_read_user(&a, sizeof(a), uaddr);
+        p->port = a.port; __builtin_memcpy(p->addr, &a.addr, 4);
+    } else if (fam == AF_INET6_) {
+        struct sa6 a = {};
+        bpf_probe_read_user(&a, sizeof(a), uaddr);
+        p->port = a.port; __builtin_memcpy(p->addr, a.addr, 16);
+    } else {
+        return 0;
+    }
+    p->family = fam;
+    return p->port != 0;
+}
+
+static __always_inline void sockio_out(u32 op, u64 variant, s32 fd, struct peer_t *p, u64 amount) {
+    struct io_key k;
+    __builtin_memset(&k, 0, sizeof(k));
+    k.tgid = bpf_get_current_pid_tgid() >> 32;
+    k.op = op;
+    k.family = p->family; k.port = p->port;
+    __builtin_memcpy(k.addr, p->addr, 16);
+    struct task_struct *t = (struct task_struct *)bpf_get_current_task();
+    bpf_probe_read_kernel(&k.gen, sizeof(k.gen), &t->self_exec_id);
+    u64 now = bpf_ktime_get_ns(), calls = 1;
+    struct io_val *v = iolast.lookup(&k);
+    if (v) {
+        if ((s64)(now - v->ts) < (s64)SOCKIO_NS) {
+            __sync_fetch_and_add(&v->bytes, amount);
+            __sync_fetch_and_add(&v->calls, 1);
+            return;
+        }
+        amount += v->bytes; calls += v->calls;
+        v->ts = now; v->bytes = 0; v->calls = 0;
+    } else {
+        struct io_val nv = {};
+        nv.ts = now;
+        iolast.update(&k, &nv);
+    }
+    struct event_t *e = events.ringbuf_reserve(sizeof(struct event_t));
+    if (!e) return;
+    hdr(e, K_SOCKIO);
+    e->aux = op; e->ret = (s64)amount; e->flags = variant | (calls << 32); e->dirfd = fd;
+    e->family = p->family; e->port = p->port;
+    __builtin_memcpy(e->addr, p->addr, 16);
+    events.ringbuf_submit(e, 0);
+}
+
+static __always_inline void sockio_fd(u32 op, u64 variant, int fd, u64 amount, const void *mmsg) {
+    struct sock *sk = fd_sock(fd);
+    if (!sk) return;
+    struct peer_t p = {};
+    if (!sock_peer(sk, &p)) return;
+    if (!p.port) {
+        if (!mmsg) return;
+        const void *name = 0;
+        bpf_probe_read_user(&name, sizeof(name), mmsg);
+        if (variant == SV_RECVMMSG) {
+            u32 nl = 0;
+            bpf_probe_read_user(&nl, sizeof(nl), (const char *)mmsg + 8);
+            if (!nl) return;
+        }
+        if (!user_peer(&p, name)) return;
+    }
+    sockio_out(op, variant, fd, &p, amount);
+}
+
+static __always_inline int sockio_exit(struct pt_regs *regs, long ret) {
+    if (!SOCKIO_NS) return 0;
+    long nr = 0;
+    bpf_probe_read_kernel(&nr, sizeof(REG_NR), &REG_NR);
+    u32 op; u64 v; const void *mmsg = 0;
+    unsigned long x0 = 0, x1 = 0, x2 = 0, x4 = 0;
+    if (nr == SYS_read)                                 { op = IO_READ;     v = SV_READ; }
+    else if (nr == SYS_write)                           { op = IO_WRITE;    v = SV_WRITE; }
+    else if (nr == SYS_readv || nr == SYS_preadv2)      { op = IO_READ;     v = SV_READV; }
+    else if (nr == SYS_writev || nr == SYS_pwritev2)    { op = IO_WRITE;    v = SV_WRITEV; }
+    else if (nr == SYS_recvfrom)                        { op = IO_RECVFROM; v = SV_RECVFROM; }
+    else if (nr == SYS_recvmsg)                         { op = IO_RECVMSG;  v = SV_RECVMSG; }
+    else if (nr == SYS_sendfile)                        { op = IO_WRITE;    v = SV_SENDFILE; }
+    else if (nr == SYS_splice)                          { op = IO_WRITE;    v = SV_SPLICE; }
+    else if (nr == SYS_sendto) {
+        bpf_probe_read_kernel(&x4, sizeof(x4), &REG_XARG4);
+        if (x4) return 0;
+        op = IO_SENDTO; v = SV_SENDTO;
+    } else if (nr == SYS_sendmsg) {
+        bpf_probe_read_kernel(&x1, sizeof(x1), &REG_XARG1);
+        const void *name = 0;
+        bpf_probe_read_user(&name, sizeof(name), (const void *)x1);
+        if (name) return 0;
+        op = IO_SENDMSG; v = SV_SENDMSG;
+    } else if (nr == SYS_recvmmsg) {
+        bpf_probe_read_kernel(&x1, sizeof(x1), &REG_XARG1);
+        op = IO_RECVMSG; v = SV_RECVMMSG; mmsg = (const void *)x1;
+    } else if (nr == SYS_sendmmsg) {
+        bpf_probe_read_kernel(&x1, sizeof(x1), &REG_XARG1);
+        op = IO_SENDMSG; v = SV_SENDMMSG; mmsg = (const void *)x1;
+    } else {
+        return 0;
+    }
+    SKIP_SELF();
+    bpf_probe_read_kernel(&x0, sizeof(x0), &REG_XARG0);
+    if (v == SV_SPLICE) {
+        bpf_probe_read_kernel(&x2, sizeof(x2), &REG_XARG2);
+        sockio_fd(IO_WRITE, v, (int)x2, ret, 0);
+        sockio_fd(IO_READ, v, (int)x0, ret, 0);
+        return 0;
+    }
+    sockio_fd(op, v, (int)x0, ret, mmsg);
     return 0;
 }
 
@@ -243,16 +478,25 @@ RAW_TRACEPOINT_PROBE(sys_enter) {
         if (a1 == 0 || a1 == 1030) return remember(K_DUP, 0, (const void *)1, a0, 0);   /* F_DUPFD, F_DUPFD_CLOEXEC */
         return 0;
     }
-    if (nr == SYS_recvfrom) return remember(K_RECV, 0, (const void *)a4, 0, 0);
+    /* recv*: the address is read at exit, only if the kernel returned one; otherwise the socket's peer (K_SOCKIO) */
+    if (nr == SYS_recvfrom) {
+        unsigned long a5 = 0;
+        bpf_probe_read_kernel(&a5, sizeof(a5), &REG_ARG5);
+        return remember(K_RECV, 0, (const void *)a4, a5, 0);
+    }
     if (nr == SYS_recvmsg)  return remember(K_RECV, 1, (const void *)a1, 0, 0);
     return remember(K_ACCEPT, 0, (const void *)a1, 0, 0);              /* accept / accept4 */
 }
 
 RAW_TRACEPOINT_PROBE(sys_exit) {
     u32 tid = TID();
-    struct pend_t *p = inflight.lookup(&tid);
-    if (!p) return 0;
     long ret = (long)ctx->args[1];
+    struct pend_t *p = inflight.lookup(&tid);
+    if (!p) {
+        if (ret > 0) sockio_exit((struct pt_regs *)ctx->args[0], ret);
+        return 0;
+    }
+    int addressed = 1;
     if (ret >= 0) {
         if (p->kind == K_DUP) {
             struct event_t *e = events.ringbuf_reserve(sizeof(struct event_t));
@@ -266,21 +510,29 @@ RAW_TRACEPOINT_PROBE(sys_exit) {
             }
         } else {
             const void *uaddr = p->ptr;
-            if (p->variant == 1) {          /* recvmsg: the msghdr's msg_name, filled in by the kernel */
-                uaddr = 0;
-                bpf_probe_read_user(&uaddr, sizeof(uaddr), p->ptr);
+            u32 alen = 1;
+            if (p->kind == K_RECV) {
+                if (p->variant == 1) {      /* recvmsg: the msghdr's msg_name / msg_namelen, filled in by the kernel */
+                    uaddr = 0;
+                    bpf_probe_read_user(&uaddr, sizeof(uaddr), p->ptr);
+                    bpf_probe_read_user(&alen, sizeof(alen), (const char *)p->ptr + 8);
+                } else if (p->flags) {      /* recvfrom: *addrlen */
+                    bpf_probe_read_user(&alen, sizeof(alen), (const void *)p->flags);
+                }
+                addressed = 0;
             }
-            if (uaddr) {
+            if (uaddr && alen) {
                 struct event_t *e = events.ringbuf_reserve(sizeof(struct event_t));
                 if (e) {
                     hdr(e, p->kind); e->aux = p->variant; e->ret = ret;
-                    if (read_sockaddr(e, uaddr)) events.ringbuf_submit(e, 0);
+                    if (read_sockaddr(e, uaddr)) { events.ringbuf_submit(e, 0); addressed = 1; }
                     else events.ringbuf_discard(e, 0);
                 }
             }
         }
     }
     inflight.delete(&tid);
+    if (!addressed && ret > 0) sockio_exit((struct pt_regs *)ctx->args[0], ret);
     return 0;
 }
 
@@ -307,30 +559,96 @@ TRACEPOINT_PROBE(sched, sched_process_exit) {
     events.ringbuf_submit(e, 0);
     return 0;
 }
+/*__URING__*/
 """
 
+# io_uring submissions (bcc engine): added to BPF_PROGRAM when the kernel has the io_uring_submit_req tracepoint and its
+# headers define struct io_kiocb (include/linux/io_uring_types.h, 6.0+). Same opcodes and semantics as pdp_uring in
+# agent/bpf/pdp_ebpf.bpf.c.
+BPF_URING = r"""
+RAW_TRACEPOINT_PROBE(io_uring_submit_req) {
+    if (!SOCKIO_NS) return 0;
+    struct io_kiocb *req = (struct io_kiocb *)ctx->args[0];
+    u8 opc = 0;
+    bpf_probe_read_kernel(&opc, sizeof(opc), &req->opcode);
+    u32 op;
+    switch (opc) {
+    case 1: case 4: case 22: case 49: case 60:  op = IO_READ; break;
+    case 2: case 5: case 23: case 61:           op = IO_WRITE; break;
+    case 26: case 47:                           op = IO_SENDTO; break;
+    case 27: case 58:                           op = IO_RECVFROM; break;
+    case 9: case 48:                            op = IO_SENDMSG; break;
+    case 10:                                    op = IO_RECVMSG; break;
+    default: return 0;
+    }
+    u8 fl = 0;
+    bpf_probe_read_kernel(&fl, 1, &req->flags);
+    if (fl & 1) return 0;
+    SKIP_SELF();
+    int fd = -1;
+    bpf_probe_read_kernel(&fd, sizeof(fd), &req->cqe.fd);
+    sockio_fd(op, SV_URING | ((u64)opc << 8), fd, 0, 0);
+    return 0;
+}
+"""
+URING_TRACEPOINT = "io_uring/io_uring_submit_req"
+BCC_COMPAT_PRELUDE = "#define _LINUX_BPF_H 1   /* kernel-internal linux/bpf.h: needs a newer uapi bpf.h than bcc bundles */\n"
 
-# syscall numbers and the pt_regs fields holding syscall arguments 0, 1, 2 and 4, per architecture
+
+def _bcc_compat() -> bool:
+    """bcc engine: the running kernel's headers are built with -fms-extensions (>= 6.19)."""
+    try:
+        with open(f"/lib/modules/{os.uname().release}/build/Makefile", errors="replace") as f:
+            return "-fms-extensions" in f.read()
+    except OSError:
+        return False
+
+
+def _uring_available() -> bool:
+    """bcc engine: the io_uring tracepoint exists and the kernel headers define struct io_kiocb."""
+    rel = os.uname().release
+    tp = any(os.path.isdir(f"{d}/events/{URING_TRACEPOINT}") for d in ("/sys/kernel/tracing", "/sys/kernel/debug/tracing"))
+    hdr = any(os.path.isfile(f"{d}/include/linux/io_uring_types.h") for d in (f"/lib/modules/{rel}/build", f"/usr/src/linux-headers-{rel}"))
+    return tp and hdr
+
+
+# per architecture: syscall numbers; the pt_regs fields holding syscall arguments 0, 1, 2, 4 and 5 at entry; at exit
+# the syscall number and arguments 0, 1, 2 and 4 (arm64 overwrites x0 with the return value: orig_x0 keeps argument 0)
 _ARCH = {
     "x86_64": ({"open": 2, "openat": 257, "openat2": 437, "creat": 85, "connect": 42, "sendto": 44, "sendmsg": 46,
-                "recvfrom": 45, "recvmsg": 47, "accept": 43, "accept4": 288, "dup": 32, "dup2": 33, "dup3": 292, "fcntl": 72},
-               ("regs->di", "regs->si", "regs->dx", "regs->r8")),
+                "recvfrom": 45, "recvmsg": 47, "accept": 43, "accept4": 288, "dup": 32, "dup2": 33, "dup3": 292, "fcntl": 72,
+                "read": 0, "write": 1, "readv": 19, "writev": 20, "preadv2": 327, "pwritev2": 328, "recvmmsg": 299,
+                "sendmmsg": 307, "sendfile": 40, "splice": 275},
+               ("regs->di", "regs->si", "regs->dx", "regs->r8", "regs->r9"),
+               ("regs->orig_ax", "regs->di", "regs->si", "regs->dx", "regs->r8")),
     "aarch64": ({"open": -1, "openat": 56, "openat2": 437, "creat": -1, "connect": 203, "sendto": 206, "sendmsg": 211,
-                 "recvfrom": 207, "recvmsg": 212, "accept": 202, "accept4": 242, "dup": 23, "dup2": -1, "dup3": 24, "fcntl": 25},
-                ("regs->regs[0]", "regs->regs[1]", "regs->regs[2]", "regs->regs[4]")),
+                 "recvfrom": 207, "recvmsg": 212, "accept": 202, "accept4": 242, "dup": 23, "dup2": -1, "dup3": 24, "fcntl": 25,
+                 "read": 63, "write": 64, "readv": 65, "writev": 66, "preadv2": 286, "pwritev2": 287, "recvmmsg": 243,
+                 "sendmmsg": 269, "sendfile": 71, "splice": 76},
+                ("regs->regs[0]", "regs->regs[1]", "regs->regs[2]", "regs->regs[4]", "regs->regs[5]"),
+                ("regs->syscallno", "regs->orig_x0", "regs->regs[1]", "regs->regs[2]", "regs->regs[4]")),
 }
 
 
-def program(self_pid: int, ring_pages: int = 1024, arch: str | None = None) -> str:
-    """The kernel program text for this architecture."""
+def program(self_pid: int, ring_pages: int = 1024, arch: str | None = None, sockio_ms: int = SOCKIO_MS,
+            uring: bool | None = None) -> str:
+    """The kernel program text for this architecture. sockio_ms: K_SOCKIO re-emit interval (0 = not traced); uring:
+    include the io_uring probe (default: if this kernel has the tracepoint and the headers define struct io_kiocb)."""
     import platform
     arch = arch or platform.machine()
     if arch not in _ARCH:
         raise RuntimeError(f"eBPF collector: unsupported architecture {arch}")
-    nrs, regs = _ARCH[arch]
+    nrs, regs, xregs = _ARCH[arch]
     defs = "".join(f"#define SYS_{k} {v}\n" for k, v in nrs.items())
-    defs += "".join(f"#define REG_ARG{i} {r}\n" for i, r in zip((0, 1, 2, 4), regs))
-    return BPF_PROGRAM.replace("__SELF_PID__", str(self_pid)).replace("__RING_PAGES__", str(ring_pages)).replace("/*__SYSCALLS__*/", defs)
+    defs += "".join(f"#define REG_ARG{i} {r}\n" for i, r in zip((0, 1, 2, 4, 5), regs))
+    defs += f"#define REG_NR {xregs[0]}\n" + "".join(f"#define REG_XARG{i} {r}\n" for i, r in zip((0, 1, 2, 4), xregs[1:]))
+    if uring is None:
+        uring = sockio_ms > 0 and _uring_available()
+    text = (BPF_PROGRAM.replace("__SELF_PID__", str(self_pid)).replace("__RING_PAGES__", str(ring_pages))
+            .replace("/*__SYSCALLS__*/", defs).replace("__SOCKIO_NS__", str(max(0, int(sockio_ms)) * 1000000)))
+    if uring:
+        text = text.replace("/*__URING_INCLUDE__*/", "#include <linux/io_uring_types.h>").replace("/*__URING__*/", BPF_URING)
+    return text.replace("/*__URING_INCLUDE__*/", "").replace("/*__URING__*/", "")
 
 
 @dataclass
@@ -533,6 +851,11 @@ class EbpfNormaliser:
             op = {CONNECT: "CONNECT", SEND: "SENDMSG" if r.aux == 1 else "SENDTO",
                   RECV: "RECVMSG" if r.aux == 1 else "RECVFROM", ACCEPT: "RECVFROM"}[k]
             yield from M.socket(r.pid, ts, op, ip, r.port)
+        elif k == SOCKIO:                  # data on a connected socket: READ/WRITE/RECV*/SEND* with the socket's peer
+            ip = sock_ip(r.family, r.addr)
+            if ip is None or r.aux >= len(SOCKIO_OPS):
+                return
+            yield from M.socket(r.pid, ts, SOCKIO_OPS[r.aux], ip, r.port)
 
     def exec_path(self, pid: int, path: str) -> str:
         """The program an exec ran, as an absolute path (0.6). execve() takes the name as the caller wrote it:
@@ -604,7 +927,7 @@ class CoreTracer:
     engine = "core"
 
     def __init__(self, ring_pages: int = 1024, self_pid: int | None = None, loader: str | None = None,
-                 start_timeout: float = 30.0, btf: str | None = None):
+                 start_timeout: float = 30.0, btf: str | None = None, sockio_ms: int | None = None):
         if ring_pages & (ring_pages - 1):
             raise ValueError("ring_pages must be a power of two")
         if btf is None and not os.path.exists(KERNEL_BTF):
@@ -616,7 +939,7 @@ class CoreTracer:
         t0 = time.monotonic()
         self.btf = btf
         self.p = subprocess.Popen([self.loader, "--ring-pages", str(ring_pages), "--exclude", str(self_pid or os.getpid())]
-                                  + (["--btf", btf] if btf else []),
+                                  + (["--btf", btf] if btf else []) + ([] if sockio_ms is None else ["--sockio-interval-ms", str(int(sockio_ms))]),
                                   stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
         threading.Thread(target=self._drain_stderr, daemon=True, name="pdp-ebpf-stderr").start()
         self._fd = self.p.stdout.fileno()
@@ -699,13 +1022,24 @@ class BccTracer:
     decoded records (Rec) in ring-buffer order. Compiling takes a few seconds and needs python3-bpfcc + headers."""
     engine = "bcc"
 
-    def __init__(self, ring_pages: int = 1024, self_pid: int | None = None):
+    def __init__(self, ring_pages: int = 1024, self_pid: int | None = None, sockio_ms: int | None = None):
         from bcc import BPF   # imported here so the module loads without bcc (unit tests, other collectors)
         if ring_pages & (ring_pages - 1):
             raise ValueError("ring_pages must be a power of two")
         t0 = time.monotonic()
-        text = program(self_pid or os.getpid(), ring_pages)
-        self.b = BPF(text=text, cflags=["-w"])   # -w: the host kernel headers emit many harmless clang warnings
+        text = program(self_pid or os.getpid(), ring_pages, sockio_ms=SOCKIO_MS if sockio_ms is None else int(sockio_ms))
+        # -w: the host kernel headers emit many harmless clang warnings. The socket-data code needs net/sock.h and
+        # linux/fs.h; kernels >= 6.19 build with -fms-extensions (their headers embed tagged structs), and their
+        # include/linux/bpf.h needs a newer uapi bpf.h than bcc's bundled one (BPF_F_CPU ...): with those headers the
+        # program is compiled with -fms-extensions and without the kernel-internal linux/bpf.h (nothing here uses it).
+        compat = _bcc_compat()
+        try:
+            self.b = BPF(text=(BCC_COMPAT_PRELUDE if compat else "") + text, cflags=["-w"] + (["-fms-extensions"] if compat else []))
+        except Exception:  # noqa
+            if compat:
+                raise
+            print("eBPF collector (bcc): compile failed; retrying with the >= 6.19 header compatibility settings", file=sys.stderr, flush=True)
+            self.b = BPF(text=BCC_COMPAT_PRELUDE + text, cflags=["-w", "-fms-extensions"])
         self.stats = {"lost": 0}                 # not counted by this engine
         self._out: list[Rec] = []
         self._mono_to_wall = time.time_ns() - time.monotonic_ns()   # bpf_ktime_get_ns is CLOCK_MONOTONIC
@@ -755,15 +1089,16 @@ def find_btf(data_dir: str | None = None) -> str | None:
     return None
 
 
-def EbpfTracer(ring_pages: int = 1024, self_pid: int | None = None, engine: str | None = None, btf: str | None = None):
+def EbpfTracer(ring_pages: int = 1024, self_pid: int | None = None, engine: str | None = None, btf: str | None = None,
+               sockio_ms: int | None = None):
     """The kernel tracer for `engine`: "core" (libbpf CO-RE, the default, or $PDP_EBPF_ENGINE) or "bcc" (the
     header-compiled fallback). Long-lived: the sandbox reuses one tracer for many workload sessions."""
     engine = engine or os.environ.get("PDP_EBPF_ENGINE") or "core"
     if engine not in ENGINES:
         raise ValueError(f"eBPF collector: unknown engine {engine!r} (core, bcc)")
     if engine == "core":
-        return CoreTracer(ring_pages, self_pid, btf=btf)
-    return ENGINES[engine](ring_pages, self_pid)
+        return CoreTracer(ring_pages, self_pid, btf=btf, sockio_ms=sockio_ms)
+    return ENGINES[engine](ring_pages, self_pid, sockio_ms=sockio_ms)
 
 
 class EbpfLive:
@@ -777,8 +1112,11 @@ class EbpfLive:
     def __init__(self, batch: int = 2000, command: list[str] | None = None, tracer: CoreTracer | BccTracer | None = None,
                  run_id: str | None = None, cwd: str | None = None, ring_pages: int = 1024, proc: str = "/proc",
                  engine: str | None = None, btf: Callable[[], str | None] | None = None, retry_s: float = 600,
-                 canary_s: float = 0, canary_dir: str | None = None):
+                 canary_s: float = 0, canary_dir: str | None = None, sockio_ms: int | None = None,
+                 socket_data: bool = True):
         self.batch, self.command, self.cwd, self.ring_pages, self.engine = batch, command, cwd, ring_pages, engine
+        self.sockio_ms = sockio_ms                 # K_SOCKIO re-emit interval (None: the loader default; 0 = off)
+        self.socket_data = socket_data             # False: SOCKIO records are dropped (parity checks against strace)
         self._tracer = tracer
         self.btf, self.retry_s = btf, retry_s       # btf: called before each start attempt (may download one)
         self.error: str | None = None               # why the collector is not running (reported in health)
@@ -877,7 +1215,8 @@ class EbpfLive:
     @property
     def tracer(self) -> CoreTracer | BccTracer:
         if self._tracer is None:
-            self._tracer = EbpfTracer(self.ring_pages, engine=self.engine, btf=self.btf() if self.btf else None)
+            self._tracer = EbpfTracer(self.ring_pages, engine=self.engine, btf=self.btf() if self.btf else None,
+                                       sockio_ms=self.sockio_ms)
         return self._tracer
 
     def _start(self, stop: Callable[[], bool]) -> Iterator[list]:
@@ -909,6 +1248,8 @@ class EbpfLive:
             # its opens by naming files '.pdp-canary-...'
             if canary and r.pid in canary:
                 self._canary_record(r)
+                continue
+            if r.kind == SOCKIO and not self.socket_data:
                 continue
             if track is not None:
                 if r.kind == FORK:

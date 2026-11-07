@@ -162,13 +162,102 @@ bpf_dir = os.path.join(os.path.dirname(__file__), "..", "..", "agent", "bpf")
 hdr = open(os.path.join(bpf_dir, "pdp_ebpf.h")).read()
 kinds = {k: int(v) for k, v in re.findall(r"#define K_(\w+)\s+(\d+)", hdr)}
 check(kinds == {"EXEC_ARG": EXEC, "EXEC_ARGV": EXEC_ARGV, "OPEN": OPEN, "CONNECT": CONNECT, "SEND": SEND, "RECV": RECV,
-                "ACCEPT": ACCEPT, "FORK": FORK, "EXIT": EXIT, "DUP": DUP, "STATS": STATS}, "record kinds match pdp_ebpf.h")
+                "ACCEPT": ACCEPT, "FORK": FORK, "EXIT": EXIT, "DUP": DUP, "SOCKIO": 10, "STATS": STATS}, "record kinds match pdp_ebpf.h")
 check(f"#define STRLEN    {STRLEN}" in hdr and '"PDPEBPF\\0"' in hdr and STREAM_MAGIC == b"PDPEBPF\0", "STRLEN and stream magic match")
 src = open(os.path.join(bpf_dir, "pdp_ebpf.bpf.c")).read()
 for arch, tag in (("x86_64", "__TARGET_ARCH_x86"), ("aarch64", "__TARGET_ARCH_arm64")):
     block = src.split(tag, 1)[1].split("#el", 1)[0]
     nrs = {k: (-1 if v == "NO_SYSCALL" else int(v)) for k, v in re.findall(r"#define SYS_(\w+) (\w+)", block)}
     check(nrs == _ARCH[arch][0], f"CO-RE syscall numbers for {arch} match the bcc program's")
+
+# ---- data on connected sockets (SOCKIO records, agent releases after 0.6.0) ----
+from pdp_agent.sources.ebpf import (BPF_PROGRAM, BPF_URING, SOCKIO, SOCKIO_MS, SOCKIO_OPS, SOCKIO_VARIANTS, EbpfLive)
+from pdp_agent.sources.common import ProvenanceMapper
+
+ns = EbpfNormaliser("sio", proc="/nonexistent")
+
+
+def sio(op_index, pid=700, ip="93.184.216.34", port=443, family=socket.AF_INET, variant=0, amount=100, calls=1):
+    addr = socket.inet_pton(family, ip) if family in (socket.AF_INET, socket.AF_INET6) else b""
+    return Rec(SOCKIO, pid, ts_ns=5000, aux=op_index, ret=amount, flags=variant | (calls << 32), dirfd=4,
+               family=family, port=port, addr=addr.ljust(16, b"\0"))
+
+
+def sfeed(norm, *recs):
+    return [(ev.op, ents[0].ntype, ents[1].ntype, ents[0].uuid, ents[1].uuid, ents[0].label, ents[1].label)
+            for r in recs for ents, ev in norm.decode(r)]
+
+
+conn = sfeed(ns, Rec(CONNECT, 700, family=socket.AF_INET, port=443, addr=socket.inet_aton("93.184.216.34") + b"\0" * 12))
+net_uuid = conn[0][4]
+expect = {0: ("READ", "in"), 1: ("WRITE", "out"), 2: ("RECVFROM", "in"), 3: ("RECVMSG", "in"), 4: ("SENDTO", "out"), 5: ("SENDMSG", "out")}
+for i, (op, d) in expect.items():
+    e = sfeed(ns, sio(i))
+    ok = len(e) == 1 and e[0][0] == op
+    if d == "in":
+        ok = ok and e[0][1] == "netflow" and e[0][2] == "subject" and e[0][3] == net_uuid
+    else:
+        ok = ok and e[0][1] == "subject" and e[0][2] == "netflow" and e[0][4] == net_uuid
+    check(ok, f"SOCKIO aux {i} -> {op} ({'netflow -> process' if d == 'in' else 'process -> netflow'}), same netflow node as connect")
+check(SOCKIO_OPS == ("READ", "WRITE", "RECVFROM", "RECVMSG", "SENDTO", "SENDMSG"), "SOCKIO op table")
+e = sfeed(ns, sio(0, ip="2001:db8::5", port=8443, family=socket.AF_INET6))
+check(e and e[0][5] == "netflow 2001:db8::5 8443" and e[0][3] == "net:2001:db8::5:8443", f"SOCKIO IPv6 peer label/uuid ({e[:1]})")
+check(sfeed(ns, sio(6)) == [] and sfeed(ns, sio(99)) == [], "SOCKIO with an unknown op is ignored")
+check(sfeed(ns, sio(0, family=socket.AF_UNIX)) == [] and sfeed(ns, sio(1, family=0)) == [], "SOCKIO on a non-INET family is ignored")
+e = sfeed(ns, sio(0, variant=12 | (22 << 8), amount=0))
+check(e and e[0][0] == "READ", "io_uring SOCKIO (variant io_uring, opcode READ) -> READ")
+# the process side: same node as the process's other edges (exec generation), a forked child gets its own
+p_conn = conn[0][3]
+check(sfeed(ns, sio(1))[0][3] == p_conn, "SOCKIO WRITE comes from the same process node as its connect")
+sfeed(ns, Rec(FORK, 700, aux=701))
+check(sfeed(ns, sio(1, pid=701))[0][3] != p_conn, "a forked child's write on an inherited socket is the child's edge")
+# the same edge decoded through the strace-shared mapper directly (labels identical across collectors)
+pm = ProvenanceMapper("x")
+(ents, ev), = list(pm.socket(1, 1, "READ", "10.0.0.1", 80))
+check(ev.op == "READ" and ev.src == "net:10.0.0.1:80" and ents[0].label == "netflow 10.0.0.1 80", "ProvenanceMapper.socket: READ socket -> process")
+(ents, ev), = list(pm.socket(1, 2, "WRITE", "10.0.0.1", 80))
+check(ev.op == "WRITE" and ev.dst == "net:10.0.0.1:80", "ProvenanceMapper.socket: WRITE process -> socket")
+
+# raw stream: a SOCKIO record keeps op, byte/call counts, fd and peer
+r, used, _ = parse_records(raw(SOCKIO, 9, aux=1, ret=123456, flags=10 | (7 << 32), dirfd=5, family=socket.AF_INET,
+                               port=socket.htons(8080), addr=socket.inet_aton("10.1.2.3")))
+r = r[0]
+check(used == 576 and r.kind == SOCKIO and r.aux == 1 and r.ret == 123456 and r.flags & 0xff == 10 and r.flags >> 32 == 7
+      and r.dirfd == 5 and r.port == 8080 and sock_ip(r.family, r.addr) == "10.1.2.3",
+      "parse_records: SOCKIO record (op, bytes, variant sendfile, calls, fd, peer)")
+
+# EbpfLive(socket_data=False) drops SOCKIO records (parity checks against strace)
+lv = EbpfLive(tracer=object(), socket_data=False)
+lv.norm = EbpfNormaliser("p", proc="/nonexistent")
+ops = [ev.op for _, ev in lv._decode([sio(0), sio(1), Rec(CONNECT, 700, family=socket.AF_INET, port=1, addr=b"\1\2\3\4" + b"\0" * 12)], None)]
+check(ops == ["CONNECT"], f"socket_data=False: SOCKIO records dropped ({ops})")
+lv2 = EbpfLive(tracer=object())
+lv2.norm = EbpfNormaliser("p", proc="/nonexistent")
+ops = [ev.op for _, ev in lv2._decode([sio(0), sio(1)], None)]
+check(ops == ["READ", "WRITE"], f"socket_data defaults to on ({ops})")
+
+# header constants: IO_* order, SV_* variants, default interval
+io = {k: int(v) for k, v in re.findall(r"#define IO_(\w+)\s+(\d+)", hdr)}
+check([k for k, _ in sorted(io.items(), key=lambda x: x[1])] == list(SOCKIO_OPS) and sorted(io.values()) == list(range(6)),
+      "IO_* in pdp_ebpf.h match SOCKIO_OPS")
+sv = {k: int(v) for k, v in re.findall(r"#define SV_(\w+) (\d+)", hdr)}
+check([k.lower() if k != "URING" else "io_uring" for k, _ in sorted(sv.items(), key=lambda x: x[1])] == list(SOCKIO_VARIANTS),
+      "SV_* in pdp_ebpf.h match SOCKIO_VARIANTS")
+check(re.search(r"#define SOCKIO_MS (\d+)", hdr).group(1) == str(SOCKIO_MS), "default re-emit interval matches pdp_ebpf.h")
+# the bcc program mirrors the header constants and the CO-RE io_uring opcode table
+for k, v in io.items():
+    check(f"#define IO_{k.ljust(8)}{v}" in BPF_PROGRAM or re.search(rf"#define IO_{k}\s+{v}\b", BPF_PROGRAM), f"bcc IO_{k} = {v}")
+check(all(re.search(rf"#define SV_{k} {v}\b", BPF_PROGRAM) for k, v in sv.items()), "bcc SV_* match pdp_ebpf.h")
+opcodes = lambda text: re.findall(r"(case [\d: case]+:)\s+op = (IO_\w+)", text)
+check(opcodes(src.split('SEC("raw_tp/io_uring_submit_req")')[1]) == opcodes(BPF_URING) and len(opcodes(BPF_URING)) == 6,
+      "io_uring opcode -> op table identical in both engines")
+t = program(1, 64, "x86_64", sockio_ms=2000, uring=True)
+check("#define SOCKIO_NS 2000000000ULL" in t and "#define REG_NR regs->orig_ax" in t and "#define REG_XARG0 regs->di" in t
+      and "#define REG_ARG5 regs->r9" in t and "RAW_TRACEPOINT_PROBE(io_uring_submit_req)" in t
+      and "#include <linux/io_uring_types.h>" in t, "bcc program: interval, exit-time registers, io_uring probe")
+t = program(1, 64, "aarch64", sockio_ms=0, uring=False)
+check("#define SOCKIO_NS 0ULL" in t and "#define REG_NR regs->syscallno" in t and "#define REG_XARG0 regs->orig_x0" in t
+      and "io_uring_submit_req" not in t and "__URING" not in t, "bcc program: arm64 exit registers (orig_x0), socket data off, no io_uring")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

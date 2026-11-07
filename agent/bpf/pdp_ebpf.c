@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
 /* pdp-ebpf: user-space loader of the PDP eBPF collector (libbpf CO-RE, skeleton embedded, statically linked).
  *
- *   pdp-ebpf [--ring-pages N] [--spool-mb M] [--exclude PID]... [--stats-interval S] [--btf FILE] [--nice N] [--check]
+ *   pdp-ebpf [--ring-pages N] [--spool-mb M] [--exclude PID]... [--stats-interval S] [--btf FILE] [--nice N]
+ *            [--sockio-interval-ms MS] [--check]
+ *
+ * --sockio-interval-ms: data on connected sockets (K_SOCKIO) is reported at most once per (process image, edge, peer)
+ * per MS milliseconds (default SOCKIO_MS = 2000); 0 turns socket data tracing off. The io_uring program is optional:
+ * attached when the kernel has the io_uring_submit_req tracepoint, otherwise a note goes to stderr.
  *
  * Loads and attaches the kernel program (pdp_ebpf.bpf.c), relocated against the running kernel's BTF, then streams
  * the raw ring-buffer records (struct event_t, pdp_ebpf.h) to stdout in ring-buffer order. Stream: a 16-byte header
@@ -28,6 +33,7 @@
 #include <sys/resource.h>
 #include <linux/types.h>
 #include <bpf/libbpf.h>
+#include <bpf/btf.h>
 #include "pdp_ebpf.h"
 #include "pdp_ebpf.skel.h"
 
@@ -147,11 +153,12 @@ static void emit_stats(__u64 lost, __u64 behind) {
 }
 
 static void usage(const char *p) {
-    fprintf(stderr, "usage: %s [--ring-pages N] [--spool-mb M] [--exclude PID]... [--stats-interval S] [--btf FILE] [--nice N] [--check]\n", p);
+    fprintf(stderr, "usage: %s [--ring-pages N] [--spool-mb M] [--exclude PID]... [--stats-interval S] [--btf FILE] [--nice N] [--sockio-interval-ms MS] [--check]\n", p);
 }
 
 int main(int argc, char **argv) {
     unsigned ring_pages = 1024, stats_interval = 10;
+    long sockio_ms = SOCKIO_MS;
     /* the loader only moves records from the kernel ring into its spool; on a busy host it must get the CPU before
        the ring fills, or the kernel drops records (measured: 2 saturated CPUs, a file-open burst: 4129 lost at
        nice 0, none at -10). Best effort: needs CAP_SYS_NICE (the agent container is privileged). */
@@ -162,9 +169,9 @@ int main(int argc, char **argv) {
     static const struct option opts[] = {
         {"ring-pages", required_argument, 0, 'r'}, {"exclude", required_argument, 0, 'x'}, {"spool-mb", required_argument, 0, 'm'},
         {"stats-interval", required_argument, 0, 's'}, {"check", no_argument, 0, 'c'}, {"btf", required_argument, 0, 'b'},
-        {"nice", required_argument, 0, 'n'}, {"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
+        {"nice", required_argument, 0, 'n'}, {"sockio-interval-ms", required_argument, 0, 'i'}, {"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
     excl[nexcl++] = (__u32)getpid();
-    for (int c; (c = getopt_long(argc, argv, "r:x:s:m:b:n:ch", opts, NULL)) != -1;) {
+    for (int c; (c = getopt_long(argc, argv, "r:x:s:m:b:n:i:ch", opts, NULL)) != -1;) {
         switch (c) {
         case 'r': ring_pages = (unsigned)strtoul(optarg, NULL, 10); break;
         case 'm': qmax = (size_t)strtoull(optarg, NULL, 10) << 20; if (qmax < 2 * CHUNK) qmax = 2 * CHUNK; break;
@@ -174,6 +181,7 @@ int main(int argc, char **argv) {
             break;
         case 's': stats_interval = (unsigned)strtoul(optarg, NULL, 10); break;
         case 'n': nice_level = (int)strtol(optarg, NULL, 10); break;
+        case 'i': sockio_ms = strtol(optarg, NULL, 10); if (sockio_ms < 0) sockio_ms = 0; break;
         case 'c': check = 1; break;
         case 'b': btf = optarg; break;
         default: usage(argv[0]); return c == 'h' ? 0 : 2;
@@ -198,17 +206,39 @@ int main(int argc, char **argv) {
     LIBBPF_OPTS(bpf_object_open_opts, oopts, .btf_custom_path = btf);
     struct pdp_ebpf_bpf *skel = pdp_ebpf_bpf__open_opts(&oopts);
     if (!skel) { fprintf(stderr, "pdp-ebpf: open failed: %s\n", strerror(errno)); return 1; }
-    for (int i = 0; i < MAX_EXCL; i++) skel->rodata->excl[i] = excl[i];
-    bpf_map__set_max_entries(skel->maps.events, ring_pages * (unsigned)getpagesize());
-    if ((err = pdp_ebpf_bpf__load(skel))) {
+    /* the io_uring program is optional: loaded only if the kernel has the tracepoint (its BTF names the raw tracepoint's
+       prototype btf_trace_io_uring_submit_req), and dropped if it is what fails to load on this kernel */
+    int uring = sockio_ms > 0;
+    if (uring) {
+        struct btf *kb = btf ? btf__parse(btf, NULL) : btf__load_vmlinux_btf();
+        uring = kb && btf__find_by_name_kind(kb, "btf_trace_io_uring_submit_req", BTF_KIND_TYPEDEF) >= 0;
+        btf__free(kb);
+        if (!uring && sockio_ms > 0)
+            fprintf(stderr, "pdp-ebpf: this kernel has no io_uring_submit_req tracepoint: socket data moved through io_uring is not traced\n");
+    }
+    for (int attempt = 0;; attempt++) {
+        for (int i = 0; i < MAX_EXCL; i++) skel->rodata->excl[i] = excl[i];
+        skel->rodata->sockio_ns = (__u64)sockio_ms * 1000000ull;
+        bpf_map__set_max_entries(skel->maps.events, ring_pages * (unsigned)getpagesize());
+        bpf_program__set_autoload(skel->progs.pdp_uring, uring);
+        bpf_program__set_autoattach(skel->progs.pdp_uring, false);   /* attached below; its failure is not fatal */
+        if (!(err = pdp_ebpf_bpf__load(skel))) break;
+        pdp_ebpf_bpf__destroy(skel);
+        if (uring && attempt == 0) {
+            fprintf(stderr, "pdp-ebpf: the io_uring program did not load (%d: %s); continuing without it\n", err, strerror(-err));
+            uring = 0;
+            if ((skel = pdp_ebpf_bpf__open_opts(&oopts))) continue;
+        }
         fprintf(stderr, "pdp-ebpf: load failed (%d: %s); the kernel needs BPF, BTF (/sys/kernel/btf/vmlinux or --btf FILE) and "
                 "the ring buffer (>= 5.8), and the process CAP_BPF+CAP_PERFMON (or CAP_SYS_ADMIN)\n", err, strerror(-err));
-        pdp_ebpf_bpf__destroy(skel); return 1;
+        return 1;
     }
     if ((err = pdp_ebpf_bpf__attach(skel))) {
         fprintf(stderr, "pdp-ebpf: attach failed (%d: %s)\n", err, strerror(-err));
         pdp_ebpf_bpf__destroy(skel); return 1;
     }
+    if (uring && !(skel->links.pdp_uring = bpf_program__attach(skel->progs.pdp_uring)))
+        fprintf(stderr, "pdp-ebpf: the io_uring program did not attach (%s); socket data moved through io_uring is not traced\n", strerror(errno));
     if (check) { fprintf(stderr, "ok\n"); pdp_ebpf_bpf__destroy(skel); return 0; }
 
     struct ring_buffer *rb = ring_buffer__new(bpf_map__fd(skel->maps.events), on_record, NULL, NULL);
