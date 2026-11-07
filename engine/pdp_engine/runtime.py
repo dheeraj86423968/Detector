@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import torch
 
+from .behaviour import BehaviourModel, propagate
 from .bundle import check_requires, detector1_file, load_state_dict, verify_digests
 from .featurizer import Word2VecFeaturizer
 from .layers import ALWAYS_EVIDENCE, EVIDENCE_RULES, DeterministicLayers, Hit
@@ -44,6 +45,7 @@ class WindowResult:
     edge_loss: dict = field(default_factory=dict)   # optional per-edge losses for context (detector-1)
     reasons: dict = field(default_factory=dict)     # node id -> [{"layer", "rule", "detail", ...}] for alerted nodes
     hits: list = field(default_factory=list)        # layer 1/2 hits of this window (pdp_engine.layers.Hit)
+    r3: np.ndarray = field(default_factory=lambda: np.zeros(0))   # 0.7: detector-3 ratio (behavioural likelihood)
 
     def layer_of(self, n: int) -> str:
         """Primary layer of an alerted node: novelty > rules > corroborated > learned."""
@@ -198,6 +200,9 @@ class Runtime:
         # models run on the GPU spares ~N*(emb+3)*4 bytes of GPU memory (large registries OOM'd otherwise)
         self.featdev = torch.device(feat_device) if feat_device else self.dev
         self.reg = registry
+        self.bm = self.bk = self.prop = None     # 0.7 detector-3 / propagation (set below for bundles that have them)
+        self.susp = np.zeros(0)
+        self.final_thr = 1.0
         self.layers_only = bool(self.m.get("layers_only"))
         if self.layers_only:       # early model below one day: layers 1-2 only, nothing learned to load
             self._init_layers_only(bundle_dir, registry, approved_executables, daily_budget, seen_at_load_ns)
@@ -226,12 +231,25 @@ class Runtime:
         self.agg2 = np.asarray(agg["weights"] if agg else aggregate_weights("mean", [0.0] * len(self.cal2)), dtype=np.float64)
         self.fcal = FusionCalibration(tuple(cal["fusion"]["weights"]), pick(cal["fusion"]), cal["fusion"]["percentiles"],
                                       cal["fusion"].get("mode", "weighted"))
+        # 0.7: detector-3 (behavioural likelihood) and learned-seeded propagation; the learned score is then
+        # max(detector-1/2 fusion, detector-3) in validation-budget units, propagated, over the final threshold
+        d3 = (self.m.get("detectors") or {}).get("detector-3")
+        if d3:
+            self.bm = BehaviourModel.load(bundle_dir)
+            self.bk = self.bm.keys(registry)
+            c3 = cal["detector-3"]
+            self.thr3 = (float(c3["proc"]), float(c3["obj"]))
+            self.learned_unit = float(cal["fusion"].get("budget_threshold", 1.0))
+        self.prop = cal.get("propagation") if d3 else None
+        self.final_thr = float((cal.get("final") or {}).get("threshold", 1.0)) if d3 else 1.0
         # deterministic layers + learned alerting policy (absent in pre-0.3 bundles)
         self.layers = DeterministicLayers.load(bundle_dir, self.m["num_nodes"], set(approved_executables or ())) if layers else None
         pol = self.m.get("learned_policy") or {}
         self.daily_budget = int(daily_budget if daily_budget is not None else pol.get("daily_budget", 20))
         cp = pol.get("corroboration_percentile", "99.9")
         self.corroboration = float(cal["fusion"]["percentiles"].get(cp, self.fcal.threshold)) / self.fcal.threshold
+        if d3 and (cal.get("final") or {}).get("percentiles", {}).get(cp) is not None:   # 0.7: on the final scale
+            self.corroboration = float(cal["final"]["percentiles"][cp]) / self.final_thr
         ev = (self.layers.spec.get("config", {}).get("evidence_rules", EVIDENCE_RULES) if self.layers is not None else ())
         self.policy = AlertPolicy(self.layers, self.daily_budget, self.corroboration, cp, ev) if self.layers is not None else None
         if self.policy is not None and pol.get("alert_layers") is not None:
@@ -263,6 +281,7 @@ class Runtime:
         if not keep_reset_state:
             self._tgn_init = None
         self.N0 = self.x.shape[0]   # base feature rows (bundle registry) kept across reset()
+        self.susp = np.zeros(n0)
 
     def _load_tgn(self, n: int, at: str = "end"):
         init = self._tgn_init_val if (at == "validation" and self._tgn_init_val is not None) else self._tgn_init
@@ -286,7 +305,11 @@ class Runtime:
         if self.layers is not None:
             self.layers.reset()
             self.policy.reset()
+        self.susp = np.zeros(0)
         self.grow()
+        self.susp = np.zeros(max(len(self.reg), self.x.shape[0]))
+        if self.bk is not None:
+            self.bk = self.bm.keys(self.reg)
 
     def set_learned_alerts(self, on: bool) -> None:
         """False: layer 3 only ranks; alerts come from layers 1-2 alone (deterministic mode)."""
@@ -337,6 +360,8 @@ class Runtime:
             self._featurize(range(old, n))
             self.state.grow(n)
             self.last_seen = np.concatenate([self.last_seen, np.full(n - len(self.last_seen), NOT_YET, dtype=np.int64)])
+        if len(self.susp) < self.x.shape[0]:
+            self.susp = np.concatenate([self.susp, np.zeros(self.x.shape[0] - len(self.susp))])
 
     def rules(self, w: Window) -> list[Hit]:
         """Layers 1-2 on a slice of the stream (real-time path): call with consecutive slices of the open window in
@@ -393,14 +418,39 @@ class Runtime:
         s2 = [node_scores(n, w.src, w.dst, np.concatenate(l)) for l in l2]
         r2 = np.average([fill_missing(c.ratio(s[ids])) for c, s in zip(self.cal2, s2)], axis=0, weights=self.agg2)
         fused = self.fcal.fuse(r1, r2) / self.fcal.threshold   # ratio units like r1/r2: > 1 = above the threshold
+        r3 = np.zeros(0)
+        if self.bm is not None:
+            fused, r3 = self._learned_07(w, ids, fused)
         if self.layers is None:
             alerts, reasons, hits = ids[above(fused)], {}, []
         else:
             alerts, reasons, hits = self._alert_policy(w, ids, fused, hits)
-        res = WindowResult(w.start_ns, w.end_ns, w.num_edges, ids, fused, r1, r2, alerts, reasons=reasons, hits=hits)
+        res = WindowResult(w.start_ns, w.end_ns, w.num_edges, ids, fused, r1, r2, alerts, reasons=reasons, hits=hits, r3=r3)
         if keep_edge_losses:
             res.edge_loss = {"detector-1": np.mean(l1s, axis=0), "detector-2": np.mean([np.concatenate(l) for l in l2], axis=0)}
         return res
+
+    def _learned_07(self, w: Window, ids: np.ndarray, fused: np.ndarray):
+        """0.7 learned score of the window's nodes: max(detector-1/2 fusion, detector-3), each in units of its
+        validation-budget threshold, propagated along unusual data-flow edges (carried across windows), over the
+        final threshold calibrated on the validation day after propagation. Returns (final, r3) aligned with ids."""
+        n = len(self.reg)
+        if len(self.susp) < n:
+            self.susp = np.concatenate([self.susp, np.zeros(n - len(self.susp))])
+        self.bk.grow()
+        own, es = self.bm.node_scores(w, self.bk, n)
+        tn = np.where(self.bk.isproc[:n], self.thr3[0], self.thr3[1])
+        r3_all = own / tn
+        base = r3_all.copy()
+        np.maximum.at(base, ids, fill_missing(fused) / self.learned_unit)
+        if self.prop:
+            p = self.prop
+            propagate(self.susp[:n], base, w, es / self.thr3[0], float(p["delta"]), float(p["gate"]), float(p["clip"]),
+                      float(p["seed"]), int(p["passes"]))
+            final = self.susp[ids] / self.final_thr
+        else:
+            final = base[ids] / self.final_thr
+        return final, r3_all[ids]
 
     # ---- registry compaction (long-running endpoints) -----------------------------------------------------
     def compaction_keep(self, now_ns: int, max_age_ns: int, extra=()) -> np.ndarray:
@@ -441,6 +491,10 @@ class Runtime:
         if self.layers is not None:
             self.layers.remap(old2new)
         self.last_seen = self.last_seen[keep]
+        if len(self.susp):
+            self.susp = self.susp[:len(keep)][keep]
+        if self.bk is not None:
+            self.bk.remap(old2new)
         self.N0 = len(self.reg)
         return old2new
 

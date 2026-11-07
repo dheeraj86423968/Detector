@@ -22,16 +22,18 @@ import torch
 
 
 # features a bundle can require of the runtime (manifest "requires"); a runtime refuses bundles needing others
-SUPPORTED_FEATURES = {"detector-1:batch_scale", "fusion:max"}
+SUPPORTED_FEATURES = {"detector-1:batch_scale", "fusion:max", "detector-3", "propagation"}
 
 
 def detector1_file(velox_input: str, k: int) -> str:
     return f"detector-1-bs-s{k}.npz" if velox_input == "batch_scale" else f"detector-1-s{k}.npz"
 
 
-def requirements(velox_input: str, fusion_mode: str) -> list[str]:
-    """What a bundle needs beyond the 0.4 runtime (manifest "requires")."""
-    return (["detector-1:batch_scale"] if velox_input == "batch_scale" else []) + (["fusion:max"] if fusion_mode == "max" else [])
+def requirements(velox_input: str, fusion_mode: str, detector3: bool = False, propagation: bool = False) -> list[str]:
+    """What a bundle needs beyond the 0.4 runtime (manifest "requires"). 0.7: detector-3 (behavioural likelihood,
+    pdp_engine.behaviour) and learned-seeded propagation."""
+    return ((["detector-1:batch_scale"] if velox_input == "batch_scale" else []) + (["fusion:max"] if fusion_mode == "max" else [])
+            + (["detector-3"] if detector3 else []) + (["propagation"] if propagation else []))
 
 
 def check_requires(manifest: dict) -> None:

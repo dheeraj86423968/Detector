@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import torch
 
+from .behaviour import BehaviourModel, top_threshold
 from .bundle import detector1_file, requirements, save_state_dict, write_manifest
 from .data import WindowStore, nodes_in_days
 from .featurizer import Word2VecFeaturizer
@@ -59,11 +60,22 @@ class TrainConfig:
     # selecting one seed keeps all of its variance. The learned layer is now a ranker behind the deterministic
     # layers, where stability matters more than peak sensitivity.
     orthrus_aggregate: str = "mean"
+    # 0.7: detector-3 (behavioural likelihood, pdp_engine.behaviour) and learned-seeded propagation. Thresholds are
+    # set so that `calibration_budget` benign validation nodes would alert (0 = the validation maximum, 0.3-0.6).
+    detector3: bool = True
+    calibration_budget: int = 10
+    propagation: bool = True
+    propagation_delta: float = 0.95       # suspicion kept per hop
+    propagation_gate: float = 0.4         # an edge carries suspicion only if its detector-3 score >= 0.4 x the threshold
+    propagation_clip: float = 3.0         # one extreme score reaches at most as far as a 3x one
+    propagation_seed: float = 0.3         # only nodes at >= 0.3 of the threshold pass suspicion on
+    propagation_passes: int = 2           # hops per window
     # deterministic layers (pdp_engine.layers) and the learned layer's alerting policy
-    layer_novelty: bool = True
+    layer_novelty: bool = False       # 0.7: the "new executable" rule no longer alerts on its own (detector-3 covers it)
     layer_rules: bool = True
     learned_daily_budget: int = 20    # at most this many learned-only alerts per day (highest scores first)
-    learned_alerts: bool = False      # 0.4: the learned layer ranks; it raises alerts only when the endpoint turns them on
+    learned_alerts: bool = True       # 0.7: the learned layer alerts (recall first, within the daily budget);
+                                      # 0.4-0.6: it only ranked
     corroboration_percentile: str = "99.9"   # learned score (validation percentile) that alerts next to a layer 1/2 alert
     alert_layers: tuple | None = None        # layers allowed to alert (None = all); early models restrict this
     layers_only: bool = False                # rules-only model: layers 1-2 fitted, no learned detectors (early models
@@ -94,6 +106,7 @@ class Trainer:
         self.x = None  # node features on device
         self.layer_exclude: dict | None = None   # 0.6 learning integrity: kept out of layers 1-2 (fit_layers exclude)
         self.layer_prior: dict | None = None     # 0.6: layers.json of the model a retrain replaces (fit_layers prior)
+        self.node_exclude = None                 # 0.7: registry positions kept out of detector-3's counts
 
     # ---------------------------------------------------------------- featurisation
     def fit_featurizer(self) -> Word2VecFeaturizer:
@@ -251,6 +264,7 @@ class Trainer:
         r2 = np.average(ratios2, axis=0, weights=agg)   # the aggregation the runtime will apply, so the fusion is calibrated on it
         fcal = FusionCalibration.from_validation(r1, r2, self.cfg.fusion_weights, self.cfg.fusion_mode)
         log(f"fusion threshold {fcal.threshold:.3f}")
+        d3 = self.fit_detector3() if self.cfg.detector3 else None
         calibration = {
             "detector-1": {"threshold": cal1.threshold, "percentiles": cal1.percentiles},
             "detector-1-seeds": [{"threshold": c.threshold, "percentiles": c.percentiles} for c in cal1s],
@@ -258,6 +272,15 @@ class Trainer:
             "detector-2-aggregate": {"mode": self.cfg.orthrus_aggregate, "weights": [float(w) for w in agg], "val_loss": val_losses},
             "fusion": {"weights": list(fcal.weights), "threshold": fcal.threshold, "percentiles": fcal.percentiles, "mode": fcal.mode},
         }
+        if d3 is not None:
+            fv = fcal.fuse(r1, r2) / fcal.threshold
+            calibration["fusion"]["budget_threshold"] = top_threshold(fv, self.cfg.calibration_budget)
+            calibration["detector-3"] = d3
+            if self.cfg.propagation:
+                calibration["propagation"] = {"delta": self.cfg.propagation_delta, "gate": self.cfg.propagation_gate,
+                                              "clip": self.cfg.propagation_clip, "seed": self.cfg.propagation_seed,
+                                              "passes": self.cfg.propagation_passes}
+            calibration["final"] = {"threshold": 1.0, "budget": self.cfg.calibration_budget, "pending": True}
         json.dump(calibration, open(os.path.join(self.out_dir, "calibration.json"), "w"), indent=1)
         # layers 1 + 2: fitted on the same benign days (training + validation), no attack data
         lcfg = LayerConfig(novelty=self.cfg.layer_novelty, rules=self.cfg.layer_rules, tags=TagParams())
@@ -270,13 +293,15 @@ class Trainer:
         write_manifest(self.out_dir, {
             **(meta or {}),
             "num_nodes": self.N, "train_days": self.train_days, "val_day": self.val_day,
-            "detectors": {"detector-1": {"in_dim": self.velox_in_dim, "out_dim": self.cfg.velox_out_dim, "seeds": len(cal1s),
+            "detectors": {**({"detector-3": {"kind": "behavioural-likelihood", "budget": self.cfg.calibration_budget}} if d3 else {}),
+                          "detector-1": {"in_dim": self.velox_in_dim, "out_dim": self.cfg.velox_out_dim, "seeds": len(cal1s),
                                          "degree_features": self.velox_input == "window_degrees", "input": self.velox_input,
                                          "lr": self.cfg.velox_lr, "average_top": self.cfg.velox_average_top},
                           "detector-2": {"in_dim": int(self.x.shape[1]), "hid_dim": self.cfg.orthrus_hid_dim, "out_dim": self.cfg.orthrus_out_dim,
                                          "dropout": self.cfg.orthrus_dropout, "seeds": len(self.cfg.orthrus_seeds), "neighbor_size": self.cfg.neighbor_size}},
             "calibration": calibration,
-            "requires": requirements(self.velox_input, self.cfg.fusion_mode),
+            "requires": requirements(self.velox_input, self.cfg.fusion_mode, detector3=d3 is not None,
+                                     propagation=d3 is not None and self.cfg.propagation),
             "layers": {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules,
                        "known_executables": len(spec["known_executables"]),
                        "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},
@@ -284,7 +309,57 @@ class Trainer:
                        **({"coverage": spec["coverage"]} if spec.get("coverage") else {})},
             "learned_policy": policy,
         })
+        if d3 is not None:
+            self.calibrate_final()
         return self.out_dir
+
+    # ---------------------------------------------------------------- detector-3 (0.7)
+    def fit_detector3(self) -> dict:
+        """Fit detector-3 on the training days (minus excluded nodes), save it, and calibrate its per-node-type
+        thresholds on the validation day (calibration_budget benign nodes over)."""
+        m, K = BehaviourModel.fit(self.store, self.train_days, self.reg, self.node_exclude, log=log)
+        m.save(self.out_dir)
+        n = len(self.reg)
+        best = np.zeros(n)
+        seen = np.zeros(n, bool)
+        for w in self.store.windows(self.val_day):
+            own, _ = m.node_scores(w, K, n)
+            np.maximum(best, own, out=best)
+            seen[w.src] = True
+            seen[w.dst] = True
+        isp = K.isproc[:n]
+        b = self.cfg.calibration_budget
+        cal = {"proc": top_threshold(best[seen & isp], b), "obj": top_threshold(best[seen & ~isp], b), "budget": b,
+               "keys": len(m.vocab)}
+        log(f"detector-3 thresholds proc {cal['proc']:.2f} obj {cal['obj']:.2f} (budget {b})")
+        return cal
+
+    def calibrate_final(self) -> None:
+        """Replay the validation day through the runtime itself (detectors 1-3, fusion, propagation) and set the final
+        threshold so that calibration_budget benign nodes would alert; rewrites calibration and manifest."""
+        from .bundle import write_manifest as _wm
+        from .runtime import Runtime
+        rt = Runtime(self.out_dir, self.store.load_registry(), device=str(self.dev), layers=False)
+        rt.reset(at="validation")
+        n = len(rt.reg)
+        best = np.full(n, -np.inf)
+        for w in self.store.windows(self.val_day):
+            r = rt.score(w)
+            np.maximum.at(best, r.node_ids, r.fused)
+        v = best[np.isfinite(best)]
+        b = self.cfg.calibration_budget
+        thr = top_threshold(v, b)
+        pct = {p: float(np.percentile(v, float(p))) for p in ("99", "99.9", "99.99")} if len(v) else {}
+        cal = json.load(open(os.path.join(self.out_dir, "calibration.json")))
+        cal["final"] = {"threshold": thr, "budget": b, "percentiles": pct, "validation_nodes": int(len(v))}
+        json.dump(cal, open(os.path.join(self.out_dir, "calibration.json"), "w"), indent=1)
+        man = json.load(open(os.path.join(self.out_dir, "manifest.json")))
+        for k in ("sha256", "signature"):
+            man.pop(k, None)
+        man["calibration"] = cal
+        _wm(self.out_dir, man)
+        log(f"final threshold {thr:.3f} (validation nodes {len(v)}, budget {b})")
+        del rt
 
     def run_layers_only(self, meta: dict | None = None) -> str:
         """A bundle with layers 1-2 only (known programs, trusted addresses, per-key thresholds): what an early model
@@ -303,3 +378,67 @@ class Trainer:
         })
         log(f"rules-only bundle: {len(spec['known_executables'])} known programs, {len(spec.get('trusted_ips', []))} trusted addresses")
         return self.out_dir
+
+
+def upgrade_bundle_07(src_dir: str, out_dir: str, store: WindowStore, cfg: TrainConfig | None = None,
+                      node_exclude=None, layer_exclude: dict | None = None, layer_prior: dict | None = None,
+                      device: str | None = None) -> str:
+    """0.7 upgrade of an existing bundle without retraining detectors 1-2 (no GPU training): copy it, fit
+    detector-3 on its training days, calibrate detector-3 and the detector-1/2 fusion at the validation budget
+    (the fusion by replaying the validation day through the runtime), re-fit layers 1-2 with the current defaults
+    (layer 1 does not alert on its own from 0.7 on), switch the learned layer to alerting within the daily budget,
+    and calibrate the final threshold after propagation. The copy is unsigned (the server signs it)."""
+    import shutil
+    from .runtime import Runtime
+    cfg = cfg or TrainConfig()
+    if device:
+        cfg = TrainConfig(**{**cfg.__dict__, "device": device})
+    if os.path.exists(out_dir):
+        raise FileExistsError(out_dir)
+    shutil.copytree(src_dir, out_dir)
+    for f in ("signature.json",):
+        if os.path.exists(os.path.join(out_dir, f)):
+            os.remove(os.path.join(out_dir, f))
+    man = json.load(open(os.path.join(out_dir, "manifest.json")))
+    if man.get("layers_only"):
+        raise ValueError("rules-only bundle: nothing learned to upgrade")
+    tr = Trainer(store, list(man["train_days"]), man["val_day"], cfg, out_dir)
+    tr.node_exclude = node_exclude
+    # detector-1/2 fusion on the validation day, through the runtime of the original bundle
+    rt = Runtime(src_dir, store.load_registry(), device=str(tr.dev), layers=False)
+    rt.reset(at="validation")
+    best = np.full(len(rt.reg), -np.inf)
+    for w in store.windows(tr.val_day):
+        r = rt.score(w)
+        np.maximum.at(best, r.node_ids, r.fused)
+    del rt
+    fv = best[np.isfinite(best)]
+    d3 = tr.fit_detector3()
+    cal = man["calibration"]
+    cal["fusion"]["budget_threshold"] = top_threshold(fv, cfg.calibration_budget)
+    cal["detector-3"] = d3
+    if cfg.propagation:
+        cal["propagation"] = {"delta": cfg.propagation_delta, "gate": cfg.propagation_gate, "clip": cfg.propagation_clip,
+                              "seed": cfg.propagation_seed, "passes": cfg.propagation_passes}
+    cal["final"] = {"threshold": 1.0, "budget": cfg.calibration_budget, "pending": True}
+    json.dump(cal, open(os.path.join(out_dir, "calibration.json"), "w"), indent=1)
+    lcfg = LayerConfig(novelty=cfg.layer_novelty, rules=cfg.layer_rules, tags=TagParams())
+    spec = fit_layers(store, tr.train_days + [tr.val_day], tr.reg, int(man["num_nodes"]), lcfg, log=log,
+                      exclude=layer_exclude, prior=layer_prior)
+    json.dump(spec, open(os.path.join(out_dir, "layers.json"), "w"))
+    meta = {k: v for k, v in man.items() if k not in ("sha256", "format", "created", "signature")}
+    meta["calibration"] = cal
+    meta["detectors"] = {"detector-3": {"kind": "behavioural-likelihood", "budget": cfg.calibration_budget}, **man["detectors"]}
+    req = list(man.get("requires") or [])
+    meta["requires"] = req + [f for f in (["detector-3"] + (["propagation"] if cfg.propagation else [])) if f not in req]
+    meta["layers"] = {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules,
+                      "known_executables": len(spec["known_executables"]),
+                      "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},
+                      **({"excluded": spec["excluded"]} if spec.get("excluded") else {}),
+                      **({"coverage": spec["coverage"]} if spec.get("coverage") else {})}
+    meta["learned_policy"] = {"daily_budget": int(cfg.learned_daily_budget), "corroboration_percentile": cfg.corroboration_percentile,
+                              "learned_alerts": bool(cfg.learned_alerts)}
+    meta["upgraded_from"] = man.get("bundle_id")
+    write_manifest(out_dir, meta)
+    tr.calibrate_final()
+    return out_dir

@@ -96,15 +96,23 @@ from pdp_engine.models import VELOX_INPUTS  # noqa: E402
 check(tuple(P.TRAIN_SCHEMA["velox_input"][1]) == tuple(VELOX_INPUTS), "velox_input values = pdp_engine.models.VELOX_INPUTS")
 
 # ---- 2. floor: no configuration without a deterministic layer that alerts
-check(refused(P.check_floor, {"train": {"layer_novelty": False, "layer_rules": False}}) is not None, "both deterministic layers off: refused")
-check(refused(P.check_floor, {"train": {"alert_layers": ["learned", "corroborated"]}}) is not None, "alerting only from learned/corroborated: refused")
-check(refused(P.check_floor, {"train": {"layer_novelty": False}}) is None, "one layer off: allowed (with a reason)")
+# 0.7: the learned layer alerts on its own; the floor is "the learned layer or the data-flow rules can alert"
+check(refused(P.check_floor, {"train": {"layer_rules": False, "learned_alerts": False}}) is not None, "data-flow rules off and learned alerts off: refused")
+check(refused(P.check_floor, {"train": {"layer_rules": False}, "learned_alerts": False}) is not None, "rules off, learned alerts off by the endpoint setting: refused")
+check(refused(P.check_floor, {"train": {"alert_layers": ["novelty", "corroborated"]}, "learned_alerts": False}) is not None,
+      "alerting only from layer 1 / corroborated with learned alerts off: refused")
+check(refused(P.check_floor, {"train": {"layer_rules": False}}) is None, "rules off, learned layer still alerting: allowed (with a reason)")
+check(refused(P.check_floor, {"train": {"alert_layers": ["learned", "corroborated"]}}) is None, "alerting from the learned layer only: allowed (with a reason)")
 check(refused(P.check_floor, {}) is None, "defaults pass the floor")
 
 # ---- 3. what weakens detection
 W = P.weakenings
 cases = [
-    ({}, {"train": {"layer_novelty": False}}, "layer 1"),
+    ({"train": {"layer_novelty": True}}, {"train": {"layer_novelty": False}}, "layer 1"),
+    ({}, {"train": {"detector3": False}}, "detector-3"),
+    ({}, {"train": {"propagation": False}}, "propagation"),
+    ({}, {"train": {"calibration_budget": 0}}, "calibration budget"),
+    ({}, {"train": {"learned_alerts": False}}, "training settings"),
     ({}, {"train": {"layer_rules": False}}, "layer 2"),
     ({}, {"train": {"alert_layers": ["novelty", "rules"]}}, "alerting turned off"),
     ({}, {"train": {"layers_only": True}}, "layers_only"),

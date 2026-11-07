@@ -99,6 +99,14 @@ TRAIN_SCHEMA = {
     "fusion_weights": ("numpair", 0.0, 100.0),
     "fusion_mode": ("enum", ("max", "weighted")),                              # pdp_engine.scoring.fuse_ratios
     "orthrus_aggregate": ("enum", ("best_val_loss", "mean", "weighted")),      # pdp_engine.scoring.aggregate_weights
+    "detector3": ("bool",),                     # 0.7 behavioural-likelihood detector (pdp_engine.behaviour)
+    "calibration_budget": ("int", 0, 200),      # benign validation nodes allowed over the learned thresholds
+    "propagation": ("bool",),
+    "propagation_delta": ("num", 0.0, 1.0),
+    "propagation_gate": ("num", 0.0, 10.0),
+    "propagation_clip": ("num", 1.0, 100.0),
+    "propagation_seed": ("num", 0.0, 10.0),
+    "propagation_passes": ("int", 1, 5),
     "layer_novelty": ("bool",),
     "layer_rules": ("bool",),
     "learned_daily_budget": ("int", 0, 1000),
@@ -203,7 +211,11 @@ def detection_settings(cfg: dict | None) -> dict:
     cfg = cfg or {}
     t = cfg.get("train") if isinstance(cfg.get("train"), dict) else {}
     al = t.get("alert_layers")
-    return {"layer_novelty": t.get("layer_novelty", True) is not False, "layer_rules": t.get("layer_rules", True) is not False,
+    # defaults = TrainConfig's (0.7: layer 1 does not alert on its own, the learned layer does, detector-3 and
+    # propagation on, thresholds at a validation budget of 10)
+    return {"layer_novelty": t.get("layer_novelty", False) is True, "layer_rules": t.get("layer_rules", True) is not False,
+            "detector3": t.get("detector3", True) is not False, "propagation": t.get("propagation", True) is not False,
+            "calibration_budget": t.get("calibration_budget", 10),
             "alert_layers": set(LAYERS) if al is None else set(al) if isinstance(al, list) else set(LAYERS),
             "layers_only": t.get("layers_only") is True,
             "corroboration_percentile": t.get("corroboration_percentile", "99.9"),
@@ -224,16 +236,16 @@ def alerting_layers(cfg: dict | None) -> set[str]:
         out.discard("rules")
     if not ({"novelty", "rules"} & out):
         out.discard("corroborated")
-    if d["learned_alerts"] is False or (d["learned_alerts"] is None and d["train_learned_alerts"] is not True) or d["layers_only"]:
+    if d["learned_alerts"] is False or (d["learned_alerts"] is None and d["train_learned_alerts"] is False) or d["layers_only"]:
         out.discard("learned")
     return out
 
 
 def check_floor(cfg: dict) -> None:
-    """A configuration in which no deterministic layer alerts is refused outright (not even with a reason): it would
-    leave the endpoint enrolled and looking protected while nothing could ever alert."""
-    if not ({"novelty", "rules"} & alerting_layers(cfg)):
-        _bad("this would stop both deterministic layers (new programs and data-flow rules) from alerting on the endpoint; "
+    """A configuration in which neither the learned layer nor the data-flow rules can alert is refused outright (not
+    even with a reason): it would leave the endpoint enrolled and looking protected while nothing could ever alert."""
+    if not ({"rules", "learned"} & alerting_layers(cfg)):
+        _bad("this would stop both the learned detection and the data-flow rules from alerting on the endpoint; "
              "at least one of them must stay on (retire the endpoint instead if it should not be protected)")
 
 
@@ -249,12 +261,18 @@ def weakenings(before: dict | None, after: dict | None) -> list[str]:
         out.append("alerting turned off for " + ", ".join(LAYER_TEXT[x] for x in dropped))
     if a["layers_only"] and not b["layers_only"]:
         out.append("learned detectors no longer trained (layers_only)")
+    if b["detector3"] and not a["detector3"]:
+        out.append("behavioural-likelihood detector (detector-3) turned off")
+    if b["propagation"] and not a["propagation"]:
+        out.append("propagation of learned suspicion turned off")
+    if isinstance(a["calibration_budget"], int) and isinstance(b["calibration_budget"], int) and a["calibration_budget"] < b["calibration_budget"]:
+        out.append(f"learned thresholds raised (calibration budget {b['calibration_budget']} -> {a['calibration_budget']})")
     cb, ca = b["corroboration_percentile"], a["corroboration_percentile"]
     if cb in PERCENTILES and ca in PERCENTILES and PERCENTILES.index(ca) > PERCENTILES.index(cb):
         out.append(f"corroboration threshold raised from the {cb}th to the {ca}th percentile")
     if b["learned_alerts"] is True and a["learned_alerts"] is not True:
         out.append(f"{LAYER_TEXT['learned']} turned off")
-    if b["train_learned_alerts"] is True and a["train_learned_alerts"] is not True:
+    if b["train_learned_alerts"] is not False and a["train_learned_alerts"] is False:
         out.append(f"{LAYER_TEXT['learned']} turned off in the model's training settings")
     for key, label, bv, av in (("learned_daily_budget", "daily limit of unusual-behaviour alerts", b["learned_daily_budget"], a["learned_daily_budget"]),
                                ("train_budget", "daily limit of unusual-behaviour alerts (training settings)", b["train_budget"], a["train_budget"])):

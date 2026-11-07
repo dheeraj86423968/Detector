@@ -79,3 +79,22 @@ def exclusions(c, eid: str, until_ns: int | None = None) -> dict:
 def feedback_filter() -> str:
     """SQL condition (alias a) for false-positive verdicts that may become benign training data."""
     return VERIFIED_SQL
+
+
+def exclude_nodes(reg, ex: dict) -> list[int]:
+    """0.7: registry positions detector-3 must not learn from - processes of an excluded program and network
+    endpoints at an excluded address (the same unreleased alerts as for layers 1-2). Every event touching them is left
+    out of the counts, so an attacker active during the baseline does not become 'what this program normally does'."""
+    from pdp_engine.layers import executable, program_key, remote_ip
+    progs, addrs = set(ex.get("programs") or ()), set(ex.get("addresses") or ())
+    if not progs and not addrs:
+        return []
+    out = []
+    for i, e in enumerate(reg.entities):
+        if e.ntype == "subject" and progs:
+            exe = executable(e.label)
+            if program_key(exe, strict=True) in progs or program_key(exe) in progs:
+                out.append(i)
+        elif e.ntype == "netflow" and addrs and remote_ip(e.label) in addrs:
+            out.append(i)
+    return out

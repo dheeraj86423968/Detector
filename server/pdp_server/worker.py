@@ -243,8 +243,9 @@ def _trainer(store, train_days, val_day, cfg, out, eid, tz="UTC", retrain=False)
         tr.layer_prior = json.load(open(os.path.join(cur["path"], "layers.json")))
     if any(ex.values()):
         tr.layer_exclude = ex
+        tr.node_exclude = learning.exclude_nodes(tr.reg, ex)
         log(f"train {eid}: excluded from the baseline (unreleased alerts): {len(ex['programs'])} programs, "
-            f"{len(ex['addresses'])} addresses, {len(ex['rule_keys'])} rule keys")
+            f"{len(ex['addresses'])} addresses, {len(ex['rule_keys'])} rule keys, {len(tr.node_exclude)} nodes (detector-3)")
     return tr
 
 
