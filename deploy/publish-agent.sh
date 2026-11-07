@@ -20,7 +20,7 @@ if [ "${2:-}" = "--arm64" ]; then
 fi
 port=$(grep -E '^PDP_REGISTRY_PUSH_PORT=' .env 2>/dev/null | cut -d= -f2 || true); port=${port:-5000}
 docker image inspect "pdp/agent:$ver" >/dev/null 2>&1 || { echo "no local image pdp/agent:$ver" >&2; exit 1; }
-docker compose up -d registry >/dev/null
+docker compose up -d --no-deps registry >/dev/null   # --no-deps: never recreate the api replicas (use rollout.sh for those)
 for i in $(seq 1 20); do curl -fsS "http://127.0.0.1:$port/v2/" >/dev/null 2>&1 && break; sleep 1; done
 R="127.0.0.1:$port/pdp/agent"
 if [ -z "$arm" ]; then
