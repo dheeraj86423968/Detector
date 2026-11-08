@@ -54,7 +54,7 @@ router = APIRouter()
 
 KINDS = ("email", "slack", "teams", "webhook", "syslog")
 EVENTS = ("incident", "agent_offline", "agent_health", "weekly", "platform")   # platform: operator alerts (internal organisation)
-EVENTS += ("detection_weakened", "response_action")    # 0.6: security events (pdp_server.posture)
+EVENTS += ("detection_weakened", "response_action", "ingest_quota")    # 0.6: security events (pdp_server.posture); ingest_quota: F11
 SEVERITIES = ("low", "medium", "high", "critical")
 SEV_RANK = {s: i for i, s in enumerate(SEVERITIES)}
 EMAIL_RE = re.compile(r"^[^@\s,;<>]+@[^@\s,;<>]+\.[^@\s,;<>]+$")

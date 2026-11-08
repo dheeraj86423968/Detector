@@ -413,7 +413,7 @@ def audit_change(c, s: dict, action: str, target: str | None = None, *, before=N
 
 
 # ================================================================================================ security events
-EVENT_KINDS = ("detection_weakened", "response_action")
+EVENT_KINDS = ("detection_weakened", "response_action", "ingest_quota")   # ingest_quota: integrity.check_quota (security review F11)
 
 
 def security_event(c, org_id, kind: str, title: str, *, severity: str = "high", s: dict | None = None, endpoint_id=None,

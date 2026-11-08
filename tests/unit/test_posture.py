@@ -296,7 +296,7 @@ check(m["event"] == "detection_weakened" and m["severity"] == "high" and "mallor
 from pdp_server import notify as N  # noqa: E402
 check("detection_weakened" in N.EVENTS and "response_action" in N.EVENTS, "notify: new event types")
 check(N._cef_event(m).startswith("CEF:0|M.D Lab|") and "pdp-detection_weakened" in N._cef_event(m), "message renders as CEF for syslog channels")
-check(P.channel_kinds(["incident"]) == ["detection_weakened", "response_action"], "channels receiving incidents also get security events")
+check(P.channel_kinds(["incident"]) == ["detection_weakened", "response_action", "ingest_quota"], "channels receiving incidents also get security events")
 check(P.channel_kinds(["agent_offline"]) == [] and P.channel_kinds(["response_action"]) == ["response_action"], "explicit subscription")
 
 # ---- 8. token bucket (the SQL in posture.take computes the same)
