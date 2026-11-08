@@ -13,6 +13,7 @@
 set -u
 umask 077
 INTERVAL_H=${PDP_BACKUP_INTERVAL_H:-24}; KEEP=${PDP_BACKUP_KEEP:-7}; OUT=/backups
+. "$(dirname "$0")/seal.sh"       # seal / verify: AES-256-CBC + HMAC-SHA256 over the ciphertext (encrypt-then-MAC)
 export PGPASSWORD="$PDP_DB_PASSWORD"
 PG="-h platform-db -U pdp -d platform"
 log() { echo "$(date -u +%FT%TZ) backup: $*"; }
@@ -32,11 +33,11 @@ one() {
     tar -C /data -cf "$w/stores.tar" endpoints 2>/dev/null || true
   fi
   echo "{\"created\": \"$ts\", \"full\": ${PDP_BACKUP_FULL:-0}}" > "$w/manifest.json"
-  tar -C "$w" -cf - . | gzip -1 | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass file:/run/backup.key -out "$OUT/pdp-$ts.tar.gz.enc" \
-    || { rm -rf "$w"; echo "encryption failed"; return 1; }
+  tar -C "$w" -cf - . | gzip -1 | seal /run/backup.key "$OUT/pdp-$ts.tar.gz.enc" \
+    || { rm -rf "$w"; rm -f "$OUT/pdp-$ts.tar.gz.enc" "$OUT/pdp-$ts.tar.gz.enc.hmac"; echo "encryption failed"; return 1; }
   rm -rf "$w"
   sz=$(stat -c %s "$OUT/pdp-$ts.tar.gz.enc")
-  ls -1t "$OUT"/pdp-*.tar.gz.enc 2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
+  ls -1t "$OUT"/pdp-*.tar.gz.enc 2>/dev/null | tail -n +$((KEEP + 1)) | while read -r old; do rm -f "$old" "$old.hmac"; done
   log "wrote pdp-$ts.tar.gz.enc ($sz bytes); keeping the newest $KEEP"
   status true "$sz" "pdp-$ts.tar.gz.enc" ""
 }
