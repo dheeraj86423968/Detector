@@ -1,0 +1,52 @@
+{
+ "set": "THEIA_E5-theia",
+ "bundle": "b07rel",
+ "n_attacks": 1,
+ "gt_nodes": 66,
+ "days": 2,
+ "R": {
+  "TP": 0,
+  "FP": 129,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 64.5,
+  "by_layer": {
+   "learned": 32,
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "A": {
+  "TP": 0,
+  "FP": 128,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 64.0,
+  "by_layer": {
+   "learned": 32,
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 9
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "B": {
+  "TP": 0,
+  "FP": 128,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 64.0,
+  "by_layer": {
+   "learned": 32,
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 9
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ }
+}

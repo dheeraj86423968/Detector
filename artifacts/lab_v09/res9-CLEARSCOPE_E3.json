@@ -1,0 +1,43 @@
+{
+ "set": "CLEARSCOPE_E3",
+ "bundle": "v07rel",
+ "n_attacks": 1,
+ "gt_nodes": 41,
+ "days": 2,
+ "R": {
+  "TP": 0,
+  "FP": 51,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 25.5,
+  "by_layer": {
+   "learned": 51
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "A": {
+  "TP": 0,
+  "FP": 51,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 25.5,
+  "by_layer": {
+   "learned": 51
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "B": {
+  "TP": 0,
+  "FP": 51,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 25.5,
+  "by_layer": {
+   "learned": 51
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ }
+}

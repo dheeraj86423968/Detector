@@ -1,0 +1,67 @@
+{
+ "set": "OPTC_H201",
+ "bundle": "v07rel",
+ "n_attacks": 1,
+ "gt_nodes": 2905,
+ "days": 3,
+ "R": {
+  "TP": 7,
+  "FP": 42,
+  "recall": 0.002,
+  "attacks": 1,
+  "FP/day": 14.0,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14,
+   "learned": 23,
+   "corroborated": 2
+  },
+  "by_layer_tp": {
+   "rules": 6,
+   "learned": 1
+  },
+  "attacks_found": [
+   "h201_0923"
+  ]
+ },
+ "A": {
+  "TP": 7,
+  "FP": 42,
+  "recall": 0.002,
+  "attacks": 1,
+  "FP/day": 14.0,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14,
+   "learned": 24,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 6,
+   "learned": 1
+  },
+  "attacks_found": [
+   "h201_0923"
+  ]
+ },
+ "B": {
+  "TP": 7,
+  "FP": 42,
+  "recall": 0.002,
+  "attacks": 1,
+  "FP/day": 14.0,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14,
+   "learned": 24,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 6,
+   "learned": 1
+  },
+  "attacks_found": [
+   "h201_0923"
+  ]
+ }
+}

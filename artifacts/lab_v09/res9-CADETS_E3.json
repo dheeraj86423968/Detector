@@ -1,0 +1,79 @@
+{
+ "set": "CADETS_E3",
+ "bundle": "v07rel",
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "R": {
+  "TP": 32,
+  "FP": 42,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 10.5,
+  "by_layer": {
+   "learned": 27,
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "learned": 1,
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ]
+ },
+ "A": {
+  "TP": 32,
+  "FP": 42,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 10.5,
+  "by_layer": {
+   "learned": 27,
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "learned": 1,
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ]
+ },
+ "B": {
+  "TP": 32,
+  "FP": 42,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 10.5,
+  "by_layer": {
+   "learned": 27,
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "learned": 1,
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ]
+ }
+}

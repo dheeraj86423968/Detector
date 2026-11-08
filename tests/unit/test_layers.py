@@ -324,6 +324,24 @@ else:
     rw_, rf_ = pw.apply(wf, reg, fi, hi_all)[1], pf_.apply(wf, reg, fi, hi_all)[1]
     check(I["shadow"] in rw_ and I["client"] in rw_ and I["shadow"] not in rf_ and I["client"] not in rf_,
           "corroboration_scope=forward: only what the alerted process affected, not what flowed into it")
+    # 0.8.1: near-alert corroboration on the neighbour's own score (propagated suspicion from the alert is circular)
+    pown = AlertPolicy(DeterministicLayers(bare, N_PRE), 0, 0.5)
+    r_own0 = pown.apply(wf, reg, fi, hi_all, own=np.zeros(len(fi)))[1]
+    r_own1 = AlertPolicy(DeterministicLayers(bare, N_PRE), 0, 0.5).apply(wf, reg, fi, hi_all, own=hi_all)[1]
+    pfin = AlertPolicy(DeterministicLayers(bare, N_PRE), 0, 0.5); pfin.near_alert_score = "final"
+    r_fin = pfin.apply(wf, reg, fi, hi_all, own=np.zeros(len(fi)))[1]
+    check(pown.near_alert_score == "own" and I["shadow"] not in r_own0 and I["client"] not in r_own0
+          and I["shadow"] in r_own1 and I["client"] in r_own1 and I["shadow"] in r_fin and I["client"] in r_fin,
+          "near-alert corroboration uses the neighbour's own score (0.8.1); near_alert_score=final keeps 0.7's propagated score")
+    check(I["shadow"] in rw_, "no own score passed (pre-0.7 runtimes): the fused score is used as before")
+    hi1 = np.full(len(il1), 0.9)
+    prc = lambda cap: AlertPolicy(DeterministicLayers({"known_executables": [], "trusted_ips": [], "thresholds": {},
+                                                       "config": {"normalize_programs": True, "novel_instances": 1}}, 0), 0, 0.5, evidence_rules=())
+    p0, p1 = prc(0), prc(1); p1.repeat_corroborations = 1
+    r_c0, r_c1 = p0.apply(w1, rw, il1, hi1)[1], p1.apply(w1, rw, il1, hi1)[1]
+    cor = lambda r: sorted(n for n in r if r[n][0]["layer"] == "corroborated" and r[n][0]["rule"] == "novel_executable_repeat")
+    check(cor(r_c0) == sorted([K["n2"], K["n3"]]) and len(cor(r_c1)) == 1,
+          f"repeat_corroborations caps corroborated repeat runs per program and day, any spelling ({cor(r_c0)} / {cor(r_c1)})")
 
 # ---------------------------------------------------------------- 0.6: evasion resistance
 import pdp_engine.layers as LY

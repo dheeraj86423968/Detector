@@ -264,6 +264,9 @@ class Runtime:
         self.policy = AlertPolicy(self.layers, self.daily_budget, self.corroboration, cp, ev) if self.layers is not None else None
         if self.policy is not None and pol.get("alert_layers") is not None:
             self.policy.alert_layers = set(pol["alert_layers"])
+        if self.policy is not None:     # 0.8.1 defaults apply to older bundles too (artifacts/lab_v09)
+            self.policy.near_alert_score = str(pol.get("near_alert_score", NEAR_ALERT_SCORE))
+            self.policy.repeat_corroborations = int(pol.get("repeat_corroborations", REPEAT_CORROBORATIONS))
         # learned-layer alerts by default (an endpoint setting overrides it): bundles from 0.4 on rank only
         self.default_learned_alerts = bool(pol.get("learned_alerts", True))
         self.set_learned_alerts(self.default_learned_alerts)
@@ -431,6 +434,7 @@ class Runtime:
         r2 = np.average([fill_missing(c.ratio(s[ids])) for c, s in zip(self.cal2, s2)], axis=0, weights=self.agg2)
         fused = self.fcal.fuse(r1, r2) / self.fcal.threshold   # ratio units like r1/r2: > 1 = above the threshold
         r3 = np.zeros(0)
+        self._own = None
         if self.bm is not None:
             fused, r3 = self._learned_07(w, ids, fused)
         if self.layers is None:
@@ -462,6 +466,7 @@ class Runtime:
             r3_all, er = own / tn, es / self.thr3[0]
         base = r3_all.copy()
         np.maximum.at(base, ids, fill_missing(fused) / self.learned_unit)
+        self._own = base[ids] / self.final_thr      # this window's own evidence, before propagation (alert policy)
         if self.prop:
             p = self.prop
             propagate(self.susp[:n], base, w, er, float(p["delta"]), float(p["gate"]), float(p["clip"]),
@@ -520,8 +525,14 @@ class Runtime:
         return old2new
 
     def _alert_policy(self, w: Window, ids: np.ndarray, fused: np.ndarray, hits=None):
-        return self.policy.apply(w, self.reg, ids, fused, hits)
+        return self.policy.apply(w, self.reg, ids, fused, hits, own=getattr(self, "_own", None))
 
+
+# 0.8.1 (artifacts/lab_v09): a learned score corroborates a neighbouring layer-1/2 alert only on the neighbour's own
+# evidence in the window ("own"), not on suspicion propagated to it - on CARBANAKv2 h1 one alerted Windows Update
+# process propagated its suspicion to ~3,500 files it wrote, which then "corroborated" that same alert. "final" = 0.7.
+NEAR_ALERT_SCORE = "own"
+REPEAT_CORROBORATIONS = 0     # > 0: corroborated repeat runs of a new program per program and UTC day (0 = no cap)
 
 CRITICAL_RULES = ("exfiltration", "untrusted_code_network")
 
@@ -557,10 +568,13 @@ class AlertPolicy:
         self.evidence_rules = set(evidence_rules or ()) | set(ALWAYS_EVIDENCE)
         self.corroboration_scope = "window"   # learned_near_alert candidates: "window" neighbours | "forward" data flow
         self.near_alert = True                # False: the learned score corroborates evidence rules only
+        self.near_alert_score = NEAR_ALERT_SCORE   # "own": the neighbour's own (pre-propagation) score; "final": 0.7
+        self.repeat_corroborations = REPEAT_CORROBORATIONS
         self.reset()
 
     def reset(self):
         self._day, self._day_learned = None, 0
+        self._repeats: dict = {}
 
     def split(self, hits: list[Hit]) -> tuple[dict, dict]:
         """Hits -> (reasons of alerting rules, evidence of corroboration-only rules), per node."""
@@ -578,7 +592,9 @@ class AlertPolicy:
             reasons = {n: rs for n, rs in reasons.items() if any(x["layer"] in self.alert_layers for x in rs)}
         return reasons
 
-    def apply(self, w: Window, reg: Registry, ids: np.ndarray, fused: np.ndarray, hits: list[Hit] | None = None):
+    def apply(self, w: Window, reg: Registry, ids: np.ndarray, fused: np.ndarray, hits: list[Hit] | None = None,
+              own: np.ndarray | None = None):
+        """own: each node's own score in this window before propagation (0.7+ runtimes), aligned with ids."""
         if hits is None:
             hits = self.layers.process(w, reg, ids)
         pos = {int(n): i for i, n in enumerate(ids.tolist())}
@@ -587,11 +603,20 @@ class AlertPolicy:
         det = [n for n in reasons if n in pos]
         if not self.learned_alerts or (self.alert_layers is not None and not ({"corroborated", "learned"} & self.alert_layers)):
             return np.array(sorted(reasons), dtype=np.int64), reasons, hits
+        day = int(w.start_ns // 86_400_000_000_000)
+        if day != self._day:
+            self._day, self._day_learned, self._repeats = day, 0, {}
         # evidence rules: alert when the learned score corroborates them
         for n, ev in evidence.items():
             if n in reasons or n not in pos:
                 continue
             f = float(fused[pos[n]])
+            if f > self.corroboration and self.repeat_corroborations > 0 and ev[0]["rule"] == "novel_executable_repeat":
+                nov = getattr(self.layers, "novelty", None)
+                k = nov.key(ev[0]["key"]) if nov is not None else ev[0]["key"]   # any spelling of the same program
+                if self._repeats.get(k, 0) >= self.repeat_corroborations:
+                    continue        # more runs of the same new program are the same finding
+                self._repeats[k] = self._repeats.get(k, 0) + 1
             if f > self.corroboration:
                 reasons[n] = [{"layer": "corroborated", "rule": ev[0]["rule"], "value": round(f, 3), "key": ev[0]["key"],
                                "detail": f"{ev[0]['detail']}; learned score {f:.2f} corroborates"}] + [dict(x, layer="evidence") for x in ev]
@@ -603,17 +628,16 @@ class AlertPolicy:
             else:                                        # "window": any neighbour in the window, either direction
                 m = np.isin(w.src, dset) | np.isin(w.dst, dset)
                 nb = np.setdiff1d(np.unique(np.concatenate([w.src[m], w.dst[m]])), dset)
+            score = own if (own is not None and self.near_alert_score == "own") else fused
             for n in nb.tolist():
                 if n in reasons:
                     continue
-                f = float(fused[pos[n]])
+                f = float(score[pos[n]])
                 if f > self.corroboration:
                     reasons[n] = [{"layer": "corroborated", "rule": "learned_near_alert", "value": round(f, 3),
-                                   "detail": f"learned score {f:.2f} (above the validation {self.label}th percentile) next to a layer-1/2 alert"}]
+                                   "detail": f"own learned score {f:.2f} (above the validation {self.label}th percentile) next to a layer-1/2 alert"
+                                   if score is own else f"learned score {f:.2f} (above the validation {self.label}th percentile) next to a layer-1/2 alert"}]
         # learned-only: above the fusion threshold, within the daily budget, highest first
-        day = int(w.start_ns // 86_400_000_000_000)
-        if day != self._day:
-            self._day, self._day_learned = day, 0
         cand = [i for i in np.where(above(fused))[0].tolist() if int(ids[i]) not in reasons]
         cand.sort(key=lambda i: -float(fused[i]))
         room = max(0, self.daily_budget - self._day_learned)

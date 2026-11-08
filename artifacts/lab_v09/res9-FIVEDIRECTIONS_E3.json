@@ -1,0 +1,67 @@
+{
+ "set": "FIVEDIRECTIONS_E3",
+ "bundle": "v07rel",
+ "n_attacks": 2,
+ "gt_nodes": 108,
+ "days": 3,
+ "R": {
+  "TP": 11,
+  "FP": 225,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 75.0,
+  "by_layer": {
+   "learned": 25,
+   "corroborated": 163,
+   "novelty": 48
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ },
+ "A": {
+  "TP": 11,
+  "FP": 221,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 73.7,
+  "by_layer": {
+   "learned": 27,
+   "novelty": 48,
+   "corroborated": 157
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ },
+ "B": {
+  "TP": 11,
+  "FP": 198,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 66.0,
+  "by_layer": {
+   "learned": 27,
+   "novelty": 48,
+   "corroborated": 134
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ }
+}

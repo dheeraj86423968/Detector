@@ -1,0 +1,64 @@
+{
+ "set": "CARBANAKV2_EDR-h4",
+ "bundle": "b07rel",
+ "n_attacks": 1,
+ "gt_nodes": 21,
+ "days": 7,
+ "R": {
+  "TP": 3,
+  "FP": 64,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 9.1,
+  "by_layer": {
+   "novelty": 25,
+   "learned": 37,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ]
+ },
+ "A": {
+  "TP": 3,
+  "FP": 64,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 9.1,
+  "by_layer": {
+   "novelty": 25,
+   "learned": 37,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ]
+ },
+ "B": {
+  "TP": 3,
+  "FP": 64,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 9.1,
+  "by_layer": {
+   "novelty": 25,
+   "learned": 37,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ]
+ }
+}

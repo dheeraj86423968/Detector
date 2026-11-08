@@ -1,0 +1,73 @@
+{
+ "set": "OPTC_H501",
+ "bundle": "v07rel",
+ "n_attacks": 1,
+ "gt_nodes": 749,
+ "days": 3,
+ "R": {
+  "TP": 19,
+  "FP": 132,
+  "recall": 0.025,
+  "attacks": 1,
+  "FP/day": 44.0,
+  "by_layer": {
+   "learned": 25,
+   "novelty": 41,
+   "corroborated": 66,
+   "rules": 19
+  },
+  "by_layer_tp": {
+   "corroborated": 8,
+   "rules": 8,
+   "novelty": 2,
+   "learned": 1
+  },
+  "attacks_found": [
+   "h501_0924"
+  ]
+ },
+ "A": {
+  "TP": 19,
+  "FP": 102,
+  "recall": 0.025,
+  "attacks": 1,
+  "FP/day": 34.0,
+  "by_layer": {
+   "learned": 26,
+   "novelty": 41,
+   "corroborated": 35,
+   "rules": 19
+  },
+  "by_layer_tp": {
+   "corroborated": 8,
+   "rules": 8,
+   "novelty": 2,
+   "learned": 1
+  },
+  "attacks_found": [
+   "h501_0924"
+  ]
+ },
+ "B": {
+  "TP": 19,
+  "FP": 102,
+  "recall": 0.025,
+  "attacks": 1,
+  "FP/day": 34.0,
+  "by_layer": {
+   "learned": 26,
+   "novelty": 41,
+   "corroborated": 35,
+   "rules": 19
+  },
+  "by_layer_tp": {
+   "corroborated": 8,
+   "rules": 8,
+   "novelty": 2,
+   "learned": 1
+  },
+  "attacks_found": [
+   "h501_0924"
+  ]
+ }
+}
