@@ -24,8 +24,16 @@ if ! grep -q '^PDP_KMS=' "$ENVFILE"; then
   grep -q '^PDP_KMS_ADDR=' "$ENVFILE" || echo "COMPOSE_PROFILES=kms" >> "$ENVFILE"
   echo "enabled the bundled KMS in $ENVFILE"
 fi
+# ---- registry push credentials (deploy/publish-agent.sh; the gateway checks them on its loopback push listener)
+if ! grep -q '^PDP_REGISTRY_PUSH_PASSWORD=' "$ENVFILE"; then
+  echo "PDP_REGISTRY_PUSH_USER=publisher" >> "$ENVFILE"
+  echo "PDP_REGISTRY_PUSH_PASSWORD=$(openssl rand -hex 24)" >> "$ENVFILE"
+  echo "generated registry push credentials in $ENVFILE"
+fi
 chmod 600 "$ENVFILE"
 set -a; . "$ENVFILE"; set +a
+HTPASSWD=${PDP_REGISTRY_HTPASSWD:-deploy/nginx/registry-push.htpasswd}
+(umask 077; printf '%s:%s\n' "$PDP_REGISTRY_PUSH_USER" "$(openssl passwd -apr1 "$PDP_REGISTRY_PUSH_PASSWORD")" > "$HTPASSWD")
 
 BASE="-f deploy/docker-compose.yml"
 if [ "$MODE" = gpu ]; then

@@ -23,6 +23,9 @@ PDP_HTTP_PORT=8080
 PDP_CONSOLE_PORT=9445
 PDP_AGENT_PORT=9446
 PDP_REGISTRY_PUSH_PORT=5001
+PDP_REGISTRY_HTPASSWD=./nginx/registry-push-staging.htpasswd
+PDP_REGISTRY_PUSH_USER=publisher
+PDP_REGISTRY_PUSH_PASSWORD=$(openssl rand -hex 24)
 PDP_PUBLIC_HOSTNAME=
 PDP_NGINX_PUBLIC=./nginx/public-staging
 PDP_SIGNUP=open
@@ -39,6 +42,10 @@ EOV
   echo "generated $ENV"
 fi
 mkdir -p nginx/public-staging
+# registry push credentials for the gateway's loopback push listener (same scheme as bringup.sh)
+grep -q '^PDP_REGISTRY_PUSH_PASSWORD=' "$ENV" || { umask 077; printf 'PDP_REGISTRY_HTPASSWD=./nginx/registry-push-staging.htpasswd\nPDP_REGISTRY_PUSH_USER=publisher\nPDP_REGISTRY_PUSH_PASSWORD=%s\n' "$(openssl rand -hex 24)" >> "$ENV"; }
+( set -a; . "./$ENV"; set +a; umask 077
+  printf '%s:%s\n' "$PDP_REGISTRY_PUSH_USER" "$(openssl passwd -apr1 "$PDP_REGISTRY_PUSH_PASSWORD")" > "${PDP_REGISTRY_HTPASSWD:-./nginx/registry-push-staging.htpasswd}" )
 # staging serves the console build under test (console: npx vite build --outDir dist-next); production serves
 # console/dist, updated only when production's API is rolled (docs/OPERATIONS.md), so it never runs ahead of its API
 grep -q '^PDP_CONSOLE_DIST=' "$ENV" || echo 'PDP_CONSOLE_DIST=../console/dist-next' >> "$ENV"

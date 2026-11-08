@@ -233,3 +233,9 @@ CREATE TABLE IF NOT EXISTS rate_buckets (
   at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (user_id, kind));
 -- 0.6: an interpreter / shell allowed on purpose (force + reason)
 ALTER TABLE allowlist ADD COLUMN IF NOT EXISTS forced BOOLEAN NOT NULL DEFAULT false;
+
+-- security review 2026-11-08 (F19): sessions signed out before their cookie expires (access.revoke_session); rows are
+-- dropped once the cookie would have expired anyway
+CREATE TABLE IF NOT EXISTS revoked_sessions (
+  sid TEXT PRIMARY KEY, user_id INT, expires_at TIMESTAMPTZ NOT NULL, at TIMESTAMPTZ DEFAULT now());
+CREATE INDEX IF NOT EXISTS revoked_sessions_exp ON revoked_sessions (expires_at);

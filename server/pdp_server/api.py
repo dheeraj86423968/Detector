@@ -214,9 +214,22 @@ async def ndjson_rows(request: Request):
             yield json.loads(line)
 
 
+def _quota(ep: dict, rows: int, request: Request) -> int:
+    """Daily ingest budget (security review F11): 429 when this upload would exceed it. -> the upload's bytes."""
+    from . import integrity
+    nbytes = int(request.headers.get("content-length") or 0)
+    try:
+        with db.conn() as c:
+            integrity.check_quota(c, ep, rows, nbytes)
+    except integrity.IngestError as e:
+        raise HTTPException(e.status, str(e))
+    return nbytes
+
+
 @app.post("/v1/endpoints/{endpoint_id}/entities")
 async def upload_entities(endpoint_id: str, request: Request, ep=Depends(agent_endpoint)):
     rows = [r async for r in ndjson_rows(request)]
+    nbytes = _quota(ep, len(rows), request)
     s = db.tschema(endpoint_id)
     with db.conn(db.TELEMETRY_DSN) as c:
         with c.cursor() as cur:
@@ -226,6 +239,9 @@ async def upload_entities(endpoint_id: str, request: Request, ep=Depends(agent_e
                 cur, f"INSERT INTO {s}.entities (uuid, dense_id, ntype, label, display) VALUES %s ON CONFLICT (uuid) DO NOTHING",
                 [(r["uuid"], r.get("dense_id"), r["ntype"], r["label"], json.dumps(r.get("display", {}))) for r in rows],
                 template=f"(%s, COALESCE(%s, nextval('{s}.dense_seq')), %s, %s, %s)", page_size=5000)
+    with db.conn() as c:       # counted against the daily budget like event batches
+        db.q(c, "INSERT INTO upload_batches (endpoint_id, batch_id, kind, rows, bytes) VALUES (%s,%s,'entities',%s,%s) ON CONFLICT DO NOTHING",
+             (endpoint_id, "ent-" + pki.new_id(), len(rows), nbytes or None))
     return {"ok": True, "rows": len(rows)}
 
 
@@ -235,6 +251,7 @@ async def upload_events(endpoint_id: str, request: Request, ep=Depends(agent_end
         if db.q(c, "SELECT 1 FROM upload_batches WHERE endpoint_id=%s AND batch_id=%s", (endpoint_id, x_batch_id), one=True):
             return {"ok": True, "batch_id": x_batch_id, "duplicate": True}
     rows = [r async for r in ndjson_rows(request)]
+    _quota(ep, len(rows), request)
     from . import integrity
     rows, refused = integrity.filter_events(rows, *integrity.ts_bounds(ep))   # 0.6: impossible timestamps refused
     try:
@@ -565,6 +582,10 @@ def oidc_callback(request: Request, code: str | None = None, state: str | None =
 def logout(request: Request, response: Response):
     s = auth.read_session(request.cookies.get("pdp_session"))
     response.delete_cookie("pdp_session", path="/")
+    if s:            # security review F19: the cookie is revoked server-side, not only deleted in this browser
+        from .access import revoke_session
+        with db.conn() as c:
+            revoke_session(c, s)
     end = None
     if s and oidc.enabled():
         with db.conn() as c:
@@ -805,13 +826,16 @@ def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
     agent = f"https://{host}:{os.environ.get('PDP_AGENT_PORT', '8443')}"
     image = agent_image(host) or os.environ.get("PDP_AGENT_IMAGE", "pdp/agent:latest")
     login = f"echo {token} | docker login {host} -u pdp --password-stdin && \\\n" if agent_image(host) else ""
-    docker = (login + f"docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host --log-driver local \\\n"
-              f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN={token} -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
+    # the token is passed in the environment, never on a command line other local users could read (/proc/*/cmdline)
+    docker = (login + f"export PDP_ENROLL_TOKEN={token} && docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host --log-driver local \\\n"
+              f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
               f"  -e PDP_SERVER_URL={agent} -e PDP_AGENT_URL={agent} {image} run")
     from .k8s import key_of
     return {"ok": True, "token": token, "expires_in_hours": 24, "ca_sha256": fp, "server_url": server, "agent_url": agent,
             "progress_key": key_of(token),
             "install_command": f"curl -fsSL {server}/install.sh | sudo bash -s -- --token {token}",
+            # security review F10: the same installer with the token in the environment instead of argv (sudo logs, ps)
+            "install_command_env": f"export PDP_ENROLL_TOKEN={token} && curl -fsSL {server}/install.sh | sudo --preserve-env=PDP_ENROLL_TOKEN bash -s -- --token-env",
             "package_command": f"sudo pdp-agent-install --server {agent} --agent-url {agent} --token {token} --ca-sha256 {fp}",
             "docker_command": docker,
             "enroll_command": f"python -m pdp_agent enroll {token} --ca-sha256 {fp}"}

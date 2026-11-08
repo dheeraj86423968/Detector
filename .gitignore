@@ -22,6 +22,8 @@ deploy/kms-secrets/
 deploy/nginx/public/*.conf
 deploy/nginx/public/*.redirect
 deploy/staging.env
+deploy/nginx/registry-push.htpasswd
+deploy/nginx/registry-push-staging.htpasswd
 deploy/nginx/public-staging/
 deploy/backup.key
 deploy/backups/

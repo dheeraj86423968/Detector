@@ -39,6 +39,8 @@ def session(request: Request) -> dict:
             raise HTTPException(401, "user no longer exists or is disabled")
         if int(s.get("g", 0)) != u["session_gen"]:
             raise HTTPException(401, "this session was ended (password changed or signed out everywhere); sign in again")
+        if s.get("sid") and db.q(c, "SELECT 1 FROM revoked_sessions WHERE sid=%s", (s["sid"],), one=True):
+            raise HTTPException(401, "this session was signed out; sign in again")
         if u["require_mfa"] and u["auth"] == "local" and not u["totp_enabled"] and request.url.path not in MFA_SETUP_PATHS:
             raise HTTPException(403, "your organisation requires two-factor sign-in: set it up under Account first")
         org_eps = {str(r["id"]) for r in db.q(c, "SELECT id FROM endpoints WHERE org_id=%s", (u["org_id"],))}
@@ -53,6 +55,18 @@ def set_session(response: Response, user_id: int, role: str) -> None:
         g = db.q(c, "SELECT session_gen FROM users WHERE id=%s", (user_id,), one=True)
     response.set_cookie("pdp_session", auth.make_session(user_id, role, g["session_gen"] if g else 0), httponly=True, secure=True,
                         samesite="strict", max_age=auth.SESSION_TTL, path="/")
+
+
+def revoke_session(c, s: dict) -> None:
+    """Sign out this one session (security review F19): its id is kept until the cookie would have expired anyway, so
+    a copy of the cookie stops working at logout instead of at expiry. Cookies issued before session ids existed carry
+    none; they can only be ended with end_sessions()."""
+    if not s or not s.get("sid"):
+        return
+    from datetime import datetime, timezone
+    exp = datetime.fromtimestamp(int(s.get("exp") or 0) + 60, tz=timezone.utc)
+    db.q(c, "DELETE FROM revoked_sessions WHERE expires_at < now()")
+    db.q(c, "INSERT INTO revoked_sessions (sid, user_id, expires_at) VALUES (%s,%s,%s) ON CONFLICT (sid) DO NOTHING", (str(s["sid"])[:64], s.get("u"), exp))
 
 
 def end_sessions(c, user_id: int) -> None:

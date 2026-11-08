@@ -1220,6 +1220,8 @@ class Agent:
             return f"the registry {registry!r} is not the server this agent is enrolled with ({', '.join(sorted(hosts))})"
         if not image.startswith(registry.rstrip("/") + "/"):
             return f"the image {image!r} is not from the registry {registry!r}"
+        if not re.search(r"@sha256:[0-9a-f]{64}$", image):
+            return f"the image {image!r} is not pinned to a digest (a tag alone can be re-pointed in the registry)"
         return None
 
     def kernel_btf(self) -> str | None:

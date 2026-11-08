@@ -27,6 +27,8 @@ Required:
   --server URL       gateway console/enrolment URL, e.g. https://pdp.example.com
   --ca-sha256 FP     CA fingerprint shown in the console with the enrolment token (hex sha256, ':' allowed)
   --token TOKEN      one-time enrolment token (not needed if this host is already enrolled)
+  --token-env        take the token from \$PDP_ENROLL_TOKEN; --token-file FILE from FILE; --token-stdin from standard
+                     input: none of these put the token on the command line (ps, sudo's log, shell history)
 
 Options:
   --agent-url URL    agent mTLS API (default: the server host on port 8443 when --server uses the default
@@ -52,6 +54,9 @@ while [ $# -gt 0 ]; do
     --server) server=${2:?}; shift ;;
     --agent-url) agent_url=${2:?}; shift ;;
     --token) token=${2:?}; shift ;;
+    --token-env) token=${PDP_ENROLL_TOKEN:-}; [ -n "$token" ] || die "--token-env: PDP_ENROLL_TOKEN is not set (sudo --preserve-env=PDP_ENROLL_TOKEN)" ;;
+    --token-file) token=$(head -n1 "${2:?}" | tr -d '[:space:]'); [ -n "$token" ] || die "--token-file: ${2} is empty"; shift ;;
+    --token-stdin) IFS= read -r token || true; token=$(printf '%s' "$token" | tr -d '[:space:]'); [ -n "$token" ] || die "--token-stdin: no token on standard input" ;;
     --ca-sha256) ca=${2:?}; shift ;;
     --image) image=${2:?}; shift ;;
     --image-tar) image_tar=${2:?}; shift ;;

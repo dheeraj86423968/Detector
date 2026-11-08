@@ -35,8 +35,12 @@ def public_host(request: Request) -> str:
 
 
 def agent_image(host: str) -> str | None:
-    ver = os.environ.get("PDP_AGENT_VERSION", "").strip()
-    return f"{host}/pdp/agent:{ver}" if ver else None
+    """The published agent image, pinned to the manifest digest deploy/publish-agent.sh recorded (security review F2):
+    installers and the updater pull `<host>/pdp/agent:<version>@sha256:<digest>`, so a re-tagged image in the
+    registry is not what endpoints run. None until a version with a digest is published."""
+    from .updates import image_ref, latest
+    ver = latest()
+    return image_ref(host, ver) if ver else None
 
 
 BTF_DIR = os.environ.get("PDP_BTF_DIR", "/btf")

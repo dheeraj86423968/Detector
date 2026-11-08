@@ -4,6 +4,7 @@ Run: PYTHONPATH=server:engine:agent python tests/unit/test_security_hardening.py
 """
 import contextlib
 import os
+import re
 import socket
 import sys
 import tempfile
@@ -173,6 +174,237 @@ check(enroll_token("env") == "tok-from-env" and enroll_token("literal") == "lite
 check("enroll env" in open(os.path.join(os.path.dirname(__file__), "..", "..", "deploy", "docker", "agent-entrypoint.sh")).read()
       and 'enroll "$PDP_ENROLL_TOKEN"' not in open(os.path.join(os.path.dirname(__file__), "..", "..", "deploy", "docker", "agent-entrypoint.sh")).read(),
       "the agent entrypoint passes the token through the environment")
+
+
+# =============================================================================================== round 2
+ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
+from pdp_server import updates, integrity as I, pki   # noqa: E402
+
+# ---- 10. agent updates: digests (F2), downgrades (F4), hold threshold (F5)
+D1, D2 = "sha256:" + "1" * 64, "sha256:" + "2" * 64
+os.environ["PDP_AGENT_VERSION"], os.environ["PDP_AGENT_DIGEST"] = "0.7.0", D1
+os.environ["PDP_AGENT_DIGESTS"] = f"0.6.0={D2},0.7.0={D1}"
+os.environ["PDP_PUBLIC_HOSTNAME"] = "pdp.example.com"
+check(updates.digest_for("0.7.0") == D1 and updates.digest_for("0.6.0") == D2 and updates.digest_for("0.5.0") is None, "recorded digests per version")
+check(updates.image_ref("pdp.example.com", "0.7.0") == f"pdp.example.com/pdp/agent:0.7.0@{D1}" and updates.image_ref("h", "0.5.0") is None
+      and distrib.agent_image("pdp.example.com") == f"pdp.example.com/pdp/agent:0.7.0@{D1}", "installer and updater references are digest-pinned")
+os.environ["PDP_AGENT_DIGESTS"] = "0.6.0=" + D2
+os.environ.pop("PDP_AGENT_DIGEST")
+check(updates.digest_for("0.7.0") is None and distrib.agent_image("h") is None, "a version published without a digest yields no image reference")
+os.environ["PDP_AGENT_DIGEST"], os.environ["PDP_AGENT_DIGESTS"] = D1, f"0.6.0={D2},0.7.0={D1}"
+
+def ep(i, ver, failed=(), seen=0, name=None):
+    return {"id": f"e{i}", "name": name or f"host{i}", "agent_version": ver, "agent_version_since": datetime.now(timezone.utc) - timedelta(hours=2),
+            "last_seen": datetime.now(timezone.utc) - timedelta(seconds=seen), "enrolled_at": datetime.now(timezone.utc) - timedelta(days=i),
+            "health": {"update": {"failed": list(failed)}}}
+fleet = [ep(1, "0.6.0", failed=["0.7.0"])] + [ep(i, "0.7.0") for i in range(2, 12)]
+h = updates.hold(fleet, "0.7.0")
+check(h["held"] is None and h["failed_on"] == [{"id": "e1", "name": "host1"}] and h["tried"] == 11, "one endpoint reporting a failure does not hold the version (recorded)")
+h = updates.hold([ep(1, "0.6.0", failed=["0.7.0"]), ep(2, "0.6.0", failed=["0.7.0"])] + [ep(i, "0.7.0") for i in range(3, 12)], "0.7.0")
+check(h["held"] and "2 of the 11" in h["held"] and len(h["failed_on"]) == 2, "two failures out of eleven (>= 2 and >= 10 %) hold it")
+h = updates.hold([ep(1, "0.6.0", failed=["0.7.0"]), ep(2, "0.6.0", failed=["0.7.0"])] + [ep(i, "0.7.0") for i in range(3, 40)], "0.7.0")
+check(h["held"] is None and len(h["failed_on"]) == 2, "two failures out of thirty-nine (< 10 %) do not hold it")
+check(updates.hold([ep(1, "0.7.0")], "0.7.0") is None, "no failures: nothing to hold")
+
+class UpdDB(FakeDB):
+    def __init__(self, eps, policy="auto", versions=("0.6.0", "0.7.0")):
+        super().__init__(users={1: {"username": "op", "org_id": "o1"}}); self.eps, self.policy, self.versions = eps, policy, versions
+        self.events, self.audit = [], []
+    def q(self, c, sql, args=(), one=False):
+        self.log.append((sql, args))
+        if sql.startswith("SELECT agent_update FROM orgs"): r = [{"agent_update": self.policy}]
+        elif sql.startswith("SELECT id, name, agent_version"): r = [dict(e) for e in self.eps]
+        elif sql.startswith("SELECT DISTINCT agent_version"): r = [{"agent_version": v} for v in self.versions]
+        elif sql.startswith("SELECT agent_version, count"): r = [{"agent_version": v, "n": 1} for v in self.versions]
+        elif sql.startswith("UPDATE orgs SET agent_update"): self.policy = args[0]; r = None
+        elif sql.startswith("SELECT username FROM users"): r = [{"username": "op"}]
+        elif sql.startswith("INSERT INTO audit_log"): self.audit.append(args); r = None
+        elif sql.startswith("INSERT INTO security_events"): self.events.append(args); r = None
+        else: raise AssertionError(sql)
+        if r is None: return None
+        return (r[0] if r else None) if one else r
+udb = UpdDB(fleet); db.q = udb.q
+r = updates.rollout(None, "o1", "0.7.0")
+check(r["ready"] and r["failed_on"] == [{"id": "e1", "name": "host1"}], "rollout: proven, the single failure is reported but does not hold")
+upd = updates.update_for(None, {"id": "e2", "org_id": "o1", "agent_version": "0.6.0", "health": {}})
+check(upd and upd["image"] == f"pdp.example.com/pdp/agent:0.7.0@{D1}", "an endpoint is offered the digest-pinned image")
+os.environ["PDP_AGENT_DIGESTS"] = "0.6.0=" + D2; os.environ.pop("PDP_AGENT_DIGEST")
+check(updates.update_for(None, {"id": "e2", "org_id": "o1", "agent_version": "0.6.0", "health": {}}) is None, "no digest for the target: no update is offered")
+os.environ["PDP_AGENT_DIGEST"], os.environ["PDP_AGENT_DIGESTS"] = D1, f"0.6.0={D2},0.7.0={D1}"
+admin_s = {"u": 1, "org": "o1", "r": "admin", "op": False}
+op_s = {"u": 1, "org": "o1", "r": "admin", "op": True}
+st = raises(updates.set_policy, updates.UpdatePolicy(agent_update="0.6.0"), admin_s)
+check(st == 403 and udb.policy == "auto", "an organisation admin cannot pin below the fleet's running versions")
+out = updates.set_policy(updates.UpdatePolicy(agent_update="0.7.0"), admin_s)
+check(out["policy"] == "0.7.0" and udb.audit and not udb.events, "pinning at the current version: allowed, audited, no security event")
+st = raises(updates.set_policy, updates.UpdatePolicy(agent_update="0.6.0"), op_s)
+check(st == 400 and udb.policy == "0.7.0", "the operator rolling back without a reason is refused (reason required)")
+out = updates.set_policy(updates.UpdatePolicy(agent_update="0.6.0", reason="CVE in 0.7.0 collector"), op_s)
+check(out["policy"] == "0.6.0" and udb.events and udb.events[-1][1] == "detection_weakened" and "0.6.0" in udb.events[-1][6]
+      and "CVE in 0.7.0" in udb.audit[-1][6], "the operator's rollback is audited with the reason and raised as a detection_weakened event")
+check(raises(updates.set_policy, updates.UpdatePolicy(agent_update="0.5.0"), op_s) == 400, "a version without a recorded digest cannot be pinned")
+
+# ---- 11. per-endpoint ingest budget (F11)
+class QuotaDB(FakeDB):
+    def __init__(self, used_b, used_n):
+        super().__init__(); self.used, self.state, self.events = (used_b, used_n), None, []
+    def q(self, c, sql, args=(), one=False):
+        self.log.append((sql, args))
+        if sql.startswith("SELECT coalesce(sum(bytes), 0) AS b"): r = [{"b": self.used[0], "n": self.used[1]}]
+        elif sql.startswith("SELECT state FROM endpoint_integrity"): r = [{"state": self.state}] if self.state else []
+        elif sql.startswith("INSERT INTO endpoint_integrity"):
+            import json as _j; self.state = {"findings": _j.loads(args[1])}; r = None
+        elif sql.startswith("INSERT INTO security_events"): self.events.append(args); r = None
+        else: raise AssertionError(sql)
+        if r is None: return None
+        return (r[0] if r else None) if one else r
+EP = {"id": "e1", "org_id": "o1", "name": "web-1", "config": {}}
+qdb = QuotaDB(1 << 30, 1_000_000); db.q = qdb.q; I._q = qdb.q
+I.check_quota(None, EP, 5000, 1 << 20)
+check(not qdb.events, "within the daily budget: accepted")
+qdb = QuotaDB(I.DAILY_BYTES - 10, 1_000_000); db.q = qdb.q; I._q = qdb.q
+try:
+    I.check_quota(None, EP, 5000, 1 << 20); st = None
+except I.IngestError as e:
+    st = e.status
+check(st == 429 and len(qdb.events) == 1 and qdb.events[0][1] == "ingest_quota" and qdb.events[0][3] == "e1"
+      and qdb.state["findings"][0]["key"].startswith("ingest_quota:"), "over the byte budget: 429, one integrity finding, one security event")
+try:
+    I.check_quota(None, EP, 5000, 1 << 20)
+except I.IngestError:
+    pass
+check(len(qdb.events) == 1 and len(qdb.state["findings"]) == 1, "the next refusal the same day adds no second event or finding")
+qdb = QuotaDB(0, I.DAILY_ROWS - 1); db.q = qdb.q; I._q = qdb.q
+try:
+    I.check_quota(None, EP, 5000, 10); st = None
+except I.IngestError as e:
+    st = e.status
+check(st == 429 and "rows" in qdb.events[0][6], "over the row budget: 429")
+qdb = QuotaDB(I.DAILY_BYTES + 5, 0); db.q = qdb.q; I._q = qdb.q
+I.check_quota(None, dict(EP, config={"ingest_daily_bytes": I.DAILY_BYTES * 4}), 1, 1)
+check(not qdb.events and I.quota_for({"config": {"ingest_daily_bytes": True}}) == (I.DAILY_BYTES, I.DAILY_ROWS), "a per-endpoint override raises the budget; a bogus one is ignored")
+gw = open(os.path.join(ROOT, "deploy", "nginx", "gateway.conf")).read()
+check("limit_req_zone $ssl_client_s_dn zone=pdp_agent" in gw and re.search(r"location /v1/ \{.*?limit_req zone=pdp_agent", gw, re.S), "the agent port is rate-limited per client certificate")
+
+# ---- 12. logout revokes the session server-side (F19)
+class SessDB(FakeDB):
+    def __init__(self):
+        super().__init__(); self.revoked = set()
+    def q(self, c, sql, args=(), one=False):
+        self.log.append((sql, args))
+        if sql.startswith("SELECT u.role, u.auth"):
+            r = [{"role": "admin", "auth": "local", "disabled": False, "endpoints": None, "org_id": "o1", "operator": False, "totp_enabled": False,
+                  "session_gen": 0, "require_mfa": False, "org_disabled": False, "org_name": "Org"}]
+        elif sql.startswith("SELECT 1 FROM revoked_sessions"): r = [{"?": 1}] if args[0] in self.revoked else []
+        elif sql.startswith("DELETE FROM revoked_sessions"): r = None
+        elif sql.startswith("INSERT INTO revoked_sessions"): self.revoked.add(args[0]); r = None
+        elif sql.startswith("SELECT id FROM endpoints WHERE org_id"): r = []
+        elif sql.startswith("SELECT session_gen"): r = [{"session_gen": 0}]
+        else: raise AssertionError(sql)
+        if r is None: return None
+        return (r[0] if r else None) if one else r
+sdb = SessDB(); db.q = sdb.q
+cookie = auth.make_session(7, "admin", 0)
+sd = auth.read_session(cookie)
+check(sd and len(sd.get("sid") or "") >= 16 and auth.read_session(auth.make_session(7, "admin", 0))["sid"] != sd["sid"], "every session cookie carries its own id")
+class SReq:
+    def __init__(self, cookie): self.cookies, self.headers, self.client = {"pdp_session": cookie}, {}, None; self.url = type("U", (), {"path": "/api/me"})()
+check(access.session(SReq(cookie))["u"] == 7, "a live session is accepted")
+access.revoke_session(None, sd)
+check(sd["sid"] in sdb.revoked and raises(access.session, SReq(cookie)) == 401, "after logout the same cookie is refused")
+check(access.session(SReq(auth.make_session(7, "admin", 0)))["u"] == 7, "the user's other sessions continue")
+
+# ---- 13. private keys out of the gateway's volume (F9)
+tmp = tempfile.mkdtemp()
+pki.PKI_DIR, pki.PRIVATE_DIR = tmp, os.path.join(tmp, "private")
+pki.ensure_pki(["localhost"])
+check(os.path.exists(os.path.join(tmp, "private", "ca.key")) and os.path.exists(os.path.join(tmp, "private", "bundle_signing.key"))
+      and not os.path.exists(os.path.join(tmp, "ca.key")) and os.path.exists(os.path.join(tmp, "ca.pem")) and os.path.exists(os.path.join(tmp, "server.key")),
+      "file mode: CA and signing keys are created under private/, certificates and the TLS key stay in the gateway's directory")
+check(oct(os.stat(os.path.join(tmp, "private")).st_mode)[-3:] == "700" and oct(os.stat(os.path.join(tmp, "private", "ca.key")).st_mode)[-3:] == "600", "private/ is 0700, keys 0600")
+pem, serial = pki.sign_csr(__import__("cryptography.x509", fromlist=["x"]).CertificateSigningRequestBuilder().subject_name(pki._name("x")).sign(
+    __import__("cryptography.hazmat.primitives.asymmetric.ec", fromlist=["x"]).generate_private_key(__import__("cryptography.hazmat.primitives.asymmetric.ec", fromlist=["x"]).SECP256R1()),
+    __import__("cryptography.hazmat.primitives.hashes", fromlist=["x"]).SHA256()).public_bytes(__import__("cryptography.hazmat.primitives.serialization", fromlist=["x"]).Encoding.PEM).decode(), "e1")
+check("BEGIN CERTIFICATE" in pem and serial, "the CA signs from its new location")
+# an installation from before the review: keys directly in PKI_DIR are moved once
+import shutil as _sh
+for name in ("ca.key", "bundle_signing.key"):
+    _sh.move(os.path.join(tmp, "private", name), os.path.join(tmp, name))
+open(os.path.join(tmp, "session.secret"), "wb").write(b"s" * 32)
+moved = pki.migrate_private()
+check(sorted(moved) == ["bundle_signing.key", "ca.key", "session.secret"] and not os.path.exists(os.path.join(tmp, "ca.key"))
+      and open(os.path.join(tmp, "private", "session.secret"), "rb").read() == b"s" * 32 and pki.migrate_private() == [],
+      "legacy key files are moved into private/ (once); the session secret keeps its value")
+compose = open(os.path.join(ROOT, "deploy", "docker-compose.yml")).read()
+import yaml  # noqa: E402
+dc = yaml.safe_load(compose)
+gw_vols = " ".join(map(str, dc["services"]["gateway"]["volumes"]))
+check("pdp_pki_private" not in gw_vols and "pdp_pki:/pki:ro" in gw_vols and all("pdp_pki_private:/pki/private" in " ".join(map(str, dc["services"][n]["volumes"]))
+      for n in ("api", "worker-ingest", "worker-train")), "compose: the private volume is mounted into api and workers, never the gateway")
+check("ports" not in dc["services"]["registry"] and dc["services"]["registry"]["networks"] == ["backend"]
+      and any(":5000" in str(p) for p in dc["services"]["gateway"]["ports"]) and "auth_basic_user_file /etc/nginx/registry-push.htpasswd" in gw
+      and dc["services"]["registry"]["environment"]["REGISTRY_STORAGE_MAINTENANCE_READONLY_ENABLED"] == "${PDP_REGISTRY_READONLY:-true}",
+      "compose/gateway: registry has no published port, is read-only by default; pushes go through the gateway's authenticated loopback listener")
+
+# ---- 14. backups: encrypt-then-MAC, verified before extraction, unsafe members refused (F22)
+import subprocess, tarfile  # noqa: E402
+bk = tempfile.mkdtemp()
+open(os.path.join(bk, "key"), "w").write("k" * 48)
+os.makedirs(os.path.join(bk, "src")); open(os.path.join(bk, "src", "a.txt"), "w").write("hello")
+seal = os.path.join(ROOT, "deploy", "backup", "seal.sh")
+sh = lambda cmd: subprocess.run(["bash", "-c", f". '{seal}'; {cmd}"], cwd=bk, capture_output=True, text=True)
+r = sh("tar -C src -cf - . | gzip -1 | seal key out.enc && verify key out.enc && echo VERIFIED")
+check(r.returncode == 0 and "VERIFIED" in r.stdout and os.path.exists(os.path.join(bk, "out.enc.hmac")), f"seal + verify round trip ({r.stderr.strip()[:80]})")
+r = sh("unseal key out.enc | gunzip | tar -tf - | grep -q a.txt && echo PLAIN")
+check("PLAIN" in r.stdout, "unseal gives the archive back")
+data = bytearray(open(os.path.join(bk, "out.enc"), "rb").read()); data[-5] ^= 0x01; open(os.path.join(bk, "out.enc"), "wb").write(data)
+check(sh("verify key out.enc").returncode != 0, "a flipped ciphertext byte fails verification")
+data[-5] ^= 0x01; open(os.path.join(bk, "out.enc"), "wb").write(data)
+open(os.path.join(bk, "key2"), "w").write("x" * 48)
+check(sh("verify key2 out.enc").returncode != 0 and sh("rm out.enc.hmac; verify key out.enc").returncode != 0, "a wrong key or a missing MAC fails verification")
+with tarfile.open(os.path.join(bk, "evil.tar"), "w") as t:
+    ti = tarfile.TarInfo("../../etc/evil"); ti.size = 0; t.addfile(ti)
+with tarfile.open(os.path.join(bk, "abs.tar"), "w") as t:
+    ti = tarfile.TarInfo("/etc/evil"); ti.size = 0; t.addfile(ti)
+with tarfile.open(os.path.join(bk, "link.tar"), "w") as t:
+    ti = tarfile.TarInfo("pki/ca.key"); ti.type = tarfile.SYMTYPE; ti.linkname = "/etc/shadow"; t.addfile(ti)
+with tarfile.open(os.path.join(bk, "good.tar"), "w") as t:
+    t.add(os.path.join(bk, "src", "a.txt"), arcname="./a.txt")
+check(all(sh(f"safe_members {n}.tar").returncode != 0 for n in ("evil", "abs", "link")) and sh("safe_members good.tar").returncode == 0,
+      "member checks: '..', absolute paths and symlinks are refused, a plain archive passes")
+rs = open(os.path.join(ROOT, "deploy", "restore.sh")).read()
+check(rs.index("verify \"$KEY\" \"$ARCH\"") < rs.index("unseal \"$KEY\" \"$ARCH\"") < rs.index("safe_members \"$W/archive.tar\"") < rs.index("--no-same-owner -xf \"$W/archive.tar\""),
+      "restore.sh: verify, then decrypt to a file, then check members, then extract without ownership")
+
+# ---- 15. installers: the token never has to be on the command line (F10)
+def arg_loop(path):
+    t = open(path).read()
+    return re.search(r"\nwhile \[ \$# -gt 0 \]; do\n.*?\ndone\n", t, re.S).group(0)
+for name, path in (("install.sh", os.path.join(ROOT, "server", "pdp_server", "install.sh.tmpl")), ("pdp-agent-install", os.path.join(ROOT, "deploy", "packaging", "agent", "pdp-agent-install"))):
+    loop = arg_loop(path)
+    head = 'token=""; die() { echo "die: $*" >&2; exit 9; }; usage() { :; }; DATA=/nonexistent\n'
+    run = lambda args, env=None, stdin="": subprocess.run(["bash", "-c", head + loop + '\nprintf "%s" "$token"', "x", *args], env={**os.environ, **(env or {})}, input=stdin, capture_output=True, text=True)
+    tf = os.path.join(bk, "tok"); open(tf, "w").write("tok-from-file\n")
+    check(run(["--token-env"], {"PDP_ENROLL_TOKEN": "tok-from-env"}).stdout == "tok-from-env" and run(["--token-file", tf]).stdout == "tok-from-file"
+          and run(["--token-stdin"], stdin="tok-from-stdin\n").stdout == "tok-from-stdin" and run(["--token", "literal"]).stdout == "literal",
+          f"{name}: --token-env / --token-file / --token-stdin / --token")
+    check(run(["--token-env"], {"PDP_ENROLL_TOKEN": ""}).returncode == 9 and run(["--token-stdin"], stdin="").returncode == 9, f"{name}: an empty token is an error")
+check("--token-env" in api.create_endpoint.__code__.co_consts.__repr__() or "install_command_env" in open(os.path.join(ROOT, "server", "pdp_server", "api.py")).read(),
+      "the console gets an install command that keeps the token in the environment")
+ep_sh = open(os.path.join(ROOT, "deploy", "docker", "agent-entrypoint.sh")).read()
+check("enroll env" in ep_sh, "the container entrypoint passes the token through the environment")
+
+# ---- 16. desktop wrapper (F12): no bridge in the console window, guarded IPC, confined navigation
+mj = open(os.path.join(ROOT, "desktop", "main.js")).read()
+console_prefs = re.search(r"win = new BrowserWindow\(\{.*?webPreferences: \{(.*?)\}", mj, re.S).group(1)
+settings_prefs = re.search(r"settingsWin = new BrowserWindow\(\{.*?webPreferences: \{(.*?)\}", mj, re.S).group(1)
+check("preload" not in console_prefs and "sandbox: true" in console_prefs and "preload" in settings_prefs, "console window has no preload; the settings window has it")
+check(mj.count("if (!fromSettingsPage(e)) throw") == 2 and 'url.startsWith("file://")' in mj, "both IPC handlers check the calling frame is the local settings page")
+check('u.protocol !== "https:"' in mj and "validateConfig(c)" in mj, "saveConfig validates the gateway URL scheme and the fingerprint format")
+check(re.search(r'if \(u\.protocol === "https:" \|\| u\.protocol === "http:"\) shell\.openExternal', mj) and mj.count("shell.openExternal(") == 1,
+      "only http(s) links open outside the app")
+check('contents.on("will-navigate"' in mj and "setWindowOpenHandler" in mj and "u.origin === serverOrigin()" in mj, "navigation is confined to the configured server's origin")
+check("toggleDevTools" not in mj, "DevTools are not in the production menu")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)
