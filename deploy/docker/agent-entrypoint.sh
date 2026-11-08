@@ -11,6 +11,7 @@ RUN="python -m pdp_agent"
 AS=""
 [ "$PDP_RUN_USER" = "pdp" ] && AS="gosu pdp"
 if [ -n "$PDP_ENROLL_TOKEN" ]; then
-  $AS $RUN enroll "$PDP_ENROLL_TOKEN" ${PDP_CA_SHA256:+--ca-sha256 "$PDP_CA_SHA256"}
+  # the token stays in the environment (`enroll env`), not on a command line other local users can read in /proc
+  $AS $RUN enroll env ${PDP_CA_SHA256:+--ca-sha256 "$PDP_CA_SHA256"}
 fi
 exec $AS $RUN "$@"

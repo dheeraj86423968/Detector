@@ -1194,6 +1194,10 @@ class Agent:
         if not all(self.UPD_RE.match(x) for x in vals.values()):
             log(f"update to {v}: refused, unexpected characters in the server's answer")
             return False
+        why = self.update_source_problem(vals["IMAGE"], vals["REGISTRY"])
+        if why:
+            log(f"update to {v}: refused, {why}")
+            return False
         tmp = self._upd("update-request.env.tmp")
         with open(tmp, "w") as f:
             f.write("".join(f"{k}={x}\n" for k, x in vals.items()))
@@ -1203,6 +1207,22 @@ class Agent:
         self.exit_code = 75
         self.stop = True
         return True
+
+    def update_source_problem(self, image: str, registry: str) -> str | None:
+        """The host updater pulls `image` from `registry` with the credential the server gave and runs it as root: the
+        image must come from the server this agent is enrolled with (the host of its pinned server / agent URL), not
+        from wherever an answer names. None when acceptable, else the reason."""
+        from urllib.parse import urlparse
+        hosts = {urlparse(u).hostname for u in (getattr(self.cfg, "agent_url", None), getattr(self.cfg, "server_url", None)) if u}
+        hosts.discard(None)
+        reg_host = registry.split("/", 1)[0].rsplit(":", 1)[0] if registry else ""
+        if not registry or reg_host.lower() not in {h.lower() for h in hosts}:
+            return f"the registry {registry!r} is not the server this agent is enrolled with ({', '.join(sorted(hosts))})"
+        if not image.startswith(registry.rstrip("/") + "/"):
+            return f"the image {image!r} is not from the registry {registry!r}"
+        if not re.search(r"@sha256:[0-9a-f]{64}$", image):
+            return f"the image {image!r} is not pinned to a digest (a tag alone can be re-pointed in the registry)"
+        return None
 
     def kernel_btf(self) -> str | None:
         """BTF for the eBPF collector on kernels without /sys/kernel/btf/vmlinux: a local file, else one the server

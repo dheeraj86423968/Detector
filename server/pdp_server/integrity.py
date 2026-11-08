@@ -59,6 +59,11 @@ MAX_BODY = int(os.environ.get("PDP_INGEST_MAX_BYTES", str(1 << 30)))      # deco
 MAX_RATIO = int(os.environ.get("PDP_INGEST_MAX_RATIO", "200"))             # ... and its compression ratio (above 64 MB)
 MAX_ROWS = int(os.environ.get("PDP_INGEST_MAX_ROWS", "250000"))            # rows per request
 MAX_DAYS_PER_BATCH = int(os.environ.get("PDP_INGEST_MAX_DAYS", "8"))        # daily partitions one event batch may touch
+# security review F11: what one endpoint may upload per rolling 24 hours (compressed bytes as sent, and rows), over all
+# its event / entity uploads; a per-endpoint override lives in its config (ingest_daily_bytes / ingest_daily_rows,
+# set by the operator). A busy server uploads about 0.7 GB and 60 M events a day.
+DAILY_BYTES = int(os.environ.get("PDP_INGEST_DAILY_BYTES", str(8 << 30)))
+DAILY_ROWS = int(os.environ.get("PDP_INGEST_DAILY_ROWS", str(200_000_000)))
 TS_FLOOR_NS = 946_684_800 * 10**9                         # 2000-01-01: no endpoint (nor a replayed dataset) is older
 DAY_S = 86400
 DAY_NS_ = DAY_S * 10**9                                     # = db.DAY_NS (partitions)
@@ -354,6 +359,45 @@ def on_ingest_rejects(c, endpoint_id: str, n: int, why: str) -> None:
     _q(c, "INSERT INTO endpoint_integrity (endpoint_id, state) VALUES (%s, jsonb_build_object('findings', %s::jsonb)) "
             "ON CONFLICT (endpoint_id) DO UPDATE SET state = jsonb_set(endpoint_integrity.state, '{findings}', "
             "coalesce(endpoint_integrity.state->'findings', '[]'::jsonb) || %s::jsonb, true), updated_at=now()", (endpoint_id, f, f))
+
+
+def quota_for(ep: dict) -> tuple[int, int]:
+    cfg = ep.get("config") or {}
+    def pick(k, default):
+        v = cfg.get(k)
+        return int(v) if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 else default
+    return pick("ingest_daily_bytes", DAILY_BYTES), pick("ingest_daily_rows", DAILY_ROWS)
+
+
+def used_today(c, endpoint_id: str) -> tuple[int, int]:
+    r = _q(c, "SELECT coalesce(sum(bytes), 0) AS b, coalesce(sum(rows), 0) AS n FROM upload_batches WHERE endpoint_id=%s "
+              "AND received_at > now() - interval '24 hours'", (endpoint_id,), one=True) or {}
+    return int(r.get("b") or 0), int(r.get("n") or 0)
+
+
+def check_quota(c, ep: dict, rows: int, nbytes: int) -> None:
+    """Refuse (429) an upload that would take the endpoint over its daily budget; the first refusal of a day is an
+    integrity finding (the console's health view) and a high-severity security event for the organisation."""
+    max_b, max_n = quota_for(ep)
+    used_b, used_n = used_today(c, str(ep["id"]))
+    if used_b + nbytes <= max_b and used_n + rows <= max_n:
+        return
+    what = (f"{(used_b + nbytes) / 2**20:,.0f} MB" if used_b + nbytes > max_b else f"{used_n + rows:,} rows") + " in 24 hours"
+    why = f"over its daily upload budget ({max_b >> 20:,} MB, {max_n:,} rows): {what}"
+    now = time.time()
+    key = f"ingest_quota:{int(now) // 86400}"
+    st = _q(c, "SELECT state FROM endpoint_integrity WHERE endpoint_id=%s", (str(ep["id"]),), one=True)
+    if not any(f.get("key") == key for f in ((st or {}).get("state") or {}).get("findings") or []):
+        f = json.dumps([_finding(key, "error", f"Uploads refused: the endpoint is {why} (a runaway or hostile agent fills the server's storage)", now)])
+        _q(c, "INSERT INTO endpoint_integrity (endpoint_id, state) VALUES (%s, jsonb_build_object('findings', %s::jsonb)) "
+              "ON CONFLICT (endpoint_id) DO UPDATE SET state = jsonb_set(endpoint_integrity.state, '{findings}', "
+              "coalesce(endpoint_integrity.state->'findings', '[]'::jsonb) || %s::jsonb, true), updated_at=now()", (str(ep["id"]), f, f))
+        if ep.get("org_id"):
+            from .posture import security_event
+            security_event(c, ep["org_id"], "ingest_quota", f"Uploads from {ep.get('name') or ep['id']} refused: {why}", severity="high",
+                           endpoint_id=str(ep["id"]), detail={"type": "ingest_quota", "endpoint_name": ep.get("name"), "bytes_24h": used_b + nbytes,
+                                                              "rows_24h": used_n + rows, "max_bytes": max_b, "max_rows": max_n})
+    raise IngestError(429, f"upload refused: this endpoint is {why}")
 
 
 # ================================================================================================ health problems

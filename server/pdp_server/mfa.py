@@ -20,7 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from . import auth, db
-from .access import session
+from .access import note_failed_sign_in, session, sign_in_locked
 
 router = APIRouter()
 STEP = 30
@@ -91,15 +91,22 @@ def login_mfa(req: Code, request: Request, response: Response):
         raise HTTPException(401, "sign in with your password first (the code step expired after 5 minutes)")
     with db.conn() as c:
         u = db.q(c, "SELECT * FROM users WHERE id=%s AND NOT disabled", (uid,), one=True)
-        ok = False
-        if u and u["totp_enabled"]:
+        ok, locked = False, sign_in_locked(u)
+        if u and u["totp_enabled"] and not locked:
             step = verify(u["totp_secret"], req.code, u.get("totp_last"))
             if step is not None:
-                db.q(c, "UPDATE users SET totp_last=%s, last_login=now() WHERE id=%s", (step, uid)); ok = True
+                db.q(c, "UPDATE users SET totp_last=%s, last_login=now(), failed_logins=0, locked_until=NULL WHERE id=%s", (step, uid)); ok = True
             elif use_recovery(c, u, req.code):
-                db.q(c, "UPDATE users SET last_login=now() WHERE id=%s", (uid,)); ok = True
-    record(u["org_id"] if u else None, uid, u["username"] if u else None, "sign-in (second factor)" if ok else "sign-in refused: wrong code",
-           None, 200 if ok else 401, _client_ip(request))
+                db.q(c, "UPDATE users SET last_login=now(), failed_logins=0, locked_until=NULL WHERE id=%s", (uid,)); ok = True
+        if u and not ok and not locked:
+            # a wrong code counts like a wrong password: the account locks after 5 failures (30 s, 60 s, ... 15 min),
+            # so a 6-digit code cannot be guessed within the 5 minutes the pending cookie lives
+            note_failed_sign_in(c, u["id"])
+    record(u["org_id"] if u else None, uid, u["username"] if u else None,
+           "sign-in (second factor)" if ok else "sign-in refused: too many failed codes" if locked else "sign-in refused: wrong code",
+           None, 200 if ok else 429 if locked else 401, _client_ip(request))
+    if locked:
+        raise HTTPException(429, "too many failed sign-ins; try again later")
     if not ok:
         time.sleep(0.5)
         raise HTTPException(401, "wrong or already used code")

@@ -23,7 +23,33 @@ from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 from . import kms
 
 PKI_DIR = os.environ.get("PDP_PKI_DIR", "/pki")
+# Private material (file mode: the CA key and the bundle-signing key; always: the console session secret) lives in
+# its own directory / volume that only the api and the workers mount - the gateway mounts PKI_DIR for its TLS key
+# and must never see the keys that issue agent certificates or sign models (security review F9).
+PRIVATE_DIR = os.environ.get("PDP_PKI_PRIVATE_DIR", os.path.join(PKI_DIR, "private"))
+PRIVATE_FILES = ("ca.key", "bundle_signing.key", "session.secret")
 log = logging.getLogger("pdp.pki")
+
+
+def private_path(name: str) -> str:
+    return os.path.join(PRIVATE_DIR, name)
+
+
+def migrate_private() -> list[str]:
+    """Move private files that older versions kept directly in PKI_DIR into PRIVATE_DIR (idempotent; the two may be
+    different volumes, so copy then remove). Returns the files moved."""
+    import shutil
+    moved = []
+    os.makedirs(PRIVATE_DIR, mode=0o700, exist_ok=True)
+    for name in PRIVATE_FILES:
+        old, new = os.path.join(PKI_DIR, name), private_path(name)
+        if os.path.exists(old) and not os.path.exists(new):
+            shutil.copy2(old, new)
+            os.chmod(new, 0o600)
+            os.remove(old)
+            moved.append(name)
+            log.warning("moved %s into %s (the gateway mounts %s and must not hold private keys)", name, PRIVATE_DIR, PKI_DIR)
+    return moved
 
 
 def _write(path: str, data: bytes, mode: int = 0o600) -> None:
@@ -38,9 +64,10 @@ def _name(cn: str, org: str = "PDP") -> x509.Name:
 
 
 def ensure_pki(server_hostnames: list[str]) -> None:
+    migrate_private()
     if kms.enabled():
         return _ensure_pki_kms(server_hostnames)
-    ca_key_p, ca_crt_p = os.path.join(PKI_DIR, "ca.key"), os.path.join(PKI_DIR, "ca.pem")
+    ca_key_p, ca_crt_p = private_path("ca.key"), os.path.join(PKI_DIR, "ca.pem")
     if not os.path.exists(ca_key_p):
         key = ec.generate_private_key(ec.SECP384R1())
         now = dt.datetime.now(dt.timezone.utc)
@@ -57,7 +84,7 @@ def ensure_pki(server_hostnames: list[str]) -> None:
         issue_server_cert(server_hostnames)
     elif not os.path.exists(os.path.join(PKI_DIR, "server-chain.pem")):
         write_chain()
-    sk = os.path.join(PKI_DIR, "bundle_signing.key")
+    sk = private_path("bundle_signing.key")
     if not os.path.exists(sk):
         key = ed25519.Ed25519PrivateKey.generate()
         _write(sk, key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
@@ -75,8 +102,8 @@ def _ensure_pki_kms(server_hostnames: list[str]) -> None:
     if not os.path.exists(pub_p) or open(pub_p).read().strip() != pub.strip():
         _write(pub_p, pub.encode(), 0o644)
     for leftover in ("ca.key", "bundle_signing.key"):
-        if os.path.exists(os.path.join(PKI_DIR, leftover)):
-            log.warning("PDP_KMS=transit but %s is still in %s: run tools/kms_setup.py --remove-local-keys", leftover, PKI_DIR)
+        if os.path.exists(private_path(leftover)):
+            log.warning("PDP_KMS=transit but %s is still in %s: run tools/kms_setup.py --remove-local-keys", leftover, PRIVATE_DIR)
     if not os.path.exists(os.path.join(PKI_DIR, "server.key")) or _hostnames_changed(server_hostnames) or not _issued_by_ca("server.pem"):
         issue_server_cert(server_hostnames)
     elif not os.path.exists(os.path.join(PKI_DIR, "server-chain.pem")):
@@ -109,7 +136,7 @@ def _hostnames_changed(hostnames: list[str]) -> bool:
 
 
 def _ca():
-    key = serialization.load_pem_private_key(open(os.path.join(PKI_DIR, "ca.key"), "rb").read(), password=None)
+    key = serialization.load_pem_private_key(open(private_path("ca.key"), "rb").read(), password=None)
     cert = x509.load_pem_x509_certificate(open(os.path.join(PKI_DIR, "ca.pem"), "rb").read())
     return key, cert
 
@@ -181,7 +208,7 @@ def signing_private_pem() -> bytes:
     """File mode only; with a KMS the private key is not available to the platform (use sign_bundle)."""
     if kms.enabled():
         raise RuntimeError("the bundle-signing key is in the KMS; use pki.sign_bundle()")
-    return open(os.path.join(PKI_DIR, "bundle_signing.key"), "rb").read()
+    return open(private_path("bundle_signing.key"), "rb").read()
 
 
 def sign_bundle(bundle_dir: str) -> str:

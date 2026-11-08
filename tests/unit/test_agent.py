@@ -116,9 +116,11 @@ class PullTransport(FakeTransport):
     def request(self, method, path, body=None, **kw):
         self.calls.append((method, path, body))
         if path.endswith("/pull-token"):
-            return {"ok": True, "user": "pdp", "token": "tok123", "version": "9.9.9", "image": "srv.example/pdp/agent:9.9.9", "registry": "srv.example"}
+            return {"ok": True, "user": "pdp", "token": "tok123", "version": "9.9.9", "image": "srv.example/pdp/agent:9.9.9" + DIG, "registry": "srv.example"}
         return {"ok": True}
-offer = {"version": "9.9.9", "image": "srv.example/pdp/agent:9.9.9", "registry": "srv.example"}
+DIG = "@sha256:" + "a" * 64          # images are pinned to a digest (security review F2)
+offer = {"version": "9.9.9", "image": "srv.example/pdp/agent:9.9.9" + DIG, "registry": "srv.example"}
+a.cfg.agent_url, a.cfg.server_url = "https://srv.example:8443", "https://srv.example"   # the server this agent is enrolled with
 a.tr = PullTransport(); a.updater = False; a._update_offer = offer
 check(not a.request_update(offer) and a.update_health()["state"] == "available", "no updater on the host: the update is only reported")
 a.updater = True
@@ -128,6 +130,23 @@ check("IMAGE=srv.example/pdp/agent:9.9.9" in req and "TOKEN=tok123" in req and o
       "update request written for the updater (mode 600)")
 check(a.update_health()["state"] == "updating", "health reports the update in progress")
 _os.remove(_os.path.join(a.cfg.data_dir, "update-request.env")); a.stop = False; a.exit_code = 0
+# security review 2026-11-08: the updater only pulls from the server the agent is enrolled with
+check(a.update_source_problem("srv.example/pdp/agent:9.9.9" + DIG, "srv.example") is None
+      and a.update_source_problem("SRV.example:443/pdp/agent:9.9.9" + DIG, "SRV.example:443") is None, "image from the enrolled server accepted")
+check(a.update_source_problem("evil.example/pdp/agent:9.9.9" + DIG, "evil.example") is not None, "a foreign registry is refused")
+check(a.update_source_problem("evil.example/pdp/agent:9.9.9" + DIG, "srv.example") is not None, "an image outside the named registry is refused")
+check(a.update_source_problem("srv.example/pdp/agent:9.9.9" + DIG, "") is not None, "an answer without a registry is refused")
+check(a.update_source_problem("srv.example/pdp/agent:9.9.9", "srv.example") is not None, "a tag-only image (no digest) is refused")
+class EvilTransport(PullTransport):
+    def request(self, method, path, body=None, **kw):
+        r = super().request(method, path, body, **kw)
+        if path.endswith("/pull-token"):
+            r = dict(r, image="evil.example/pdp/agent:9.9.9" + DIG, registry="evil.example")
+        return r
+a.tr = EvilTransport()
+check(not a.request_update(offer) and not a.stop and not _os.path.exists(_os.path.join(a.cfg.data_dir, "update-request.env")),
+      "a pull answer naming another registry writes no update request")
+a.tr = PullTransport()
 open(_os.path.join(a.cfg.data_dir, "update-failed"), "w").write("9.9.9\n")
 check(not a.request_update(offer) and a.update_health()["failed"] == ["9.9.9"], "a version the updater rolled back is not requested again")
 open(_os.path.join(a.cfg.data_dir, "update-trial.env"), "w").write("VERSION=x\n")

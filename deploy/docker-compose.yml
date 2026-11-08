@@ -69,11 +69,15 @@ services:
       PDP_INTERNAL_ORG_NAME: ${PDP_INTERNAL_ORG_NAME:-Internal}
       PDP_SIGNUPS_PER_HOUR: ${PDP_SIGNUPS_PER_HOUR:-5}
       PDP_AGENT_VERSION: ${PDP_AGENT_VERSION:-}            # the published agent the one-line installer pulls (deploy/publish-agent.sh)
+      PDP_AGENT_DIGEST: ${PDP_AGENT_DIGEST:-}              # ... and its manifest digest: installs and updates pull by digest, never by tag alone
+      PDP_AGENT_DIGESTS: ${PDP_AGENT_DIGESTS:-}            # "ver=sha256:...,..." for every version published since digests were recorded
+      PDP_INGEST_DAILY_BYTES: ${PDP_INGEST_DAILY_BYTES:-}  # per-endpoint upload budget per 24 h (default 8 GiB / 200 M rows)
+      PDP_INGEST_DAILY_ROWS: ${PDP_INGEST_DAILY_ROWS:-}
       PDP_PUBLIC_HOSTNAME: ${PDP_PUBLIC_HOSTNAME:-}
       HTTPS_PROXY: ${PDP_HTTPS_PROXY:-}
       NO_PROXY: ${PDP_NO_PROXY:-kms,localhost,127.0.0.1}
       PDP_DOH_URL: ${PDP_DOH_URL:-https://cloudflare-dns.com/dns-query}   # SSO domain proof (DNS TXT over HTTPS)
-    volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro",
+    volumes: [ pdp_data:/data, pdp_pki:/pki, pdp_pki_private:/pki/private, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro",
                "./btf:/btf:ro" ]          # BTF files for endpoint kernels without their own (operator-stocked; may be empty)
     networks: [ backend ]
     restart: unless-stopped
@@ -94,7 +98,7 @@ services:
     # train_rules signs the early rules-only bundles: it needs the KMS like worker-train (without it every early
     # model failed with "/pki/bundle_signing.key not found" when PDP_KMS=transit)
     environment: { <<: [*db-env, *kms-env] }
-    volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
+    volumes: [ pdp_data:/data, pdp_pki:/pki, pdp_pki_private:/pki/private, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
     networks: [ backend ]
     restart: unless-stopped
     depends_on: { api: { condition: service_healthy } }
@@ -104,7 +108,7 @@ services:
     command: ["worker", "--kinds", "train,sim", "--device", "${PDP_TRAIN_DEVICE:-cpu}"]
     environment: { <<: [*db-env, *kms-env] }
     shm_size: 8g
-    volumes: [ pdp_data:/data, pdp_pki:/pki, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
+    volumes: [ pdp_data:/data, pdp_pki:/pki, pdp_pki_private:/pki/private, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
     networks: [ backend ]
     restart: unless-stopped
     depends_on: { api: { condition: service_healthy } }
@@ -113,10 +117,12 @@ services:
     image: nginx:1.27-alpine
     # PDP_BIND: empty = all addresses (production: clients need the console and agent ports); "127.0.0.1:" = this
     # host only (staging: reach it through an SSH tunnel)
-    ports: [ "${PDP_BIND:-}${PDP_HTTP_PORT:-80}:80", "${PDP_BIND:-}${PDP_CONSOLE_PORT:-443}:443", "${PDP_BIND:-}${PDP_AGENT_PORT:-8443}:8443" ]
+    ports: [ "${PDP_BIND:-}${PDP_HTTP_PORT:-80}:80", "${PDP_BIND:-}${PDP_CONSOLE_PORT:-443}:443", "${PDP_BIND:-}${PDP_AGENT_PORT:-8443}:8443",
+             "127.0.0.1:${PDP_REGISTRY_PUSH_PORT:-5000}:5000" ]   # registry pushes (deploy/publish-agent.sh): loopback, HTTP basic auth
     volumes:
       - ./nginx/gateway.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/console.conf:/etc/nginx/snippets/console.conf:ro
+      - ${PDP_REGISTRY_HTPASSWD:-./nginx/registry-push.htpasswd}:/etc/nginx/registry-push.htpasswd:ro   # written by bringup.sh / staging.sh
       - ${PDP_NGINX_PUBLIC:-./nginx/public}:/etc/nginx/public:ro   # public-hostname server, written by deploy/acme.sh
       - pdp_acme:/etc/letsencrypt:ro
       - pdp_acme_web:/acme:ro
@@ -131,9 +137,12 @@ services:
     environment:
       REGISTRY_STORAGE_DELETE_ENABLED: "true"
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+      # read-only except while deploy/publish-agent.sh runs (it recreates the registry writable for the push and
+      # read-only again afterwards): nothing on the backend network can re-point a published tag (security review F2)
+      REGISTRY_STORAGE_MAINTENANCE_READONLY_ENABLED: ${PDP_REGISTRY_READONLY:-true}
     volumes: [ pdp_registry:/var/lib/registry ]
-    ports: [ "127.0.0.1:${PDP_REGISTRY_PUSH_PORT:-5000}:5000" ]   # pushes only from this host (deploy/publish-agent.sh)
-    networks: [ backend, edge ]          # edge only so the loopback push port can be published (backend is internal)
+    # no published port: pushes go through the gateway's loopback listener (basic auth), pulls through /v2/
+    networks: [ backend ]
     restart: unless-stopped
 
   notifier:                  # notifications (e-mail, Slack, Teams, webhook, syslog CEF) and SIEM alert feeds per
@@ -168,6 +177,7 @@ services:
       - "${PDP_BACKUP_DIR:-./backups}:/backups"
       - "${PDP_BACKUP_KEY:-./backup.key}:/run/backup.key:ro"     # keep a copy of this key off the host
       - pdp_pki:/pki:ro
+      - pdp_pki_private:/pki/private:ro
       - pdp_data:/data:ro
       - pdp_kms_data:/kms-data:ro
       - "${PDP_KMS_SECRETS:-./kms-secrets}:/kms-secrets:ro"
@@ -230,6 +240,7 @@ volumes:
   pdp_telemetry_db: {}
   pdp_data: {}
   pdp_pki: {}
+  pdp_pki_private: {}       # CA key, bundle-signing key (file mode) and the session secret: api and workers only, never the gateway
   pdp_kms_data: {}
   pdp_prometheus: {}
   pdp_grafana: {}

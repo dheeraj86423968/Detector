@@ -21,9 +21,16 @@ else
   PROJ=pdp-staging; ENVF=staging.env; SECRETS=./kms-secrets-staging; FILES="-f docker-compose.yml"
 fi
 DC="docker compose -p $PROJ --env-file $ENVF $FILES"
+. ./backup/seal.sh
 W=$(mktemp -d); trap 'rm -rf "$W"' EXIT
-echo "== decrypting $ARCH"
-openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass "file:$KEY" -in "$ARCH" | gunzip | tar -C "$W" -xf -
+echo "== verifying and decrypting $ARCH"
+# authenticity first (HMAC over the ciphertext, sidecar .hmac), then decrypt to a file, then check every member's path
+# before anything is extracted: a tampered or crafted archive must not reach tar as root
+verify "$KEY" "$ARCH" || { echo "the archive's HMAC does not verify (wrong key, or the archive was altered): not restoring" >&2; exit 1; }
+unseal "$KEY" "$ARCH" | gunzip > "$W/archive.tar"
+safe_members "$W/archive.tar" || { echo "the archive holds unsafe paths: not restoring" >&2; exit 1; }
+tar -C "$W" --no-same-owner -xf "$W/archive.tar" && rm -f "$W/archive.tar"
+for t in pki models stores kms; do [ -f "$W/$t.tar" ] && { safe_members "$W/$t.tar" || { echo "$t.tar holds unsafe paths: not restoring" >&2; exit 1; }; }; done
 cat "$W/manifest.json"; echo
 echo "== stopping $PROJ services"
 $DC stop api worker-ingest worker-train notifier gateway backup >/dev/null 2>&1 || true
@@ -39,13 +46,16 @@ if [ -f "$W/telemetry.dump" ]; then
 fi
 vol() { echo "${PROJ}_$1"; }
 echo "== keys and models"
-docker run --rm -v "$(vol pdp_pki)":/pki -v "$W":/w alpine:3.20 sh -c 'rm -rf /pki/* && tar -C /pki -xf /w/pki.tar'
-[ -f "$W/models.tar" ] && docker run --rm -v "$(vol pdp_data)":/data -v "$W":/w alpine:3.20 sh -c 'tar -C /data -xf /w/models.tar'
-[ -f "$W/stores.tar" ] && docker run --rm -v "$(vol pdp_data)":/data -v "$W":/w alpine:3.20 sh -c 'tar -C /data -xf /w/stores.tar'
+# pki.tar holds PKI_DIR with its private/ subdirectory (two volumes since the 2026-11-08 review: the gateway mounts
+# only pdp_pki); the private directory is a mount point, so its contents are cleared, not the directory itself
+docker run --rm -v "$(vol pdp_pki)":/pki -v "$(vol pdp_pki_private)":/pki/private -v "$W":/w alpine:3.20 \
+  sh -c 'find /pki -mindepth 1 -not -path /pki/private -not -path "/pki/private/*" -delete && rm -rf /pki/private/* && tar -C /pki -o -xf /w/pki.tar'
+[ -f "$W/models.tar" ] && docker run --rm -v "$(vol pdp_data)":/data -v "$W":/w alpine:3.20 sh -c 'tar -C /data -o -xf /w/models.tar'
+[ -f "$W/stores.tar" ] && docker run --rm -v "$(vol pdp_data)":/data -v "$W":/w alpine:3.20 sh -c 'tar -C /data -o -xf /w/stores.tar'
 if [ -f "$W/kms.tar" ]; then
   echo "== KMS (OpenBao storage, unseal key, token)"
   $DC stop kms >/dev/null 2>&1 || true
-  mkdir -p "$W/k" && tar -C "$W/k" -xf "$W/kms.tar"
+  mkdir -p "$W/k" && tar -C "$W/k" --no-same-owner -xf "$W/kms.tar"
   docker run --rm -v "$(vol pdp_kms_data)":/kd -v "$W/k":/k alpine:3.20 sh -c 'rm -rf /kd/* && cp -a /k/kms-data/. /kd/'
   mkdir -p "$SECRETS" && cp -a "$W/k/kms-secrets/." "$SECRETS/"
   if [ "$TARGET" = staging ]; then      # staging switches to the restored KMS

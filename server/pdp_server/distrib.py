@@ -23,14 +23,24 @@ router = APIRouter()
 TEMPLATE = os.path.join(os.path.dirname(__file__), "install.sh.tmpl")
 
 
+HOST_RE = re.compile(r"^[A-Za-z0-9.-]{1,253}$")
+
+
 def public_host(request: Request) -> str:
-    """The console host clients use: the configured public hostname, else the host this request came to."""
-    return os.environ.get("PDP_PUBLIC_HOSTNAME") or (request.headers.get("host") or "localhost").split(":")[0]
+    """The console host clients use: the configured public hostname, else the host this request came to. The request
+    host is rendered into the one-line installer (a shell script) and the install commands, so only a host name or
+    address is accepted; anything else falls back to localhost."""
+    h = os.environ.get("PDP_PUBLIC_HOSTNAME") or (request.headers.get("host") or "localhost").split(":")[0]
+    return h if HOST_RE.match(h) else "localhost"
 
 
 def agent_image(host: str) -> str | None:
-    ver = os.environ.get("PDP_AGENT_VERSION", "").strip()
-    return f"{host}/pdp/agent:{ver}" if ver else None
+    """The published agent image, pinned to the manifest digest deploy/publish-agent.sh recorded (security review F2):
+    installers and the updater pull `<host>/pdp/agent:<version>@sha256:<digest>`, so a re-tagged image in the
+    registry is not what endpoints run. None until a version with a digest is published."""
+    from .updates import image_ref, latest
+    ver = latest()
+    return image_ref(host, ver) if ver else None
 
 
 BTF_DIR = os.environ.get("PDP_BTF_DIR", "/btf")

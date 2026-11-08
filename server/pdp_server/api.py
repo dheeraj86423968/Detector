@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 import psycopg2.extras
 
 from . import auth, db, oidc, pki
-from .access import admin, end_sessions, require_endpoint, scope_sql, session, set_session, triager, visible
+from .access import admin, end_sessions, note_failed_sign_in, require_endpoint, scope_sql, session, set_session, sign_in_locked, triager, visible
 from .graphs import alert_graph, endpoint_timeline, incident_graph
 
 app = FastAPI(title="PDP", docs_url=None, redoc_url=None, openapi_url=None)
@@ -144,21 +144,24 @@ def agent_endpoint(endpoint_id: str, x_client_dn: str | None = Header(default=No
     if x_client_verify != "SUCCESS" or not m or m.group(1) != endpoint_id:
         raise HTTPException(403, "client certificate does not match endpoint")
     with db.conn() as c:
-        ep = db.q(c, "SELECT * FROM endpoints WHERE id=%s", (endpoint_id,), one=True)
+        ep = db.q(c, "SELECT e.*, o.disabled AS org_disabled FROM endpoints e LEFT JOIN orgs o ON o.id=e.org_id WHERE e.id=%s", (endpoint_id,), one=True)
         if not ep or ep["phase"] == "retired":
             raise HTTPException(404, "unknown endpoint")
+        if ep.pop("org_disabled", False):   # a suspended organisation's agents stop being served (no uploads, no models, no commands)
+            raise HTTPException(403, "the organisation's access to PDP is suspended")
         db.q(c, "UPDATE endpoints SET last_seen=now() WHERE id=%s", (endpoint_id,))
     return ep
 
 
 class EnrollReq(BaseModel):
-    token: str
-    hostname: str
-    os: str = "linux"
-    arch: str = "x86_64"
-    agent_version: str = "0.1.0"
-    tz: str = "UTC"
-    csr_pem: str
+    # bounded: this is the one unauthenticated agent route (a 100 MB "CSR" must not reach the parser or the database)
+    token: str = Field(min_length=10, max_length=200)
+    hostname: str = Field(min_length=1, max_length=255)
+    os: str = Field(default="linux", max_length=64)
+    arch: str = Field(default="x86_64", max_length=64)
+    agent_version: str = Field(default="0.1.0", max_length=32)
+    tz: str = Field(default="UTC", max_length=64)
+    csr_pem: str = Field(min_length=1, max_length=16384)
 
 
 @app.post("/v1/enroll")
@@ -211,9 +214,22 @@ async def ndjson_rows(request: Request):
             yield json.loads(line)
 
 
+def _quota(ep: dict, rows: int, request: Request) -> int:
+    """Daily ingest budget (security review F11): 429 when this upload would exceed it. -> the upload's bytes."""
+    from . import integrity
+    nbytes = int(request.headers.get("content-length") or 0)
+    try:
+        with db.conn() as c:
+            integrity.check_quota(c, ep, rows, nbytes)
+    except integrity.IngestError as e:
+        raise HTTPException(e.status, str(e))
+    return nbytes
+
+
 @app.post("/v1/endpoints/{endpoint_id}/entities")
 async def upload_entities(endpoint_id: str, request: Request, ep=Depends(agent_endpoint)):
     rows = [r async for r in ndjson_rows(request)]
+    nbytes = _quota(ep, len(rows), request)
     s = db.tschema(endpoint_id)
     with db.conn(db.TELEMETRY_DSN) as c:
         with c.cursor() as cur:
@@ -223,6 +239,9 @@ async def upload_entities(endpoint_id: str, request: Request, ep=Depends(agent_e
                 cur, f"INSERT INTO {s}.entities (uuid, dense_id, ntype, label, display) VALUES %s ON CONFLICT (uuid) DO NOTHING",
                 [(r["uuid"], r.get("dense_id"), r["ntype"], r["label"], json.dumps(r.get("display", {}))) for r in rows],
                 template=f"(%s, COALESCE(%s, nextval('{s}.dense_seq')), %s, %s, %s)", page_size=5000)
+    with db.conn() as c:       # counted against the daily budget like event batches
+        db.q(c, "INSERT INTO upload_batches (endpoint_id, batch_id, kind, rows, bytes) VALUES (%s,%s,'entities',%s,%s) ON CONFLICT DO NOTHING",
+             (endpoint_id, "ent-" + pki.new_id(), len(rows), nbytes or None))
     return {"ok": True, "rows": len(rows)}
 
 
@@ -232,6 +251,7 @@ async def upload_events(endpoint_id: str, request: Request, ep=Depends(agent_end
         if db.q(c, "SELECT 1 FROM upload_batches WHERE endpoint_id=%s AND batch_id=%s", (endpoint_id, x_batch_id), one=True):
             return {"ok": True, "batch_id": x_batch_id, "duplicate": True}
     rows = [r async for r in ndjson_rows(request)]
+    _quota(ep, len(rows), request)
     from . import integrity
     rows, refused = integrity.filter_events(rows, *integrity.ts_bounds(ep))   # 0.6: impossible timestamps refused
     try:
@@ -438,8 +458,8 @@ def healthz():
 
 # ============================================================================ console side
 class Login(BaseModel):
-    username: str
-    password: str
+    username: str = Field(max_length=254)
+    password: str = Field(max_length=1024)
 
 
 def _set_session(response: Response, user_id: int, role: str) -> None:
@@ -465,12 +485,13 @@ def login(req: Login, response: Response, request: Request):
         u = db.q(c, "SELECT u.*, o.disabled AS org_disabled FROM users u JOIN orgs o ON o.id=u.org_id WHERE u.username=%s", (ident,), one=True) or \
             db.q(c, "SELECT u.*, o.disabled AS org_disabled FROM users u JOIN orgs o ON o.id=u.org_id "
                     "WHERE u.auth='local' AND lower(u.email)=lower(%s)", (ident,), one=True)
-        if u and u.get("locked_until") and u["locked_until"] > datetime.now(timezone.utc):
+        if sign_in_locked(u):
             failure = (429, "too many failed sign-ins; try again later")
         elif not u or u["auth"] != "local" or u["disabled"] or not auth.verify_password(req.password, u["password_hash"]):
             if u:   # back off: 5 failures free, then 30 s, 60 s, ... up to 15 min (reset by a successful sign-in)
-                db.q(c, "UPDATE users SET failed_logins = failed_logins + 1, locked_until = CASE WHEN failed_logins + 1 >= 5 "
-                        "THEN now() + make_interval(secs => LEAST(900, 30 * power(2, failed_logins + 1 - 5))) END WHERE id=%s", (u["id"],))
+                note_failed_sign_in(c, u["id"])
+            else:   # an unknown name costs the same as a wrong password (no user enumeration by timing)
+                auth.verify_password(req.password, auth.dummy_hash())
             failure = (401, "bad credentials")
         elif u["org_disabled"]:
             failure = (403, "your organisation's access to PDP is suspended; contact your provider")
@@ -561,6 +582,10 @@ def oidc_callback(request: Request, code: str | None = None, state: str | None =
 def logout(request: Request, response: Response):
     s = auth.read_session(request.cookies.get("pdp_session"))
     response.delete_cookie("pdp_session", path="/")
+    if s:            # security review F19: the cookie is revoked server-side, not only deleted in this browser
+        from .access import revoke_session
+        with db.conn() as c:
+            revoke_session(c, s)
     end = None
     if s and oidc.enabled():
         with db.conn() as c:
@@ -801,13 +826,16 @@ def create_endpoint(req: NewEndpoint, request: Request, s=Depends(admin)):
     agent = f"https://{host}:{os.environ.get('PDP_AGENT_PORT', '8443')}"
     image = agent_image(host) or os.environ.get("PDP_AGENT_IMAGE", "pdp/agent:latest")
     login = f"echo {token} | docker login {host} -u pdp --password-stdin && \\\n" if agent_image(host) else ""
-    docker = (login + f"docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host --log-driver local \\\n"
-              f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN={token} -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
+    # the token is passed in the environment, never on a command line other local users could read (/proc/*/cmdline)
+    docker = (login + f"export PDP_ENROLL_TOKEN={token} && docker run -d --name pdp-agent --restart=always --privileged --pid=host --network=host --log-driver local \\\n"
+              f"  -v /var/lib/pdp:/var/lib/pdp -e PDP_ENROLL_TOKEN -e PDP_CA_SHA256={fp} -e PDP_SOURCE_KIND=ebpf \\\n"
               f"  -e PDP_SERVER_URL={agent} -e PDP_AGENT_URL={agent} {image} run")
     from .k8s import key_of
     return {"ok": True, "token": token, "expires_in_hours": 24, "ca_sha256": fp, "server_url": server, "agent_url": agent,
             "progress_key": key_of(token),
             "install_command": f"curl -fsSL {server}/install.sh | sudo bash -s -- --token {token}",
+            # security review F10: the same installer with the token in the environment instead of argv (sudo logs, ps)
+            "install_command_env": f"export PDP_ENROLL_TOKEN={token} && curl -fsSL {server}/install.sh | sudo --preserve-env=PDP_ENROLL_TOKEN bash -s -- --token-env",
             "package_command": f"sudo pdp-agent-install --server {agent} --agent-url {agent} --token {token} --ca-sha256 {fp}",
             "docker_command": docker,
             "enroll_command": f"python -m pdp_agent enroll {token} --ca-sha256 {fp}"}
@@ -1219,16 +1247,7 @@ def create_campaign(req: NewCampaign, s=Depends(triager)):
     """A simulation campaign against one of the endpoint's own models (bundle_id must belong to endpoint_id). Limited
     per user (rate) and per organisation (simulated attacks per 24 hours, pdp_server.posture)."""
     require_endpoint(s, req.endpoint_id)
-    spec = dict(req.spec)
-    from_sim = {"days", "runs", "attacks_per_pass", "families", "evasion_levels", "seed", "horizon_windows", "fp_budget"}
-    if set(spec) - from_sim:
-        raise HTTPException(400, f"unknown spec keys: {sorted(set(spec) - from_sim)}")
-    try:
-        bad_n = not (1 <= int(spec.get("runs", 40)) <= 5000) or not (1 <= int(spec.get("attacks_per_pass", 3)) <= 50)
-    except (TypeError, ValueError):
-        bad_n = True
-    if bad_n:
-        raise HTTPException(400, "runs must be 1..5000 and attacks_per_pass 1..50")
+    spec = validate_campaign_spec(req.spec)
     if req.bundle_id is not None:
         try:
             req.bundle_id = str(uuidlib.UUID(req.bundle_id))
@@ -1258,13 +1277,55 @@ def create_campaign(req: NewCampaign, s=Depends(triager)):
     return {"ok": True, "id": cid, "seed": spec["seed"]}
 
 
-@app.get("/api/sim/families")
-def sim_families(s=Depends(session)):
+SIM_SYNTHETIC = ("web_backdoor", "browser_dropper", "lotl_recon", "priv_esc_lateral", "exfiltration", "ransomware", "script_c2")
+SIM_EVASION = ("none", "low", "medium", "high", "extreme", "stealth")
+SIM_SPEC_KEYS = {"days", "runs", "attacks_per_pass", "families", "evasion_levels", "seed", "horizon_windows", "fp_budget"}
+
+
+def sim_family_list() -> list[str]:
     import glob
     attack_dir = os.environ.get("PDP_ATTACK_DIR", "/opt/pdp/sim/attacks")
-    synthetic = ["web_backdoor", "browser_dropper", "lotl_recon", "priv_esc_lateral", "exfiltration", "ransomware", "script_c2"]
     transplants = sorted("transplant:" + os.path.basename(f)[:-5] for f in glob.glob(os.path.join(attack_dir, "*.json")))
-    return {"ok": True, "families": synthetic + transplants, "evasion_levels": ["none", "low", "medium", "high", "extreme", "stealth"]}
+    return list(SIM_SYNTHETIC) + transplants
+
+
+def validate_campaign_spec(spec: dict) -> dict:
+    """A campaign specification from the console, typed and bounded. Families must be ones this server offers: a
+    `transplant:<name>` family names a file under PDP_ATTACK_DIR, so an arbitrary string here would make the worker
+    open an arbitrary path. Days are the validation day or dates (they name window-store directories)."""
+    import re as _re
+    if not isinstance(spec, dict):
+        raise HTTPException(400, "spec must be an object")
+    spec = dict(spec)
+    if set(spec) - SIM_SPEC_KEYS:
+        raise HTTPException(400, f"unknown spec keys: {sorted(set(spec) - SIM_SPEC_KEYS)}")
+
+    def _int(k, default, lo, hi):
+        v = spec.get(k, default)
+        if isinstance(v, bool) or not isinstance(v, (int, str)) or not str(v).lstrip("-").isdigit() or not lo <= int(v) <= hi:
+            raise HTTPException(400, f"{k} must be an integer between {lo} and {hi}")
+        return int(v)
+    spec["runs"] = _int("runs", 40, 1, 5000)
+    spec["attacks_per_pass"] = _int("attacks_per_pass", 3, 1, 50)
+    if "horizon_windows" in spec:
+        spec["horizon_windows"] = _int("horizon_windows", 8, 1, 96)
+    if "seed" in spec and spec["seed"] is not None:
+        spec["seed"] = _int("seed", 0, 0, 2**31 - 1)
+    for k, allowed, what in (("families", set(sim_family_list()), "attack families"), ("evasion_levels", set(SIM_EVASION), "evasion levels")):
+        if k in spec:
+            v = spec[k]
+            if not isinstance(v, list) or not v or len(v) > 50 or not all(isinstance(x, str) and x in allowed for x in v):
+                raise HTTPException(400, f"{k} must list {what} offered by this server (GET /api/sim/families)")
+    if "days" in spec:
+        v = spec["days"]
+        if not isinstance(v, list) or not v or len(v) > 31 or not all(isinstance(x, str) and (x == "validation" or _re.fullmatch(r"\d{4}-\d{2}-\d{2}", x)) for x in v):
+            raise HTTPException(400, "days must list 'validation' or dates (YYYY-MM-DD)")
+    return spec
+
+
+@app.get("/api/sim/families")
+def sim_families(s=Depends(session)):
+    return {"ok": True, "families": sim_family_list(), "evasion_levels": list(SIM_EVASION)}
 
 
 @app.get("/api/sim/campaigns/{campaign_id}/results")

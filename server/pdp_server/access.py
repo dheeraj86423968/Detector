@@ -39,6 +39,8 @@ def session(request: Request) -> dict:
             raise HTTPException(401, "user no longer exists or is disabled")
         if int(s.get("g", 0)) != u["session_gen"]:
             raise HTTPException(401, "this session was ended (password changed or signed out everywhere); sign in again")
+        if s.get("sid") and db.q(c, "SELECT 1 FROM revoked_sessions WHERE sid=%s", (s["sid"],), one=True):
+            raise HTTPException(401, "this session was signed out; sign in again")
         if u["require_mfa"] and u["auth"] == "local" and not u["totp_enabled"] and request.url.path not in MFA_SETUP_PATHS:
             raise HTTPException(403, "your organisation requires two-factor sign-in: set it up under Account first")
         org_eps = {str(r["id"]) for r in db.q(c, "SELECT id FROM endpoints WHERE org_id=%s", (u["org_id"],))}
@@ -55,10 +57,36 @@ def set_session(response: Response, user_id: int, role: str) -> None:
                         samesite="strict", max_age=auth.SESSION_TTL, path="/")
 
 
+def revoke_session(c, s: dict) -> None:
+    """Sign out this one session (security review F19): its id is kept until the cookie would have expired anyway, so
+    a copy of the cookie stops working at logout instead of at expiry. Cookies issued before session ids existed carry
+    none; they can only be ended with end_sessions()."""
+    if not s or not s.get("sid"):
+        return
+    from datetime import datetime, timezone
+    exp = datetime.fromtimestamp(int(s.get("exp") or 0) + 60, tz=timezone.utc)
+    db.q(c, "DELETE FROM revoked_sessions WHERE expires_at < now()")
+    db.q(c, "INSERT INTO revoked_sessions (sid, user_id, expires_at) VALUES (%s,%s,%s) ON CONFLICT (sid) DO NOTHING", (str(s["sid"])[:64], s.get("u"), exp))
+
+
 def end_sessions(c, user_id: int) -> None:
     """End every session of this user (password change or reset, sign out everywhere). Call inside the transaction
     that makes the change; sign the acting user in again with set_session() afterwards if they keep working."""
     db.q(c, "UPDATE users SET session_gen = session_gen + 1 WHERE id=%s", (user_id,))
+
+
+def sign_in_locked(u: dict | None) -> bool:
+    """True while the account's failed sign-ins (password or second factor) have it locked."""
+    from datetime import datetime, timezone
+    return bool(u and u.get("locked_until") and u["locked_until"] > datetime.now(timezone.utc))
+
+
+def note_failed_sign_in(c, user_id: int) -> None:
+    """One more failed sign-in step for this account: 5 failures free, then 30 s, 60 s, ... up to 15 min (reset by a
+    successful sign-in). Used by the password step and the second-factor step alike, so that neither can be guessed
+    at the API's own pace."""
+    db.q(c, "UPDATE users SET failed_logins = failed_logins + 1, locked_until = CASE WHEN failed_logins + 1 >= 5 "
+            "THEN now() + make_interval(secs => LEAST(900, 30 * power(2, failed_logins + 1 - 5))) END WHERE id=%s", (user_id,))
 
 
 def admin(s=Depends(session)) -> dict:

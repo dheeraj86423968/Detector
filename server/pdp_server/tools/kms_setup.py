@@ -42,6 +42,13 @@ from cryptography.x509.oid import NameOID
 from pdp_server import kms
 
 PKI_DIR = os.environ.get("PDP_PKI_DIR", "/pki")
+PRIVATE_DIR = os.environ.get("PDP_PKI_PRIVATE_DIR", os.path.join(PKI_DIR, "private"))   # keys live here since the 2026-11-08 review
+
+
+def _key_path(name: str) -> str:
+    """A private key file: in PRIVATE_DIR, or (an installation not yet migrated by pki.migrate_private) in PKI_DIR."""
+    p = os.path.join(PRIVATE_DIR, name)
+    return p if os.path.exists(p) or not os.path.exists(os.path.join(PKI_DIR, name)) else os.path.join(PKI_DIR, name)
 SERVICE_UID = 10001
 
 SIGNER_POLICY = f"""
@@ -108,7 +115,7 @@ def ensure_engines(k: kms.Client) -> None:
 def ensure_bundle_key(k: kms.Client) -> str:
     if k.call("GET", f"{kms.TRANSIT}/keys/{kms.BUNDLE_KEY}", ok404=True):
         return "existing"
-    local = os.path.join(PKI_DIR, "bundle_signing.key")
+    local = _key_path("bundle_signing.key")
     if os.path.exists(local):
         key = serialization.load_pem_private_key(open(local, "rb").read(), password=None)
         target = key.private_bytes(serialization.Encoding.DER, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
@@ -134,7 +141,7 @@ def ensure_ca(k: kms.Client) -> str:
         r = None
     if r and r.get("data", {}).get("certificate"):
         return "existing"
-    key_p, crt_p = os.path.join(PKI_DIR, "ca.key"), os.path.join(PKI_DIR, "ca.pem")
+    key_p, crt_p = _key_path("ca.key"), os.path.join(PKI_DIR, "ca.pem")
     if os.path.exists(key_p) and os.path.exists(crt_p):
         k.call("POST", f"{kms.PKI}/config/ca", {"pem_bundle": open(key_p).read() + "\n" + open(crt_p).read()})
         return "imported"
@@ -222,9 +229,11 @@ def verify(addr: str, token: str) -> None:
 
 def remove_local_keys(secrets_dir: str) -> None:
     backup = os.path.join(secrets_dir, "backup", time.strftime("%Y%m%dT%H%M%S"))
+    # both locations: PRIVATE_DIR (since the 2026-11-08 review) and the legacy PKI_DIR of an unmigrated installation
     for name in ("ca.key", "bundle_signing.key"):
-        p = os.path.join(PKI_DIR, name)
-        if os.path.exists(p):
+        for p in sorted({os.path.join(PKI_DIR, name), os.path.join(PRIVATE_DIR, name)}):
+            if not os.path.exists(p):
+                continue
             os.makedirs(backup, mode=0o700, exist_ok=True)
             shutil.copy2(p, os.path.join(backup, name))
             os.chmod(os.path.join(backup, name), 0o400)

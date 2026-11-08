@@ -50,6 +50,10 @@ M.D Lab Detector agent installer for $SERVER
   curl -fsSL $SERVER/install.sh | sudo bash -s -- --token TOKEN [options]
 
   --token TOKEN        enrolment token from the console (Endpoints > Add endpoint); valid 24 hours, single use
+  --token-env          take the token from \$PDP_ENROLL_TOKEN (keeps it off the command line and out of sudo's log):
+                       export PDP_ENROLL_TOKEN=...; curl ... | sudo --preserve-env=PDP_ENROLL_TOKEN bash -s -- --token-env
+  --token-file FILE    read the token from FILE (first line); --token-stdin reads it from standard input (when this
+                       script runs from a file, not piped into bash)
   --source KIND        collector: ebpf (default; kernel 5.8+ with BTF), auditd or strace
   --tz TZ              time zone for the agent's day boundaries (default UTC)
   --no-install-docker  fail instead of installing docker when it is missing
@@ -64,6 +68,9 @@ EOF
 while [ $# -gt 0 ]; do
   case "$1" in
     --token) token=${2:?--token needs a value}; shift ;;
+    --token-env) token=${PDP_ENROLL_TOKEN:-}; [ -n "$token" ] || die "--token-env: PDP_ENROLL_TOKEN is not set (sudo --preserve-env=PDP_ENROLL_TOKEN)" ;;
+    --token-file) token=$(head -n1 "${2:?--token-file needs a file}" | tr -d '[:space:]'); [ -n "$token" ] || die "--token-file: $2 is empty"; shift ;;
+    --token-stdin) IFS= read -r token || true; token=$(printf '%s' "$token" | tr -d '[:space:]'); [ -n "$token" ] || die "--token-stdin: no token on standard input" ;;
     --source) source=${2:?}; shift ;;
     --tz) tz=${2:?}; shift ;;
     --no-install-docker) install_docker=0 ;;
@@ -216,18 +223,22 @@ download_meter() {
 }
 
 eval "IMAGE_SIZE=\${IMAGE_BYTES_$iarch:-0}"
-say "Downloading the agent ($IMAGE$([ "$IMAGE_SIZE" -gt 0 ] && echo ", $(( IMAGE_SIZE / 1000000 )) MB the first time"))"
+# the image reference is pinned to its manifest digest (<repo>:<version>@sha256:...): docker verifies what it pulls
+# against the digest, so a re-pointed tag in the registry cannot change what this host runs
+case "$IMAGE" in *@sha256:*) ;; *) die "the server published the agent without an image digest; the operator must re-publish it (deploy/publish-agent.sh)" ;; esac
+IMAGE_TAG=${IMAGE%%@*}; IMAGE_VERSION=${IMAGE_TAG##*:}
+say "Downloading the agent ($IMAGE_TAG, digest ${IMAGE##*@sha256:}$([ "$IMAGE_SIZE" -gt 0 ] && echo ", $(( IMAGE_SIZE / 1000000 )) MB the first time"))"
 # a previous install's image (none on a new host: no file, which must not stop the installer)
 old_image=$(sed -n 's/^PDP_AGENT_IMAGE=//p' "$ETC/agent.env" 2>/dev/null | tail -1 || true)
 if [ -z "$token" ] && ! docker image inspect "$IMAGE" >/dev/null 2>&1 && [ -n "$old_image" ] && docker image inspect "$old_image" >/dev/null 2>&1; then
-  ok "keeping $old_image for now; the agent updates itself to ${IMAGE##*:} through the updater"
+  ok "keeping $old_image for now; the agent updates itself to $IMAGE_VERSION through the updater"
   IMAGE=$old_image
 fi
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   [ -n "$token" ] || die "the agent image is missing and no --token was given to download it"
   cfg=$(mktemp -d)
   printf '{"auths":{"%s":{"auth":"%s"}}}' "$REGISTRY" "$(printf 'pdp:%s' "$token" | base64 -w0)" > "$cfg/config.json"
-  report downloading "starting the download of ${IMAGE##*/}" 0 "$IMAGE_SIZE"
+  report downloading "starting the download of ${IMAGE_TAG##*/}" 0 "$IMAGE_SIZE"
   LAYERS=$(mktemp)
   ( DOCKER_CONFIG="$cfg" docker pull "$IMAGE" 2>&1 | pull_progress ) &
   pull_pid=$!
@@ -241,7 +252,7 @@ fi
 got=$(docker image inspect -f '{{.Architecture}}' "$IMAGE" 2>/dev/null || echo unknown)
 [ "$got" = "$iarch" ] || die "this server publishes the agent for $got, not for this $arch host; ask the operator for an $iarch build"
 ok "agent image ready"
-report downloaded "${IMAGE##*/}" "$IMAGE_SIZE" "$IMAGE_SIZE"
+report downloaded "${IMAGE_TAG##*/}" "$IMAGE_SIZE" "$IMAGE_SIZE"
 
 # ------------------------------------------------------------------------------------------------ configuration
 say "Configuring the agent"
@@ -292,15 +303,23 @@ if [ -f "$TRIAL" ]; then
     fi
   fi
 fi
-# no update on trial: earlier agent images (our repository only) are removed, so updates do not pile up on disk
+# no update on trial: earlier agent images (our repository only) are removed, so updates do not pile up on disk.
+# Image references are <repo>:<version>@sha256:<digest>; the repository is what precedes the tag
 cur=$(val PDP_AGENT_IMAGE "$ETC/agent.env")          # again: a rollback above may just have changed it
+cur_tag=${cur%%@*}
 if [ ! -f "$TRIAL" ] && [ -n "$cur" ]; then
-  for img in $(docker images --format '{{.Repository}}:{{.Tag}}' "${cur%:*}" 2>/dev/null); do
-    if [ "$img" != "$cur" ] && docker rmi "$img" >/dev/null 2>&1; then log "removed the earlier agent image $img"; fi
+  for img in $(docker images --format '{{.Repository}}:{{.Tag}}' "${cur_tag%:*}" 2>/dev/null); do
+    case "$img" in *:'<none>') continue ;; esac        # digest-only pulls (the current image) list without a tag
+    if [ "$img" != "$cur_tag" ] && docker rmi "$img" >/dev/null 2>&1; then log "removed the earlier agent image $img"; fi
   done
 fi
 if [ -f "$REQ" ] && [ ! -f "$TRIAL" ]; then
   v=$(val VERSION "$REQ"); img=$(val IMAGE "$REQ"); reg=$(val REGISTRY "$REQ"); tok=$(val TOKEN "$REQ"); rm -f "$REQ"
+  case "$img" in
+    *@sha256:*) ;;             # pinned to a digest: docker verifies the pulled content against it
+    *) log "refusing the update to $v: the image reference $img is not pinned to a digest"; img="" ;;
+  esac
+  case "$img" in "$reg"/*|"") ;; *) log "refusing the update to $v: $img is not from the registry $reg"; img="" ;; esac
   if [ -n "$img" ] && [ "$img" != "$cur" ]; then
     d=$(mktemp -d)
     if printf '%s' "$tok" | DOCKER_CONFIG=$d docker login -u pdp --password-stdin "$reg" >/dev/null 2>&1 \
