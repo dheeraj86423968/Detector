@@ -1,5 +1,70 @@
 # Layered detection (0.3, revised in 0.4, 0.5, 0.6 and 0.7)
 
+## 0.8 (2026-11-08): process-chain evidence ("breadth") - tried, not released as the default
+
+Asked for: score process chains so that layer 1 ("new executable") can be dropped, then test on clean data. Lab,
+protocol (written before any end-to-end result) and decision record: artifacts/lab_v08.
+
+**Why 0.7 needed layer 1.** On TRACE, detector-3 scored each node by its single most unusual event. A busy host's
+most unusual benign processes are single extreme events - a tool reading a directory it has never read (`du`, `df`,
+`lsb_release`: 50-73 nats) - while the attack was many linked, moderately unusual steps (a program from /tmp that
+starts `uname` and `sh`, connects out and writes files: ~22-25 nats each). One maximum per node always ranks the
+benign singles first.
+
+**Breadth evidence** (`behaviour.Breadth`, `TrainConfig.d3_breadth`): per process instance, the most unusual event of
+each kind of activity - starting / being started by a process, network, writing files, reading files - within 4
+hours, each capped at 10 nats (beyond that a rarity estimate says nothing more) and counted above a 4-nat floor
+(everyday mild novelty); the process's evidence is their sum. Unusual in several ways at once is what attack steps
+look like; one extreme event no longer outranks them. Objects (files, addresses) keep a capped maximum and rise by
+propagation from the processes that touch them. Calibrated like 0.7 (10 benign validation nodes over the
+threshold, the threshold never below one fully novel kind of activity), streamed over the validation day exactly as
+the runtime scores. Tried and rejected offline (detector-3 alone, 10 sets): summing evidence along the process tree
+(more false positives on every set), per-endpoint normalised caps (fewer attacks than caps in nats), six activity
+groups instead of four, shorter or longer horizons (little difference).
+
+Learning integrity (released): every entity an unreleased alert was raised on, whatever layer raised it, stays out of
+detector-3's counts on retraining (with layer 1 off a new program is often caught by the learned layer alone).
+Agent 0.8.0 (bundles require `detector-3-breadth`).
+
+### Development / seen sets (end to end, same source bundles; 0.7 released re-run through the same harness)
+
+| set | 0.7 released (layer 1 on): TP / FP (per day) / attacks | 0.8 (layer 1 off) |
+|---|---|---|
+| CADETS | 32 / 42 (10.5) / 3 of 3 | 33 / 29 (7.2) / 3 of 3 |
+| THEIA | 111 / 127 (42.3) / 2 of 2 | 109 / 129 (43.0) / 2 of 2 |
+| OpTC H201 | 7 / 42 (14.0) / 1 of 1 | 8 / 8 (2.7) / 1 of 1 |
+| OpTC H501 | 19 / 132 (44.0) / 1 of 1 | 12 / 24 (8.0) / 1 of 1 |
+| OpTC H051 | 76 / 58 (19.3) / 1 of 1 | 69 / 41 (13.7) / 1 of 1 |
+| ClearScope | 0 / 51 (25.5) / 0 of 1 | 0 / 41 (20.5) / 0 of 1 |
+| FiveDirections | 11 / 225 (75.0) / 2 of 2 | 4 / 40 (13.3) / 2 of 2 |
+| ATLASv2 h1 | 14 / 125 / 8 of 10 | 10 / 111 / 8 of 10 |
+| ATLASv2 h2 (no labelled attack) | 0 / 36 | 0 / 68 |
+| TRACE | 9 / 81 (20.2) / 3 of 3 - all from layer 1 | 4 / 39 (9.8) / 3 of 3 - all from the learned layer |
+| mean | 21 of 34 attacks, 41.2 FP/day, node recall 0.306 | 21 of 34 attacks, 29.7 FP/day, node recall 0.266 |
+
+The same attacks on every set without layer 1, with 28% fewer false positives. Pre-registered acceptance rule 3
+(node recall not below 0.7's) was **not met**: layer 1 alerted on each of an attack's new executables one by one
+(TRACE 9 nodes vs 4) and corroboration added their neighbours (FiveDirections, ATLASv2 h1); 0.8 finds the same
+attacks through fewer of their nodes. Corroboration at the 99.9th percentile instead of the threshold recovered
+little (0.276) for 4 more false positives a day. ATLASv2 h2 is worse (68 vs 36; 12 of them are the multi-host
+attack's payload.exe, which the ground truth labels only on h1).
+
+### Held-out (scored once, after freezing): see docs/BENCHMARK_HELDOUT.md "0.8"
+
+| | 0.6 | 0.7 released (production) | 0.8 |
+|---|---|---|---|
+| CARBANAKv2 h1-h5 + THEIA E5 (6 attacks) | 5 of 6, 488 FP | 5 of 6, 4,751 FP | 4 of 6, 603 FP |
+
+**Decision (pre-registered rule): not released.** 0.8 missed the CARBANAKv2 h3 attack, which only layer 1 caught;
+its learned alerts on that host (all false) ran at the daily budget. Breadth stays in the product, off by default
+(`train.d3_breadth`, per endpoint); layer 1 stays on, and turning it off is a weakening change as in 0.7. What 0.8
+showed: breadth replaces layer 1 on TRACE and keeps every attack on the development / seen sets with fewer false
+positives, but new programs on Windows EDR telemetry are still a signal the learned layer alone does not catch.
+
+**Found on the held-out data about the released 0.7 configuration:** corroboration next to layer-1 alerts produced
+3,511 false positives on CARBANAKv2 h1 (470 a day), and on these hosts 0.7 found the same attacks as 0.6 with ten
+times its false positives. Not tuned here (this data is now seen); open.
+
 ## 0.7 (2026-11-07): learned detection first, rules on top
 
 Asked for: the learned part as the primary detector, recall first, and no stand-alone naive rules such as "new

@@ -1,0 +1,55 @@
+{
+ "dataset": "THEIA_E5",
+ "host": "theia",
+ "test_days": [
+  "2019-05-14",
+  "2019-05-15"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 70,
+ "0.6": {
+  "TP": 0,
+  "FP": 87,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 43.5,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "gt_in_test": 66,
+  "attacks_found": []
+ },
+ "0.7": {
+  "TP": 0,
+  "FP": 129,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 64.5,
+  "by_layer": {
+   "learned": 32,
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "gt_in_test": 66,
+  "attacks_found": []
+ },
+ "0.8": {
+  "TP": 0,
+  "FP": 76,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 38.0,
+  "by_layer": {
+   "learned": 31,
+   "rules": 33,
+   "corroborated": 12
+  },
+  "by_layer_tp": {},
+  "gt_in_test": 66,
+  "attacks_found": []
+ }
+}

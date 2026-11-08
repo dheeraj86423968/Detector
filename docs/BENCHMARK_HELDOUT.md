@@ -1,5 +1,32 @@
 # Held-out benchmarks
 
+## 0.8 (2026-11-08): CARBANAKv2 (EDR telemetry) and DARPA E5 THEIA
+
+Six hosts nobody on this project had looked at, prepared by a separate agent that ran no detector
+(artifacts/heldout_v08/PREP_LOG.md: `tools.heldout_prep` for CARBANAKv2 from its Carbon Black EDR database, hosts as
+graph components; `tools.heldout_stream` for THEIA E5, verified identical to the database replay on a 1-in-40
+sample). Chronological split per host (PIDSMaker's lists where chronological - THEIA E5 -, otherwise every day from the
+first to the last attack day as test, the day before as validation, up to 7 days before that as training). CADETS E5
+and ClearScope E5 could not be downloaded (Google Drive quota). Protocol and decision record:
+artifacts/lab_v08/PROTOCOL.md (configuration frozen in 55c5eb8 before this run).
+
+Per host one 0.6-configured bundle trained on the baseline (GPU), upgraded with the product trainer to 0.7 released
+and to 0.8 (same detectors 1-2); test days scored by the runtime. Run once:
+
+| host | test days | 0.6: attacks / TP / FP | 0.7 released | 0.8 (layer 1 off) |
+|---|---|---|---|---|
+| CARBANAKv2 h1 | 8 | 1 / 5 / 85 | 1 / 5 / 3,756 | 1 / 3 / 67 |
+| CARBANAKv2 h2 | 9 | 1 / 40 / 164 | 1 / 40 / 220 | 1 / 29 / 149 |
+| CARBANAKv2 h3 | 7 | 1 / 1 / 72 | 1 / 2 / 269 | 0 / 0 / 150 |
+| CARBANAKv2 h4 | 7 | 1 / 3 / 26 | 1 / 3 / 64 | 1 / 1 / 49 |
+| CARBANAKv2 h5 | 11 | 1 / 9 / 54 | 1 / 18 / 313 | 1 / 2 / 112 |
+| THEIA E5 | 2 | 0 / 0 / 87 | 0 / 0 / 129 | 0 / 0 / 76 |
+| total | | 5 of 6, 488 FP | 5 of 6, 4,751 FP | 4 of 6, 603 FP |
+
+0.8 did not meet its pre-registered decision rule (>= 0.7's attacks): not released (docs/DETECTION_LAYERS.md "0.8").
+No system caught the THEIA E5 attack. 0.7 released produced 3,511 corroborated false positives on CARBANAKv2 h1.
+Results: artifacts/benchmark_heldout/eval-*-v08.json.
+
 ## 0.7 (2026-11-07): DARPA E3 TRACE and ATLASv2 (EDR telemetry)
 
 Three hosts nobody on this project had looked at, prepared by a separate step that ran no detector

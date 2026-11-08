@@ -1,0 +1,68 @@
+{
+ "dataset": "CARBANAKV2_EDR",
+ "host": "h3",
+ "test_days": [
+  "2024-04-30",
+  "2024-05-01",
+  "2024-05-02",
+  "2024-05-06",
+  "2024-05-07",
+  "2024-05-08",
+  "2024-05-09"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 229,
+ "0.6": {
+  "TP": 1,
+  "FP": 72,
+  "recall": 0.038,
+  "attacks": 1,
+  "FP/day": 10.3,
+  "by_layer": {
+   "novelty": 59,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1
+  },
+  "gt_in_test": 26,
+  "attacks_found": [
+   "carbanakv2_edr"
+  ]
+ },
+ "0.7": {
+  "TP": 2,
+  "FP": 269,
+  "recall": 0.077,
+  "attacks": 1,
+  "FP/day": 38.4,
+  "by_layer": {
+   "learned": 132,
+   "novelty": 59,
+   "corroborated": 66,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "gt_in_test": 26,
+  "attacks_found": [
+   "carbanakv2_edr"
+  ]
+ },
+ "0.8": {
+  "TP": 0,
+  "FP": 150,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 21.4,
+  "by_layer": {
+   "learned": 132,
+   "rules": 18
+  },
+  "by_layer_tp": {},
+  "gt_in_test": 26,
+  "attacks_found": []
+ }
+}

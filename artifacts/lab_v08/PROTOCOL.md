@@ -75,3 +75,28 @@ Frozen candidate: v08b = TrainConfig defaults in this commit (detector-3 breadth
 floor 4 nats, horizon 4 h; layer 1 off; corroboration at the learned threshold; final threshold floored at 1).
 Per this protocol layer 1 would stay, since rule 3 failed; dropping it anyway is a deviation that the user decides,
 with the held-out results (0.6, 0.7 released, 0.8 all scored once) in hand.
+
+## Held-out result (2026-11-08, scored once; heldout08.py / heldout08.sh, configuration frozen in 55c5eb8)
+
+CARBANAKV2_EDR h1-h5 (Windows, Carbon Black EDR) and THEIA_E5 (Linux) - prepared by a separate agent that ran no
+detector (artifacts/heldout_v08/PREP_LOG.md); CADETS_E5 and CLEARSCOPE_E5 could not be downloaded (Google Drive
+quota). Per host: a 0.6-configured bundle trained on the baseline, upgraded with the product trainer to 0.7 released
+and to 0.8; the test days scored by the runtime.
+
+| host (test days) | 0.6: attacks / TP / FP | 0.7 released | 0.8 |
+|---|---|---|---|
+| CARBANAKv2 h1 (8) | 1 / 5 / 85 | 1 / 5 / 3756 | 1 / 3 / 67 |
+| CARBANAKv2 h2 (9) | 1 / 40 / 164 | 1 / 40 / 220 | 1 / 29 / 149 |
+| CARBANAKv2 h3 (7) | 1 / 1 / 72 | 1 / 2 / 269 | **0** / 0 / 150 |
+| CARBANAKv2 h4 (7) | 1 / 3 / 26 | 1 / 3 / 64 | 1 / 1 / 49 |
+| CARBANAKv2 h5 (11) | 1 / 9 / 54 | 1 / 18 / 313 | 1 / 2 / 112 |
+| THEIA E5 (2) | 0 / 0 / 87 | 0 / 0 / 129 | 0 / 0 / 76 |
+| **total** | **5 of 6, 58 TP, 488 FP** | **5 of 6, 68 TP, 4751 FP** | **4 of 6, 35 TP, 603 FP** |
+
+Decision rule: 0.8 needed >= 0.7's attacks (5) with <= 1.5x its false positives. It found 4: **rule failed**; 0.8 is
+not released and layer 1 stays (commit 11bcac4: breadth off by default, available per endpoint). On h3 only layer 1
+caught the attack; 0.8's learned alerts there (132 in 7 days, all false) ran at the daily budget.
+
+Also seen: 0.7 released - the configuration in production - produced 3,511 corroborated false positives on h1 (3,756
+in total, 470 a day), and on these hosts found the same attacks as 0.6 with ten times its false positives. Not tuned
+here (this data is now seen); reported to the user for a decision.
