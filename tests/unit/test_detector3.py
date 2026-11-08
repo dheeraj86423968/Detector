@@ -282,7 +282,11 @@ for d in range(3):
     days.append(day)
 st.save_registry(regt)
 cfg = TrainConfig(device="cpu", emb_dim=16, w2v_epochs=2, velox_out_dim=16, velox_epochs=2, velox_runs=1, orthrus_seeds=(0,),
-                  orthrus_hid_dim=16, orthrus_out_dim=16, orthrus_epochs=2, calibration_budget=2)
+                  orthrus_hid_dim=16, orthrus_out_dim=16, orthrus_epochs=2, calibration_budget=2,
+                  d3_breadth=True, layer_novelty=False)        # the 0.8 configuration (not the default: held-out decision)
+_d = TrainConfig()
+check(_d.layer_novelty is True and _d.d3_breadth is False and _d.detector3 is True,
+      "defaults after the 0.8 held-out run: layer 1 on, detector-3 breadth off (available per endpoint)")
 out = os.path.join(tmp2, "bundle")
 Trainer(st, days[:2], days[2], cfg, out).run({"endpoint": "t"})
 import json
@@ -293,7 +297,7 @@ check("detector-3" in man["detectors"] and "detector-3" in man["requires"] and "
 check(cal.get("final", {}).get("pending") is None and cal["final"]["threshold"] > 0, f"final threshold calibrated after propagation ({cal['final']['threshold']:.3f})")
 check(man["layers"]["novelty"] is False and man["learned_policy"]["learned_alerts"] is True
       and man["learned_policy"].get("corroboration") == "threshold",
-      "0.8 defaults: layer 1 off (detector-3 breadth covers it), learned alerts on, corroboration at the learned threshold")
+      "0.8 configuration: layer 1 off, learned alerts on, corroboration at the learned threshold")
 cb = cal["detector-3"].get("breadth") or {}
 check("detector-3-breadth" in man["requires"] and cb.get("cap") == 10.0 and cb.get("floor") == 4.0 and cb.get("horizon_s") == 14400.0,
       f"0.8 bundle: breadth calibrated with cap, floor, horizon and required of the runtime ({cb})")
@@ -470,8 +474,8 @@ check("detector-3" in m7["detectors"] and m7["calibration"]["final"].get("pendin
 rt7 = Runtime(b7, st.load_registry(), device="cpu")
 check(rt7.bm is not None and rt7.prop is not None, "the runtime loads the upgraded bundle")
 check("detector-3-breadth" in m7["requires"] and m7["calibration"]["detector-3"].get("breadth") and rt7.breadth is not None,
-      "upgrade_bundle_07 with the 0.8 defaults adds breadth (and requires it)")
-check(m7["layers"]["novelty"] is False, "upgrade: layers re-fitted with the 0.8 defaults (layer 1 off)")
+      "upgrade_bundle_07 with the 0.8 configuration adds breadth (and requires it)")
+check(m7["layers"]["novelty"] is False, "upgrade: layers re-fitted with the 0.8 configuration (layer 1 off)")
 # 0.7 -> 0.8: upgrading a bundle that already has detector-3 (the d3_breadth-off one above)
 b8 = os.path.join(tmp2, "b8")
 upgrade_bundle_07(b7s, b8, st, cfg)

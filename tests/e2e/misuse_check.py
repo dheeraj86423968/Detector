@@ -105,18 +105,20 @@ try:
     check(se and "layer 2" in se["title"] and se["username"].startswith("mis-adm") and str(se["endpoint_id"]) == e1, "security event recorded")
     check(status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True}, "learned_daily_budget": 30}), s=A)[0] == 200,
           "strengthening needs no reason")
-    # 0.8: layer 1 (new programs) is an optional extra rule, off by default: turning it on or off needs no reason;
-    # turning detector-3's breadth evidence off (or making it less sensitive) does
-    check(status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True, "layer_novelty": True}}), s=A)[0] == 200,
-          "0.8: turning layer 1 on needs no reason")
-    check(status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True, "layer_novelty": False}}), s=A)[0] == 200,
-          "0.8: turning layer 1 off needs no reason")
-    st, msg = status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True, "d3_breadth": False}}), s=A)
-    check(st == 400 and msg.startswith("Reason required") and "breadth" in msg, "0.8: turning detector-3 breadth evidence off needs a reason")
-    st, msg = status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True, "d3_breadth_floor": 8.0}}), s=A)
-    check(st == 400 and "breadth floor raised" in msg, "0.8: raising the breadth floor needs a reason")
-    st, msg = status_of(api.patch_config, e1, cp(config={"train": {"d3_breadth_floor": 12.0}}, reason="x"), s=A)
-    check(st == 400 and "below train.d3_breadth_cap" in msg, "0.8: a breadth floor at or above the cap is refused")
+    # layer 1 (new programs) stays the default safety net (0.8 held-out decision): turning it off needs a reason;
+    # detector-3 breadth is optional (off by default): turning it on needs none, weakening it once on does
+    st, msg = status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True, "layer_novelty": False}}), s=A)
+    check(st == 400 and msg.startswith("Reason required"), "turning layer 1 off needs a reason")
+    check(status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True, "d3_breadth": True}}), s=A)[0] == 200,
+          "turning detector-3 breadth on needs no reason")
+    st, msg = status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True, "d3_breadth": True, "d3_breadth_floor": 8.0}}), s=A)
+    check(st == 400 and "breadth floor raised" in msg, "raising the breadth floor (breadth on) needs a reason")
+    st, msg = status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True}}), s=A)
+    check(st == 400 and msg.startswith("Reason required") and "breadth" in msg, "turning detector-3 breadth off again needs a reason")
+    st, msg = status_of(api.patch_config, e1, cp(config={"train": {"d3_breadth": True, "d3_breadth_floor": 12.0}}, reason="x"), s=A)
+    check(st == 400 and "below train.d3_breadth_cap" in msg, "a breadth floor at or above the cap is refused")
+    check(status_of(api.patch_config, e1, cp(config={"train": {"layer_rules": True}}, reason="restore defaults"), s=A)[0] == 200,
+          "back to the defaults with a reason")
 
     # ---- allow list
     ne = lambda **kw: NewEntry(**{"kind": "program", "endpoints": [e1], **kw})  # noqa: E731

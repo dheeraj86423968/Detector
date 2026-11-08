@@ -114,7 +114,7 @@ TRAIN_SCHEMA = {
     "propagation_clip": ("num", 1.0, 100.0),
     "propagation_seed": ("num", 0.0, 10.0),
     "propagation_passes": ("int", 1, 5),
-    "layer_novelty": ("bool",),                 # 0.8: an optional extra rule (off by default; detector-3 covers it)
+    "layer_novelty": ("bool",),                 # layer 1 (new programs): on by default (safety net, 0.7; 0.8 held-out)
     "novelty_as_evidence": ("bool",),
     "corroboration_at_threshold": ("bool",),           # 0.7: new programs alert only when the learned score corroborates
     "layer_rules": ("bool",),
@@ -224,12 +224,12 @@ def detection_settings(cfg: dict | None) -> dict:
     cfg = cfg or {}
     t = cfg.get("train") if isinstance(cfg.get("train"), dict) else {}
     al = t.get("alert_layers")
-    # defaults = TrainConfig's (0.8: layer 1 off - an optional extra rule -, the learned layer alerts, detector-3 with
-    # breadth evidence and propagation on, thresholds at a validation budget of 10)
-    return {"layer_novelty": t.get("layer_novelty", False) is True, "layer_rules": t.get("layer_rules", True) is not False,
+    # defaults = TrainConfig's (layer 1 alerts - the safety net kept in 0.7 and after the 0.8 held-out run -, the
+    # learned layer alerts too, detector-3 and propagation on, breadth evidence off, thresholds at a budget of 10)
+    return {"layer_novelty": t.get("layer_novelty", True) is not False, "layer_rules": t.get("layer_rules", True) is not False,
             "detector3": t.get("detector3", True) is not False, "propagation": t.get("propagation", True) is not False,
             "calibration_budget": t.get("calibration_budget", 10),
-            "d3_breadth": t.get("d3_breadth", True) is not False, "d3_breadth_cap": t.get("d3_breadth_cap", D3_BREADTH_CAP),
+            "d3_breadth": t.get("d3_breadth", False) is True, "d3_breadth_cap": t.get("d3_breadth_cap", D3_BREADTH_CAP),
             "d3_breadth_floor": t.get("d3_breadth_floor", D3_BREADTH_FLOOR),
             "d3_breadth_horizon_s": t.get("d3_breadth_horizon_s", D3_BREADTH_HORIZON_S),
             "alert_layers": set(LAYERS) if al is None else set(al) if isinstance(al, list) else set(LAYERS),
@@ -269,11 +269,10 @@ def weakenings(before: dict | None, after: dict | None) -> list[str]:
     """Human-readable list of the ways `after` detects less than `before` (both full stored configurations)."""
     b, a = detection_settings(before), detection_settings(after)
     out = []
-    # 0.8: layer 1 (new programs) is an optional extra rule, off by default (detector-3 covers it): turning it on or
-    # off, or dropping it from alert_layers, is not weakening; the floor is the learned layer or the data-flow rules
-    if b["layer_rules"] and not a["layer_rules"]:
-        out.append(f"{LAYER_TEXT['rules']} turned off")
-    dropped = [x for x in LAYERS if x != "novelty" and x in b["alert_layers"] and x not in a["alert_layers"]]
+    for k, what in (("layer_novelty", "novelty"), ("layer_rules", "rules")):
+        if b[k] and not a[k]:
+            out.append(f"{LAYER_TEXT[what]} turned off")
+    dropped = [x for x in LAYERS if x in b["alert_layers"] and x not in a["alert_layers"]]
     if dropped:
         out.append("alerting turned off for " + ", ".join(LAYER_TEXT[x] for x in dropped))
     if a["layers_only"] and not b["layers_only"]:
@@ -656,8 +655,9 @@ def compute(ep: dict, bundle: dict | None, entries: list[dict] | None = None, no
         if man and lay is None:
             add("no_layers", "warning", "The model predates the deterministic layers (new programs, data-flow rules): retrain it")
         elif isinstance(lay, dict):
-            if lay.get("rules") is False:     # (0.8: layer 1 off is the default, not a problem)
-                add("model_rules_off", "error", f"{LAYER_TEXT['rules'].capitalize()} is turned off in the current model")
+            for k, what in (("novelty", "novelty"), ("rules", "rules")):
+                if lay.get(k) is False:
+                    add(f"model_{k}_off", "error", f"{LAYER_TEXT[what].capitalize()} is turned off in the current model")
             cov = lay.get("coverage") or {}
             if cov:   # 0.6: telemetry the rule layers need (pdp_engine.layers.telemetry_coverage)
                 P, F = int(cov.get("processes") or 0), int(cov.get("flows") or 0)
@@ -671,7 +671,7 @@ def compute(ep: dict, bundle: dict | None, entries: list[dict] | None = None, no
         pol = man.get("learned_policy") or {}
         al = pol.get("alert_layers")
         if isinstance(al, list):
-            missing = [x for x in ("rules", "corroborated") if x not in al]
+            missing = [x for x in ("novelty", "rules", "corroborated") if x not in al]
             if missing:
                 add("model_alert_layers", "error", "The current model does not alert on " + ", ".join(LAYER_TEXT[x] for x in missing))
         if man.get("layers_only"):

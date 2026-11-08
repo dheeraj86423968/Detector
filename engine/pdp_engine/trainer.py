@@ -67,7 +67,8 @@ class TrainConfig:
     d3_grouped: bool = False              # 0.7b: detector-3 thresholds per kind of activity (behaviour.GROUP_NAMES)
     # 0.8: a process's detector-3 evidence is the sum over kinds of activity of its most unusual event of that kind
     # within the horizon, each capped and above a floor (behaviour.Breadth) - instead of its single most unusual event
-    d3_breadth: bool = True
+    d3_breadth: bool = False              # off by default: the 0.8 held-out run (artifacts/lab_v08) found fewer attacks
+                                          # than 0.7 with layer 1 (CARBANAKv2 h3 missed); available per endpoint
     d3_breadth_cap: float = 10.0          # nats: one event counts at most this much (P < 5e-5 is "never seen")
     d3_breadth_floor: float = 4.0         # nats: mild novelty (P > 2%) counts nothing
     d3_breadth_horizon_s: float = 4 * 3600.0
@@ -78,9 +79,10 @@ class TrainConfig:
     propagation_seed: float = 0.3         # only nodes at >= 0.3 of the threshold pass suspicion on
     propagation_passes: int = 2           # hops per window
     # deterministic layers (pdp_engine.layers) and the learned layer's alerting policy
-    layer_novelty: bool = False       # layer 1 (new executable) alerts. 0.7 kept it as a safety net (on the TRACE host
-                                      # it was the only layer that caught the attacks); 0.8: detector-3 breadth catches
-                                      # them (artifacts/lab_v08), the rule is off by default
+    layer_novelty: bool = True        # layer 1 (new executable) alerts: the safety net. 0.7 kept it (on TRACE it was the
+                                      # only layer that caught the attacks); 0.8 tried to drop it with detector-3 breadth -
+                                      # same attacks on the dev/seen sets, but on clean held-out data (CARBANAKv2 h3) only
+                                      # layer 1 caught the attack (artifacts/lab_v08 decision record)
     novelty_as_evidence: bool = False # True: its hits are evidence only (alert when the learned score corroborates);
                                       # measured in 0.7 and rejected (+250 false positives on OpTC H201)
     corroboration_at_threshold: bool = True   # 0.7: a learned score corroborates a rule hit / sits next to an alert
