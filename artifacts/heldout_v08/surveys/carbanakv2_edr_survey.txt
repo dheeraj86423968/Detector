@@ -1,0 +1,111 @@
+10.192.101.45
+  2024-04-18 rows     206537 mapped     183780
+  2024-04-22 rows     408061 mapped     382100
+  2024-04-24 rows     248003 mapped     228019
+  2024-04-25 rows     156069 mapped     136006
+  2024-04-26 rows     142492 mapped     122762
+  2024-04-29 rows     170670 mapped     147235
+  2024-04-30 rows     123152 mapped     105903
+  2024-05-01 rows     110074 mapped      94020
+  2024-05-02 rows     118810 mapped     102120
+  2024-05-07 rows     109444 mapped      98674
+  2024-05-08 rows      56706 mapped      52571
+  2024-05-09 rows     163463 mapped     143368
+  2024-05-10 rows     206905 mapped     185994
+unassigned
+  2024-04-18 rows         23 mapped         20
+  2024-04-20 rows          1 mapped          1
+  2024-04-21 rows         30 mapped         30
+  2024-04-22 rows       2790 mapped       2790
+  2024-04-23 rows       4686 mapped       4686
+  2024-04-24 rows       4663 mapped       4663
+  2024-04-25 rows       4394 mapped       4394
+  2024-04-26 rows       4106 mapped       4106
+  2024-04-27 rows       4289 mapped       4289
+  2024-04-28 rows       4180 mapped       4180
+  2024-04-29 rows       4525 mapped       4525
+  2024-04-30 rows       4273 mapped       4273
+  2024-05-01 rows       4289 mapped       4289
+  2024-05-02 rows      17911 mapped      17911
+  2024-05-03 rows       4096 mapped       4096
+  2024-05-04 rows       3854 mapped       3854
+  2024-05-05 rows       3823 mapped       3823
+  2024-05-06 rows       4280 mapped       4280
+  2024-05-07 rows       4256 mapped       4256
+  2024-05-08 rows       4430 mapped       4428
+  2024-05-09 rows       4188 mapped       4181
+  2024-05-10 rows       4149 mapped       4149
+  2024-05-11 rows       3733 mapped       3733
+  2024-05-12 rows       2191 mapped       2191
+10.192.90.48
+  2024-04-19 rows     122514 mapped     105814
+  2024-04-20 rows     104406 mapped      89598
+  2024-04-22 rows     365579 mapped     304630
+  2024-04-23 rows     139586 mapped     124587
+  2024-04-24 rows     766395 mapped     617852
+  2024-04-25 rows     388503 mapped     318060
+  2024-04-26 rows     139282 mapped     123966
+  2024-04-27 rows     439872 mapped     352747
+  2024-04-30 rows      61235 mapped      57553
+  2024-05-01 rows     318348 mapped     264713
+  2024-05-02 rows     203304 mapped     170245
+  2024-05-06 rows      83137 mapped      76921
+  2024-05-07 rows     537208 mapped     421091
+  2024-05-08 rows     394556 mapped     327989
+  2024-05-09 rows     381607 mapped     349366
+10.195.78.253
+  2024-04-20 rows         51 mapped         51
+  2024-04-23 rows    1164172 mapped    1144380
+  2024-04-29 rows    1481084 mapped    1235026
+  2024-04-30 rows     198312 mapped     177462
+  2024-05-01 rows     172139 mapped     154707
+  2024-05-02 rows     210132 mapped     187593
+  2024-05-03 rows     183800 mapped     162677
+  2024-05-06 rows     167739 mapped     150893
+  2024-05-07 rows     435215 mapped     411951
+  2024-05-08 rows     226999 mapped     212056
+  2024-05-09 rows     167748 mapped     161063
+  2024-05-10 rows     140859 mapped     131288
+10.195.75.103
+  2024-04-21 rows        296 mapped        286
+  2024-04-22 rows     199568 mapped     173999
+  2024-04-23 rows     689420 mapped     647975
+  2024-04-24 rows    1535827 mapped    1225570
+  2024-04-25 rows     321039 mapped     300074
+  2024-04-26 rows     159548 mapped     138749
+  2024-04-28 rows     170842 mapped     149832
+  2024-04-29 rows     240041 mapped     204100
+  2024-04-30 rows     223704 mapped     210657
+  2024-05-01 rows     200867 mapped     185704
+  2024-05-02 rows     544640 mapped     484299
+  2024-05-03 rows     228095 mapped     199544
+  2024-05-06 rows     239829 mapped     204927
+  2024-05-07 rows     269478 mapped     230323
+  2024-05-08 rows     270017 mapped     232614
+  2024-05-09 rows     289472 mapped     261594
+130.126.136.46
+  2024-04-22 rows       5789 mapped       4731
+  2024-04-23 rows      11465 mapped       9343
+  2024-04-24 rows      10882 mapped       8685
+  2024-04-25 rows      11327 mapped       8986
+  2024-04-26 rows      17817 mapped      13642
+  2024-04-27 rows      10830 mapped       8591
+  2024-04-28 rows      12168 mapped       9866
+  2024-04-29 rows      12006 mapped       9553
+  2024-04-30 rows       9136 mapped       7621
+  2024-05-01 rows       9817 mapped       8274
+  2024-05-02 rows      17687 mapped      14214
+  2024-05-03 rows      11271 mapped       8930
+  2024-05-04 rows       8676 mapped       6487
+  2024-05-05 rows      10446 mapped       8099
+  2024-05-06 rows      14127 mapped      10672
+  2024-05-07 rows      22781 mapped      19537
+  2024-05-08 rows       8074 mapped       7142
+  2024-05-09 rows      10002 mapped       8315
+  2024-05-10 rows      16202 mapped      12644
+  2024-05-11 rows       8791 mapped       7256
+  2024-05-12 rows       7999 mapped       5797
+
+real	0m30.318s
+user	0m0.015s
+sys	0m0.013s

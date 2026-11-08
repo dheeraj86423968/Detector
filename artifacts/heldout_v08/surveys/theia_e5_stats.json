@@ -1,0 +1,122 @@
+{
+ "2019-05-08": {
+  "events": 9755176,
+  "dropped_unknown_entity": 0,
+  "windows": 88,
+  "fused_edges": 5561236,
+  "new_entities": 291841,
+  "registry_size": 291841,
+  "events_by_type": {
+   "WRITE": 1454700,
+   "READ": 2819860,
+   "RECVMSG": 7033,
+   "RECVFROM": 459425,
+   "SENDTO": 6766,
+   "OPEN": 4762268,
+   "CONNECT": 4133,
+   "EXECUTE": 106760,
+   "SENDMSG": 1688,
+   "CLONE": 132543
+  }
+ },
+ "2019-05-09": {
+  "events": 7006586,
+  "dropped_unknown_entity": 0,
+  "windows": 87,
+  "fused_edges": 3558692,
+  "new_entities": 210474,
+  "registry_size": 502315,
+  "events_by_type": {
+   "WRITE": 1577493,
+   "READ": 2521422,
+   "RECVMSG": 6727,
+   "RECVFROM": 35369,
+   "SENDTO": 4376,
+   "OPEN": 2658470,
+   "CONNECT": 2806,
+   "EXECUTE": 89776,
+   "SENDMSG": 1739,
+   "CLONE": 108408
+  }
+ },
+ "2019-05-10": {
+  "events": 6564340,
+  "dropped_unknown_entity": 0,
+  "windows": 76,
+  "fused_edges": 3285286,
+  "new_entities": 244362,
+  "registry_size": 746677,
+  "events_by_type": {
+   "WRITE": 1455330,
+   "READ": 2544012,
+   "RECVMSG": 44235,
+   "RECVFROM": 4386,
+   "SENDTO": 6127,
+   "OPEN": 2307356,
+   "CONNECT": 4366,
+   "EXECUTE": 88848,
+   "SENDMSG": 1986,
+   "CLONE": 107694
+  }
+ },
+ "2019-05-11": {
+  "events": 6586717,
+  "dropped_unknown_entity": 0,
+  "windows": 92,
+  "fused_edges": 3971819,
+  "new_entities": 173815,
+  "registry_size": 920492,
+  "events_by_type": {
+   "WRITE": 773728,
+   "READ": 2288492,
+   "RECVMSG": 335928,
+   "RECVFROM": 17540,
+   "SENDTO": 23270,
+   "OPEN": 2944432,
+   "CONNECT": 17275,
+   "EXECUTE": 82798,
+   "SENDMSG": 4719,
+   "CLONE": 98535
+  }
+ },
+ "2019-05-14": {
+  "events": 13771858,
+  "dropped_unknown_entity": 0,
+  "windows": 92,
+  "fused_edges": 8624024,
+  "new_entities": 373722,
+  "registry_size": 1294214,
+  "events_by_type": {
+   "WRITE": 2194248,
+   "READ": 3939077,
+   "RECVMSG": 171471,
+   "RECVFROM": 24147,
+   "SENDTO": 29383,
+   "OPEN": 7066797,
+   "CONNECT": 16116,
+   "EXECUTE": 146534,
+   "SENDMSG": 3764,
+   "CLONE": 180321
+  }
+ },
+ "2019-05-15": {
+  "events": 12464260,
+  "dropped_unknown_entity": 0,
+  "windows": 85,
+  "fused_edges": 6028003,
+  "new_entities": 255981,
+  "registry_size": 1550195,
+  "events_by_type": {
+   "WRITE": 3261596,
+   "READ": 4147454,
+   "RECVMSG": 16252,
+   "RECVFROM": 20548,
+   "SENDTO": 21384,
+   "OPEN": 4707921,
+   "CONNECT": 7618,
+   "EXECUTE": 125937,
+   "SENDMSG": 1614,
+   "CLONE": 153936
+  }
+ }
+}

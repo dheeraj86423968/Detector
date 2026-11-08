@@ -18,6 +18,9 @@ Inputs are FIFOs fed by the caller (so no stream passes through a container's st
   --nodes FIFO   `pg_restore -a -t subject_node_table -t file_node_table -t netflow_node_table -f - dump`
   --events FIFO  `pg_restore -a -t event_table -f - dump | cut -s -f2,3,5,6,7`, opened once per pass
   --referenced   npz with arrays `base` / `test` of referenced index ids (survey pass)
+
+Subcommands: `survey` (one counting pass over the event FIFO: per-day rows / kept events, stream checks, referenced
+ids, day sizes), the default conversion, and `manifest`.
 """
 from __future__ import annotations
 
@@ -271,6 +274,96 @@ def main():
     json.dump(stats, open(a.stats, "w"), indent=1)
 
 
+def survey(argv):
+    """survey --events FIFO --first-day D --last-day D --base d1,d2 --test d3,d4 --out-prefix P
+
+    One pass over the event stream (same `cut -s -f2,3,5,6,7` FIFO as the converter). Counts only, no content:
+    raw rows and strictly-mapped events per US/Eastern day of [first-day, last-day], rows per operation, the stream
+    checks the converter relies on, and the referenced index ids of the kept events of the base (train + val) and
+    test days. Writes P_survey.json, P_ref.npz (arrays base / test, for --referenced) and P_sizes.json (kept events
+    per day, for --day-sizes)."""
+    import collections
+    ap = argparse.ArgumentParser()
+    for k in ("events", "first_day", "last_day", "base", "test", "out_prefix"):
+        ap.add_argument("--" + k.replace("_", "-"), required=True)
+    a = ap.parse_args(argv)
+    d0, d1 = datetime.strptime(a.first_day, "%Y-%m-%d"), datetime.strptime(a.last_day, "%Y-%m-%d")
+    days = [(d0 + timedelta(days=i)).strftime("%Y-%m-%d") for i in range((d1 - d0).days + 2)]   # + end boundary
+    B = np.array([ns(f"{d} 00:00:00") for d in days], dtype=np.int64)
+    days = days[:-1]
+    base_k = np.array([days.index(d) for d in a.base.split(",")])
+    test_k = np.array([days.index(d) for d in a.test.split(",")])
+    ref = {"base": np.zeros(1 << 20, bool), "test": np.zeros(1 << 20, bool)}
+    ops, rows_day, kept_day = collections.Counter(), collections.Counter(), collections.Counter()
+    c = collections.Counter()
+    opmap: dict[bytes, bool] = {}
+
+    def mark(part, ids):
+        if not len(ids):
+            return
+        m = int(ids.max()) + 1
+        if m > len(ref[part]):
+            ref[part] = np.concatenate([ref[part], np.zeros(max(m, 2 * len(ref[part])) - len(ref[part]), bool)])
+        ref[part][ids] = True
+
+    def flush(src, op, dst, uu, ts):
+        joined = b"\n".join(uu)
+        if len(joined) != 37 * len(uu) - 1 or len(UUID_RE.findall(joined)) != len(uu):
+            c["bad_uuid"] += sum(1 for u in uu if not (len(u) == 36 and UUID_RE.fullmatch(u)))
+        t = np.array(ts, dtype=np.int64)
+        k = np.searchsorted(B, t, side="left") - 1
+        on_b = np.isin(t, B)
+        c["exactly_midnight"] += int(on_b.sum())
+        ok = (k >= 0) & (k < len(days)) & ~on_b
+        c["outside_days_or_null_ts"] += int((~ok).sum())
+        mapped = np.array([opmap.setdefault(o, normalise_op(o.decode(), strict=True) is not None) for o in op])
+        for o in op:
+            ops[o] += 1
+        for kk, n in zip(*np.unique(k[ok], return_counts=True)):
+            rows_day[days[kk]] += int(n)
+        sel = ok & mapped
+        for kk, n in zip(*np.unique(k[sel], return_counts=True)):
+            kept_day[days[kk]] += int(n)
+        idx = np.nonzero(sel & (np.isin(k, base_k) | np.isin(k, test_k)))[0]
+        s = [src[i] for i in idx]; d = [dst[i] for i in idx]
+        bad = [x for x in s + d if not x.isdigit() or (len(x) > 1 and x[:1] == b"0")]
+        c["noncanonical_index_ids"] += len(bad)
+        si = np.array([int(x) if x.isdigit() else -1 for x in s], dtype=np.int64)
+        di = np.array([int(x) if x.isdigit() else -1 for x in d], dtype=np.int64)
+        kk = k[idx]
+        for part, ks in (("base", base_k), ("test", test_k)):
+            m = np.isin(kk, ks)
+            for arr in (si[m], di[m]):
+                mark(part, arr[arr >= 0])
+
+    rows = 0
+    src, op, dst, uu, ts = [], [], [], [], []
+    with open(a.events, "rb") as fh:
+        for line in fh:
+            p = line.rstrip(b"\n").split(b"\t")
+            src.append(p[0]); op.append(p[1]); dst.append(p[2]); uu.append(p[3])
+            ts.append(int(p[4]) if p[4] != b"\\N" else -1)
+            rows += 1
+            if len(ts) == 2_000_000:
+                flush(src, op, dst, uu, ts); src, op, dst, uu, ts = [], [], [], [], []
+                if rows % 50_000_000 == 0:
+                    log(f"survey: {rows} rows")
+    if ts:
+        flush(src, op, dst, uu, ts)
+    rb, rt = np.nonzero(ref["base"])[0], np.nonzero(ref["test"])[0]
+    np.savez_compressed(a.out_prefix + "_ref.npz", base=rb, test=rt)
+    json.dump({d: kept_day[d] for d in days}, open(a.out_prefix + "_sizes.json", "w"), indent=1)
+    res = {"rows": rows, "rows_per_day": {d: rows_day[d] for d in days if rows_day[d]},
+           "mapped_per_day": {d: kept_day[d] for d in days if kept_day[d]},
+           "ops": {o.decode(): n for o, n in ops.items()},
+           "ops_dropped_by_strict_map": sorted(o.decode() for o, m in opmap.items() if not m),
+           **{k: c[k] for k in ("outside_days_or_null_ts", "exactly_midnight", "bad_uuid", "noncanonical_index_ids")},
+           "referenced_base": len(rb), "referenced_test": len(rt), "referenced_any": len(np.union1d(rb, rt)),
+           "referenced_test_not_base": len(np.setdiff1d(rt, rb))}
+    json.dump(res, open(a.out_prefix + "_survey.json", "w"), indent=1)
+    log(json.dumps(res, indent=1))
+
+
 def write_manifest(argv):
     """manifest --out <host dir> --dataset D --host H --platform P --dump PATH --train ... --val ... --test ...
     --stats stats.json --survey survey.json --referenced ref.npz --gt a.csv,b.csv [--gt-dir /gt] [--split-note ..] [--notes a;b]"""
@@ -281,6 +374,9 @@ def write_manifest(argv):
     for k in ("out", "dataset", "host", "platform", "dump", "train", "val", "test", "stats", "survey", "referenced", "gt"):
         ap.add_argument(f"--{k}", required=True)
     ap.add_argument("--gt-dir", default="/gt"); ap.add_argument("--split-note", default=""); ap.add_argument("--notes", default="")
+    ap.add_argument("--flags", default="", help="';'-separated")
+    ap.add_argument("--verified", default="verified identical to PostgresReplay + ingest_day on a 5M-row sample (trace_e3_sample)",
+                    help="how the stream path was checked against the database path for this dump")
     a = ap.parse_args(argv)
     train, test = a.train.split(","), a.test.split(",")
     stats, survey = json.load(open(a.stats)), json.load(open(a.survey))
@@ -305,10 +401,10 @@ def write_manifest(argv):
         gt[os.path.basename(f)[:-4]] = r
     man = {
         "dataset": a.dataset, "host": a.host, "platform": a.platform,
-        "database": f"not restored (disk): streamed from {a.dump} with pdp_server.tools.heldout_stream; "
-                    "verified identical to PostgresReplay + ingest_day on a 5M-row sample (trace_e3_sample)",
+        "database": f"not restored (disk): streamed from {a.dump} with pdp_server.tools.heldout_stream; {a.verified}",
         "source": "heldout_stream (PostgresReplay-equivalent)",
-        "train_days": train, "val_day": a.val, "test_days": test, "split_rule": a.split_note, "flags": [],
+        "train_days": train, "val_day": a.val, "test_days": test, "split_rule": a.split_note,
+        "flags": [f for f in a.flags.split(";") if f],
         "day_boundaries": "US/Eastern calendar days, timestamp_rec strictly inside (PostgresReplay / PIDSMaker graph construction)",
         "window": "15 min fused windows (WindowBuilder, chunks of 1024)",
         "entity_uuid": "framework index_id (orthrus ground truth column 3); label formats 'subject <exe> <cmdline>', 'file <path>', 'netflow <ip> <port>'",
@@ -326,4 +422,6 @@ def write_manifest(argv):
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "manifest":
         sys.exit(write_manifest(sys.argv[2:]))
+    if len(sys.argv) > 1 and sys.argv[1] == "survey":
+        sys.exit(survey(sys.argv[2:]))
     sys.exit(main())

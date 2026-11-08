@@ -1,0 +1,96 @@
+event_table 3524866
+subject_node_table 400166
+file_node_table 284072
+netflow_node_table 11075
+08:38:28 /data/heldout_verify_v08/theia_e5/db/h/baseline: 2019-05-08 243848 events, 56 windows, 165924 fused edges, registry 84862
+08:38:29 /data/heldout_verify_v08/theia_e5/db/h/baseline: 2019-05-09 175102 events, 49 windows, 110022 fused edges, registry 133207
+08:38:31 /data/heldout_verify_v08/theia_e5/db/h/baseline: 2019-05-10 164050 events, 61 windows, 103796 fused edges, registry 178583
+08:38:33 /data/heldout_verify_v08/theia_e5/db/h/baseline: 2019-05-11 164719 events, 65 windows, 122602 fused edges, registry 237560
+08:38:38 /data/heldout_verify_v08/theia_e5/db/h/eval-test: 2019-05-14 344225 events, 75 windows, 250623 fused edges, registry 365993
+08:38:42 /data/heldout_verify_v08/theia_e5/db/h/eval-test: 2019-05-15 311763 events, 68 windows, 181161 fused edges, registry 442732
+08:38:44 manifest written: /data/heldout_verify_v08/theia_e5/db/h/manifest.json
+08:38:51 {
+ "rows": 3524866,
+ "rows_per_day": {
+  "2019-05-07": 1444903,
+  "2019-05-08": 247318,
+  "2019-05-09": 177978,
+  "2019-05-10": 166899,
+  "2019-05-11": 167273,
+  "2019-05-12": 80287,
+  "2019-05-13": 105600,
+  "2019-05-14": 348963,
+  "2019-05-15": 315595,
+  "2019-05-16": 291017,
+  "2019-05-17": 179033
+ },
+ "mapped_per_day": {
+  "2019-05-07": 1442201,
+  "2019-05-08": 243848,
+  "2019-05-09": 175102,
+  "2019-05-10": 164050,
+  "2019-05-11": 164719,
+  "2019-05-12": 79133,
+  "2019-05-13": 104121,
+  "2019-05-14": 344225,
+  "2019-05-15": 311763,
+  "2019-05-16": 287938,
+  "2019-05-17": 176363
+ },
+ "ops": {
+  "EVENT_WRITE": 1653496,
+  "EVENT_READ": 741313,
+  "EVENT_RECVMSG": 38193,
+  "EVENT_OPEN": 953441,
+  "EVENT_RECVFROM": 44385,
+  "EVENT_EXIT": 30846,
+  "EVENT_CLONE": 30295,
+  "EVENT_EXECUTE": 24812,
+  "EVENT_CONNECT": 2569,
+  "EVENT_SENDTO": 4220,
+  "EVENT_UNLINK": 146,
+  "EVENT_CHANGE_PRINCIPAL": 345,
+  "EVENT_MODIFY_FILE_ATTRIBUTES": 66,
+  "EVENT_SENDMSG": 739
+ },
+ "ops_dropped_by_strict_map": [
+  "EVENT_CHANGE_PRINCIPAL",
+  "EVENT_EXIT",
+  "EVENT_MODIFY_FILE_ATTRIBUTES",
+  "EVENT_UNLINK"
+ ],
+ "outside_days_or_null_ts": 0,
+ "exactly_midnight": 0,
+ "bad_uuid": 0,
+ "noncanonical_index_ids": 0,
+ "referenced_base": 237560,
+ "referenced_test": 218609,
+ "referenced_any": 442732,
+ "referenced_test_not_base": 205172
+}
+08:38:51 loading entities for 442732 referenced index ids
+08:38:53 node rows streamed: {'subject_node_table': 400166, 'file_node_table': 284072, 'netflow_node_table': 11075}; kept [237642, 198209, 6881]
+08:38:53 lookup: 442732 entities
+08:38:53 baseline: event pass for ['2019-05-08', '2019-05-09', '2019-05-10', '2019-05-11']
+08:38:58 event pass: 3524866 rows streamed; kept 2019-05-08: 243848, 2019-05-09: 175102, 2019-05-10: 164050, 2019-05-11: 164719
+08:38:59 /data/heldout_verify_v08/theia_e5/stream/h/baseline: 2019-05-08 {'events': 243848, 'dropped_unknown_entity': 0, 'windows': 56, 'fused_edges': 165924, 'new_entities': 84862, 'registry_size': 84862, 'events_by_type': {'WRITE': 36367, 'READ': 70402, 'RECVMSG': 174, 'OPEN': 119218, 'RECVFROM': 11497, 'CLONE': 3260, 'EXECUTE': 2601, 'CONNECT': 119, 'SENDTO': 165, 'SENDMSG': 45}}; free 81.9 GB
+08:39:00 /data/heldout_verify_v08/theia_e5/stream/h/baseline: 2019-05-09 {'events': 175102, 'dropped_unknown_entity': 0, 'windows': 49, 'fused_edges': 110022, 'new_entities': 48345, 'registry_size': 133207, 'events_by_type': {'WRITE': 39375, 'READ': 63040, 'RECVMSG': 152, 'OPEN': 66523, 'RECVFROM': 873, 'CLONE': 2809, 'EXECUTE': 2102, 'CONNECT': 63, 'SENDTO': 125, 'SENDMSG': 40}}; free 81.8 GB
+08:39:00 /data/heldout_verify_v08/theia_e5/stream/h/baseline: 2019-05-10 {'events': 164050, 'dropped_unknown_entity': 0, 'windows': 61, 'fused_edges': 103796, 'new_entities': 45376, 'registry_size': 178583, 'events_by_type': {'WRITE': 36347, 'READ': 63618, 'RECVMSG': 1080, 'OPEN': 57672, 'RECVFROM': 97, 'CLONE': 2776, 'EXECUTE': 2143, 'CONNECT': 111, 'SENDTO': 160, 'SENDMSG': 46}}; free 81.8 GB
+08:39:01 /data/heldout_verify_v08/theia_e5/stream/h/baseline: 2019-05-11 {'events': 164719, 'dropped_unknown_entity': 0, 'windows': 65, 'fused_edges': 122602, 'new_entities': 58977, 'registry_size': 237560, 'events_by_type': {'WRITE': 19333, 'READ': 57243, 'RECVMSG': 8396, 'OPEN': 73533, 'RECVFROM': 425, 'CLONE': 2417, 'EXECUTE': 2187, 'CONNECT': 445, 'SENDTO': 616, 'SENDMSG': 124}}; free 81.8 GB
+08:39:02 /data/heldout_verify_v08/theia_e5/stream/h/baseline: registry saved (237560 entities)
+08:39:02 eval-test: event pass for ['2019-05-14', '2019-05-15']
+08:39:07 event pass: 3524866 rows streamed; kept 2019-05-14: 344225, 2019-05-15: 311763
+08:39:09 /data/heldout_verify_v08/theia_e5/stream/h/eval-test: 2019-05-14 {'events': 344225, 'dropped_unknown_entity': 0, 'windows': 75, 'fused_edges': 250623, 'new_entities': 128433, 'registry_size': 365993, 'events_by_type': {'WRITE': 54863, 'READ': 98601, 'RECVMSG': 4332, 'OPEN': 176553, 'RECVFROM': 590, 'CLONE': 4457, 'EXECUTE': 3573, 'CONNECT': 370, 'SENDTO': 777, 'SENDMSG': 109}}; free 81.7 GB
+08:39:10 /data/heldout_verify_v08/theia_e5/stream/h/eval-test: 2019-05-15 {'events': 311763, 'dropped_unknown_entity': 0, 'windows': 68, 'fused_edges': 181161, 'new_entities': 76739, 'registry_size': 442732, 'events_by_type': {'WRITE': 81406, 'READ': 103770, 'RECVMSG': 415, 'OPEN': 117584, 'RECVFROM': 496, 'CLONE': 3987, 'EXECUTE': 3334, 'CONNECT': 164, 'SENDTO': 574, 'SENDMSG': 33}}; free 81.6 GB
+08:39:12 /data/heldout_verify_v08/theia_e5/stream/h/eval-test: registry saved (442732 entities)
+baseline registry entities 237560 237560 identical
+baseline days ['2019-05-08', '2019-05-09', '2019-05-10', '2019-05-11'] ['2019-05-08', '2019-05-09', '2019-05-10', '2019-05-11']
+  2019-05-08: 56 windows, 165924 edges compared
+  2019-05-09: 49 windows, 110022 edges compared
+  2019-05-10: 61 windows, 103796 edges compared
+  2019-05-11: 65 windows, 122602 edges compared
+eval-test registry entities 442732 442732 identical
+eval-test days ['2019-05-14', '2019-05-15'] ['2019-05-14', '2019-05-15']
+  2019-05-14: 75 windows, 250623 edges compared
+  2019-05-15: 68 windows, 181161 edges compared
+EQUIVALENT

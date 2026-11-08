@@ -1,0 +1,63 @@
+{
+ "rows": 140994662,
+ "rows_per_day": {
+  "2019-05-07": 57796136,
+  "2019-05-08": 9892730,
+  "2019-05-09": 7119117,
+  "2019-05-10": 6675936,
+  "2019-05-11": 6690937,
+  "2019-05-12": 3211455,
+  "2019-05-13": 4224033,
+  "2019-05-14": 13958501,
+  "2019-05-15": 12623791,
+  "2019-05-16": 11640707,
+  "2019-05-17": 7161319
+ },
+ "mapped_per_day": {
+  "2019-05-07": 57693796,
+  "2019-05-08": 9755176,
+  "2019-05-09": 7006586,
+  "2019-05-10": 6564340,
+  "2019-05-11": 6586717,
+  "2019-05-12": 3163255,
+  "2019-05-13": 4162229,
+  "2019-05-14": 13771858,
+  "2019-05-15": 12464260,
+  "2019-05-16": 11512328,
+  "2019-05-17": 7055857
+ },
+ "ops": {
+  "EVENT_WRITE": 66155235,
+  "EVENT_READ": 29644315,
+  "EVENT_RECVMSG": 1531703,
+  "EVENT_RECVFROM": 1775374,
+  "EVENT_SENDTO": 165338,
+  "EVENT_OPEN": 38130199,
+  "EVENT_CONNECT": 104409,
+  "EVENT_EXECUTE": 996631,
+  "EVENT_EXIT": 1235348,
+  "EVENT_SENDMSG": 27702,
+  "EVENT_CLONE": 1205496,
+  "EVENT_BOOT": 6,
+  "EVENT_CHANGE_PRINCIPAL": 14589,
+  "EVENT_MODIFY_FILE_ATTRIBUTES": 2305,
+  "EVENT_UNLINK": 6011,
+  "EVENT_MPROTECT": 1
+ },
+ "ops_dropped_by_strict_map": [
+  "EVENT_BOOT",
+  "EVENT_CHANGE_PRINCIPAL",
+  "EVENT_EXIT",
+  "EVENT_MODIFY_FILE_ATTRIBUTES",
+  "EVENT_MPROTECT",
+  "EVENT_UNLINK"
+ ],
+ "outside_days_or_null_ts": 0,
+ "exactly_midnight": 0,
+ "bad_uuid": 0,
+ "noncanonical_index_ids": 0,
+ "referenced_base": 920492,
+ "referenced_test": 749962,
+ "referenced_any": 1550195,
+ "referenced_test_not_base": 629703
+}
