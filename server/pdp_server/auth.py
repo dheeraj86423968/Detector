@@ -12,7 +12,7 @@ import time
 # the session secret lives with the other private material (pki.PRIVATE_DIR: not mounted into the gateway); an
 # installation that still has it at the pre-review path /pki/session.secret is migrated by pki.migrate_private()
 SESSION_SECRET_PATH = os.environ.get("PDP_SESSION_SECRET") or os.path.join(
-    os.environ.get("PDP_PKI_PRIVATE_DIR", os.path.join(os.environ.get("PDP_PKI_DIR", "/pki"), "private")), "session.secret")
+    (os.environ.get("PDP_PKI_PRIVATE_DIR") or os.path.join(os.environ.get("PDP_PKI_DIR") or "/pki", "private")), "session.secret")
 LEGACY_SESSION_SECRET_PATH = os.path.join(os.environ.get("PDP_PKI_DIR", "/pki"), "session.secret")
 SESSION_TTL = 12 * 3600
 

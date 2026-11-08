@@ -62,8 +62,8 @@ MAX_DAYS_PER_BATCH = int(os.environ.get("PDP_INGEST_MAX_DAYS", "8"))        # da
 # security review F11: what one endpoint may upload per rolling 24 hours (compressed bytes as sent, and rows), over all
 # its event / entity uploads; a per-endpoint override lives in its config (ingest_daily_bytes / ingest_daily_rows,
 # set by the operator). A busy server uploads about 0.7 GB and 60 M events a day.
-DAILY_BYTES = int(os.environ.get("PDP_INGEST_DAILY_BYTES", str(8 << 30)))
-DAILY_ROWS = int(os.environ.get("PDP_INGEST_DAILY_ROWS", str(200_000_000)))
+DAILY_BYTES = int(os.environ.get("PDP_INGEST_DAILY_BYTES") or (8 << 30))   # (compose passes "" when unset)
+DAILY_ROWS = int(os.environ.get("PDP_INGEST_DAILY_ROWS") or 200_000_000)
 TS_FLOOR_NS = 946_684_800 * 10**9                         # 2000-01-01: no endpoint (nor a replayed dataset) is older
 DAY_S = 86400
 DAY_NS_ = DAY_S * 10**9                                     # = db.DAY_NS (partitions)

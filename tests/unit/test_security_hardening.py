@@ -406,5 +406,15 @@ check(re.search(r'if \(u\.protocol === "https:" \|\| u\.protocol === "http:"\) s
 check('contents.on("will-navigate"' in mj and "setWindowOpenHandler" in mj and "u.origin === serverOrigin()" in mj, "navigation is confined to the configured server's origin")
 check("toggleDevTools" not in mj, "DevTools are not in the production menu")
 
+# compose passes unset settings as empty strings (${PDP_INGEST_DAILY_BYTES:-}): modules must load with them
+import subprocess as _sp  # noqa: E402
+_env = {**os.environ, "PDP_INGEST_DAILY_BYTES": "", "PDP_INGEST_DAILY_ROWS": "", "PDP_UPDATE_HOLD_MIN": "", "PDP_UPDATE_HOLD_PCT": "",
+        "PDP_PKI_PRIVATE_DIR": ""}
+_r = _sp.run([sys.executable, "-c", "from pdp_server import integrity, updates, pki, auth; "
+              "print(integrity.DAILY_BYTES, integrity.DAILY_ROWS, updates.HOLD_MIN, updates.HOLD_PCT, pki.PRIVATE_DIR, auth.SESSION_SECRET_PATH)"],
+             env=_env, capture_output=True, text=True)
+check(_r.returncode == 0 and _r.stdout.split()[:4] == [str(8 << 30), "200000000", "2", "10.0"]
+      and _r.stdout.split()[4].endswith("/private"), f"empty compose settings fall back to the defaults ({_r.stdout.strip() or _r.stderr[-300:]})")
+
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

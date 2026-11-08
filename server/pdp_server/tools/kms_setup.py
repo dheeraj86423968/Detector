@@ -42,7 +42,7 @@ from cryptography.x509.oid import NameOID
 from pdp_server import kms
 
 PKI_DIR = os.environ.get("PDP_PKI_DIR", "/pki")
-PRIVATE_DIR = os.environ.get("PDP_PKI_PRIVATE_DIR", os.path.join(PKI_DIR, "private"))   # keys live here since the 2026-11-08 review
+PRIVATE_DIR = (os.environ.get("PDP_PKI_PRIVATE_DIR") or os.path.join(PKI_DIR, "private"))   # keys live here since the 2026-11-08 review
 
 
 def _key_path(name: str) -> str:

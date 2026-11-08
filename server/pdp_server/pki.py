@@ -26,7 +26,7 @@ PKI_DIR = os.environ.get("PDP_PKI_DIR", "/pki")
 # Private material (file mode: the CA key and the bundle-signing key; always: the console session secret) lives in
 # its own directory / volume that only the api and the workers mount - the gateway mounts PKI_DIR for its TLS key
 # and must never see the keys that issue agent certificates or sign models (security review F9).
-PRIVATE_DIR = os.environ.get("PDP_PKI_PRIVATE_DIR", os.path.join(PKI_DIR, "private"))
+PRIVATE_DIR = (os.environ.get("PDP_PKI_PRIVATE_DIR") or os.path.join(PKI_DIR, "private"))
 PRIVATE_FILES = ("ca.key", "bundle_signing.key", "session.secret")
 log = logging.getLogger("pdp.pki")
 

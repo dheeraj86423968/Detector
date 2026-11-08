@@ -30,8 +30,8 @@ router = APIRouter()
 CANARY_MIN = float(os.environ.get("PDP_UPDATE_CANARY_MIN", "30"))
 # a version is held back for an organisation only when its failures reach both of these (security review F5: one
 # compromised endpoint reporting "failed" must not veto every update for its organisation)
-HOLD_MIN = int(os.environ.get("PDP_UPDATE_HOLD_MIN", "2"))                 # endpoints that reported the version failed
-HOLD_PCT = float(os.environ.get("PDP_UPDATE_HOLD_PCT", "10"))              # ... and at least this share of those that tried it
+HOLD_MIN = int(os.environ.get("PDP_UPDATE_HOLD_MIN") or 2)                 # endpoints that reported the version failed
+HOLD_PCT = float(os.environ.get("PDP_UPDATE_HOLD_PCT") or 10)              # ... and at least this share of those that tried it
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 
