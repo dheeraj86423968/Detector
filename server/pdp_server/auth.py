@@ -37,6 +37,17 @@ def verify_password(pw: str, stored: str) -> bool:
         return False
 
 
+_DUMMY: list[str] = []
+
+
+def dummy_hash() -> str:
+    """A hash of a random password, verified when a sign-in names an unknown user so that the request costs the same
+    scrypt work as a wrong password for an existing one (no user enumeration by response time)."""
+    if not _DUMMY:
+        _DUMMY.append(hash_password(secrets.token_hex(16)))
+    return _DUMMY[0]
+
+
 def make_session(user_id: int, role: str, gen: int = 0) -> str:
     """`gen` is the user's session generation (users.session_gen): bumping it (password change or reset, "sign out
     everywhere") ends every session issued before - access.session() compares it on each request."""

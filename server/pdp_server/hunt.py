@@ -98,10 +98,35 @@ def _uuid(x: str) -> bool:
         return False
 
 
+MAX_ANSWER_ROWS, MAX_ANSWER_FIELDS, MAX_ANSWER_TEXT = 500, 16, 2000
+
+
+def clean_rows(rows: list) -> list[dict]:
+    """An agent's hunt answer as the console can show it: objects only (a compromised endpoint must not be able to
+    break the hunt view for everyone with a stray value), bounded in rows, fields and text length."""
+    out = []
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        row = {}
+        for k, v in list(r.items())[:MAX_ANSWER_FIELDS]:
+            k = str(k)[:64]
+            if isinstance(v, (bool, int, float)) or v is None:
+                row[k] = v
+            else:
+                row[k] = str(v)[:MAX_ANSWER_TEXT]
+        out.append(row)
+        if len(out) >= MAX_ANSWER_ROWS:
+            break
+    return out
+
+
 def agent_router(app, agent_endpoint, ndjson_rows):
     @app.post("/v1/endpoints/{endpoint_id}/hunts/{hunt_id}")
     async def hunt_answer(endpoint_id: str, hunt_id: str, request: Request, ep=Depends(agent_endpoint)):
-        rows = [r async for r in ndjson_rows(request)][:500]
+        if not _uuid(hunt_id):
+            raise HTTPException(404, "unknown hunt")
+        rows = clean_rows([r async for r in ndjson_rows(request)])
         with db.conn() as c:
             h = db.q(c, "SELECT endpoints FROM hunts WHERE id=%s", (hunt_id,), one=True)
             if not h or endpoint_id not in h["endpoints"]:

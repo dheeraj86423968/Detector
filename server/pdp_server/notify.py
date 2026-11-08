@@ -230,15 +230,15 @@ def _smtp_send(to: str, subject: str, text: str) -> None:
 def _syslog_send(target: str, lines: list[str]) -> None:
     from .exporter import SyslogSink
     u = urlparse(target)
-    resolve_public(u.hostname, u.port or 514)
     sink = SyslogSink(target)
+    sink.addr = resolve_public(u.hostname, sink.port)[0]     # connect to the checked address (no DNS rebinding in between)
     sink._connect()
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     try:
         for line in lines:
             data = f"<{8 * 13 + 4}>1 {ts} {sink.me} pdp - event - {line}".encode()
             if sink.scheme == "udp":
-                sink.sock.sendto(data[:65000], (sink.host, sink.port))
+                sink.sock.sendto(data[:65000], sink.dest())
             else:
                 sink.sock.sendall(f"{len(data)} ".encode() + data)
     finally:

@@ -61,6 +61,20 @@ def end_sessions(c, user_id: int) -> None:
     db.q(c, "UPDATE users SET session_gen = session_gen + 1 WHERE id=%s", (user_id,))
 
 
+def sign_in_locked(u: dict | None) -> bool:
+    """True while the account's failed sign-ins (password or second factor) have it locked."""
+    from datetime import datetime, timezone
+    return bool(u and u.get("locked_until") and u["locked_until"] > datetime.now(timezone.utc))
+
+
+def note_failed_sign_in(c, user_id: int) -> None:
+    """One more failed sign-in step for this account: 5 failures free, then 30 s, 60 s, ... up to 15 min (reset by a
+    successful sign-in). Used by the password step and the second-factor step alike, so that neither can be guessed
+    at the API's own pace."""
+    db.q(c, "UPDATE users SET failed_logins = failed_logins + 1, locked_until = CASE WHEN failed_logins + 1 >= 5 "
+            "THEN now() + make_interval(secs => LEAST(900, 30 * power(2, failed_logins + 1 - 5))) END WHERE id=%s", (user_id,))
+
+
 def admin(s=Depends(session)) -> dict:
     if s["r"] != "admin":
         raise HTTPException(403, "admin role required")

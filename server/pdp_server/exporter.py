@@ -107,12 +107,18 @@ class SyslogSink:
         self.scheme, self.host, self.port, self.ca = u.scheme, u.hostname, u.port or (6514 if u.scheme == "tls" else 514), ca
         self.sock = None
         self.me = socket.gethostname()
+        # the address to connect to when the caller resolved (and checked) the host name itself: the connection then
+        # goes where the check looked, not where a second DNS answer points (rebinding to an internal service)
+        self.addr: str | None = None
+
+    def dest(self) -> tuple[str, int]:
+        return (self.addr or self.host, self.port)
 
     def _connect(self):
         if self.scheme == "udp":
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.sock = socket.socket(socket.AF_INET6 if ":" in (self.addr or "") else socket.AF_INET, socket.SOCK_DGRAM)
             return
-        s = socket.create_connection((self.host, self.port), timeout=10)
+        s = socket.create_connection(self.dest(), timeout=10)
         if self.scheme == "tls":
             ctx = ssl.create_default_context(cafile=self.ca) if self.ca else ssl.create_default_context()
             s = ctx.wrap_socket(s, server_hostname=self.host)
@@ -127,7 +133,7 @@ class SyslogSink:
                 msg = f"<{8 * 13 + (2 if float(a['fused']) >= 2 else 4)}>1 {ts} {self.me} pdp - alert - {to_cef(a, console)}"   # RFC 5424, facility 13 (log audit)
                 data = msg.encode()
                 if self.scheme == "udp":
-                    self.sock.sendto(data[:65000], (self.host, self.port))
+                    self.sock.sendto(data[:65000], self.dest())
                 else:
                     self.sock.sendall(f"{len(data)} ".encode() + data)           # RFC 6587 octet counting
         except OSError:

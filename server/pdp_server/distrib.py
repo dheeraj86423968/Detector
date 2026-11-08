@@ -23,9 +23,15 @@ router = APIRouter()
 TEMPLATE = os.path.join(os.path.dirname(__file__), "install.sh.tmpl")
 
 
+HOST_RE = re.compile(r"^[A-Za-z0-9.-]{1,253}$")
+
+
 def public_host(request: Request) -> str:
-    """The console host clients use: the configured public hostname, else the host this request came to."""
-    return os.environ.get("PDP_PUBLIC_HOSTNAME") or (request.headers.get("host") or "localhost").split(":")[0]
+    """The console host clients use: the configured public hostname, else the host this request came to. The request
+    host is rendered into the one-line installer (a shell script) and the install commands, so only a host name or
+    address is accepted; anything else falls back to localhost."""
+    h = os.environ.get("PDP_PUBLIC_HOSTNAME") or (request.headers.get("host") or "localhost").split(":")[0]
+    return h if HOST_RE.match(h) else "localhost"
 
 
 def agent_image(host: str) -> str | None:
