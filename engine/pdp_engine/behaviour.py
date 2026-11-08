@@ -494,3 +494,107 @@ def grouped_raw_scores(model: "BehaviourModel", w, K: EntityKeys, n: int) -> np.
             np.maximum.at(out[k], p[m], s[m])
             np.maximum.at(out[k], x[m], s[m])
     return out
+
+
+# 0.8: evidence accumulated over a process's activities ("breadth"). One maximum per process cannot tell one strange
+# benign event (a tool reading a directory it never read: 50-70 nats on a busy host) from an attack whose steps are each
+# only moderately strange (a program started from /tmp that then connects out and writes files: ~20 nats each). Per
+# process instance, the most unusual event of each kind of activity (BREADTH_GROUPS) within a time horizon counts,
+# capped (beyond `cap` nats a rarity estimate says nothing more: P < 5e-5 is "never seen" either way) and above a
+# floor (mild novelty is everyday noise); the process's evidence is their sum. Unusual in several kinds of activity
+# at once is what attack steps look like; a single extreme event no longer outranks them. Objects (files,
+# addresses) keep their own capped maximum; they rise through propagation from the processes that touch them.
+BREADTH_GROUPS = ("process", "network", "file-write", "file-read")
+
+
+class Breadth:
+    """Per-process breadth state: for each registry position and activity group, the largest event score seen
+    within `horizon_ns` and when it was set (carried across windows; grows with the registry, remapped on
+    compaction)."""
+
+    def __init__(self, cap: float, floor: float, horizon_ns: int):
+        self.cap, self.floor, self.horizon_ns = float(cap), float(floor), int(horizon_ns)
+        self.reset()
+
+    # storage: float32 maxima and int64 times in buffers with spare capacity (the registry grows a little every
+    # window; re-allocating the whole state each time would copy it per window). val / ts are views of the used part.
+    @property
+    def val(self) -> np.ndarray:
+        return self._val[:, :self.n]
+
+    @property
+    def ts(self) -> np.ndarray:
+        return self._ts[:, :self.n]
+
+    def _alloc(self, capacity: int) -> None:
+        v = np.zeros((len(BREADTH_GROUPS), capacity), np.float32)
+        t = np.zeros((len(BREADTH_GROUPS), capacity), np.int64)
+        v[:, :self.n], t[:, :self.n] = self._val[:, :self.n], self._ts[:, :self.n]
+        self._val, self._ts = v, t
+
+    def grow(self, n: int) -> None:
+        if n <= self.n:
+            return
+        if n > self._val.shape[1]:
+            self._alloc(max(n, 2 * self._val.shape[1], 1024))
+        self._val[:, self.n:n] = 0.0          # positions freed by an earlier remap may hold old values
+        self._ts[:, self.n:n] = 0
+        self.n = n
+
+    def reset(self) -> None:
+        self.n = 0
+        self._val = np.zeros((len(BREADTH_GROUPS), 0), np.float32)
+        self._ts = np.zeros((len(BREADTH_GROUPS), 0), np.int64)
+
+    def remap(self, keep: np.ndarray) -> None:
+        k = min(self.n, len(keep))
+        idx = np.nonzero(keep[:k])[0]
+        v, t = self._val[:, idx], self._ts[:, idx]
+        self.n = len(idx)
+        self._val, self._ts = v, t
+
+    def update(self, p: np.ndarray, g: np.ndarray, s: np.ndarray, now_ns: int) -> np.ndarray:
+        """Fold a window's process events (process p, group g, score s) into the state; returns the processes
+        touched (unique) and their breadth after the update."""
+        if not len(p):
+            return np.zeros(0, np.int64), np.zeros(0)
+        G = len(BREADTH_GROUPS)
+        key = p.astype(np.int64) * G + g
+        u, inv = np.unique(key, return_inverse=True)
+        m = np.zeros(len(u), np.float32)
+        np.maximum.at(m, inv, s)
+        up, ug = u // G, u % G
+        old, t0 = self._val[ug, up], self._ts[ug, up]
+        expired = now_ns - t0 > self.horizon_ns
+        repl = expired | (m >= old)
+        self._val[ug[repl], up[repl]] = m[repl]
+        self._ts[ug[repl], up[repl]] = now_ns
+        procs = np.unique(up)
+        live = (now_ns - self._ts[:, procs]) <= self.horizon_ns
+        ev = np.clip(np.minimum(self._val[:, procs].astype(np.float64), self.cap) - self.floor, 0.0, None) * live
+        return procs, ev.sum(0)
+
+
+def breadth_groups(K: EntityKeys, x: np.ndarray, r: np.ndarray) -> np.ndarray:
+    """BREADTH_GROUPS id per event (what the process touched): 0 a process, 1 a network endpoint, 2 a file written
+    to, 3 a file read / opened / executed."""
+    return event_groups(K, x, r)
+
+
+def breadth_node_scores(model: "BehaviourModel", w, K: EntityKeys, n: int, state: Breadth):
+    """(node evidence of length n, per-edge raw score of length w.num_edges): processes touched in the window get
+    their breadth (state updated with the window's events at the window end), objects min(max event score, cap)."""
+    K.grow()
+    p, x, e, s = model.edge_scores(w, K)
+    own = np.zeros(n)
+    es = np.zeros(w.num_edges)
+    if not len(s):
+        return own, es
+    np.maximum.at(es, e, s)
+    r = edge_events(w, K)[2]
+    state.grow(n)
+    procs, ev = state.update(p, breadth_groups(K, x, r), s, int(w.end_ns))
+    obj = ~K.isproc[x]
+    np.maximum.at(own, x[obj], np.minimum(s[obj], state.cap))
+    own[procs] = ev
+    return own, es

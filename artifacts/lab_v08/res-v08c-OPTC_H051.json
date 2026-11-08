@@ -1,0 +1,38 @@
+{
+ "set": "OPTC_H051",
+ "name": "v08c",
+ "cfg": {
+  "corroboration_at_threshold": false
+ },
+ "product": {
+  "TP": 75,
+  "FP": 61,
+  "recall": 0.658,
+  "attacks": 1,
+  "FP/day": 20.3
+ },
+ "n_attacks": 1,
+ "gt_nodes": 114,
+ "days": 3,
+ "layer:corroborated": {
+  "TP": 7,
+  "FP": 25,
+  "recall": 0.061,
+  "attacks": 1
+ },
+ "layer:learned": {
+  "TP": 0,
+  "FP": 5,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "layer:rules": {
+  "TP": 68,
+  "FP": 31,
+  "recall": 0.596,
+  "attacks": 1
+ },
+ "attacks_found": [
+  "h051_0925"
+ ]
+}

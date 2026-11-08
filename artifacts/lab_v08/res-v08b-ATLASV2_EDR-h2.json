@@ -1,0 +1,34 @@
+{
+ "set": "ATLASV2_EDR-h2",
+ "name": "v08b",
+ "cfg": {},
+ "product": {
+  "TP": 0,
+  "FP": 68,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 68.0
+ },
+ "n_attacks": 10,
+ "gt_nodes": 0,
+ "days": 1,
+ "layer:corroborated": {
+  "TP": 0,
+  "FP": 21,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "layer:learned": {
+  "TP": 0,
+  "FP": 23,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "layer:rules": {
+  "TP": 0,
+  "FP": 24,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "attacks_found": []
+}

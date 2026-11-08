@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import torch
 
-from .behaviour import BehaviourModel, propagate
+from .behaviour import BehaviourModel, Breadth, breadth_node_scores, propagate
 from .bundle import check_requires, detector1_file, load_state_dict, verify_digests
 from .featurizer import Word2VecFeaturizer
 from .layers import ALWAYS_EVIDENCE, EVIDENCE_RULES, DeterministicLayers, Hit
@@ -202,6 +202,8 @@ class Runtime:
         self.reg = registry
         self.bm = self.bk = self.prop = None     # 0.7 detector-3 / propagation (set below for bundles that have them)
         self.thr3g = None
+        self.breadth = None                      # 0.8: per-process breadth state (behaviour.Breadth)
+        self.thr3b = None
         self.susp = np.zeros(0)
         self.final_thr = 1.0
         self.layers_only = bool(self.m.get("layers_only"))
@@ -241,6 +243,10 @@ class Runtime:
             c3 = cal["detector-3"]
             self.thr3 = (float(c3["proc"]), float(c3["obj"]))
             self.thr3g = np.asarray(c3["groups"], dtype=np.float64) if c3.get("groups") else None   # 0.7b
+            if c3.get("breadth"):                                                                     # 0.8
+                b3 = c3["breadth"]
+                self.breadth = Breadth(float(b3["cap"]), float(b3["floor"]), int(float(b3["horizon_s"]) * 1e9))
+                self.thr3b = float(b3["threshold"])
             self.learned_unit = float(cal["fusion"].get("budget_threshold", 1.0))
         self.prop = cal.get("propagation") if d3 else None
         self.final_thr = float((cal.get("final") or {}).get("threshold", 1.0)) if d3 else 1.0
@@ -314,6 +320,8 @@ class Runtime:
         self.susp = np.zeros(max(len(self.reg), self.x.shape[0]))
         if self.bk is not None:
             self.bk = self.bm.keys(self.reg)
+        if self.breadth is not None:
+            self.breadth.reset()
 
     def set_learned_alerts(self, on: bool) -> None:
         """False: layer 3 only ranks; alerts come from layers 1-2 alone (deterministic mode)."""
@@ -442,7 +450,10 @@ class Runtime:
         if len(self.susp) < n:
             self.susp = np.concatenate([self.susp, np.zeros(n - len(self.susp))])
         self.bk.grow()
-        if self.thr3g is not None:                  # 0.7b: per-activity thresholds (already ratios)
+        if self.breadth is not None:                # 0.8: breadth evidence (processes), capped maxima (objects)
+            own, es = breadth_node_scores(self.bm, w, self.bk, n, self.breadth)
+            r3_all, er = own / self.thr3b, es / self.thr3[0]
+        elif self.thr3g is not None:                # 0.7b: per-activity thresholds (already ratios)
             from .behaviour import grouped_node_scores
             r3_all, er = grouped_node_scores(self.bm, w, self.bk, n, self.thr3g)
         else:
@@ -503,6 +514,8 @@ class Runtime:
             self.susp = self.susp[:len(keep)][keep]
         if self.bk is not None:
             self.bk.remap(old2new)
+        if self.breadth is not None:
+            self.breadth.remap(keep)
         self.N0 = len(self.reg)
         return old2new
 

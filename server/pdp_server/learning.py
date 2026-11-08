@@ -55,11 +55,13 @@ def exclusions(c, eid: str, until_ns: int | None = None) -> dict:
     """{"programs", "addresses", "rule_keys"} pointed at by this endpoint's unreleased alerts (see module doc).
     until_ns: only alerts about activity before this time (the end of the days being learned) - alerts about later
     activity say nothing about the baseline's content (and on a replayed benchmark they come from the test days)."""
-    rows = db.q(c, f"SELECT a.ntype, a.label, a.layer, a.rule, a.reasons FROM alerts a WHERE a.endpoint_id=%s "
+    rows = db.q(c, f"SELECT a.node_uuid, a.ntype, a.label, a.layer, a.rule, a.reasons FROM alerts a WHERE a.endpoint_id=%s "
                    f"AND NOT (a.status IN %s AND {VERIFIED_SQL}) AND (%s::bigint IS NULL OR a.window_start_ns < %s::bigint) "
                    f"ORDER BY a.id DESC LIMIT %s", (eid, RELEASING, until_ns, until_ns, MAX_ALERTS))
-    progs, addrs, keys = set(), set(), set()
+    progs, addrs, keys, nodes = set(), set(), set(), set()
     for r in rows:
+        if r.get("node_uuid"):        # 0.8: the alerted entity itself, whatever layer raised it (with layer 1 off a
+            nodes.add(str(r["node_uuid"]))   # new program is often caught by the learned layer alone)
         if r["ntype"] == "netflow":
             ip = _remote_ip(r["label"])
             if ip:
@@ -73,7 +75,8 @@ def exclusions(c, eid: str, until_ns: int | None = None) -> dict:
             if x.get("layer") in ("rules", "corroborated") or rule in ("untrusted_exec", "exfiltration", "untrusted_code_network",
                                                                        "untrusted_persistence", "tainted_spawn", "tainted_modify"):
                 keys.add((str(rule), str(key)))
-    return {"programs": sorted(progs), "addresses": sorted(addrs), "rule_keys": sorted([list(k) for k in keys])}
+    return {"programs": sorted(progs), "addresses": sorted(addrs), "rule_keys": sorted([list(k) for k in keys]),
+            "nodes": sorted(nodes)}
 
 
 def feedback_filter() -> str:
@@ -83,14 +86,18 @@ def feedback_filter() -> str:
 
 def exclude_nodes(reg, ex: dict) -> list[int]:
     """0.7: registry positions detector-3 must not learn from - processes of an excluded program and network
-    endpoints at an excluded address (the same unreleased alerts as for layers 1-2). Every event touching them is left
-    out of the counts, so an attacker active during the baseline does not become 'what this program normally does'."""
+    endpoints at an excluded address (the same unreleased alerts as for layers 1-2), and (0.8) every entity an unreleased
+    alert was raised on. Every event touching them is left out of the counts, so an attacker active during the
+    baseline does not become 'what this program normally does'."""
     from pdp_engine.layers import executable, program_key, remote_ip
     progs, addrs = set(ex.get("programs") or ()), set(ex.get("addresses") or ())
+    out = sorted({i for i in (reg.get(u) for u in ex.get("nodes") or ()) if i is not None})   # 0.8: alerted entities
     if not progs and not addrs:
-        return []
-    out = []
+        return out
+    seen = set(out)
     for i, e in enumerate(reg.entities):
+        if i in seen:
+            continue
         if e.ntype == "subject" and progs:
             exe = executable(e.label)
             if program_key(exe, strict=True) in progs or program_key(exe) in progs:

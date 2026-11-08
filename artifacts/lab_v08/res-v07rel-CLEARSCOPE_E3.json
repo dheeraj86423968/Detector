@@ -1,0 +1,25 @@
+{
+ "set": "CLEARSCOPE_E3",
+ "name": "v07rel",
+ "cfg": {
+  "d3_breadth": false,
+  "layer_novelty": true
+ },
+ "product": {
+  "TP": 0,
+  "FP": 51,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 25.5
+ },
+ "n_attacks": 1,
+ "gt_nodes": 41,
+ "days": 2,
+ "layer:learned": {
+  "TP": 0,
+  "FP": 51,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "attacks_found": []
+}

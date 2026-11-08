@@ -1,0 +1,25 @@
+{
+ "set": "FIVEDIRECTIONS_E3",
+ "name": "v08a",
+ "cfg": {},
+ "product": {
+  "TP": 4,
+  "FP": 40,
+  "recall": 0.037,
+  "attacks": 2,
+  "FP/day": 13.3
+ },
+ "n_attacks": 2,
+ "gt_nodes": 108,
+ "days": 3,
+ "layer:learned": {
+  "TP": 4,
+  "FP": 40,
+  "recall": 0.037,
+  "attacks": 2
+ },
+ "attacks_found": [
+  "fivedirections_e3_excel_0409",
+  "fivedirections_e3_firefox_0411"
+ ]
+}

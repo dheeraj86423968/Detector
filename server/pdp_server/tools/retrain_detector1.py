@@ -39,6 +39,12 @@ def retrain(eid: str, src: dict, device: str, deploy: bool = False, reuse: bool 
     from pdp_server import db, pki
     from pdp_server.worker import store_for
     man = json.load(open(os.path.join(src["path"], "manifest.json")))
+    if (man.get("detectors") or {}).get("detector-3"):
+        # the copy would keep detector-3's calibration (learned unit = the fusion's budget threshold, final threshold
+        # after propagation) against a re-calibrated fusion, and drop its manifest "requires" (0.7 agents would load
+        # a 0.8 bundle without its breadth evidence): retrain the pre-0.7 bundle, then upgrade it (tools.upgrade_08)
+        raise SystemExit(f"bundle {src['id']} has detector-3 (0.7+): retrain detector-1 on its pre-0.7 source bundle "
+                         "and upgrade the result with pdp_server.tools.upgrade_08")
     d2 = man["detectors"]["detector-2"]
     run = int(man.get("variant_run") or 0)
     cfg = TrainConfig(device=device)

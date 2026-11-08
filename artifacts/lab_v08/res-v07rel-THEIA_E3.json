@@ -1,0 +1,46 @@
+{
+ "set": "THEIA_E3",
+ "name": "v07rel",
+ "cfg": {
+  "d3_breadth": false,
+  "layer_novelty": true
+ },
+ "product": {
+  "TP": 111,
+  "FP": 127,
+  "recall": 0.941,
+  "attacks": 2,
+  "FP/day": 42.3
+ },
+ "n_attacks": 2,
+ "gt_nodes": 118,
+ "days": 3,
+ "layer:corroborated": {
+  "TP": 11,
+  "FP": 18,
+  "recall": 0.093,
+  "attacks": 2
+ },
+ "layer:learned": {
+  "TP": 0,
+  "FP": 28,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "layer:novelty": {
+  "TP": 5,
+  "FP": 7,
+  "recall": 0.042,
+  "attacks": 2
+ },
+ "layer:rules": {
+  "TP": 95,
+  "FP": 74,
+  "recall": 0.805,
+  "attacks": 2
+ },
+ "attacks_found": [
+  "Browser_Extension_Drakon_Dropper",
+  "Firefox_Backdoor_Drakon_In_Memory"
+ ]
+}

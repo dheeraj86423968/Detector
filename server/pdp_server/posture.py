@@ -2,8 +2,8 @@
 stolen session) must not be able to weaken detection silently, and the product resists uses it was not built for.
 
   settings schema   every endpoint configuration key and every `train` key is typed and range-checked
-                    (validate_config); keys the server or the training worker control are refused; at least one
-                    deterministic layer must keep alerting (check_floor)
+                    (validate_config); keys the server or the training worker control are refused; the learned
+                    layer or the data-flow rules must keep alerting (check_floor)
   weakening         a change that lowers detection (weakenings(): a layer turned off, alerting dropped for a layer,
                     a shorter baseline, periodic retraining off, an allow-list entry, a lower retention ...) is
                     allowed for admins but needs a non-empty reason (require_reason), is written to the audit log
@@ -43,6 +43,8 @@ FP_RANK = {"99": 0, "99.9": 1, "99.99": 2, None: 3}         # higher = stricter 
 PERCENTILES = ("99", "99.9", "99.99")
 LEARNED_FLOOD = int(os.environ.get("PDP_LEARNED_BUDGET_WARN", "100"))   # learned alerts / day above this flood analysts
 REASON_MAX = 500
+# pdp_engine.trainer.TrainConfig defaults of the 0.8 detector-3 breadth settings (tests/unit/test_posture.py checks them)
+D3_BREADTH_CAP, D3_BREADTH_FLOOR, D3_BREADTH_HORIZON_S = 10.0, 4.0, 4 * 3600.0
 
 
 def _engine_path() -> None:
@@ -100,15 +102,19 @@ TRAIN_SCHEMA = {
     "fusion_mode": ("enum", ("max", "weighted")),                              # pdp_engine.scoring.fuse_ratios
     "orthrus_aggregate": ("enum", ("best_val_loss", "mean", "weighted")),      # pdp_engine.scoring.aggregate_weights
     "detector3": ("bool",),                     # 0.7 behavioural-likelihood detector (pdp_engine.behaviour)
-    "calibration_budget": ("int", 0, 200),
-    "d3_grouped": ("bool",),                    # detector-3 thresholds per kind of activity      # benign validation nodes allowed over the learned thresholds
+    "calibration_budget": ("int", 0, 200),      # benign validation nodes allowed over the learned thresholds
+    "d3_grouped": ("bool",),                    # detector-3 thresholds per kind of activity
+    "d3_breadth": ("bool",),                    # 0.8: detector-3 evidence summed over kinds of activity (behaviour.Breadth)
+    "d3_breadth_cap": ("num", 1.0, 100.0),      # nats one event counts at most (d3_breadth_floor must stay below it)
+    "d3_breadth_floor": ("num", 0.0, 50.0),     # nats below which an event counts nothing
+    "d3_breadth_horizon_s": ("num", 60.0, 7 * 86400.0),    # how long a process's unusual activity keeps counting
     "propagation": ("bool",),
     "propagation_delta": ("num", 0.0, 1.0),
     "propagation_gate": ("num", 0.0, 10.0),
     "propagation_clip": ("num", 1.0, 100.0),
     "propagation_seed": ("num", 0.0, 10.0),
     "propagation_passes": ("int", 1, 5),
-    "layer_novelty": ("bool",),
+    "layer_novelty": ("bool",),                 # 0.8: an optional extra rule (off by default; detector-3 covers it)
     "novelty_as_evidence": ("bool",),
     "corroboration_at_threshold": ("bool",),           # 0.7: new programs alert only when the learned score corroborates
     "layer_rules": ("bool",),
@@ -187,6 +193,10 @@ def validate_train(t, engine_check: bool = True) -> None:
         if spec is None or (fields is not None and k != "fusion_calibration" and k not in fields):
             _bad(f"train: unknown or not configurable key {k!r} (configurable: {sorted(TRAIN_SCHEMA)})")
         _check_value(f"train.{k}", spec, v)
+    # (the stored train object is replaced as a whole by a settings change, so the defaults fill what it leaves out)
+    if t.get("d3_breadth_floor", D3_BREADTH_FLOOR) >= t.get("d3_breadth_cap", D3_BREADTH_CAP):
+        _bad(f"train.d3_breadth_floor ({t.get('d3_breadth_floor', D3_BREADTH_FLOOR):g}) must be below train.d3_breadth_cap "
+             f"({t.get('d3_breadth_cap', D3_BREADTH_CAP):g}): otherwise no activity counts as detector-3 evidence")
 
 
 def validate_config(cfg, engine_check: bool = True) -> None:
@@ -214,11 +224,14 @@ def detection_settings(cfg: dict | None) -> dict:
     cfg = cfg or {}
     t = cfg.get("train") if isinstance(cfg.get("train"), dict) else {}
     al = t.get("alert_layers")
-    # defaults = TrainConfig's (0.7: layer 1 alerts (safety net), the learned layer alerts too, detector-3 and
-    # propagation on, thresholds at a validation budget of 10)
-    return {"layer_novelty": t.get("layer_novelty", True) is not False, "layer_rules": t.get("layer_rules", True) is not False,
+    # defaults = TrainConfig's (0.8: layer 1 off - an optional extra rule -, the learned layer alerts, detector-3 with
+    # breadth evidence and propagation on, thresholds at a validation budget of 10)
+    return {"layer_novelty": t.get("layer_novelty", False) is True, "layer_rules": t.get("layer_rules", True) is not False,
             "detector3": t.get("detector3", True) is not False, "propagation": t.get("propagation", True) is not False,
             "calibration_budget": t.get("calibration_budget", 10),
+            "d3_breadth": t.get("d3_breadth", True) is not False, "d3_breadth_cap": t.get("d3_breadth_cap", D3_BREADTH_CAP),
+            "d3_breadth_floor": t.get("d3_breadth_floor", D3_BREADTH_FLOOR),
+            "d3_breadth_horizon_s": t.get("d3_breadth_horizon_s", D3_BREADTH_HORIZON_S),
             "alert_layers": set(LAYERS) if al is None else set(al) if isinstance(al, list) else set(LAYERS),
             "layers_only": t.get("layers_only") is True,
             "corroboration_percentile": t.get("corroboration_percentile", "99.9"),
@@ -256,10 +269,11 @@ def weakenings(before: dict | None, after: dict | None) -> list[str]:
     """Human-readable list of the ways `after` detects less than `before` (both full stored configurations)."""
     b, a = detection_settings(before), detection_settings(after)
     out = []
-    for k, what in (("layer_novelty", "novelty"), ("layer_rules", "rules")):
-        if b[k] and not a[k]:
-            out.append(f"{LAYER_TEXT[what]} turned off")
-    dropped = [x for x in LAYERS if x in b["alert_layers"] and x not in a["alert_layers"]]
+    # 0.8: layer 1 (new programs) is an optional extra rule, off by default (detector-3 covers it): turning it on or
+    # off, or dropping it from alert_layers, is not weakening; the floor is the learned layer or the data-flow rules
+    if b["layer_rules"] and not a["layer_rules"]:
+        out.append(f"{LAYER_TEXT['rules']} turned off")
+    dropped = [x for x in LAYERS if x != "novelty" and x in b["alert_layers"] and x not in a["alert_layers"]]
     if dropped:
         out.append("alerting turned off for " + ", ".join(LAYER_TEXT[x] for x in dropped))
     if a["layers_only"] and not b["layers_only"]:
@@ -270,6 +284,17 @@ def weakenings(before: dict | None, after: dict | None) -> list[str]:
         out.append("propagation of learned suspicion turned off")
     if isinstance(a["calibration_budget"], int) and isinstance(b["calibration_budget"], int) and a["calibration_budget"] < b["calibration_budget"]:
         out.append(f"learned thresholds raised (calibration budget {b['calibration_budget']} -> {a['calibration_budget']})")
+    if a["detector3"]:      # (detector-3 off is reported above; its breadth settings do not matter then)
+        num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)  # noqa: E731
+        if b["d3_breadth"] and not a["d3_breadth"]:
+            out.append("detector-3 breadth evidence turned off (unusual activity of several kinds no longer adds up)")
+        elif a["d3_breadth"]:
+            for k, what in (("d3_breadth_cap", "cap"), ("d3_breadth_floor", "floor")):
+                if num(a[k]) and num(b[k]) and a[k] > b[k]:
+                    out.append(f"detector-3 breadth {what} raised ({b[k]:g} -> {a[k]:g} nats: the learned layer is less sensitive)")
+            hb, ha = b["d3_breadth_horizon_s"], a["d3_breadth_horizon_s"]
+            if num(ha) and num(hb) and ha < hb:
+                out.append(f"detector-3 breadth horizon shortened ({hb:g} -> {ha:g} s)")
     cb, ca = b["corroboration_percentile"], a["corroboration_percentile"]
     if cb in PERCENTILES and ca in PERCENTILES and PERCENTILES.index(ca) > PERCENTILES.index(cb):
         out.append(f"corroboration threshold raised from the {cb}th to the {ca}th percentile")
@@ -631,9 +656,8 @@ def compute(ep: dict, bundle: dict | None, entries: list[dict] | None = None, no
         if man and lay is None:
             add("no_layers", "warning", "The model predates the deterministic layers (new programs, data-flow rules): retrain it")
         elif isinstance(lay, dict):
-            for k, what in (("novelty", "novelty"), ("rules", "rules")):
-                if lay.get(k) is False:
-                    add(f"model_{k}_off", "error", f"{LAYER_TEXT[what].capitalize()} is turned off in the current model")
+            if lay.get("rules") is False:     # (0.8: layer 1 off is the default, not a problem)
+                add("model_rules_off", "error", f"{LAYER_TEXT['rules'].capitalize()} is turned off in the current model")
             cov = lay.get("coverage") or {}
             if cov:   # 0.6: telemetry the rule layers need (pdp_engine.layers.telemetry_coverage)
                 P, F = int(cov.get("processes") or 0), int(cov.get("flows") or 0)
@@ -647,7 +671,7 @@ def compute(ep: dict, bundle: dict | None, entries: list[dict] | None = None, no
         pol = man.get("learned_policy") or {}
         al = pol.get("alert_layers")
         if isinstance(al, list):
-            missing = [x for x in ("novelty", "rules", "corroborated") if x not in al]
+            missing = [x for x in ("rules", "corroborated") if x not in al]
             if missing:
                 add("model_alert_layers", "error", "The current model does not alert on " + ", ".join(LAYER_TEXT[x] for x in missing))
         if man.get("layers_only"):

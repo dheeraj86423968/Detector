@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import torch
 
-from .behaviour import BehaviourModel, top_threshold
+from .behaviour import BehaviourModel, Breadth, breadth_node_scores, top_threshold
 from .bundle import detector1_file, requirements, save_state_dict, write_manifest
 from .data import WindowStore, nodes_in_days
 from .featurizer import Word2VecFeaturizer
@@ -65,6 +65,12 @@ class TrainConfig:
     detector3: bool = True
     calibration_budget: int = 10
     d3_grouped: bool = False              # 0.7b: detector-3 thresholds per kind of activity (behaviour.GROUP_NAMES)
+    # 0.8: a process's detector-3 evidence is the sum over kinds of activity of its most unusual event of that kind
+    # within the horizon, each capped and above a floor (behaviour.Breadth) - instead of its single most unusual event
+    d3_breadth: bool = True
+    d3_breadth_cap: float = 10.0          # nats: one event counts at most this much (P < 5e-5 is "never seen")
+    d3_breadth_floor: float = 4.0         # nats: mild novelty (P > 2%) counts nothing
+    d3_breadth_horizon_s: float = 4 * 3600.0
     propagation: bool = True
     propagation_delta: float = 0.95       # suspicion kept per hop
     propagation_gate: float = 0.4         # an edge carries suspicion only if its detector-3 score >= 0.4 x the threshold
@@ -72,8 +78,9 @@ class TrainConfig:
     propagation_seed: float = 0.3         # only nodes at >= 0.3 of the threshold pass suspicion on
     propagation_passes: int = 2           # hops per window
     # deterministic layers (pdp_engine.layers) and the learned layer's alerting policy
-    layer_novelty: bool = True        # layer 1 (new executable) alerts: kept in 0.7 as a safety net - on the TRACE
-                                      # held-out host it was the only layer that caught the attacks (artifacts/lab_v07)
+    layer_novelty: bool = False       # layer 1 (new executable) alerts. 0.7 kept it as a safety net (on the TRACE host
+                                      # it was the only layer that caught the attacks); 0.8: detector-3 breadth catches
+                                      # them (artifacts/lab_v08), the rule is off by default
     novelty_as_evidence: bool = False # True: its hits are evidence only (alert when the learned score corroborates);
                                       # measured in 0.7 and rejected (+250 false positives on OpTC H201)
     corroboration_at_threshold: bool = True   # 0.7: a learned score corroborates a rule hit / sits next to an alert
@@ -323,7 +330,8 @@ class Trainer:
                                          "dropout": self.cfg.orthrus_dropout, "seeds": len(self.cfg.orthrus_seeds), "neighbor_size": self.cfg.neighbor_size}},
             "calibration": calibration,
             "requires": requirements(self.velox_input, self.cfg.fusion_mode, detector3=d3 is not None,
-                                     propagation=d3 is not None and self.cfg.propagation),
+                                     propagation=d3 is not None and self.cfg.propagation,
+                                     breadth=d3 is not None and "breadth" in d3),
             "layers": {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules,
                        "evidence_rules": list(lcfg.evidence_rules),
                        "known_executables": len(spec["known_executables"]),
@@ -365,6 +373,18 @@ class Trainer:
                "keys": len(m.vocab)}
         if groups is not None:
             cal["groups"] = groups
+        if self.cfg.d3_breadth:     # 0.8: breadth evidence, streamed over the validation day as the runtime does
+            c = self.cfg
+            st = Breadth(c.d3_breadth_cap, c.d3_breadth_floor, int(c.d3_breadth_horizon_s * 1e9))
+            bb = np.zeros(n)
+            for w in self.store.windows(self.val_day):
+                own, _ = breadth_node_scores(m, w, K, n, st)
+                np.maximum(bb, own, out=bb)
+            # never below one fully novel kind of activity: a process must be unusual in more than one way
+            tb = max(top_threshold(bb[seen], b), c.d3_breadth_cap - c.d3_breadth_floor)
+            cal["breadth"] = {"cap": c.d3_breadth_cap, "floor": c.d3_breadth_floor, "horizon_s": c.d3_breadth_horizon_s,
+                              "threshold": tb}
+            log(f"detector-3 breadth threshold {tb:.2f} (cap {c.d3_breadth_cap}, floor {c.d3_breadth_floor})")
         log(f"detector-3 thresholds proc {cal['proc']:.2f} obj {cal['obj']:.2f} (budget {b})")
         return cal
 
@@ -382,7 +402,9 @@ class Trainer:
             np.maximum.at(best, r.node_ids, r.fused)
         v = best[np.isfinite(best)]
         b = self.cfg.calibration_budget
-        thr = top_threshold(v, b)
+        # never below 1: nothing alerts below its own component's validation-budget threshold, however quiet the
+        # validation day (0.8: keeps detector-3 breadth's "more than one kind of activity" floor in force)
+        thr = max(top_threshold(v, b), 1.0)
         pct = {p: float(np.percentile(v, float(p))) for p in ("99", "99.9", "99.99")} if len(v) else {}
         cal = json.load(open(os.path.join(self.out_dir, "calibration.json")))
         cal["final"] = {"threshold": thr, "budget": b, "percentiles": pct, "validation_nodes": int(len(v))}
@@ -417,11 +439,13 @@ class Trainer:
 def upgrade_bundle_07(src_dir: str, out_dir: str, store: WindowStore, cfg: TrainConfig | None = None,
                       node_exclude=None, layer_exclude: dict | None = None, layer_prior: dict | None = None,
                       device: str | None = None) -> str:
-    """0.7 upgrade of an existing bundle without retraining detectors 1-2 (no GPU training): copy it, fit
-    detector-3 on its training days, calibrate detector-3 and the detector-1/2 fusion at the validation budget
-    (the fusion by replaying the validation day through the runtime), re-fit layers 1-2 with the current defaults
-    (layer 1 does not alert on its own from 0.7 on), switch the learned layer to alerting within the daily budget,
-    and calibrate the final threshold after propagation. The copy is unsigned (the server signs it)."""
+    """0.7 / 0.8 upgrade of an existing bundle without retraining detectors 1-2 (no GPU training): copy it, fit
+    detector-3 on its training days, calibrate detector-3 (0.8: with its breadth evidence, cfg.d3_breadth) and the
+    detector-1/2 fusion at the validation budget (the fusion by replaying the validation day through the source
+    bundle's runtime, detectors 1-2 only), re-fit layers 1-2 with the current defaults (0.8: layer 1 off unless
+    cfg.layer_novelty), switch the learned layer to alerting within the daily budget, and calibrate the final threshold
+    after propagation. Works on 0.4-0.6 bundles (no detector-3) and on 0.7 / 0.8 bundles (detector-3 re-fitted).
+    The copy is unsigned (the server signs it)."""
     import shutil
     from .runtime import Runtime
     cfg = cfg or TrainConfig()
@@ -441,6 +465,7 @@ def upgrade_bundle_07(src_dir: str, out_dir: str, store: WindowStore, cfg: Train
     # detector-1/2 fusion on the validation day, through the runtime of the original bundle
     rt = Runtime(src_dir, store.load_registry(), device=str(tr.dev), layers=False)
     rt.reset(at="validation")
+    rt.bm = None      # a 0.7+ source: detectors 1-2 only (its fused score would otherwise be the 0.7 final score)
     best = np.full(len(rt.reg), -np.inf)
     for w in store.windows(tr.val_day):
         r = rt.score(w)
@@ -454,6 +479,8 @@ def upgrade_bundle_07(src_dir: str, out_dir: str, store: WindowStore, cfg: Train
     if cfg.propagation:
         cal["propagation"] = {"delta": cfg.propagation_delta, "gate": cfg.propagation_gate, "clip": cfg.propagation_clip,
                               "seed": cfg.propagation_seed, "passes": cfg.propagation_passes}
+    else:
+        cal.pop("propagation", None)        # a 0.7+ source's propagation does not survive cfg.propagation=False
     cal["final"] = {"threshold": 1.0, "budget": cfg.calibration_budget, "pending": True}
     json.dump(cal, open(os.path.join(out_dir, "calibration.json"), "w"), indent=1)
     lcfg = layer_config(cfg)
@@ -462,9 +489,12 @@ def upgrade_bundle_07(src_dir: str, out_dir: str, store: WindowStore, cfg: Train
     json.dump(spec, open(os.path.join(out_dir, "layers.json"), "w"))
     meta = {k: v for k, v in man.items() if k not in ("sha256", "format", "created", "signature")}
     meta["calibration"] = cal
-    meta["detectors"] = {"detector-3": {"kind": "behavioural-likelihood", "budget": cfg.calibration_budget}, **man["detectors"]}
-    req = list(man.get("requires") or [])
-    meta["requires"] = req + [f for f in (["detector-3"] + (["propagation"] if cfg.propagation else [])) if f not in req]
+    meta["detectors"] = {"detector-3": {"kind": "behavioural-likelihood", "budget": cfg.calibration_budget},
+                         **{k: v for k, v in man["detectors"].items() if k != "detector-3"}}   # a 0.7+ source's is replaced
+    # what the source required for detectors 1-2 is kept; the detector-3 features follow this upgrade's calibration
+    req = [f for f in (man.get("requires") or []) if f not in ("detector-3", "propagation", "detector-3-breadth")]
+    meta["requires"] = req + ["detector-3"] + (["propagation"] if cfg.propagation else []) \
+        + (["detector-3-breadth"] if "breadth" in d3 else [])
     meta["layers"] = {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules, "evidence_rules": list(lcfg.evidence_rules),
                       "known_executables": len(spec["known_executables"]),
                       "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},

@@ -1,0 +1,47 @@
+{
+ "set": "CADETS_E3",
+ "name": "v07rel",
+ "cfg": {
+  "d3_breadth": false,
+  "layer_novelty": true
+ },
+ "product": {
+  "TP": 32,
+  "FP": 42,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 10.5
+ },
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "layer:corroborated": {
+  "TP": 2,
+  "FP": 1,
+  "recall": 0.029,
+  "attacks": 2
+ },
+ "layer:learned": {
+  "TP": 1,
+  "FP": 26,
+  "recall": 0.015,
+  "attacks": 1
+ },
+ "layer:novelty": {
+  "TP": 7,
+  "FP": 14,
+  "recall": 0.103,
+  "attacks": 3
+ },
+ "layer:rules": {
+  "TP": 22,
+  "FP": 1,
+  "recall": 0.324,
+  "attacks": 3
+ },
+ "attacks_found": [
+  "Nginx_Backdoor_06",
+  "Nginx_Backdoor_12",
+  "Nginx_Backdoor_13"
+ ]
+}

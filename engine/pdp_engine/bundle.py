@@ -22,18 +22,20 @@ import torch
 
 
 # features a bundle can require of the runtime (manifest "requires"); a runtime refuses bundles needing others
-SUPPORTED_FEATURES = {"detector-1:batch_scale", "fusion:max", "detector-3", "propagation"}
+SUPPORTED_FEATURES = {"detector-1:batch_scale", "fusion:max", "detector-3", "propagation", "detector-3-breadth"}
 
 
 def detector1_file(velox_input: str, k: int) -> str:
     return f"detector-1-bs-s{k}.npz" if velox_input == "batch_scale" else f"detector-1-s{k}.npz"
 
 
-def requirements(velox_input: str, fusion_mode: str, detector3: bool = False, propagation: bool = False) -> list[str]:
+def requirements(velox_input: str, fusion_mode: str, detector3: bool = False, propagation: bool = False,
+                 breadth: bool = False) -> list[str]:
     """What a bundle needs beyond the 0.4 runtime (manifest "requires"). 0.7: detector-3 (behavioural likelihood,
-    pdp_engine.behaviour) and learned-seeded propagation."""
+    pdp_engine.behaviour) and learned-seeded propagation; 0.8: detector-3 breadth evidence."""
     return ((["detector-1:batch_scale"] if velox_input == "batch_scale" else []) + (["fusion:max"] if fusion_mode == "max" else [])
-            + (["detector-3"] if detector3 else []) + (["propagation"] if propagation else []))
+            + (["detector-3"] if detector3 else []) + (["propagation"] if propagation else [])
+            + (["detector-3-breadth"] if breadth else []))
 
 
 def check_requires(manifest: dict) -> None:

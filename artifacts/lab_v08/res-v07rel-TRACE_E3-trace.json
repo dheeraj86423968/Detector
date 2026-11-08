@@ -1,0 +1,41 @@
+{
+ "set": "TRACE_E3-trace",
+ "name": "v07rel",
+ "cfg": {
+  "d3_breadth": false,
+  "layer_novelty": true
+ },
+ "product": {
+  "TP": 9,
+  "FP": 81,
+  "recall": 0.257,
+  "attacks": 3,
+  "FP/day": 20.2
+ },
+ "n_attacks": 3,
+ "gt_nodes": 35,
+ "days": 4,
+ "layer:corroborated": {
+  "TP": 0,
+  "FP": 1,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "layer:learned": {
+  "TP": 0,
+  "FP": 11,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "layer:novelty": {
+  "TP": 9,
+  "FP": 69,
+  "recall": 0.257,
+  "attacks": 3
+ },
+ "attacks_found": [
+  "node_trace_e3_firefox_0410",
+  "node_trace_e3_phishing_executable_0413",
+  "node_trace_e3_pine_0413"
+ ]
+}

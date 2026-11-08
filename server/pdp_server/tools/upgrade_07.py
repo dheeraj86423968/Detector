@@ -1,14 +1,18 @@
-"""Upgrade an endpoint's bundle to the 0.7 detection without retraining detectors 1-2 (no GPU training).
+"""Upgrade an endpoint's bundle to the current (0.8) detection without retraining detectors 1-2 (no GPU training).
 
-  python -m pdp_server.tools.upgrade_07 --endpoint <id> [--bundle <id>] [--deploy]
+  python -m pdp_server.tools.upgrade_08 --endpoint <id> [--bundle <id>] [--deploy]
+  python -m pdp_server.tools.upgrade_07 ...        (the same tool under its 0.7 name)
 
-pdp_engine.trainer.upgrade_bundle_07 on a copy of the bundle: detector-3 (behavioural likelihood) fitted on the
-bundle's training days, thresholds at the validation budget, learned-seeded propagation, layers 1-2 re-fitted with the
-0.7 defaults (layer 1 no longer alerts on its own), learned alerts on within the daily budget, and the final threshold
-calibrated by replaying the validation day through the runtime. What this endpoint's unreleased alerts point at stays
-out of detector-3 and of the layers (pdp_server.learning). The result is signed and registered as a new bundle; with
---deploy it becomes the current bundle. Agents older than 0.7.0 refuse such bundles (manifest "requires":
-detector-3, propagation) and keep running their current one.
+pdp_engine.trainer.upgrade_bundle_07 on a copy of the bundle (a 0.4-0.6 bundle, or a 0.7 / 0.8 one whose detector-3
+is fitted again): detector-3 (behavioural likelihood) fitted on the bundle's training days, thresholds at the
+validation budget, 0.8 breadth evidence (a process's most unusual event per kind of activity within a horizon, summed),
+learned-seeded propagation, layers 1-2 re-fitted with the current defaults (0.8: layer 1, the "new program" rule, off
+unless the endpoint turns it on), learned alerts on within the daily budget, and the final threshold calibrated by
+replaying the validation day through the runtime. The endpoint's own detection settings (config.train: d3_breadth*,
+layer_novelty, propagation*, calibration_budget ...) apply as in a training. What this endpoint's unreleased alerts
+point at stays out of detector-3 and of the layers (pdp_server.learning). The result is signed and registered as a new
+bundle; with --deploy it becomes the current bundle. Agents refuse bundles needing features they do not have (manifest
+"requires": detector-3 and propagation need 0.7.0, detector-3-breadth 0.8.0) and keep running their current one.
 """
 from __future__ import annotations
 
@@ -22,6 +26,19 @@ def log(m):
     print(time.strftime("%H:%M:%S"), m, flush=True)
 
 
+def train_config(train: dict | None, device: str | None = None):
+    """TrainConfig from an endpoint's `train` settings, as the training worker builds it (keys TrainConfig does not
+    have, e.g. fusion_calibration, are left out)."""
+    import dataclasses
+    from pdp_engine.trainer import TrainConfig
+    names = {f.name for f in dataclasses.fields(TrainConfig)} - {"device"}
+    kw = {k: (tuple(v) if k in ("orthrus_seeds", "fusion_weights", "alert_layers") and isinstance(v, list) else v)
+          for k, v in (train or {}).items() if k in names}
+    if device:
+        kw["device"] = device
+    return TrainConfig(**kw)
+
+
 def upgrade(eid: str, src: dict, deploy: bool = False, device: str | None = None) -> str:
     from pdp_engine.bundle import sha256
     from pdp_engine.trainer import upgrade_bundle_07
@@ -30,13 +47,15 @@ def upgrade(eid: str, src: dict, deploy: bool = False, device: str | None = None
     man = json.load(open(os.path.join(src["path"], "manifest.json")))
     store = store_for(eid)
     with db.conn() as c:
-        tz = (db.q(c, "SELECT config FROM endpoints WHERE id=%s", (eid,), one=True) or {}).get("config", {}).get("tz", "UTC")
+        epc = (db.q(c, "SELECT config FROM endpoints WHERE id=%s", (eid,), one=True) or {}).get("config") or {}
+        tz = epc.get("tz", "UTC")
         ex = learning.exclusions(c, eid, learning.day_end_ns(list(man["train_days"]) + [man["val_day"]], tz))
     reg = store.load_registry()
     nodes = learning.exclude_nodes(reg, ex) if any(ex.values()) else None
     bid = pki.new_id()
     out = os.path.join(os.path.dirname(src["path"].rstrip("/")), bid)
-    upgrade_bundle_07(src["path"], out, store, node_exclude=nodes, layer_exclude=ex if any(ex.values()) else None, device=device)
+    cfg = train_config(epc.get("train") if isinstance(epc.get("train"), dict) else None, device)
+    upgrade_bundle_07(src["path"], out, store, cfg, node_exclude=nodes, layer_exclude=ex if any(ex.values()) else None)
     m = json.load(open(os.path.join(out, "manifest.json")))
     m.update({"bundle_id": bid, "upgraded_from": str(src["id"])})
     from pdp_engine.bundle import write_manifest
@@ -48,7 +67,8 @@ def upgrade(eid: str, src: dict, deploy: bool = False, device: str | None = None
              (bid, eid, out, sha256(os.path.join(out, "manifest.json")), json.dumps(manifest)))
         if deploy:
             db.q(c, "UPDATE endpoints SET current_bundle=%s WHERE id=%s", (bid, eid))
-    log(f"bundle {src['id']} -> {bid} (0.7: detector-3, propagation, learned alerts)" + (" deployed" if deploy else ""))
+    log(f"bundle {src['id']} -> {bid} (requires {', '.join(manifest.get('requires') or []) or 'nothing new'}; "
+        f"layer 1 {'on' if (manifest.get('layers') or {}).get('novelty') else 'off'}, learned alerts)" + (" deployed" if deploy else ""))
     return bid
 
 

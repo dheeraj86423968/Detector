@@ -39,7 +39,8 @@ def refused(fn, *a, **kw):
 ok_cfg = {"baseline_days": 7, "tz": "Europe/Paris", "window_minutes": 15, "fp_budget": "99.9", "learned_daily_budget": 20,
           "learned_alerts": True, "periodic_retrain": True, "early_models": False, "retain_baseline_events": False,
           "train": {"orthrus_epochs": 12, "orthrus_seeds": [0, 1, 2], "fusion_weights": [2, 1], "alert_layers": ["novelty", "rules"],
-                    "corroboration_percentile": "99.99", "fusion_calibration": "simulation", "velox_lr": 0.001}}
+                    "corroboration_percentile": "99.99", "fusion_calibration": "simulation", "velox_lr": 0.001,
+                    "d3_breadth": True, "d3_breadth_cap": 12.0, "d3_breadth_floor": 3, "d3_breadth_horizon_s": 7200}}
 check(refused(P.validate_config, ok_cfg) is None, "a valid configuration (all keys) is accepted")
 bad = {
     "train.device collides with the worker's device argument": {"train": {"device": "cuda"}},
@@ -66,6 +67,12 @@ bad = {
     "a server-managed key (refresh_days)": {"refresh_days": ["2026-11-07"]},
     "a server-managed key (kind)": {"kind": "benchmark"},
     "an unknown key": {"whatever": 1},
+    "train.d3_breadth 'yes'": {"train": {"d3_breadth": "yes"}},
+    "train.d3_breadth_cap 1000 (out of range)": {"train": {"d3_breadth_cap": 1000}},
+    "train.d3_breadth_horizon_s 1 (out of range)": {"train": {"d3_breadth_horizon_s": 1}},
+    "train.d3_breadth_floor at the cap (no activity would count)": {"train": {"d3_breadth_floor": 6.0, "d3_breadth_cap": 6.0}},
+    "train.d3_breadth_floor above the default cap": {"train": {"d3_breadth_floor": 12.0}},
+    "train.d3_breadth_cap below the default floor": {"train": {"d3_breadth_cap": 3.0}},
 }
 for what, cfg in bad.items():
     check(refused(P.validate_config, cfg) is not None, f"refused: {what}")
@@ -92,6 +99,13 @@ for name, f in fields.items():
         if refused(P.validate_train, {name: v}, engine_check=False):
             mism.append(name + "=default")
 check(not mism, f"TRAIN_SCHEMA types match the TrainConfig defaults, and the defaults validate ({mism})")
+tc = TrainConfig()
+check((P.D3_BREADTH_CAP, P.D3_BREADTH_FLOOR, P.D3_BREADTH_HORIZON_S) == (tc.d3_breadth_cap, tc.d3_breadth_floor, tc.d3_breadth_horizon_s),
+      "posture's detector-3 breadth defaults = TrainConfig's")
+ds = P.detection_settings({})
+check(ds["layer_novelty"] is tc.layer_novelty is False and ds["d3_breadth"] is tc.d3_breadth is True and ds["detector3"] is True,
+      "detection_settings defaults = TrainConfig's (0.8: layer 1 off, detector-3 breadth on)")
+check(P.detection_settings({"train": {"layer_novelty": True}})["layer_novelty"] is True, "layer 1 turned on explicitly")
 from pdp_engine.models import VELOX_INPUTS  # noqa: E402
 check(tuple(P.TRAIN_SCHEMA["velox_input"][1]) == tuple(VELOX_INPUTS), "velox_input values = pdp_engine.models.VELOX_INPUTS")
 
@@ -104,14 +118,21 @@ check(refused(P.check_floor, {"train": {"alert_layers": ["novelty", "corroborate
 check(refused(P.check_floor, {"train": {"layer_rules": False}}) is None, "rules off, learned layer still alerting: allowed (with a reason)")
 check(refused(P.check_floor, {"train": {"alert_layers": ["learned", "corroborated"]}}) is None, "alerting from the learned layer only: allowed (with a reason)")
 check(refused(P.check_floor, {}) is None, "defaults pass the floor")
+check(refused(P.check_floor, {"train": {"layer_novelty": True, "layer_rules": False, "learned_alerts": False}}) is not None,
+      "0.8: layer 1 alone (rules and learned alerts off) does not pass the floor")
+check(refused(P.check_floor, {"train": {"layer_novelty": False}}) is None, "0.8: layer 1 off passes the floor (the default)")
 
 # ---- 3. what weakens detection
 W = P.weakenings
 cases = [
-    ({"train": {"layer_novelty": True}}, {"train": {"layer_novelty": False}}, "layer 1"),
     ({}, {"train": {"detector3": False}}, "detector-3"),
     ({}, {"train": {"propagation": False}}, "propagation"),
     ({}, {"train": {"calibration_budget": 0}}, "calibration budget"),
+    ({}, {"train": {"d3_breadth": False}}, "breadth evidence turned off"),
+    ({}, {"train": {"d3_breadth_cap": 20.0}}, "breadth cap raised (10 -> 20"),
+    ({}, {"train": {"d3_breadth_floor": 6}}, "breadth floor raised (4 -> 6"),
+    ({"train": {"d3_breadth_cap": 8.0}}, {"train": {"d3_breadth_cap": 9.0}}, "breadth cap raised"),
+    ({}, {"train": {"d3_breadth_horizon_s": 600}}, "breadth horizon shortened"),
     ({}, {"train": {"learned_alerts": False}}, "training settings"),
     ({}, {"train": {"layer_rules": False}}, "layer 2"),
     ({}, {"train": {"alert_layers": ["novelty", "rules"]}}, "alerting turned off"),
@@ -131,6 +152,18 @@ for before, after, needle in cases:
 check(W({}, {"learned_daily_budget": 50, "learned_alerts": True, "baseline_days": 10, "periodic_retrain": True,
              "train": {"orthrus_epochs": 20, "layer_novelty": True}}) == [], "tuning and strengthening are not weakening")
 check(W({"train": {"layer_rules": False}}, {}) == [], "turning a layer back on is not weakening")
+# 0.8: layer 1 is an optional extra rule (off by default): neither turning it on nor off weakens detection
+check(W({"train": {"layer_novelty": True}}, {"train": {"layer_novelty": False}}) == [], "0.8: turning layer 1 off is not weakening")
+check(W({}, {"train": {"layer_novelty": True}}) == [] and W({"train": {"layer_novelty": True}}, {}) == [],
+      "0.8: turning layer 1 on, or back to its default (off), is not weakening")
+check(W({}, {"train": {"alert_layers": ["rules", "corroborated", "learned"]}}) == [], "0.8: dropping layer 1 from alert_layers is not weakening")
+check(W({}, {"train": {"d3_breadth_cap": 8.0, "d3_breadth_floor": 2.0, "d3_breadth_horizon_s": 86400}}) == [],
+      "lowering the breadth cap / floor or a longer horizon is not weakening")
+check(W({"train": {"d3_breadth": False}}, {}) == [], "turning breadth back on is not weakening")
+w = W({}, {"train": {"detector3": False, "d3_breadth": False, "d3_breadth_cap": 50.0}})
+check(len(w) == 1 and "detector-3" in w[0], f"detector-3 off: its breadth settings are not reported on top ({w})")
+check(W({}, {"train": {"d3_breadth": False, "d3_breadth_cap": 50.0}}) == [W({}, {"train": {"d3_breadth": False}})[0]],
+      "breadth off: its cap does not matter any more")
 check(W({"learned_daily_budget": 500}, {"learned_daily_budget": 400}) == [], "lowering a flood budget is not weakening")
 check(P.org_weakenings({"retention_days": 365, "require_mfa": True}, {"retention_days": 90, "require_mfa": False}) ==
       ["retention lowered from 365 to 90 days (older alerts and incidents are deleted)", "two-factor sign-in no longer required"],
@@ -222,8 +255,16 @@ p = P.compute(dict(ep, config={"periodic_retrain": False}), dict(full, created_a
 check("posture:stale_model" in keys(p), "stale model with periodic retraining off: flagged")
 check("posture:old_model" in keys(P.compute(ep, dict(full, created_at=ago(200)), [], now)), "a very old model: flagged")
 off = {"manifest": {**full["manifest"], "layers": {"novelty": False, "rules": True}}, "created_at": ago(1)}
-p = P.compute(ep, off, [], now)
-check(p["level"] == "error" and "posture:model_novelty_off" in keys(p), "layer 1 off in the model: error")
+check(P.compute(ep, off, [], now) == {"level": "ok", "problems": []}, "0.8: layer 1 off in the model (the default): ok")
+off2 = {"manifest": {**full["manifest"], "layers": {"novelty": True, "rules": False}}, "created_at": ago(1)}
+p = P.compute(ep, off2, [], now)
+check(p["level"] == "error" and "posture:model_rules_off" in keys(p), "layer 2 off in the model: error")
+pol1 = {"manifest": {**full["manifest"], "learned_policy": {"alert_layers": ["rules", "corroborated", "learned"]}}, "created_at": ago(1)}
+check("posture:model_alert_layers" not in keys(P.compute(ep, pol1, [], now)), "0.8: a model not alerting on layer 1: not a problem")
+p = P.compute(dict(ep, config={"train": {"d3_breadth_floor": 11.0}}), full, [], now)
+check("posture:invalid_train" in keys(p), "stored breadth floor above the cap flagged: training would fail")
+p = P.compute(dict(ep, config={"train": {"d3_breadth": False}}), full, [], now)
+check(p["level"] == "warning" and any(k.startswith("posture:setting:detector_") for k in keys(p)), f"breadth turned off in the settings: warning ({keys(p)})")
 pol = {"manifest": {**full["manifest"], "learned_policy": {"alert_layers": ["learned", "corroborated"]}}, "created_at": ago(1)}
 check("posture:model_alert_layers" in keys(P.compute(ep, pol, [], now)), "model not alerting on the deterministic layers: error")
 p = P.compute(dict(ep, config={"learned_alerts": True, "learned_daily_budget": 900}), full, [], now)

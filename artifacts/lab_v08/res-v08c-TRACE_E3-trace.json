@@ -1,0 +1,28 @@
+{
+ "set": "TRACE_E3-trace",
+ "name": "v08c",
+ "cfg": {
+  "corroboration_at_threshold": false
+ },
+ "product": {
+  "TP": 4,
+  "FP": 39,
+  "recall": 0.114,
+  "attacks": 3,
+  "FP/day": 9.8
+ },
+ "n_attacks": 3,
+ "gt_nodes": 35,
+ "days": 4,
+ "layer:learned": {
+  "TP": 4,
+  "FP": 39,
+  "recall": 0.114,
+  "attacks": 3
+ },
+ "attacks_found": [
+  "node_trace_e3_firefox_0410",
+  "node_trace_e3_phishing_executable_0413",
+  "node_trace_e3_pine_0413"
+ ]
+}

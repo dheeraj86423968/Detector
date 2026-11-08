@@ -1,0 +1,24 @@
+{
+ "set": "CLEARSCOPE_E3",
+ "name": "v08c",
+ "cfg": {
+  "corroboration_at_threshold": false
+ },
+ "product": {
+  "TP": 0,
+  "FP": 41,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 20.5
+ },
+ "n_attacks": 1,
+ "gt_nodes": 41,
+ "days": 2,
+ "layer:learned": {
+  "TP": 0,
+  "FP": 41,
+  "recall": 0.0,
+  "attacks": 0
+ },
+ "attacks_found": []
+}
