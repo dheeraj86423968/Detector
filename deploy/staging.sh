@@ -45,7 +45,9 @@ mkdir -p nginx/public-staging
 # registry push credentials for the gateway's loopback push listener (same scheme as bringup.sh)
 grep -q '^PDP_REGISTRY_PUSH_PASSWORD=' "$ENV" || { umask 077; printf 'PDP_REGISTRY_HTPASSWD=./nginx/registry-push-staging.htpasswd\nPDP_REGISTRY_PUSH_USER=publisher\nPDP_REGISTRY_PUSH_PASSWORD=%s\n' "$(openssl rand -hex 24)" >> "$ENV"; }
 ( set -a; . "./$ENV"; set +a; umask 077
-  printf '%s:%s\n' "$PDP_REGISTRY_PUSH_USER" "$(openssl passwd -apr1 "$PDP_REGISTRY_PUSH_PASSWORD")" > "${PDP_REGISTRY_HTPASSWD:-./nginx/registry-push-staging.htpasswd}" )
+  H="${PDP_REGISTRY_HTPASSWD:-./nginx/registry-push-staging.htpasswd}"
+  printf '%s:%s\n' "$PDP_REGISTRY_PUSH_USER" "$(openssl passwd -apr1 "$PDP_REGISTRY_PUSH_PASSWORD")" > "$H"
+  chgrp 101 "$H" && chmod 640 "$H" )     # readable by nginx's workers (gid 101 in nginx:alpine), nobody else
 # staging serves the console build under test (console: npx vite build --outDir dist-next); production serves
 # console/dist, updated only when production's API is rolled (docs/OPERATIONS.md), so it never runs ahead of its API
 grep -q '^PDP_CONSOLE_DIST=' "$ENV" || echo 'PDP_CONSOLE_DIST=../console/dist-next' >> "$ENV"

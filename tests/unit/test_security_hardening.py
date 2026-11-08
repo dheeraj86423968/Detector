@@ -343,7 +343,7 @@ check("pdp_pki_private" not in gw_vols and "pdp_pki:/pki:ro" in gw_vols and all(
       for n in ("api", "worker-ingest", "worker-train")), "compose: the private volume is mounted into api and workers, never the gateway")
 check("ports" not in dc["services"]["registry"] and dc["services"]["registry"]["networks"] == ["backend"]
       and any(":5000" in str(p) for p in dc["services"]["gateway"]["ports"]) and "auth_basic_user_file /etc/nginx/registry-push.htpasswd" in gw
-      and dc["services"]["registry"]["environment"]["REGISTRY_STORAGE_MAINTENANCE_READONLY_ENABLED"] == "${PDP_REGISTRY_READONLY:-true}",
+      and dc["services"]["registry"]["environment"]["REGISTRY_STORAGE_MAINTENANCE"] == "readonly: {enabled: ${PDP_REGISTRY_READONLY:-true}}",
       "compose/gateway: registry has no published port, is read-only by default; pushes go through the gateway's authenticated loopback listener")
 
 # ---- 14. backups: encrypt-then-MAC, verified before extraction, unsafe members refused (F22)

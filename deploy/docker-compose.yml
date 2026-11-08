@@ -139,7 +139,9 @@ services:
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
       # read-only except while deploy/publish-agent.sh runs (it recreates the registry writable for the push and
       # read-only again afterwards): nothing on the backend network can re-point a published tag (security review F2)
-      REGISTRY_STORAGE_MAINTENANCE_READONLY_ENABLED: ${PDP_REGISTRY_READONLY:-true}
+      # (the whole maintenance section as YAML: registry 2.8 panics on REGISTRY_STORAGE_MAINTENANCE_READONLY_ENABLED alone -
+      # "readonly config key must contain additional keys"; verified: read-only answers an upload with 405)
+      REGISTRY_STORAGE_MAINTENANCE: "readonly: {enabled: ${PDP_REGISTRY_READONLY:-true}}"
     volumes: [ pdp_registry:/var/lib/registry ]
     # no published port: pushes go through the gateway's loopback listener (basic auth), pulls through /v2/
     networks: [ backend ]

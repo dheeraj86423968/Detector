@@ -34,6 +34,8 @@ chmod 600 "$ENVFILE"
 set -a; . "$ENVFILE"; set +a
 HTPASSWD=${PDP_REGISTRY_HTPASSWD:-deploy/nginx/registry-push.htpasswd}
 (umask 077; printf '%s:%s\n' "$PDP_REGISTRY_PUSH_USER" "$(openssl passwd -apr1 "$PDP_REGISTRY_PUSH_PASSWORD")" > "$HTPASSWD")
+# nginx's workers (uid/gid 101 in nginx:alpine) must read it; nobody else on the host may
+chgrp 101 "$HTPASSWD" && chmod 640 "$HTPASSWD"
 
 BASE="-f deploy/docker-compose.yml"
 if [ "$MODE" = gpu ]; then
