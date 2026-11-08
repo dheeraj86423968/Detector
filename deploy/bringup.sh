@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 
 MODE="${1:-gpu}"
 ENVFILE=deploy/.env
-touch "$ENVFILE"
+(umask 077; touch "$ENVFILE")     # never world-readable, not even between its creation and the chmod below
 
 # ---- secrets: generated once, kept in deploy/.env (mode 600). Postgres reads them only when its volume is created.
 if ! grep -q '^PDP_DB_PASSWORD=' "$ENVFILE"; then

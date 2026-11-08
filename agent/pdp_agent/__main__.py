@@ -10,6 +10,22 @@ from .agent import Agent, log
 from .config import Config
 
 
+def enroll_token(arg: str) -> str:
+    """The enrolment token: the argument itself, or - for `env` / `-` - PDP_ENROLL_TOKEN from the environment, else one
+    line from stdin. A token on the command line is visible to every local user in /proc/*/cmdline for as long as
+    the enrolment takes (the container shares the host's pid namespace), so the installers and the entrypoint pass
+    it this way."""
+    import os
+    if arg not in ("env", "-"):
+        return arg
+    tok = os.environ.get("PDP_ENROLL_TOKEN", "").strip()
+    if not tok and arg == "-":
+        tok = sys.stdin.readline().strip()
+    if not tok:
+        print("enroll: no token (set PDP_ENROLL_TOKEN or pipe it on stdin)", file=sys.stderr); sys.exit(2)
+    return tok
+
+
 def main():
     cfg = Config.load()
     a = Agent(cfg)
@@ -18,7 +34,7 @@ def main():
         if len(sys.argv) < 3:
             print(__doc__); sys.exit(2)
         fp = sys.argv[sys.argv.index("--ca-sha256") + 1] if "--ca-sha256" in sys.argv else None
-        a.enroll(sys.argv[2], ca_sha256=fp)
+        a.enroll(enroll_token(sys.argv[2]), ca_sha256=fp)
         return
     if cmd == "status":
         import json
