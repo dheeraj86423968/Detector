@@ -337,7 +337,7 @@ else:
     hi1 = np.full(len(il1), 0.9)
     prc = lambda cap: AlertPolicy(DeterministicLayers({"known_executables": [], "trusted_ips": [], "thresholds": {},
                                                        "config": {"normalize_programs": True, "novel_instances": 1}}, 0), 0, 0.5, evidence_rules=())
-    p0, p1 = prc(0), prc(1); p1.repeat_corroborations = 1
+    p0, p1 = prc(0), prc(1); p0.repeat_corroborations = 0; p1.repeat_corroborations = 1
     r_c0, r_c1 = p0.apply(w1, rw, il1, hi1)[1], p1.apply(w1, rw, il1, hi1)[1]
     cor = lambda r: sorted(n for n in r if r[n][0]["layer"] == "corroborated" and r[n][0]["rule"] == "novel_executable_repeat")
     check(cor(r_c0) == sorted([K["n2"], K["n3"]]) and len(cor(r_c1)) == 1,

@@ -1,0 +1,4 @@
+events sampled 4969855 17:26:29
+sample referenced ids 163888
+kept {'file_node_table': 95335, 'netflow_node_table': 7400, 'subject_node_table': 61153}
+SAMPLE DONE 17:26:32

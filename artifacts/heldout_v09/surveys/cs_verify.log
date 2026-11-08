@@ -1,0 +1,97 @@
+event_table 4969855
+subject_node_table 61153
+file_node_table 95335
+netflow_node_table 7400
+17:27:23 /work/clearscope_e5_sample/verify/db/h/baseline: 2019-05-08 646815 events, 83 windows, 161546 fused edges, registry 24704
+17:27:26 /work/clearscope_e5_sample/verify/db/h/baseline: 2019-05-09 884406 events, 84 windows, 195913 fused edges, registry 55229
+17:27:27 /work/clearscope_e5_sample/verify/db/h/baseline: 2019-05-10 108271 events, 43 windows, 29574 fused edges, registry 60213
+17:27:27 /work/clearscope_e5_sample/verify/db/h/baseline: 2019-05-11 12802 events, 13 windows, 1285 fused edges, registry 60636
+17:27:27 /work/clearscope_e5_sample/verify/db/h/baseline: 2019-05-12 12558 events, 13 windows, 958 fused edges, registry 60636
+17:27:29 /work/clearscope_e5_sample/verify/db/h/baseline: 2019-05-13 267303 events, 49 windows, 58309 fused edges, registry 70306
+17:27:30 /work/clearscope_e5_sample/verify/db/h/eval-test: 2019-05-14 277767 events, 69 windows, 69811 fused edges, registry 80341
+17:27:32 /work/clearscope_e5_sample/verify/db/h/eval-test: 2019-05-15 502942 events, 77 windows, 115812 fused edges, registry 98107
+17:27:34 /work/clearscope_e5_sample/verify/db/h/eval-test: 2019-05-17 433129 events, 75 windows, 117155 fused edges, registry 110710
+17:27:36 manifest written: /work/clearscope_e5_sample/verify/db/h/manifest.json
+17:27:46 {
+ "rows": 4969855,
+ "rows_per_day": {
+  "2019-05-07": 900166,
+  "2019-05-08": 646815,
+  "2019-05-09": 884406,
+  "2019-05-10": 108271,
+  "2019-05-11": 12802,
+  "2019-05-12": 12558,
+  "2019-05-13": 267303,
+  "2019-05-14": 277767,
+  "2019-05-15": 502942,
+  "2019-05-16": 694854,
+  "2019-05-17": 433129,
+  "2019-05-18": 97044
+ },
+ "mapped_per_day": {
+  "2019-05-07": 900166,
+  "2019-05-08": 646815,
+  "2019-05-09": 884406,
+  "2019-05-10": 108271,
+  "2019-05-11": 12802,
+  "2019-05-12": 12558,
+  "2019-05-13": 267303,
+  "2019-05-14": 277767,
+  "2019-05-15": 502942,
+  "2019-05-16": 694854,
+  "2019-05-17": 433129,
+  "2019-05-18": 97044
+ },
+ "ops": {
+  "EVENT_READ": 3023407,
+  "EVENT_OPEN": 970361,
+  "EVENT_WRITE": 968531,
+  "EVENT_CONNECT": 1054,
+  "EVENT_RECVFROM": 2415,
+  "EVENT_SENDMSG": 1587,
+  "EVENT_RECVMSG": 1592,
+  "EVENT_SENDTO": 892,
+  "EVENT_CLONE": 16
+ },
+ "ops_dropped_by_strict_map": [],
+ "outside_days_or_null_ts": 131798,
+ "exactly_midnight": 0,
+ "bad_uuid": 0,
+ "noncanonical_index_ids": 0,
+ "referenced_base": 70306,
+ "referenced_test": 46721,
+ "referenced_any": 110710,
+ "referenced_test_not_base": 40404
+}
+17:27:46 loading entities for 110710 referenced index ids
+17:27:46 node rows streamed: {'subject_node_table': 61153, 'file_node_table': 95335, 'netflow_node_table': 7400}; kept [39329, 66665, 4716]
+17:27:46 lookup: 110710 entities
+17:27:46 baseline: event pass for ['2019-05-08', '2019-05-09', '2019-05-10', '2019-05-11', '2019-05-12', '2019-05-13']
+17:27:54 event pass: 4969855 rows streamed; kept 2019-05-08: 646815, 2019-05-09: 884406, 2019-05-10: 108271, 2019-05-11: 12802, 2019-05-12: 12558, 2019-05-13: 267303
+17:27:56 /work/clearscope_e5_sample/verify/stream/h/baseline: 2019-05-08 {'events': 646815, 'dropped_unknown_entity': 0, 'windows': 83, 'fused_edges': 161546, 'new_entities': 24704, 'registry_size': 24704, 'events_by_type': {'READ': 409163, 'OPEN': 127621, 'WRITE': 108956, 'CONNECT': 140, 'RECVFROM': 391, 'SENDMSG': 200, 'RECVMSG': 196, 'SENDTO': 147, 'CLONE': 1}}; free 28.4 GB
+17:27:59 /work/clearscope_e5_sample/verify/stream/h/baseline: 2019-05-09 {'events': 884406, 'dropped_unknown_entity': 0, 'windows': 84, 'fused_edges': 195913, 'new_entities': 30525, 'registry_size': 55229, 'events_by_type': {'READ': 552045, 'OPEN': 162049, 'WRITE': 169782, 'CONNECT': 74, 'RECVFROM': 20, 'SENDMSG': 220, 'RECVMSG': 208, 'SENDTO': 6, 'CLONE': 2}}; free 28.4 GB
+17:27:59 /work/clearscope_e5_sample/verify/stream/h/baseline: 2019-05-10 {'events': 108271, 'dropped_unknown_entity': 0, 'windows': 43, 'fused_edges': 29574, 'new_entities': 4984, 'registry_size': 60213, 'events_by_type': {'READ': 63993, 'OPEN': 22608, 'WRITE': 20947, 'CONNECT': 80, 'RECVFROM': 2, 'SENDMSG': 325, 'RECVMSG': 315, 'CLONE': 1}}; free 28.4 GB
+17:27:59 /work/clearscope_e5_sample/verify/stream/h/baseline: 2019-05-11 {'events': 12802, 'dropped_unknown_entity': 0, 'windows': 13, 'fused_edges': 1285, 'new_entities': 423, 'registry_size': 60636, 'events_by_type': {'READ': 11599, 'OPEN': 1056, 'WRITE': 2, 'CONNECT': 14, 'SENDMSG': 65, 'RECVMSG': 66}}; free 28.4 GB
+17:27:59 /work/clearscope_e5_sample/verify/stream/h/baseline: 2019-05-12 {'events': 12558, 'dropped_unknown_entity': 0, 'windows': 13, 'fused_edges': 958, 'new_entities': 0, 'registry_size': 60636, 'events_by_type': {'READ': 11543, 'OPEN': 1011, 'WRITE': 4}}; free 28.4 GB
+17:28:00 /work/clearscope_e5_sample/verify/stream/h/baseline: 2019-05-13 {'events': 267303, 'dropped_unknown_entity': 0, 'windows': 49, 'fused_edges': 58309, 'new_entities': 9670, 'registry_size': 70306, 'events_by_type': {'READ': 162234, 'OPEN': 49732, 'WRITE': 55121, 'CONNECT': 25, 'RECVFROM': 1, 'SENDMSG': 106, 'RECVMSG': 83, 'CLONE': 1}}; free 28.3 GB
+17:28:00 /work/clearscope_e5_sample/verify/stream/h/baseline: registry saved (70306 entities)
+17:28:00 eval-test: event pass for ['2019-05-14', '2019-05-15', '2019-05-17']
+17:28:07 event pass: 4969855 rows streamed; kept 2019-05-14: 277767, 2019-05-15: 502942, 2019-05-17: 433129
+17:28:08 /work/clearscope_e5_sample/verify/stream/h/eval-test: 2019-05-14 {'events': 277767, 'dropped_unknown_entity': 0, 'windows': 69, 'fused_edges': 69811, 'new_entities': 10035, 'registry_size': 80341, 'events_by_type': {'READ': 171561, 'OPEN': 54681, 'WRITE': 51063, 'CONNECT': 54, 'RECVFROM': 29, 'SENDMSG': 168, 'RECVMSG': 194, 'SENDTO': 16, 'CLONE': 1}}; free 28.3 GB
+17:28:10 /work/clearscope_e5_sample/verify/stream/h/eval-test: 2019-05-15 {'events': 502942, 'dropped_unknown_entity': 0, 'windows': 77, 'fused_edges': 115812, 'new_entities': 17766, 'registry_size': 98107, 'events_by_type': {'READ': 291541, 'OPEN': 98106, 'WRITE': 112424, 'CONNECT': 130, 'RECVFROM': 321, 'SENDMSG': 118, 'RECVMSG': 134, 'SENDTO': 163, 'CLONE': 5}}; free 28.3 GB
+17:28:11 /work/clearscope_e5_sample/verify/stream/h/eval-test: 2019-05-17 {'events': 433129, 'dropped_unknown_entity': 0, 'windows': 75, 'fused_edges': 117155, 'new_entities': 12603, 'registry_size': 110710, 'events_by_type': {'READ': 267401, 'OPEN': 89621, 'WRITE': 75653, 'CONNECT': 83, 'RECVFROM': 180, 'SENDMSG': 60, 'RECVMSG': 63, 'SENDTO': 68}}; free 28.3 GB
+17:28:11 /work/clearscope_e5_sample/verify/stream/h/eval-test: registry saved (110710 entities)
+baseline registry entities 70306 70306 identical
+baseline days ['2019-05-08', '2019-05-09', '2019-05-10', '2019-05-11', '2019-05-12', '2019-05-13'] ['2019-05-08', '2019-05-09', '2019-05-10', '2019-05-11', '2019-05-12', '2019-05-13']
+  2019-05-08: 83 windows, 161546 edges compared
+  2019-05-09: 84 windows, 195913 edges compared
+  2019-05-10: 43 windows, 29574 edges compared
+  2019-05-11: 13 windows, 1285 edges compared
+  2019-05-12: 13 windows, 958 edges compared
+  2019-05-13: 49 windows, 58309 edges compared
+eval-test registry entities 110710 110710 identical
+eval-test days ['2019-05-14', '2019-05-15', '2019-05-17'] ['2019-05-14', '2019-05-15', '2019-05-17']
+  2019-05-14: 69 windows, 69811 edges compared
+  2019-05-15: 77 windows, 115812 edges compared
+  2019-05-17: 75 windows, 117155 edges compared
+EQUIVALENT

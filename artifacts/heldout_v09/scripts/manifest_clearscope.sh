@@ -1,0 +1,15 @@
+#!/bin/bash
+# manifest for /data/heldout/CLEARSCOPE_E5/clearscope (v08 manifest_theia.sh pattern) + the PIDSMaker-excluded GT csvs
+W=/tmp/claude-0/-root-Desktop/23340b6f-b435-453c-8f8c-05b5fcb54d98/scratchpad/v09; SC=$(dirname $(readlink -f $0))
+NAME=pdp-v09-clearscope-man MEM=12g $SC/run.sh -m pdp_server.tools.heldout_stream manifest --out /data/heldout/CLEARSCOPE_E5/clearscope \
+  --dataset CLEARSCOPE_E5 --host clearscope --platform android --dump /root/darpa/clearscope_e5/clearscope_e5.dump \
+  --train 2019-05-08,2019-05-09,2019-05-10,2019-05-11,2019-05-12 --val 2019-05-13 --test 2019-05-14,2019-05-15,2019-05-17 \
+  --stats /work/clearscope_e5_stats.json --survey /work/clearscope_e5_survey.json --referenced /work/clearscope_e5_ref.npz \
+  --gt E5-CLEARSCOPE/node_clearscope_e5_appstarter_0515.csv,E5-CLEARSCOPE/node_clearscope_e5_tester_0517.csv \
+  --split-note "PIDSMaker lists are chronological (train 05-08,05-09,05-10,05-11,05-12 < val 05-13 < test 05-14,05-15,05-17) -> used as is (rule fixed before the survey; TRACE_E3 / THEIA_E5 precedent). PIDSMaker 'unused' day 05-16, the day before its start_date (05-07) and 05-18 are in neither store." \
+  --flags "train days 05-11 and 05-12 (Sat/Sun) are small: 512,119 / 502,322 kept events (05-08 25.9M, 05-09 35.4M); split not changed (fixed before the survey);05-16 (27.8M kept events, PIDSMaker-unused) is skipped between test days 05-15 and 05-17;2019-05-07 has 36.0M kept events but is before PIDSMaker's start_date 05-08 and is not used;lockwatch_0517 attack (PIDSMaker GT list comments it out; attack window 05-17 15:48-16:01) has all 17 of its GT nodes on the test days: they are attack activity but are NOT in the evaluation GT (see ground_truth_not_in_pidsmaker_list);firefox_0517 csv holds 1 node (no trailing newline, so wc -l says 0); PIDSMaker leaves it out;almost no process-lifecycle events: EVENT_CLONE 644, EVENT_EXECUTE 28 in the whole dump" \
+  --verified "verified identical to PostgresReplay + ingest_day (heldout_prep build) on a 4,969,855-row stride sample of this dump (every 40th event_table row, all days, + the 163,888 node rows it references; database clearscope_e5_sample; registries and every window array identical, same train/val/test days)" \
+  --notes "DARPA TC E5 CLEARSCOPE (Android, ClearScope recorder): 198,794,211 event rows, 5,271,926 outside 05-07..05-18 US/Eastern or NULL timestamp, all event uuids canonical;strict TC map drops no operation (only READ/OPEN/WRITE/CONNECT/RECVFROM/SENDMSG/RECVMSG/SENDTO/CLONE/EXECUTE present);subject_node_table.path is NULL for Android processes (the executable is in cmd), so subject labels read 'None <cmd>' exactly as PostgresReplay and the orthrus GT do;database not restored (stream); only the nodes referenced by kept events of the prepared days are in the registries" || exit 1
+NAME=pdp-v09-clearscope-mangt MEM=4g $SC/run.sh /src/artifacts/heldout_v09/scripts/manifest_extra_gt.py /data/heldout/CLEARSCOPE_E5/clearscope /work/clearscope_e5_ref.npz \
+  E5-CLEARSCOPE/node_clearscope_e5_firefox_0517.csv E5-CLEARSCOPE/node_clearscope_e5_lockwatch_0517.csv
+echo "MANIFEST EXIT $?"

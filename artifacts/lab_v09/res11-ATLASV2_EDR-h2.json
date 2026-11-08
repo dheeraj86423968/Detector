@@ -1,0 +1,140 @@
+{
+ "set": "ATLASV2_EDR-h2",
+ "bundle": "v07rel",
+ "n_attacks": 10,
+ "gt_nodes": 0,
+ "days": 1,
+ "variants": {
+  "A": {},
+  "F3": {
+   "learned_floor": 3.0
+  },
+  "F3R1": {
+   "learned_floor": 3.0,
+   "repeat_corroborations": 1
+  },
+  "F3R3": {
+   "learned_floor": 3.0,
+   "repeat_corroborations": 3
+  },
+  "F4": {
+   "learned_floor": 4.0
+  },
+  "F5": {
+   "learned_floor": 5.0
+  },
+  "F3B10": {
+   "learned_floor": 3.0,
+   "daily_budget": 10
+  },
+  "L0R1": {
+   "daily_budget": 0,
+   "repeat_corroborations": 1
+  }
+ },
+ "A": {
+  "TP": 0,
+  "FP": 36,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 36.0,
+  "by_layer": {
+   "learned": 10,
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "F3": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "F3R1": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "F3R3": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "F4": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "F5": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "F3B10": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "L0R1": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ }
+}

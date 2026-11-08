@@ -283,10 +283,12 @@ for d in range(3):
 st.save_registry(regt)
 cfg = TrainConfig(device="cpu", emb_dim=16, w2v_epochs=2, velox_out_dim=16, velox_epochs=2, velox_runs=1, orthrus_seeds=(0,),
                   orthrus_hid_dim=16, orthrus_out_dim=16, orthrus_epochs=2, calibration_budget=2,
-                  d3_breadth=True, layer_novelty=False)        # the 0.8 configuration (not the default: held-out decision)
+                  d3_breadth=True, layer_novelty=False, learned_daily_budget=20)   # the 0.8 configuration (not the default)
 _d = TrainConfig()
 check(_d.layer_novelty is True and _d.d3_breadth is False and _d.detector3 is True,
       "defaults after the 0.8 held-out run: layer 1 on, detector-3 breadth off (available per endpoint)")
+check(_d.learned_daily_budget == 0 and _d.repeat_corroborations == 1 and _d.near_alert_score == "own",
+      "0.9 defaults: no learned-only alerts, one corroborated repeat run per program and day, near-alert on the own score")
 out = os.path.join(tmp2, "bundle")
 Trainer(st, days[:2], days[2], cfg, out).run({"endpoint": "t"})
 import json
@@ -377,6 +379,13 @@ for w in st2.windows("2026-01-06"):
     for n in r.alerts.tolist():
         alerted.setdefault(regs.entities[n].uuid, r.layer_of(n))
 check("p:t:run" in alerted, f"the dropped program run by the SSH daemon alerts ({alerted.get('p:t:run')})")
+check(man["learned_policy"].get("policy") == "0.9" and rt.daily_budget == 20, "a 0.9 bundle keeps the budget it was trained with")
+_m = json.load(open(os.path.join(out, "manifest.json")))
+_old = dict(_m, learned_policy={k: v for k, v in _m["learned_policy"].items() if k != "policy"})
+json.dump(_old, open(os.path.join(out, "manifest.json"), "w"))
+check(Runtime(out, regs, device="cpu").daily_budget == 0 and Runtime(out, regs, device="cpu", daily_budget=7).daily_budget == 7,
+      "a bundle trained before 0.9 (budget 20 recorded) gets the 0.9 default 0; an endpoint setting still overrides")
+json.dump(_m, open(os.path.join(out, "manifest.json"), "w"))
 check(len(alerted) <= 25, f"few alerts on an otherwise ordinary day ({len(alerted)})")
 check(r3max > 1.0, f"detector-3 scores the attack above its threshold (max ratio {r3max:.1f})")
 

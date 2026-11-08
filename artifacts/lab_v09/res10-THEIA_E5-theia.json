@@ -1,0 +1,147 @@
+{
+ "set": "THEIA_E5-theia",
+ "bundle": "b07rel",
+ "n_attacks": 1,
+ "gt_nodes": 66,
+ "days": 2,
+ "variants": {
+  "A": {},
+  "L0": {
+   "daily_budget": 0
+  },
+  "L5": {
+   "daily_budget": 5
+  },
+  "F2": {
+   "learned_floor": 2.0
+  },
+  "F3": {
+   "learned_floor": 3.0
+  },
+  "C2": {
+   "corroboration": 2.0
+  },
+  "L0C2": {
+   "daily_budget": 0,
+   "corroboration": 2.0
+  },
+  "L0C15": {
+   "daily_budget": 0,
+   "corroboration": 1.5
+  }
+ },
+ "A": {
+  "TP": 0,
+  "FP": 128,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 64.0,
+  "by_layer": {
+   "learned": 32,
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 9
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "L0": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 48.5,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "L5": {
+  "TP": 0,
+  "FP": 107,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 53.5,
+  "by_layer": {
+   "learned": 10,
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "F2": {
+  "TP": 0,
+  "FP": 101,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 50.5,
+  "by_layer": {
+   "novelty": 54,
+   "learned": 5,
+   "rules": 33,
+   "corroborated": 9
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "F3": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 48.5,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "C2": {
+  "TP": 0,
+  "FP": 119,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 59.5,
+  "by_layer": {
+   "learned": 32,
+   "novelty": 54,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "L0C2": {
+  "TP": 0,
+  "FP": 87,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 43.5,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ },
+ "L0C15": {
+  "TP": 0,
+  "FP": 90,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 45.0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 3
+  },
+  "by_layer_tp": {},
+  "attacks_found": []
+ }
+}

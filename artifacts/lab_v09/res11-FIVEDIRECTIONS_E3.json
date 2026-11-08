@@ -1,0 +1,188 @@
+{
+ "set": "FIVEDIRECTIONS_E3",
+ "bundle": "v07rel",
+ "n_attacks": 2,
+ "gt_nodes": 108,
+ "days": 3,
+ "variants": {
+  "A": {},
+  "F3": {
+   "learned_floor": 3.0
+  },
+  "F3R1": {
+   "learned_floor": 3.0,
+   "repeat_corroborations": 1
+  },
+  "F3R3": {
+   "learned_floor": 3.0,
+   "repeat_corroborations": 3
+  },
+  "F4": {
+   "learned_floor": 4.0
+  },
+  "F5": {
+   "learned_floor": 5.0
+  },
+  "F3B10": {
+   "learned_floor": 3.0,
+   "daily_budget": 10
+  },
+  "L0R1": {
+   "daily_budget": 0,
+   "repeat_corroborations": 1
+  }
+ },
+ "A": {
+  "TP": 11,
+  "FP": 221,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 73.7,
+  "by_layer": {
+   "learned": 27,
+   "novelty": 48,
+   "corroborated": 157
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ },
+ "F3": {
+  "TP": 11,
+  "FP": 195,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 65.0,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 158
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ },
+ "F3R1": {
+  "TP": 11,
+  "FP": 166,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 55.3,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 129
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ },
+ "F3R3": {
+  "TP": 11,
+  "FP": 172,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 57.3,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 135
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ },
+ "F4": {
+  "TP": 11,
+  "FP": 195,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 65.0,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 158
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ },
+ "F5": {
+  "TP": 11,
+  "FP": 195,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 65.0,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 158
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ },
+ "F3B10": {
+  "TP": 11,
+  "FP": 195,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 65.0,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 158
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ },
+ "L0R1": {
+  "TP": 11,
+  "FP": 166,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 55.3,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 129
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ }
+}

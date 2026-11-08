@@ -1,4 +1,57 @@
-# Layered detection (0.3, revised in 0.4, 0.5, 0.6 and 0.7)
+# Layered detection (0.3, revised in 0.4-0.9)
+
+## 0.9 (2026-11-08): the false-positive fixes (0.8.1 corroboration + 0.9 alerting defaults)
+
+Asked for: fix the false-positive blow-up of the released 0.7 configuration found on the 0.8 held-out hosts, then make
+the best version much better on false positives. Lab, protocol (each grid's choice rule written before it ran) and
+decision record: artifacts/lab_v09. Detection itself (detectors 1-3, propagation, layers 1-2) is unchanged; only
+which scores turn into alerts.
+
+**0.8.1 - circular corroboration.** A learned score "corroborates" a layer-1/2 alert when a window neighbour of the
+alert is above the learned threshold. With 0.7's propagation, the alerted node's own suspicion flows to what it
+touches, so its neighbours rose above the threshold *because of the alert* and then confirmed it. On CARBANAKv2 h1 one
+alerted Windows Update process (`poqexec.exe`) wrote ~3,500 `winsxs` files: 3,478 corroborated alerts, none true.
+Fix: a neighbour corroborates on its own score in the window (before propagation; runtime `NEAR_ALERT_SCORE = "own"`,
+bundle `learned_policy.near_alert_score`). Evidence-rule corroboration (repeat runs, tainted rules) keeps the propagated
+score: there the flagged node itself is the subject and suspicion from its parents is real evidence.
+
+**0.9 - alerting defaults.** After 0.8.1 the alerts raised by the learned score alone were 779 alerts with 5 true
+(0.6 % precise), and no attack on any of the 16 sets was found only by them; repeat runs of one new program were
+corroborated dozens of times (one program 48 times). Defaults now: no learned-only alerts (`learned_daily_budget 0`;
+the learned layer still corroborates layer-1/2 hits and ranks everything), and at most one corroborated repeat run per
+new program per day (`repeat_corroborations 1`). Both apply to bundles trained before 0.9 through the runtime
+defaults; an endpoint's own budget setting still overrides. Raising the corroboration threshold instead (1.5x / 2x)
+lost ATLASv2 attacks and was rejected.
+
+Development / seen data, 16 sets (none of it held-out any more), end to end through the runtime:
+
+| set | 0.7 released: attacks, TP / FP | 0.8.1: TP / FP | 0.9: attacks, TP / FP (per day) |
+|---|---|---|---|
+| CADETS E3 | 3/3, 32 / 42 | 32 / 42 | 3/3, 31 / 16 (4.0) |
+| THEIA E3 | 2/2, 111 / 127 | 110 / 124 | 2/2, 109 / 86 (28.7) |
+| OpTC H201 | 1/1, 7 / 42 | 7 / 42 | 1/1, 6 / 19 (6.3) |
+| OpTC H501 | 1/1, 19 / 132 | 19 / 102 | 1/1, 17 / 77 (25.7) |
+| OpTC H051 | 1/1, 76 / 58 | 75 / 57 | 1/1, 75 / 53 (17.7) |
+| ClearScope E3 | 0/1, 0 / 51 | 0 / 51 | 0/1, 0 / 0 |
+| FiveDirections E3 | 2/2, 11 / 225 | 11 / 221 | 2/2, 11 / 166 (55.3) |
+| ATLASv2 h1 | 8/10, 14 / 125 | 13 / 86 | 8/10, 12 / 49 |
+| ATLASv2 h2 (no attack) | 0 / 36 | 0 / 36 | 0 / 26 |
+| TRACE | 3/3, 9 / 81 | 9 / 80 | 3/3, 9 / 70 (17.5) |
+| CARBANAKv2 h1 | 1/1, 5 / 3,756 | 5 / 285 | 1/1, 5 / 123 (15.4) |
+| CARBANAKv2 h2 | 1/1, 40 / 220 | 40 / 220 | 1/1, 40 / 164 (18.2) |
+| CARBANAKv2 h3 | 1/1, 2 / 269 | 2 / 222 | 1/1, 2 / 86 (12.3) |
+| CARBANAKv2 h4 | 1/1, 3 / 64 | 3 / 64 | 1/1, 3 / 27 (3.9) |
+| CARBANAKv2 h5 | 1/1, 18 / 313 | 18 / 274 | 1/1, 17 / 130 (11.8) |
+| THEIA E5 | 0/1, 0 / 129 | 0 / 128 | 0/1, 0 / 97 (48.5) |
+| **total** | **26/30, 347 / 5,670 (79.9 a day), precision 0.058, node recall 0.294** | 344 / 2,034 | **26/30, 337 / 1,189 (16.7 a day), precision 0.221, node recall 0.285** |
+
+On the six 0.8 held-out hosts (CARBANAKv2 h1-h5, THEIA E5; now seen): 0.6 5/6, 58 TP / 488 FP; 0.7 released 5/6,
+68 / 4,751; 0.9 5/6, 67 / 627. What is left: new-program alerts (Windows system programs that did not run during a
+short baseline look exactly like living-off-the-land attack steps - mstsc, control, qwinsta - so they are not filtered
+by name), rule alerts on other instances of programs the ground truth labels as attack, and corroboration of
+processes recorded without a program or command line (FiveDirections). A learned-only floor of 3x the threshold (F3)
+also found the ClearScope E3 attack (27/30) for 6 % more false positives; not chosen under the pre-registered rule.
+Held-out: CLEARSCOPE_E5, prepared but not yet scored (see the decision record).
 
 ## 0.8 (2026-11-08): process-chain evidence ("breadth") - tried, not released as the default
 

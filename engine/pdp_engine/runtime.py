@@ -253,7 +253,9 @@ class Runtime:
         # deterministic layers + learned alerting policy (absent in pre-0.3 bundles)
         self.layers = DeterministicLayers.load(bundle_dir, self.m["num_nodes"], set(approved_executables or ())) if layers else None
         pol = self.m.get("learned_policy") or {}
-        self.daily_budget = int(daily_budget if daily_budget is not None else pol.get("daily_budget", 20))
+        if daily_budget is None:      # bundles before 0.9 recorded 20 learned-only alerts a day: the 0.9 default applies
+            daily_budget = pol.get("daily_budget", 20) if (not d3 or pol.get("policy") == POLICY_VERSION) else LEARNED_DAILY_BUDGET
+        self.daily_budget = int(daily_budget)
         cp = pol.get("corroboration_percentile", "99.9")
         self.corroboration = float(cal["fusion"]["percentiles"].get(cp, self.fcal.threshold)) / self.fcal.threshold
         if d3 and (cal.get("final") or {}).get("percentiles", {}).get(cp) is not None:   # 0.7: on the final scale
@@ -532,7 +534,13 @@ class Runtime:
 # evidence in the window ("own"), not on suspicion propagated to it - on CARBANAKv2 h1 one alerted Windows Update
 # process propagated its suspicion to ~3,500 files it wrote, which then "corroborated" that same alert. "final" = 0.7.
 NEAR_ALERT_SCORE = "own"
-REPEAT_CORROBORATIONS = 0     # > 0: corroborated repeat runs of a new program per program and UTC day (0 = no cap)
+REPEAT_CORROBORATIONS = 1     # 0.9: corroborated repeat runs of a new program per program and UTC day (0 = no cap);
+                              # the first runs already alerted through layer 1, more instances are the same finding
+# 0.9 (artifacts/lab_v09 grid 2): alerts on the learned score alone were 0.6 % precise (779 alerts, 5 true, no attack
+# found only by them on 16 sets); by default the learned layer corroborates and ranks but raises no alert of its own.
+# Bundles trained from 0.9 on record their own budget (learned_policy.policy = "0.9"); an endpoint setting overrides.
+LEARNED_DAILY_BUDGET = 0
+POLICY_VERSION = "0.9"
 
 CRITICAL_RULES = ("exfiltration", "untrusted_code_network")
 
@@ -570,6 +578,7 @@ class AlertPolicy:
         self.near_alert = True                # False: the learned score corroborates evidence rules only
         self.near_alert_score = NEAR_ALERT_SCORE   # "own": the neighbour's own (pre-propagation) score; "final": 0.7
         self.repeat_corroborations = REPEAT_CORROBORATIONS
+        self.learned_floor = 0.0              # > 0: learned-only alerts need a score above this many thresholds too
         self.reset()
 
     def reset(self):
@@ -638,7 +647,7 @@ class AlertPolicy:
                                    "detail": f"own learned score {f:.2f} (above the validation {self.label}th percentile) next to a layer-1/2 alert"
                                    if score is own else f"learned score {f:.2f} (above the validation {self.label}th percentile) next to a layer-1/2 alert"}]
         # learned-only: above the fusion threshold, within the daily budget, highest first
-        cand = [i for i in np.where(above(fused))[0].tolist() if int(ids[i]) not in reasons]
+        cand = [i for i in np.where(above(fused) & (fused > self.learned_floor))[0].tolist() if int(ids[i]) not in reasons]
         cand.sort(key=lambda i: -float(fused[i]))
         room = max(0, self.daily_budget - self._day_learned)
         for i in cand[:room]:

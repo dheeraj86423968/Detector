@@ -1,0 +1,57 @@
+{
+ "2019-05-08": {
+  "events": 25872679,
+  "windows": 96,
+  "fused_edges_est": 7686531,
+  "bytes_est": 1352829456
+ },
+ "2019-05-09": {
+  "events": 35376236,
+  "windows": 96,
+  "fused_edges_est": 9789259,
+  "bytes_est": 1722909584
+ },
+ "2019-05-10": {
+  "events": 4330822,
+  "windows": 92,
+  "fused_edges_est": 1399201,
+  "bytes_est": 246259376
+ },
+ "2019-05-11": {
+  "events": 512119,
+  "windows": 84,
+  "fused_edges_est": 92460,
+  "bytes_est": 16272960
+ },
+ "2019-05-12": {
+  "events": 502322,
+  "windows": 82,
+  "fused_edges_est": 87970,
+  "bytes_est": 15482720
+ },
+ "2019-05-13": {
+  "events": 10692100,
+  "windows": 91,
+  "fused_edges_est": 3026319,
+  "bytes_est": 532632144
+ },
+ "2019-05-14": {
+  "events": 11110686,
+  "windows": 95,
+  "fused_edges_est": 3338545,
+  "bytes_est": 587583920
+ },
+ "2019-05-15": {
+  "events": 20117731,
+  "windows": 96,
+  "fused_edges_est": 5787700,
+  "bytes_est": 1018635200
+ },
+ "2019-05-17": {
+  "events": 17325168,
+  "windows": 96,
+  "fused_edges_est": 5359204,
+  "bytes_est": 943219904
+ },
+ "_total_window_bytes_est": 6435825264
+}

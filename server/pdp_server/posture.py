@@ -121,6 +121,8 @@ TRAIN_SCHEMA = {
     "learned_daily_budget": ("int", 0, 1000),
     "learned_alerts": ("bool",),
     "corroboration_percentile": ("enum", PERCENTILES),
+    "near_alert_score": ("enum", ("own", "final")),   # 0.8.1: neighbours corroborate on their own score ("final" = 0.7)
+    "repeat_corroborations": ("int", 0, 1000),       # 0.9: corroborated repeat runs per new program and day (0 = no cap)
     "alert_layers": ("layers",),
     "layers_only": ("bool",),
     "fusion_calibration": ("enum", ("fixed", "simulation")),                   # server-side (worker.job_train)
@@ -235,7 +237,7 @@ def detection_settings(cfg: dict | None) -> dict:
             "alert_layers": set(LAYERS) if al is None else set(al) if isinstance(al, list) else set(LAYERS),
             "layers_only": t.get("layers_only") is True,
             "corroboration_percentile": t.get("corroboration_percentile", "99.9"),
-            "train_learned_alerts": t.get("learned_alerts"), "train_budget": t.get("learned_daily_budget", 20),
+            "train_learned_alerts": t.get("learned_alerts"), "train_budget": t.get("learned_daily_budget", 0),
             "learned_alerts": cfg.get("learned_alerts"), "learned_daily_budget": cfg.get("learned_daily_budget"),
             "periodic_retrain": cfg.get("periodic_retrain") is not False, "early_models": cfg.get("early_models") is not False,
             "fp_budget": cfg.get("fp_budget"), "baseline_days": cfg.get("baseline_days", 7),
@@ -305,8 +307,6 @@ def weakenings(before: dict | None, after: dict | None) -> list[str]:
                                ("train_budget", "daily limit of unusual-behaviour alerts (training settings)", b["train_budget"], a["train_budget"])):
         if isinstance(av, int) and av > LEARNED_FLOOD and (not isinstance(bv, int) or av > bv):
             out.append(f"{label} raised to {av} per day (a flood that buries real alerts)")
-        if av == 0 and bv != 0 and (a["learned_alerts"] is True or a["train_learned_alerts"] is True):
-            out.append(f"{label} set to 0 while those alerts are on")
     if b["periodic_retrain"] and not a["periodic_retrain"]:
         out.append("periodic retraining turned off (the model goes stale)")
     if b["early_models"] and not a["early_models"]:
@@ -677,7 +677,8 @@ def compute(ep: dict, bundle: dict | None, entries: list[dict] | None = None, no
         if man.get("layers_only"):
             add("model_layers_only", "warning", "The current model has no learned detectors (rules-only model)")
         learned_on = cfg.get("learned_alerts") if isinstance(cfg.get("learned_alerts"), bool) else bool(pol.get("learned_alerts", True) if pol else False)
-        budget = cfg.get("learned_daily_budget") if isinstance(cfg.get("learned_daily_budget"), int) else pol.get("daily_budget", 20)
+        budget = cfg.get("learned_daily_budget") if isinstance(cfg.get("learned_daily_budget"), int) else (
+            pol.get("daily_budget", 20) if pol.get("policy") == "0.9" else 0)
         if learned_on and isinstance(budget, int) and budget > LEARNED_FLOOD:
             add("learned_flood", "warning", f"Unusual-behaviour alerts are on with a limit of {budget} per day: a flood of them buries real detections")
     # settings that take effect at the next training (or now, on the agent)

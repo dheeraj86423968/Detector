@@ -1,0 +1,199 @@
+{
+ "set": "THEIA_E3",
+ "bundle": "v07rel",
+ "n_attacks": 2,
+ "gt_nodes": 118,
+ "days": 3,
+ "variants": {
+  "A": {},
+  "L0": {
+   "daily_budget": 0
+  },
+  "L5": {
+   "daily_budget": 5
+  },
+  "F2": {
+   "learned_floor": 2.0
+  },
+  "F3": {
+   "learned_floor": 3.0
+  },
+  "C2": {
+   "corroboration": 2.0
+  },
+  "L0C2": {
+   "daily_budget": 0,
+   "corroboration": 2.0
+  },
+  "L0C15": {
+   "daily_budget": 0,
+   "corroboration": 1.5
+  }
+ },
+ "A": {
+  "TP": 110,
+  "FP": 124,
+  "recall": 0.932,
+  "attacks": 2,
+  "FP/day": 41.3,
+  "by_layer": {
+   "learned": 28,
+   "corroborated": 25,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "learned": 1,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ]
+ },
+ "L0": {
+  "TP": 109,
+  "FP": 97,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 32.3,
+  "by_layer": {
+   "corroborated": 25,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ]
+ },
+ "L5": {
+  "TP": 109,
+  "FP": 106,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 35.3,
+  "by_layer": {
+   "learned": 9,
+   "corroborated": 25,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ]
+ },
+ "F2": {
+  "TP": 109,
+  "FP": 97,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 32.3,
+  "by_layer": {
+   "corroborated": 25,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ]
+ },
+ "F3": {
+  "TP": 109,
+  "FP": 97,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 32.3,
+  "by_layer": {
+   "corroborated": 25,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ]
+ },
+ "C2": {
+  "TP": 100,
+  "FP": 113,
+  "recall": 0.847,
+  "attacks": 2,
+  "FP/day": 37.7,
+  "by_layer": {
+   "learned": 32,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ]
+ },
+ "L0C2": {
+  "TP": 100,
+  "FP": 81,
+  "recall": 0.847,
+  "attacks": 2,
+  "FP/day": 27.0,
+  "by_layer": {
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ]
+ },
+ "L0C15": {
+  "TP": 100,
+  "FP": 81,
+  "recall": 0.847,
+  "attacks": 2,
+  "FP/day": 27.0,
+  "by_layer": {
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ]
+ }
+}

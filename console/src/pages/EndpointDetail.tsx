@@ -301,7 +301,7 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
   const { data, error, loading, reload } = useApi<EndpointConfigResp>(`/api/endpoints/${id}`);
   const [budget, setBudget] = useState<string>(""); const [retire, setRetire] = useState(false);
   const cfg = data?.endpoint.config || {};
-  useEffect(() => { if (data) setBudget(String(cfg.learned_daily_budget ?? 20)); }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (data) setBudget(String(cfg.learned_daily_budget ?? 0)); }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
   if (loading && !data) return <Loading block />;
   if (error && !data) return <ErrorState error={error} onRetry={reload} />;
   const learnedOn = cfg.learned_alerts ?? data?.learned_alerts_default ?? true;
@@ -316,10 +316,10 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
           <Toggle checked={learnedOn} label="Raise unusual-behaviour alerts" onChange={v => setCfg({ learned_alerts: v }, v ? "Unusual-behaviour alerts turned on" : "Unusual-behaviour alerts turned off")} />
         </div>
         <div className="setting-row">
-          <div><div className="setting-name">Daily limit</div><div className="muted sm">At most this many unusual-behaviour alerts per day; the most unusual come first.</div></div>
+          <div><div className="setting-name">Daily limit</div><div className="muted sm">Alerts on unusual behaviour alone, per day (most unusual first). 0, the default: the model confirms and ranks the other detections.</div></div>
           <form className="inline-form" onSubmit={e => { e.preventDefault(); const v = parseInt(budget, 10); if (!isNaN(v) && v >= 0) setCfg({ learned_daily_budget: v }, `Daily limit set to ${v}`); }}>
             <input type="number" min={0} max={1000} value={budget} disabled={!learnedOn} onChange={e => setBudget(e.target.value)} style={{ width: 96 }} aria-label="Daily limit" />
-            <button className="btn" disabled={!learnedOn || budget === String(cfg.learned_daily_budget ?? 20)}>Save</button>
+            <button className="btn" disabled={!learnedOn || budget === String(cfg.learned_daily_budget ?? 0)}>Save</button>
           </form>
         </div>
       </Card>

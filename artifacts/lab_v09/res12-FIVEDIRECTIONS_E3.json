@@ -1,0 +1,29 @@
+{
+ "set": "FIVEDIRECTIONS_E3",
+ "bundle": "v07rel",
+ "n_attacks": 2,
+ "gt_nodes": 108,
+ "days": 3,
+ "variants": {
+  "A": {}
+ },
+ "A": {
+  "TP": 11,
+  "FP": 166,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 55.3,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 129
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ]
+ }
+}

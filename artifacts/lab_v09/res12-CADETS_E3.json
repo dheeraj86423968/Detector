@@ -1,0 +1,32 @@
+{
+ "set": "CADETS_E3",
+ "bundle": "v07rel",
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "variants": {
+  "A": {}
+ },
+ "A": {
+  "TP": 31,
+  "FP": 16,
+  "recall": 0.456,
+  "attacks": 3,
+  "FP/day": 4.0,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ]
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "set": "CARBANAKV2_EDR-h4",
+ "bundle": "b07rel",
+ "n_attacks": 1,
+ "gt_nodes": 21,
+ "days": 7,
+ "variants": {
+  "A": {}
+ },
+ "A": {
+  "TP": 3,
+  "FP": 27,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.9,
+  "by_layer": {
+   "novelty": 25,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ]
+ }
+}

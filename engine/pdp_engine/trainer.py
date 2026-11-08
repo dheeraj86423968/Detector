@@ -89,14 +89,15 @@ class TrainConfig:
                                               # only above the learned threshold itself (the 99.9th percentile of the
                                               # 0.7 score added hundreds of false positives next to layer-1 alerts)
     layer_rules: bool = True
-    learned_daily_budget: int = 20    # at most this many learned-only alerts per day (highest scores first)
+    learned_daily_budget: int = 0     # learned-only alerts per day (highest scores first). 0.9: 0 - they were 0.6 %
+                                      # precise; the learned layer corroborates layer-1/2 hits and ranks (lab_v09)
     learned_alerts: bool = True       # 0.7: the learned layer alerts (recall first, within the daily budget);
                                       # 0.4-0.6: it only ranked
     corroboration_percentile: str = "99.9"   # learned score (validation percentile) that alerts next to a layer 1/2 alert
     near_alert_score: str = "own"            # 0.8.1: a neighbour corroborates a layer-1/2 alert on its own score, not on
                                              # suspicion propagated to it (0.7 "final": one alerted Windows Update process
                                              # made 3,478 files it wrote "corroborate" it; artifacts/lab_v09)
-    repeat_corroborations: int = 0           # > 0: corroborated repeat runs of a new program per program and day
+    repeat_corroborations: int = 1           # corroborated repeat runs of a new program per program and day (0 = no cap)
     alert_layers: tuple | None = None        # layers allowed to alert (None = all); early models restrict this
     layers_only: bool = False                # rules-only model: layers 1-2 fitted, no learned detectors (early models
                                              # below one day of baseline: seconds on a CPU instead of a GPU run)
@@ -323,7 +324,8 @@ class Trainer:
                   "learned_alerts": bool(self.cfg.learned_alerts)}
         if d3 is not None and self.cfg.corroboration_at_threshold:
             policy["corroboration"] = "threshold"
-        policy.update(near_alert_score=self.cfg.near_alert_score, repeat_corroborations=int(self.cfg.repeat_corroborations))
+        policy.update(near_alert_score=self.cfg.near_alert_score, repeat_corroborations=int(self.cfg.repeat_corroborations),
+                      policy="0.9")
         if self.cfg.alert_layers is not None:
             policy["alert_layers"] = sorted(self.cfg.alert_layers)
         write_manifest(self.out_dir, {
@@ -510,7 +512,8 @@ def upgrade_bundle_07(src_dir: str, out_dir: str, store: WindowStore, cfg: Train
     meta["learned_policy"] = {"daily_budget": int(cfg.learned_daily_budget), "corroboration_percentile": cfg.corroboration_percentile,
                               "learned_alerts": bool(cfg.learned_alerts),
                               **({"corroboration": "threshold"} if cfg.corroboration_at_threshold else {}),
-                              "near_alert_score": cfg.near_alert_score, "repeat_corroborations": int(cfg.repeat_corroborations)}
+                              "near_alert_score": cfg.near_alert_score, "repeat_corroborations": int(cfg.repeat_corroborations),
+                              "policy": "0.9"}
     meta["upgraded_from"] = man.get("bundle_id")
     write_manifest(out_dir, meta)
     tr.calibrate_final()

@@ -1,0 +1,26 @@
+{
+ "E5-CLEARSCOPE/node_clearscope_e5_appstarter_0515.csv": {
+  "gt_nodes": 26,
+  "referenced_base_or_test": 26,
+  "referenced_test_days": 26,
+  "not_referenced": []
+ },
+ "E5-CLEARSCOPE/node_clearscope_e5_tester_0517.csv": {
+  "gt_nodes": 8,
+  "referenced_base_or_test": 8,
+  "referenced_test_days": 8,
+  "not_referenced": []
+ },
+ "E5-CLEARSCOPE/node_clearscope_e5_firefox_0517.csv": {
+  "gt_nodes": 1,
+  "referenced_base_or_test": 1,
+  "referenced_test_days": 1,
+  "not_referenced": []
+ },
+ "E5-CLEARSCOPE/node_clearscope_e5_lockwatch_0517.csv": {
+  "gt_nodes": 17,
+  "referenced_base_or_test": 17,
+  "referenced_test_days": 17,
+  "not_referenced": []
+ }
+}

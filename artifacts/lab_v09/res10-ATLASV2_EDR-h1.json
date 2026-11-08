@@ -1,0 +1,233 @@
+{
+ "set": "ATLASV2_EDR-h1",
+ "bundle": "v07rel",
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "days": 1,
+ "variants": {
+  "A": {},
+  "L0": {
+   "daily_budget": 0
+  },
+  "L5": {
+   "daily_budget": 5
+  },
+  "F2": {
+   "learned_floor": 2.0
+  },
+  "F3": {
+   "learned_floor": 3.0
+  },
+  "C2": {
+   "corroboration": 2.0
+  },
+  "L0C2": {
+   "daily_budget": 0,
+   "corroboration": 2.0
+  },
+  "L0C15": {
+   "daily_budget": 0,
+   "corroboration": 1.5
+  }
+ },
+ "A": {
+  "TP": 13,
+  "FP": 86,
+  "recall": 0.271,
+  "attacks": 8,
+  "FP/day": 86.0,
+  "by_layer": {
+   "learned": 38,
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6,
+   "learned": 1
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ]
+ },
+ "L0": {
+  "TP": 12,
+  "FP": 49,
+  "recall": 0.25,
+  "attacks": 8,
+  "FP/day": 49.0,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ]
+ },
+ "L5": {
+  "TP": 13,
+  "FP": 58,
+  "recall": 0.271,
+  "attacks": 8,
+  "FP/day": 58.0,
+  "by_layer": {
+   "learned": 10,
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6,
+   "learned": 1
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ]
+ },
+ "F2": {
+  "TP": 12,
+  "FP": 49,
+  "recall": 0.25,
+  "attacks": 8,
+  "FP/day": 49.0,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ]
+ },
+ "F3": {
+  "TP": 12,
+  "FP": 49,
+  "recall": 0.25,
+  "attacks": 8,
+  "FP/day": 49.0,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ]
+ },
+ "C2": {
+  "TP": 8,
+  "FP": 83,
+  "recall": 0.167,
+  "attacks": 5,
+  "FP/day": 83.0,
+  "by_layer": {
+   "learned": 39,
+   "novelty": 13,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "learned": 2,
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ]
+ },
+ "L0C2": {
+  "TP": 6,
+  "FP": 46,
+  "recall": 0.125,
+  "attacks": 4,
+  "FP/day": 46.0,
+  "by_layer": {
+   "novelty": 13,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ]
+ },
+ "L0C15": {
+  "TP": 8,
+  "FP": 46,
+  "recall": 0.167,
+  "attacks": 5,
+  "FP/day": 46.0,
+  "by_layer": {
+   "novelty": 13,
+   "rules": 39,
+   "corroborated": 2
+  },
+  "by_layer_tp": {
+   "novelty": 6,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ]
+ }
+}
