@@ -338,6 +338,11 @@ class Runtime:
         if self.layers is not None:
             self.layers.set_approved(approved)
 
+    def set_fleet_programs(self, programs, mode: str | None = None) -> None:
+        """0.10: programs from other endpoints' baselines ({key: endpoints}); mode evidence | drop | off (layers.NoveltyLayer)."""
+        if self.layers is not None:
+            self.layers.set_fleet(programs, mode)
+
     def set_allowlist(self, addresses=(), suppressed=()) -> None:
         """Console allow list: trusted addresses / networks and (rule, key) detections that must not alert."""
         if self.layers is not None:
@@ -543,6 +548,9 @@ LEARNED_DAILY_BUDGET = 0
 POLICY_VERSION = "0.9"
 
 CRITICAL_RULES = ("exfiltration", "untrusted_code_network")
+# corroborated at most repeat_corroborations times per program and UTC day: repeat runs of a new program (0.9) and
+# programs known from other endpoints' baselines (0.10) - more instances of the same program are the same finding
+CAPPED_EVIDENCE = ("novel_executable_repeat", "fleet_known_executable")
 
 
 def alert_tier(reasons: list[dict]) -> int:
@@ -620,7 +628,7 @@ class AlertPolicy:
             if n in reasons or n not in pos:
                 continue
             f = float(fused[pos[n]])
-            if f > self.corroboration and self.repeat_corroborations > 0 and ev[0]["rule"] == "novel_executable_repeat":
+            if f > self.corroboration and self.repeat_corroborations > 0 and ev[0]["rule"] in CAPPED_EVIDENCE:
                 nov = getattr(self.layers, "novelty", None)
                 k = nov.key(ev[0]["key"]) if nov is not None else ev[0]["key"]   # any spelling of the same program
                 if self._repeats.get(k, 0) >= self.repeat_corroborations:

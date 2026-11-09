@@ -281,6 +281,12 @@ st, js = admin.call("GET", f"/api/alerts?endpoint_id={eid}&layer=novelty")
 check(js["alerts"][0]["status"] == "false_positive", "open novelty alerts of an approved program are resolved as false positives")
 st, js = agent_call(cert_dir, "GET", f"/v1/endpoints/{eid}/status")
 check(js["config"].get("approved_executables") == ["/opt/app/bin/tool", "/tmp/.x"], "the agent receives the approvals with its configuration")
+fsha = js["config"].get("fleet_sha")
+check(js["config"].get("fleet_prevalence") == "drop" and isinstance(js["config"].get("fleet_programs"), dict) and fsha,
+      "0.10: the agent receives the fleet prevalence setting, its fleet's programs and their hash")
+st, js2 = agent_call(cert_dir, "GET", f"/v1/endpoints/{eid}/status?fleet={fsha}")
+check(st == 200 and "fleet_programs" not in js2["config"] and js2["config"].get("fleet_sha") == fsha,
+      "0.10: an unchanged fleet program list is not sent again")
 st, js = admin.call("POST", f"/api/endpoints/{eid}/approved-executables", {"executables": ["/tmp/.x"], "approve": False, "note": "e2e"})
 check(st == 200 and js["approved_executables"] == ["/opt/app/bin/tool"], "revoke an approval")
 check(admin.call("POST", f"/api/endpoints/{eid}/config", {"config": {"learned_daily_budget": -1}})[0] == 400, "invalid learned budget rejected")

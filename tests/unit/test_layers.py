@@ -223,6 +223,27 @@ dls = DeterministicLayers({"known_executables": [], "trusted_ips": [], "threshol
 dls.set_allowlist(suppressed=[("novel_executable", "/Device/HarddiskVolume1/Users/u/new.exe")])
 check([h.key for h in dls.process(w1, rw, w1.nodes())] == ["/Device/HarddiskVolume1/Users/u/NEW.exe"],
       "a suppressed new program also suppresses its repeat runs (other spellings keep their own key)")
+# 0.10 fleet prevalence: a program new here but run during other endpoints' baselines
+from pdp_engine.layers import FLEET_KNOWN_RULE
+nf = NoveltyLayer(set(), normalize=True, instances=1, strict_keys=True); nf.set_fleet({"C:/Users/U/new.exe": 3}, "evidence")
+hf = nf.process(w1, rw, w1.nodes())
+check([h.rule for h in hf] == [FLEET_KNOWN_RULE] * 3 and "3 other endpoint" in hf[0].detail,
+      f"fleet evidence: every run of a program known from other baselines (any spelling) is evidence, not a new-program alert ({[h.rule for h in hf]})")
+nd = NoveltyLayer(set(), normalize=True, instances=1, strict_keys=True); nd.set_fleet({"C:/Users/U/new.exe": 3}, "drop")
+check(nd.process(w1, rw, w1.nodes()) == [], "fleet drop: no hit at all")
+no = NoveltyLayer(set(), normalize=True, instances=1, strict_keys=True); no.set_fleet({"C:/Users/U/new.exe": 3}, "off")
+check([h.rule for h in no.process(w1, rw, w1.nodes())] == ["novel_executable", "novel_executable_repeat", "novel_executable_repeat"],
+      "fleet off: unchanged 0.9 behaviour")
+ne = NoveltyLayer(set(), normalize=True, instances=1, strict_keys=True); ne.set_fleet({}, "evidence")
+check([h.rule for h in ne.process(w1, rw, w1.nodes())][0] == "novel_executable", "fleet evidence with no fleet programs: unchanged")
+nt = NoveltyLayer(set(), normalize=True, strict_keys=True, full_paths=True); nt.set_fleet({"/windows/system32/taskkill.exe": 2}, "evidence")
+ht = {h.key: h.rule for h in nt.process(wk, rw, wk.nodes())}
+check(ht.get("taskkill") == FLEET_KNOWN_RULE and ht.get("/Device/HarddiskVolume1/Program Files/NewVendor/tool.exe") == "novel_executable",
+      f"fleet: a program recorded without a path matches by name, others still alert ({ht})")
+dlf = DeterministicLayers({"known_executables": [], "trusted_ips": [], "thresholds": {}, "config": {"normalize_programs": True, "novel_instances": 1}}, 0)
+dlf.set_fleet({"C:/Users/U/new.exe": 3}, "evidence"); dlf.set_allowlist(suppressed=[("novel_executable", "/Device/HarddiskVolume1/Users/u/new.exe")])
+check([h.key for h in dlf.process(w1, rw, w1.nodes())] == ["/Device/HarddiskVolume1/Users/u/NEW.exe"],
+      "a suppressed new program also suppresses its fleet-known runs")
 
 # ---------------------------------------------------------------- 0.4: Windows-layout data flow (no EXECUTE events)
 rv = Registry()
@@ -342,6 +363,14 @@ else:
     cor = lambda r: sorted(n for n in r if r[n][0]["layer"] == "corroborated" and r[n][0]["rule"] == "novel_executable_repeat")
     check(cor(r_c0) == sorted([K["n2"], K["n3"]]) and len(cor(r_c1)) == 1,
           f"repeat_corroborations caps corroborated repeat runs per program and day, any spelling ({cor(r_c0)} / {cor(r_c1)})")
+    # 0.10: fleet-known programs are evidence: corroborated by the learned score, at most once per program and day
+    pfl = prc(1); pfl.layers.set_fleet({"C:/Users/U/new.exe": 2}, "evidence")
+    r_fl = pfl.apply(w1, rw, il1, hi1)[1]
+    corf = sorted(n for n in r_fl if r_fl[n][0]["layer"] == "corroborated" and r_fl[n][0]["rule"] == FLEET_KNOWN_RULE)
+    pfl_lo = prc(1); pfl_lo.layers.set_fleet({"C:/Users/U/new.exe": 2}, "evidence")
+    r_lo = pfl_lo.apply(w1, rw, il1, np.full(len(il1), 0.1))[1]
+    check(len(corf) == 1 and not any(r_fl[n][0]["layer"] == "novelty" for n in r_fl) and not r_lo,
+          f"fleet-known programs alert only when the learned score corroborates, once per program and day ({corf}, {sorted(r_lo)})")
 
 # ---------------------------------------------------------------- 0.6: evasion resistance
 import pdp_engine.layers as LY

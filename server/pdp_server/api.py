@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import io
+import hashlib
 import json
 import os
 import secrets
@@ -288,12 +289,19 @@ def day_complete(endpoint_id: str, req: DayComplete, ep=Depends(agent_endpoint))
 
 
 @app.get("/v1/endpoints/{endpoint_id}/status")
-def status(endpoint_id: str, ep=Depends(agent_endpoint)):
+def status(endpoint_id: str, fleet: str | None = None, ep=Depends(agent_endpoint)):
+    """fleet: the fleet_sha of the program list the agent holds; the list is sent only when it changed (0.10)."""
     with db.conn() as c:
         b = db.q(c, "SELECT id, sha256 FROM bundles WHERE id=%s", (ep["current_bundle"],), one=True) if ep["current_bundle"] else None
         cmds = db.q(c, "SELECT id, params FROM jobs WHERE endpoint_id=%s AND kind='command' AND state='queued' ORDER BY created_at", (endpoint_id,))
         from .allowlist import effective_config
         cfg = effective_config(c, endpoint_id, ep["config"])
+        from .fleet import programs_for, settings as fleet_settings
+        cfg["fleet_prevalence"] = fleet_settings(ep["config"])[0]
+        progs = programs_for(c, ep)                         # 0.10: programs from other endpoints' baselines
+        cfg["fleet_sha"] = hashlib.sha256(json.dumps(sorted(progs.items())).encode()).hexdigest()[:16]
+        if fleet != cfg["fleet_sha"]:
+            cfg["fleet_programs"] = progs
         from .updates import update_for
         upd = update_for(c, ep)
     return {"ok": True, "phase": ep["phase"], "baseline_days_done": ep["baseline_days_done"], "config": cfg,

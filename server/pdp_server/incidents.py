@@ -1,6 +1,7 @@
 """Incidents: alerts grouped into attack stories, with a readable attack graph.
 
-An incident is a run of alerts on one endpoint with no gap longer than GAP_NS between consecutive alert windows.
+An incident is a run of alerts on one endpoint with no gap longer than GAP_NS between consecutive alert windows, split
+by provenance connectivity; the same finding (same subject) coming back within RECUR_NS joins its incident (0.10).
 Its id is the id of its first alert (stable: alerts arrive in time order). Nothing here shows detector scores; the
 console explains *what* was detected and *why* (the detection's reason).
 
@@ -20,6 +21,8 @@ from . import behaviours as beh
 from . import db
 
 GAP_NS = 30 * 60 * 1_000_000_000
+RECUR_NS = 7 * 24 * 3600 * 1_000_000_000   # 0.10 (artifacts/lab_v10 G2): the same finding recurring within 7 days
+                                          # of its incident's last alert joins that incident (0 = off, 0.9 grouping)
 WINDOW_NS = 15 * 60 * 1_000_000_000      # an alert covers its detection window
 MAX_NODES = 300
 BULK_FILES = 12          # this many plain files with the same neighbours are folded into one node
@@ -27,8 +30,9 @@ MAX_STORY = 80
 
 TYPE_RANK = {"rules": 0, "novelty": 1, "corroborated": 2, "evidence": 3, "learned": 4}
 RULE_RANK = {"exfiltration": 0, "untrusted_code_network": 1, "untrusted_exec": 2, "novel_executable": 3,
-             "tainted_modify": 4, "tainted_spawn": 5, "novel_executable_repeat": 6}
-TACTIC = {"novel_executable": "Execution", "novel_executable_repeat": "Execution", "untrusted_exec": "Execution", "tainted_spawn": "Execution",
+             "tainted_modify": 4, "tainted_spawn": 5, "novel_executable_repeat": 6, "fleet_known_executable": 7}
+TACTIC = {"novel_executable": "Execution", "novel_executable_repeat": "Execution", "fleet_known_executable": "Execution",
+          "untrusted_exec": "Execution", "tainted_spawn": "Execution",
           "untrusted_code_network": "Command and control", "exfiltration": "Exfiltration",
           "tainted_modify": "Persistence"}
 TACTIC_ORDER = ["Initial access", "Execution", "Persistence", "Privilege escalation", "Defense evasion", "Credential access",
@@ -121,7 +125,39 @@ def group(rows: list[dict]) -> list[list[dict]]:
     for g in out:
         final.extend(_split_connected(g) if any("context" in a for a in g) else [g])
     final.sort(key=lambda g: (str(g[0]["endpoint_id"]), g[0]["window_start_ns"], g[0]["id"]))
-    return final
+    return merge_recurring(final, RECUR_NS) if RECUR_NS else final
+
+
+def subject(g: list[dict]) -> str:
+    """What the console titles an incident by: the acting program of its top alert, or the address of a network node."""
+    top = min(g, key=_det_key)
+    m = _SUBJECT_RE.match(top.get("reason") or "")
+    if m:     # the acting program's full path (a masquerading copy elsewhere is a different finding)
+        a = m.group(1).strip().replace("\\", "/").casefold()
+        return "process" if a in ("none", "null", "") else a
+    return parse_label(top["ntype"], top["label"], top["node_uuid"], top.get("display"))["label"]
+
+
+_SUBJECT_RE = re.compile(r"^\s*(?:runs\s+)?([^,(]+?)(?:, which|, new on this endpoint| \(loaded from)")
+
+
+def merge_recurring(groups: list[list[dict]], horizon_ns: int) -> list[list[dict]]:
+    """0.10: the same finding coming back (same endpoint, same subject) within horizon_ns of the incident's last alert
+    joins that incident instead of opening a new one. Later alerts join the earlier incident, so ids stay stable."""
+    out: list[list[dict]] = []
+    last: dict[tuple, int] = {}
+    for g in groups:
+        sub = subject(g)
+        if not sub or sub in ("process", "unnamed file") or re.fullmatch(r"process \d+", sub):
+            out.append(list(g)); continue          # nothing names the finding: unrelated activity must not merge
+        k = (str(g[0]["endpoint_id"]), sub)
+        j = last.get(k)
+        if j is not None and g[0]["window_start_ns"] - out[j][-1]["window_start_ns"] <= horizon_ns:
+            out[j] = sorted(out[j] + g, key=lambda a: (a["window_start_ns"], a["id"]))
+        else:
+            out.append(list(g)); last[k] = len(out) - 1
+    out.sort(key=lambda g: (str(g[0]["endpoint_id"]), g[0]["window_start_ns"], g[0]["id"]))
+    return out
 
 
 HUB_DEGREE = 8
@@ -472,6 +508,9 @@ def build_graph(alerts: list[dict]) -> tuple[dict, list[dict]]:
 def clean_reason(layer: str | None, reason: str | None) -> str:
     """The analyst-facing reason: no detector scores, no internal layer names."""
     layer = layer or "learned"
+    if layer == "corroborated" and reason and reason.startswith("runs ") and "; learned score" in reason:
+        # evidence corroborated by the learned layer (repeat runs of a new program, programs known from other endpoints)
+        return clean_reason("novelty", reason.split("; learned score", 1)[0]) + ", and it behaves unusually for this endpoint"
     if not reason or layer in ("corroborated", "learned") or "score" in reason or "percentile" in reason:
         return _default_reason({"layer": layer})
     return reason.replace("runs None,", "runs a program the collector could not name,").replace("runs null,", "runs a program the collector could not name,")

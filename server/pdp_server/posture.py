@@ -42,6 +42,11 @@ FP_BUDGETS = (None, "99", "99.9", "99.99")
 FP_RANK = {"99": 0, "99.9": 1, "99.99": 2, None: 3}         # higher = stricter threshold = fewer learned alerts
 PERCENTILES = ("99", "99.9", "99.99")
 LEARNED_FLOOD = int(os.environ.get("PDP_LEARNED_BUDGET_WARN", "100"))   # learned alerts / day above this flood analysts
+# 0.10 fleet prevalence (pdp_server.fleet): how strictly a program run during other endpoints' baselines still alerts
+FLEET_STRENGTH = {"drop": 0, "evidence": 1, "off": 2}
+FLEET_TEXT = {"drop": "no longer alert as new programs", "evidence": "alert as new programs only when the learned layer corroborates",
+              "off": "alert as new programs"}
+FLEET_DEFAULT_MODE, FLEET_DEFAULT_MIN = "drop", 2      # = pdp_server.fleet defaults (tests check they agree)
 REASON_MAX = 500
 # pdp_engine.trainer.TrainConfig defaults of the 0.8 detector-3 breadth settings (tests/unit/test_posture.py checks them)
 D3_BREADTH_CAP, D3_BREADTH_FLOOR, D3_BREADTH_HORIZON_S = 10.0, 4.0, 4 * 3600.0
@@ -55,7 +60,7 @@ def _engine_path() -> None:
 
 # ================================================================================================ settings schema
 # ("int", lo, hi) | ("num", lo, hi) | ("bool",) | ("enum", values) | ("tz",) | ("train",) | ("intlist", n_lo, n_hi, lo, hi)
-# | ("numpair", lo, hi) | ("layers",)
+# | ("numpair", lo, hi) | ("layers",) | ("label",)
 CONFIG_SCHEMA = {
     "baseline_days": ("int", 1, 60),
     "tz": ("tz",),
@@ -67,6 +72,9 @@ CONFIG_SCHEMA = {
     "learned_alerts": ("bool",),
     "periodic_retrain": ("bool",),
     "early_models": ("bool",),
+    "fleet_prevalence": ("enum", ("evidence", "drop", "off")),   # 0.10 (pdp_server.fleet): programs from other baselines
+    "fleet_min_endpoints": ("int", 1, 1000),
+    "fleet": ("label",),
 }
 REJECTED_CONFIG = {
     "approved_executables": "approved_executables is no longer an endpoint setting: approve programs through the allow list "
@@ -164,6 +172,9 @@ def _check_value(name: str, spec: tuple, v) -> None:
         if not (isinstance(v, list) and len(v) == 2 and all(isinstance(x, (int, float)) and not isinstance(x, bool)
                                                               and spec[1] <= x <= spec[2] for x in v) and sum(v) > 0):
             _bad(f"{name} must be two numbers between {spec[1]:g} and {spec[2]:g}, not both 0")
+    elif kind == "label":
+        if not (isinstance(v, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _.-]{0,63}", v)):
+            _bad(f"{name} must be a label of 1 to 64 letters, digits, spaces, '_', '.' or '-'")
     elif kind == "layers":
         if v is None:
             return
@@ -241,7 +252,10 @@ def detection_settings(cfg: dict | None) -> dict:
             "learned_alerts": cfg.get("learned_alerts"), "learned_daily_budget": cfg.get("learned_daily_budget"),
             "periodic_retrain": cfg.get("periodic_retrain") is not False, "early_models": cfg.get("early_models") is not False,
             "fp_budget": cfg.get("fp_budget"), "baseline_days": cfg.get("baseline_days", 7),
-            "retain_baseline_events": cfg.get("retain_baseline_events") is True}
+            "retain_baseline_events": cfg.get("retain_baseline_events") is True,
+            "fleet_prevalence": cfg.get("fleet_prevalence") if cfg.get("fleet_prevalence") in FLEET_STRENGTH else FLEET_DEFAULT_MODE,
+            "fleet_min_endpoints": cfg.get("fleet_min_endpoints") if isinstance(cfg.get("fleet_min_endpoints"), int) else FLEET_DEFAULT_MIN,
+            "fleet": cfg.get("fleet")}
 
 
 def alerting_layers(cfg: dict | None) -> set[str]:
@@ -315,6 +329,15 @@ def weakenings(before: dict | None, after: dict | None) -> list[str]:
         out.append(f"learned-alert threshold raised (fp_budget {b['fp_budget']} -> {a['fp_budget']})")
     if isinstance(a["baseline_days"], int) and isinstance(b["baseline_days"], int) and a["baseline_days"] < b["baseline_days"]:
         out.append(f"baseline shortened from {b['baseline_days']} to {a['baseline_days']} days")
+    if FLEET_STRENGTH[a["fleet_prevalence"]] < FLEET_STRENGTH[b["fleet_prevalence"]]:
+        out.append(f"programs run on other endpoints {FLEET_TEXT[a['fleet_prevalence']]} (fleet prevalence "
+                   f"{b['fleet_prevalence']} -> {a['fleet_prevalence']})")
+    if a["fleet_prevalence"] != "off":
+        if a["fleet_min_endpoints"] < b["fleet_min_endpoints"]:
+            out.append(f"a program counts as known when {a['fleet_min_endpoints']} other endpoint(s) ran it during their baseline "
+                       f"(was {b['fleet_min_endpoints']})")
+        if a["fleet"] and a["fleet"] != b["fleet"]:
+            out.append(f"endpoint joins fleet {a['fleet']!r}: programs run during its other endpoints' baselines no longer alert as new")
     if a["retain_baseline_events"] and not b["retain_baseline_events"]:
         out.append("raw activity kept after training (privacy: every recorded process, file and connection is retained)")
     return out

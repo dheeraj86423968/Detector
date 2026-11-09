@@ -36,6 +36,7 @@ RULE_TEXT = {"novel_executable": "New program", "untrusted_exec": "Executes a do
              "untrusted_code_network": "Downloaded program contacts an untrusted address",
              "exfiltration": "Sensitive data sent to an untrusted address", "tainted_modify": "Untrusted modification of a file",
              "tainted_spawn": "Untrusted data starts a program", "novel_executable_repeat": "New program (another run)",
+             "fleet_known_executable": "New on this endpoint, known from other endpoints",
              "learned": "Unusual behaviour (or related activity) of a program"}
 
 

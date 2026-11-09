@@ -1,0 +1,27 @@
+16 sets
+P0  : attacks 26/30  TP 337  FP 1189 (16.7/day, 71 days)  new-program FP 556  precision 0.221  mean node recall 0.285
+P1  : attacks 26/30  TP 322  FP 973 (13.7/day, 71 days)  new-program FP 393  precision 0.249  mean node recall 0.250
+P1e : attacks 26/30  TP 325  FP 1003 (14.1/day, 71 days)  new-program FP 393  precision 0.245  mean node recall 0.259
+P2  : attacks 26/30  TP 333  FP 1051 (14.8/day, 71 days)  new-program FP 457  precision 0.241  mean node recall 0.275
+P2e : attacks 26/30  TP 333  FP 1075 (15.1/day, 71 days)  new-program FP 457  precision 0.237  mean node recall 0.275
+P1: no attack lost True []; recall 0.250 >= 0.257 False -> rejected
+P1e: no attack lost True []; recall 0.259 >= 0.257 True -> accepted
+P2: no attack lost True []; recall 0.275 >= 0.257 True -> accepted
+P2e: no attack lost True []; recall 0.275 >= 0.257 True -> accepted
+fewest FP among accepted: 1003; choice (most conservative within 5 %): P2
+ATLASV2_EDR-h1       P0 8/10 TP  12 FP   49 | P1 8/10 TP  12 FP   44 | P1e 8/10 TP  12 FP   44 | P2 8/10 TP  12 FP   49 | P2e 8/10 TP  12 FP   49
+ATLASV2_EDR-h2       P0 0/10 TP   0 FP   26 | P1 0/10 TP   0 FP   25 | P1e 0/10 TP   0 FP   25 | P2 0/10 TP   0 FP   26 | P2e 0/10 TP   0 FP   26
+CADETS_E3            P0 3/3 TP  31 FP   16 | P1 3/3 TP  31 FP   13 | P1e 3/3 TP  31 FP   13 | P2 3/3 TP  31 FP   16 | P2e 3/3 TP  31 FP   16
+CARBANAKV2_EDR-h1    P0 1/1 TP   5 FP  123 | P1 1/1 TP   5 FP   73 | P1e 1/1 TP   5 FP   76 | P2 1/1 TP   5 FP   83 | P2e 1/1 TP   5 FP   84
+CARBANAKV2_EDR-h2    P0 1/1 TP  40 FP  164 | P1 1/1 TP  35 FP  117 | P1e 1/1 TP  35 FP  117 | P2 1/1 TP  39 FP  131 | P2e 1/1 TP  39 FP  131
+CARBANAKV2_EDR-h3    P0 1/1 TP   2 FP   86 | P1 1/1 TP   1 FP   62 | P1e 1/1 TP   2 FP   63 | P2 1/1 TP   2 FP   72 | P2e 1/1 TP   2 FP   72
+CARBANAKV2_EDR-h4    P0 1/1 TP   3 FP   27 | P1 1/1 TP   1 FP   13 | P1e 1/1 TP   1 FP   13 | P2 1/1 TP   3 FP   24 | P2e 1/1 TP   3 FP   24
+CARBANAKV2_EDR-h5    P0 1/1 TP  17 FP  130 | P1 1/1 TP  10 FP   81 | P1e 1/1 TP  12 FP  106 | P2 1/1 TP  14 FP   89 | P2e 1/1 TP  14 FP  112
+CLEARSCOPE_E3        P0 0/1 TP   0 FP    0 | P1 0/1 TP   0 FP    0 | P1e 0/1 TP   0 FP    0 | P2 0/1 TP   0 FP    0 | P2e 0/1 TP   0 FP    0
+FIVEDIRECTIONS_E3    P0 2/2 TP  11 FP  166 | P1 2/2 TP  11 FP  152 | P1e 2/2 TP  11 FP  153 | P2 2/2 TP  11 FP  166 | P2e 2/2 TP  11 FP  166
+OPTC_H051            P0 1/1 TP  75 FP   53 | P1 1/1 TP  75 FP   53 | P1e 1/1 TP  75 FP   53 | P2 1/1 TP  75 FP   53 | P2e 1/1 TP  75 FP   53
+OPTC_H201            P0 1/1 TP   6 FP   19 | P1 1/1 TP   6 FP   18 | P1e 1/1 TP   6 FP   18 | P2 1/1 TP   6 FP   19 | P2e 1/1 TP   6 FP   19
+OPTC_H501            P0 1/1 TP  17 FP   77 | P1 1/1 TP  17 FP   69 | P1e 1/1 TP  17 FP   69 | P2 1/1 TP  17 FP   70 | P2e 1/1 TP  17 FP   70
+THEIA_E3             P0 2/2 TP 109 FP   86 | P1 2/2 TP 109 FP   86 | P1e 2/2 TP 109 FP   86 | P2 2/2 TP 109 FP   86 | P2e 2/2 TP 109 FP   86
+THEIA_E5-theia       P0 0/1 TP   0 FP   97 | P1 0/1 TP   0 FP   97 | P1e 0/1 TP   0 FP   97 | P2 0/1 TP   0 FP   97 | P2e 0/1 TP   0 FP   97
+TRACE_E3-trace       P0 3/3 TP   9 FP   70 | P1 3/3 TP   9 FP   70 | P1e 3/3 TP   9 FP   70 | P2 3/3 TP   9 FP   70 | P2e 3/3 TP   9 FP   70

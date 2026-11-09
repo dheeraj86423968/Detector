@@ -1,0 +1,131 @@
+{
+ "set": "CARBANAKV2_EDR-h2",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h2/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 81,
+ "days": 9,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 40,
+  "FP": 164,
+  "recall": 0.494,
+  "attacks": 1,
+  "FP/day": 18.2,
+  "by_layer": {
+   "novelty": 100,
+   "rules": 104
+  },
+  "by_layer_tp": {
+   "novelty": 13,
+   "rules": 27
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 207
+ },
+ "P1": {
+  "TP": 35,
+  "FP": 117,
+  "recall": 0.432,
+  "attacks": 1,
+  "FP/day": 13.0,
+  "by_layer": {
+   "novelty": 47,
+   "rules": 105
+  },
+  "by_layer_tp": {
+   "novelty": 7,
+   "rules": 28
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 155
+ },
+ "P1e": {
+  "TP": 35,
+  "FP": 117,
+  "recall": 0.432,
+  "attacks": 1,
+  "FP/day": 13.0,
+  "by_layer": {
+   "novelty": 47,
+   "rules": 105
+  },
+  "by_layer_tp": {
+   "novelty": 7,
+   "rules": 28
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 155
+ },
+ "P2": {
+  "TP": 39,
+  "FP": 131,
+  "recall": 0.481,
+  "attacks": 1,
+  "FP/day": 14.6,
+  "by_layer": {
+   "novelty": 66,
+   "rules": 104
+  },
+  "by_layer_tp": {
+   "novelty": 12,
+   "rules": 27
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 173
+ },
+ "P2e": {
+  "TP": 39,
+  "FP": 131,
+  "recall": 0.481,
+  "attacks": 1,
+  "FP/day": 14.6,
+  "by_layer": {
+   "novelty": 66,
+   "rules": 104
+  },
+  "by_layer_tp": {
+   "novelty": 12,
+   "rules": 27
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 173
+ }
+}

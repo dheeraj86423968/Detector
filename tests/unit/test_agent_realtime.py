@@ -136,5 +136,17 @@ dup = [x for x in alerts_b if x["node"]["uuid"] in ("file:/tmp/tool", "p:live:ru
 check(wins_b and not dup, f"after a restart the replayed window is scored ({len(wins_b)} windows) without sending the rule alert again")
 check(sum(w["alerts"] for w in wins_b) >= len(tool), "the window summary still counts the real-time alerts")
 
+# 0.10: console-side layer settings reach every newly loaded model (they used to stay on the previous runtime)
+c = new_agent()
+c.state.set("config", {"baseline_days": 1, "tz": "UTC", "suppressed_detections": [["novel_executable", "/usr/bin/curl"]],
+                       "trusted_addresses": ["203.0.113.0/24"], "fleet_prevalence": "evidence", "fleet_programs": {"/usr/bin/wget": 3}})
+c._apply_layer_config(c.state.get("config"))          # no model yet: nothing to apply
+c._load_bundle("b1", bdir)
+r1 = c.runtime
+c._load_bundle("b1", bdir)                            # a model upgrade: new runtime
+ok = lambda r: (r.layers.suppressed == {("novel_executable", "/usr/bin/curl")} and r.layers.novelty.fleet == {"/usr/bin/wget": 3}  # noqa: E731
+                and r.layers.novelty.fleet_mode == "evidence")
+check(r1 is not c.runtime and ok(r1) and ok(c.runtime), "allow list and fleet programs are applied to the first and to every new model")
+
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

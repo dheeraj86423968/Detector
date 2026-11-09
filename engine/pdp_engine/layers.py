@@ -261,6 +261,30 @@ class NoveltyLayer:
         if self.normalize:
             self.known_keys = {self.key(k) for k in self.known if k not in UNKNOWN_PROGRAM}
             self.known_names = {program_name(k) for k in self.known_keys}
+        self.set_fleet({}, None)
+
+    def set_fleet(self, programs, mode: str | None) -> None:
+        """0.10 fleet prevalence: programs that ran during the baselines of other endpoints of the organisation
+        ({program key: number of those endpoints}, already limited by the server to the required number of endpoints).
+        mode "evidence": such a program, new on this endpoint, is evidence (FLEET_KNOWN_RULE: alerts only when the
+        learned score corroborates it); "drop": no alert; None / "off": ignored (every new program alerts)."""
+        progs = dict(programs or {})
+        self.fleet_mode = mode if mode in ("evidence", "drop") and progs else None
+        self.fleet = {self.key(str(k)): int(n) for k, n in progs.items() if str(k) not in UNKNOWN_PROGRAM}
+        self.fleet_names = {}
+        for k, n in self.fleet.items():
+            nm = program_name(k)
+            self.fleet_names[nm] = max(self.fleet_names.get(nm, 0), n)
+
+    def fleet_count(self, exe: str) -> int:
+        """Other endpoints whose baseline ran this program (by key; a program recorded without a path: by name)."""
+        if not getattr(self, "fleet", None):
+            return 0
+        k = self.key(exe)
+        n = self.fleet.get(k, 0)
+        if not n and "/" not in k:
+            n = self.fleet_names.get(program_name(k), 0)
+        return n
 
     @property
     def approved(self) -> set[str]:
@@ -309,6 +333,14 @@ class NoveltyLayer:
                 for s, d, t in zip(w.src.tolist(), w.dst.tolist(), w.t.tolist()):
                     first_t.setdefault(s, t); first_t.setdefault(d, t)
             ts = int(first_t.get(n, w.start_ns))
+            fleet_mode = getattr(self, "fleet_mode", None)
+            nf = self.fleet_count(exe) if fleet_mode else 0
+            if nf:
+                if fleet_mode == "drop":
+                    continue
+                out.append(Hit("novelty", FLEET_KNOWN_RULE, exe, 0.0, (n,), ts,
+                               f"runs {exe}, new on this endpoint but run during the baseline of {nf} other endpoint(s)"))
+                continue
             rule = "novel_executable"
             if self.instances:
                 ck = (self.key(exe) if self.normalize else exe, ts // 86_400_000_000_000)
@@ -722,6 +754,9 @@ class TagEngine:
 # Revision after the first DARPA E3 evaluation (docs/DETECTION_LAYERS.md, "pre-registered vs revised").
 EVIDENCE_RULES = ("tainted_modify", "tainted_spawn")
 ALWAYS_EVIDENCE = ("novel_executable_repeat",)      # by definition: the program's first runs already alerted
+# 0.10: a program new to this endpoint that ran during other endpoints' baselines (fleet prevalence) is evidence
+FLEET_KNOWN_RULE = "fleet_known_executable"
+ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + (FLEET_KNOWN_RULE,)
 
 
 @dataclass
@@ -784,6 +819,10 @@ class DeterministicLayers:
         if self.novelty is not None:
             self.novelty.approved = set(approved or ())
 
+    def set_fleet(self, programs, mode: str | None) -> None:
+        if self.novelty is not None:
+            self.novelty.set_fleet(programs, mode)
+
     def set_allowlist(self, addresses=(), suppressed=()) -> None:
         """Console allow list: trusted network addresses (layer 2) and specific detections (rule, key) not to raise."""
         if self.tags is not None:
@@ -812,8 +851,8 @@ class DeterministicLayers:
         if self.tags is not None:
             hits += self.tags.process(w, reg)
         sup = getattr(self, "suppressed", None)
-        if sup:   # a suppressed new program covers its repeat runs too
-            hits = [h for h in hits if (h.rule.replace("novel_executable_repeat", "novel_executable"), h.key) not in sup]
+        if sup:   # a suppressed new program covers its repeat runs and its fleet-known runs too
+            hits = [h for h in hits if (("novel_executable" if h.rule in ("novel_executable_repeat", FLEET_KNOWN_RULE) else h.rule), h.key) not in sup]
         return hits
 
 

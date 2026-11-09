@@ -34,7 +34,7 @@ from .config import Config
 from .state import State, disk_full
 from .transport import Transport, TransportError
 
-VERSION = "0.9.0"
+VERSION = "0.10.0"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 SCORE_MAX_ATTEMPTS = 2   # a window the detector fails on this many times (exception or crash) is skipped, not retried
 UNREPORTED_MAX = 500     # alert/window batches kept on disk while the server is unreachable
@@ -666,6 +666,11 @@ class Agent:
         if restored:
             log(f"entity ages restored for {restored} of {len(self.reg)} entities")
         self.runtime.set_learned_alerts(bool(cfg.get("learned_alerts", self.runtime.default_learned_alerts)))
+        # 0.10: the allow list's addresses / suppressed detections and the fleet programs were applied to the previous
+        # model only (their cached values made _apply_layer_config skip them): apply them to the new one
+        self._approved = sorted(cfg.get("approved_executables") or [])
+        self._allow = self._fleet = None
+        self._apply_layer_config(cfg)
         wns = int(self.runtime.m.get("window_ns") or 0)
         if wns and wns != self.builder.window_ns and not self.builder.pending:   # windows as long as the bundle was trained on
             self.builder.window_ns = wns
@@ -706,6 +711,11 @@ class Agent:
             if getattr(self, "_approved", None) is not None:
                 log(f"approved executables updated ({len(appr)})")
             self._approved = appr
+        fleet = (cfg.get("fleet_prevalence"), tuple(sorted((str(k), int(n)) for k, n in (cfg.get("fleet_programs") or {}).items())))
+        if fleet != getattr(self, "_fleet", None) and hasattr(self.runtime, "set_fleet_programs"):
+            self.runtime.set_fleet_programs(dict(fleet[1]), fleet[0])
+            log(f"fleet prevalence: {fleet[0] or 'off'}, {len(fleet[1])} programs known from other endpoints' baselines")
+            self._fleet = fleet
         allow = (sorted(cfg.get("trusted_addresses") or []), sorted(tuple(x) for x in (cfg.get("suppressed_detections") or [])))
         if allow != getattr(self, "_allow", None) and hasattr(self.runtime, "set_allowlist"):
             self.runtime.set_allowlist(*allow)
@@ -966,9 +976,13 @@ class Agent:
                     # Server contact is best-effort: collection, spooling and local detection continue while the
                     # server is unreachable, and uploads resume from the sqlite spool on the next successful contact.
                     try:
-                        st = self.tr.request("GET", f"/v1/endpoints/{self.eid}/status")
+                        held = self.state.get("config") or {}
+                        fsha = held.get("fleet_sha") if isinstance(held.get("fleet_programs"), dict) else None
+                        st = self.tr.request("GET", f"/v1/endpoints/{self.eid}/status" + (f"?fleet={fsha}" if fsha else ""))
                         phase = st["phase"]; self.state.set("phase", phase)
                         if isinstance(st.get("config"), dict):      # the server owns the endpoint configuration
+                            if "fleet_programs" not in st["config"] and fsha and st["config"].get("fleet_sha") == fsha:
+                                st["config"]["fleet_programs"] = held["fleet_programs"]    # unchanged: not resent (0.10)
                             self.state.set("config", st["config"])
                             self._apply_fp_budget(st["config"].get("fp_budget"))
                             self._apply_layer_config(st["config"])

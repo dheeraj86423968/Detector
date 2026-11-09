@@ -1,4 +1,44 @@
-# Layered detection (0.3, revised in 0.4-0.9)
+# Layered detection (0.3, revised in 0.4-0.10)
+
+## 0.10 (2026-11-09): fleet prevalence and incident grouping
+
+Asked for: "do the incident grouping and program prevalence" - the two next steps of the 0.9 review (most 0.9 false
+positives were new-program alerts; analysts work incidents, not alerted nodes). Lab, protocol (variants and choice
+rules written before each grid ran) and decision record: artifacts/lab_v10.
+
+**Fleet prevalence (layer 1).** A program new on one endpoint but run during the baselines of at least two *other*
+endpoints of its organisation (their bundles' known programs, i.e. training days only, never live activity) raises no
+new-program alert. The server computes the list per endpoint (pdp_server.fleet) and sends it with the configuration
+(only when it changes, by hash); the agent's layer 1 applies it (NoveltyLayer.set_fleet). The data-flow rules and the
+learned layer still see everything such a program does. Settings (endpoint configuration): `fleet_prevalence`
+drop (default) | evidence (alert only when the learned score corroborates, at most once per program and day) | off;
+`fleet_min_endpoints` (default 2: one endpoint's poisoned baseline cannot make a program known); `fleet` (a label:
+endpoints with the same label form a fleet; default: the organisation's live endpoints; benchmark / simulation
+endpoints are alone). Lowering the strictness, the number of endpoints, or joining a fleet is a weakening (reason
+required, audited).
+
+**Incident grouping.** The same finding (same endpoint, same subject - the full path of the acting program of the
+incident's top alert, or its address; findings with no recorded program never merge) coming back within 7 days of its incident's last alert joins that incident instead of opening a new
+one (incidents.RECUR_NS; ids stay stable). Severity, tactics and status are recomputed over all its alerts, so new
+open alerts reopen it and an attack joining it raises its severity.
+
+**Also fixed:** the agent applied the allow list's trusted addresses and suppressed detections to the first model only;
+a new model (early models being replaced, periodic retraining) ran without them until the allow list changed.
+
+16 dev / seen sets (71 host-days), 0.9 -> 0.10:
+
+| | attacks | true alerts | false alerts (per day) | precision | false incidents (per host-day) | incidents |
+|---|---|---|---|---|---|---|
+| 0.9 | 26/30 | 337 | 1,189 (16.7) | 0.221 | 284 (4.0) | 354 |
+| **0.10** | 26/30 | 333 | **1,051 (14.8)** | 0.241 | **178 (2.51)** | 220 |
+
+Prevalence acts where hosts share software (CARBANAKv2 h1-h5: 530 -> 399 false alerts); with one other host
+(ATLASv2) or different OSes (DARPA E3) it changes little. Grouping is where the analyst's load drops: -37 % false
+incidents, no attack lost or buried. FiveDirections' 166 false alerts are 6 incidents (2 per day). Variants not chosen:
+prevalence from one other endpoint (P1: fewer false alerts, 973, but rejected - attack-node recall fell below the
+floor, the attackers' Windows tools ran on other hosts too), evidence mode (P2e: +24 false alerts, no true one gained),
+24 h and 2 h-gap grouping (194 / 208 false incidents). Held-out: ClearScope E5 is a single host (prevalence cannot act);
+its incident metrics are reported with the 0.9 check once the disk is freed.
 
 ## 0.9 (2026-11-08): the false-positive fixes (0.8.1 corroboration + 0.9 alerting defaults)
 

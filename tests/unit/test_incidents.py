@@ -46,5 +46,23 @@ check(len(groups) == 3, f"3 incidents ({sorted(by)})")
 inc = I.summarise(next(g for g in groups if g[0]["id"] == 1))
 check(inc["severity"] == "critical" and inc["title"] == "Downloaded program XIM contacted 5.6.7.8", f"chain title names the program: {inc['title']}")
 check(I.clean_reason("corroborated", "learned score 1.80 (above the validation 99.9th percentile)") .startswith("Closely connected"), "scores never reach the analyst")
+# 0.10: the same finding coming back within the recurrence horizon joins its incident (ids stay those of the first)
+H = 60 * M
+rec = [alert(10, "zoom", 0), alert(11, "zoom", 5 * H), alert(12, "other", 6 * H), alert(13, "zoom", 40 * H)]
+_r, I.RECUR_NS = I.RECUR_NS, 0
+base = I.group(rec)
+I.RECUR_NS = _r
+mr = {tuple(a["id"] for a in g) for g in I.merge_recurring(base, 24 * H)}
+check(mr == {(10, 11), (12,), (13,)}, f"merge_recurring: same subject within 24 h joins, a different subject or a later return does not ({sorted(mr)})")
+check({tuple(a["id"] for a in g) for g in I.group(rec)} == {(10, 11, 13), (12,)}, "default (7 days): a finding that keeps coming back stays one incident")
+unnamed = [alert(20, "u1", 0, label="subject None None", reason="runs None, which never ran during the baseline"),
+           alert(21, "u2", 5 * H, label="subject None None", reason="runs None, which never ran during the baseline")]
+check(len(I.group(unnamed)) == 2, "findings whose program was not recorded are not merged as the same finding")
+_r, I.RECUR_NS = I.RECUR_NS, 0
+check({tuple(a["id"] for a in g) for g in I.group(rec)} == {(10,), (11,), (12,), (13,)}, "RECUR_NS 0 keeps the 0.9 grouping")
+I.RECUR_NS = _r
+cr = I.clean_reason("corroborated", "runs C:/x/tool.exe, new on this endpoint but run during the baseline of 3 other endpoint(s); learned score 2.10 corroborates")
+check(cr == "runs C:/x/tool.exe, new on this endpoint but run during the baseline of 3 other endpoint(s), and it behaves unusually for this endpoint"
+      and "score" not in cr, f"corroborated evidence keeps its reason without the score ({cr})")
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

@@ -129,7 +129,8 @@ effective `config.approved_executables` from the allow list, and `posture`); `GE
   collector: running|error|null, collector_error, first_data_at, first_model_at}}`. The Add endpoint dialog polls it.
 ## Incidents
 
-An incident is a group of alerts on one endpoint that are close in time (gap <= 30 min); its id is the id of its
+An incident is a group of alerts on one endpoint that are close in time (gap <= 30 min) and connected, and the same
+finding coming back within 7 days joins it (0.10); its id is the id of its
 first alert. Scores are never shown; what is shown is *why* (the detection's reason).
 
 `GET /api/incidents?status=open|all|investigating|resolved|false_positive&endpoint_id=&severity=&limit=100` →
@@ -290,7 +291,9 @@ unit tests `tests/unit/test_posture.py`, database check `tests/e2e/misuse_check.
 /api/endpoints`) and every `train.*` key has a type and a range (`posture.CONFIG_SCHEMA`, `TRAIN_SCHEMA`, checked
 against `pdp_engine.trainer.TrainConfig`: a new engine field is not configurable until it is listed). Examples:
 `learned_daily_budget` 0-1000, `train.*_epochs` 1-100, `train.velox_runs` 1-10, at most 10 `train.orthrus_seeds`,
-`train.alert_layers` null or a non-empty list of layers, `train.corroboration_percentile` 99 / 99.9 / 99.99.
+`train.alert_layers` null or a non-empty list of layers, `train.corroboration_percentile` 99 / 99.9 / 99.99,
+`fleet_prevalence` drop / evidence / off, `fleet_min_endpoints` 1-1000, `fleet` a label (0.10, pdp_server.fleet:
+programs run during other endpoints' baselines).
 `train.device` is refused (the training worker chooses it; it used to make every training fail), and so are keys the
 server manages (`kind`, `cluster`, `refresh_days` ...). `approved_executables` is refused with a pointer to the allow
 list. A configuration in which neither deterministic layer (new programs, data-flow rules) can alert is refused
