@@ -1,0 +1,1223 @@
+{
+ "CLEARSCOPE_E5-clearscope": {
+  "days": 3,
+  "N/G0": {
+   "incidents": 11,
+   "fp_incidents": 9,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 3.0,
+   "attacks": 2,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "buried": [],
+   "max_alerts": 3,
+   "alerts": 19,
+   "list": [
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /system/bin/screencap",
+     "t0": 1557930171057000000,
+     "t1": 1557930171057000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None org.mozilla.fennec_vagrant:search",
+     "t0": 1557933836923000000,
+     "t1": 1557933836923000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.example.ScreenCapApp",
+     "t0": 1557943810096000000,
+     "t1": 1557943810096000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 3,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.android.documentsui",
+     "t0": 1557944710961000000,
+     "t1": 1557944710961000000,
+     "layers": {
+      "novelty": 3
+     }
+    },
+    {
+     "n": 3,
+     "gt": 2,
+     "top": "novelty/novel_executable subject None /data/data/de.belu.appstarter/busybox",
+     "t0": 1557949218089000000,
+     "t1": 1557949218089000000,
+     "layers": {
+      "novelty": 1,
+      "corroborated": 2
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/sl",
+     "t0": 1557950119281000000,
+     "t1": 1557950119281000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /system/bin/screencap",
+     "t0": 1558067430366000000,
+     "t1": 1558067430366000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 3,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.android.documentsui",
+     "t0": 1558119830727000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 3
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/data/de.belu.appstarter/busybox",
+     "t0": 1558119830727000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 3,
+     "gt": 2,
+     "top": "novelty/novel_executable subject None /data/local/tmp/tester",
+     "t0": 1558124351180000000,
+     "t1": 1558124351180000000,
+     "layers": {
+      "novelty": 1,
+      "corroborated": 2
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/busybox",
+     "t0": 1558125285093000000,
+     "t1": 1558125285093000000,
+     "layers": {
+      "novelty": 1
+     }
+    }
+   ]
+  },
+  "N/G2": {
+   "incidents": 8,
+   "fp_incidents": 6,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 2.0,
+   "attacks": 2,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "buried": [],
+   "max_alerts": 6,
+   "alerts": 19,
+   "list": [
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /system/bin/screencap",
+     "t0": 1557930171057000000,
+     "t1": 1558067430366000000,
+     "layers": {
+      "novelty": 2
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None org.mozilla.fennec_vagrant:search",
+     "t0": 1557933836923000000,
+     "t1": 1557933836923000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.example.ScreenCapApp",
+     "t0": 1557943810096000000,
+     "t1": 1557943810096000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 6,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.android.documentsui",
+     "t0": 1557944710961000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 6
+     }
+    },
+    {
+     "n": 4,
+     "gt": 2,
+     "top": "novelty/novel_executable subject None /data/data/de.belu.appstarter/busybox",
+     "t0": 1557949218089000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 2,
+      "corroborated": 2
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/sl",
+     "t0": 1557950119281000000,
+     "t1": 1557950119281000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 3,
+     "gt": 2,
+     "top": "novelty/novel_executable subject None /data/local/tmp/tester",
+     "t0": 1558124351180000000,
+     "t1": 1558124351180000000,
+     "layers": {
+      "novelty": 1,
+      "corroborated": 2
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/busybox",
+     "t0": 1558125285093000000,
+     "t1": 1558125285093000000,
+     "layers": {
+      "novelty": 1
+     }
+    }
+   ]
+  },
+  "A/G0": {
+   "incidents": 28,
+   "fp_incidents": 23,
+   "tp_incidents": 5,
+   "fp_inc_per_day": 7.67,
+   "attacks": 2,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "buried": [],
+   "max_alerts": 16,
+   "alerts": 123,
+   "list": [
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score file /system/bin/cmd",
+     "t0": 1557840764051000000,
+     "t1": 1557840764051000000,
+     "layers": {
+      "learned": 2
+     }
+    },
+    {
+     "n": 10,
+     "gt": 0,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1557840764051000000,
+     "t1": 1557848875002000000,
+     "layers": {
+      "learned": 10
+     }
+    },
+    {
+     "n": 8,
+     "gt": 0,
+     "top": "learned/learned_score subject None org.mozilla.fennec_vagrant",
+     "t0": 1557843467523000000,
+     "t1": 1557849776502000000,
+     "layers": {
+      "learned": 8
+     }
+    },
+    {
+     "n": 4,
+     "gt": 0,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1557879006281000000,
+     "t1": 1557881993526000000,
+     "layers": {
+      "learned": 4
+     }
+    },
+    {
+     "n": 5,
+     "gt": 0,
+     "top": "learned/learned_score subject None org.mozilla.fennec_vagrant",
+     "t0": 1557879006281000000,
+     "t1": 1557882900360000000,
+     "layers": {
+      "learned": 5
+     }
+    },
+    {
+     "n": 4,
+     "gt": 0,
+     "top": "learned/learned_score subject None flenix.net.flenixapk",
+     "t0": 1557879006281000000,
+     "t1": 1557881993526000000,
+     "layers": {
+      "learned": 4
+     }
+    },
+    {
+     "n": 7,
+     "gt": 0,
+     "top": "learned/learned_score netflow None None",
+     "t0": 1557881025576000000,
+     "t1": 1557882900360000000,
+     "layers": {
+      "learned": 7
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /system/bin/screencap",
+     "t0": 1557930171057000000,
+     "t1": 1557930171057000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None org.mozilla.fennec_vagrant:search",
+     "t0": 1557933836923000000,
+     "t1": 1557933836923000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.example.ScreenCapApp",
+     "t0": 1557943810096000000,
+     "t1": 1557943810096000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 3,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.android.documentsui",
+     "t0": 1557944710961000000,
+     "t1": 1557944710961000000,
+     "layers": {
+      "novelty": 3
+     }
+    },
+    {
+     "n": 5,
+     "gt": 4,
+     "top": "novelty/novel_executable subject None /data/data/de.belu.appstarter/busybox",
+     "t0": 1557949218089000000,
+     "t1": 1557949218089000000,
+     "layers": {
+      "novelty": 1,
+      "corroborated": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/sl",
+     "t0": 1557950119281000000,
+     "t1": 1557950119281000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score file /system/bin/dex2oat",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 2
+     }
+    },
+    {
+     "n": 10,
+     "gt": 0,
+     "top": "learned/learned_score file /system/app/webview/webview.apk",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 10
+     }
+    },
+    {
+     "n": 1,
+     "gt": 1,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 1
+     }
+    },
+    {
+     "n": 6,
+     "gt": 0,
+     "top": "learned/learned_score subject None org.mozilla.fennec_vagrant",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 6
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "learned/learned_score subject None com.tveazy.online",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 1
+     }
+    },
+    {
+     "n": 16,
+     "gt": 0,
+     "top": "learned/learned_score netflow None None",
+     "t0": 1558065600002000000,
+     "t1": 1558068331931000000,
+     "layers": {
+      "learned": 16
+     }
+    },
+    {
+     "n": 4,
+     "gt": 4,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1558065600002000000,
+     "t1": 1558068331931000000,
+     "layers": {
+      "learned": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /system/bin/screencap",
+     "t0": 1558067430366000000,
+     "t1": 1558067430366000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 3,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.android.documentsui",
+     "t0": 1558119830727000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 3
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/data/de.belu.appstarter/busybox",
+     "t0": 1558119830727000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 5,
+     "gt": 4,
+     "top": "novelty/novel_executable subject None /data/local/tmp/tester",
+     "t0": 1558124351180000000,
+     "t1": 1558124351180000000,
+     "layers": {
+      "novelty": 1,
+      "corroborated": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/busybox",
+     "t0": 1558125285093000000,
+     "t1": 1558125285093000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 12,
+     "gt": 3,
+     "top": "learned/learned_score netflow None None",
+     "t0": 1558138020254000000,
+     "t1": 1558139820373000000,
+     "layers": {
+      "learned": 12
+     }
+    },
+    {
+     "n": 6,
+     "gt": 0,
+     "top": "learned/learned_score subject None com.vavni.android.battleship",
+     "t0": 1558138020254000000,
+     "t1": 1558138920348000000,
+     "layers": {
+      "learned": 6
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score subject None mark.via.gp",
+     "t0": 1558138020254000000,
+     "t1": 1558138920348000000,
+     "layers": {
+      "learned": 2
+     }
+    }
+   ]
+  },
+  "A/G2": {
+   "incidents": 18,
+   "fp_incidents": 14,
+   "tp_incidents": 4,
+   "fp_inc_per_day": 4.67,
+   "attacks": 2,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "buried": [],
+   "max_alerts": 35,
+   "alerts": 123,
+   "list": [
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score file /system/bin/cmd",
+     "t0": 1557840764051000000,
+     "t1": 1557840764051000000,
+     "layers": {
+      "learned": 2
+     }
+    },
+    {
+     "n": 19,
+     "gt": 5,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1557840764051000000,
+     "t1": 1558068331931000000,
+     "layers": {
+      "learned": 19
+     }
+    },
+    {
+     "n": 19,
+     "gt": 0,
+     "top": "learned/learned_score subject None org.mozilla.fennec_vagrant",
+     "t0": 1557843467523000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 19
+     }
+    },
+    {
+     "n": 4,
+     "gt": 0,
+     "top": "learned/learned_score subject None flenix.net.flenixapk",
+     "t0": 1557879006281000000,
+     "t1": 1557881993526000000,
+     "layers": {
+      "learned": 4
+     }
+    },
+    {
+     "n": 35,
+     "gt": 3,
+     "top": "learned/learned_score netflow None None",
+     "t0": 1557881025576000000,
+     "t1": 1558139820373000000,
+     "layers": {
+      "learned": 35
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /system/bin/screencap",
+     "t0": 1557930171057000000,
+     "t1": 1558067430366000000,
+     "layers": {
+      "novelty": 2
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None org.mozilla.fennec_vagrant:search",
+     "t0": 1557933836923000000,
+     "t1": 1557933836923000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.example.ScreenCapApp",
+     "t0": 1557943810096000000,
+     "t1": 1557943810096000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 6,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.android.documentsui",
+     "t0": 1557944710961000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 6
+     }
+    },
+    {
+     "n": 6,
+     "gt": 4,
+     "top": "novelty/novel_executable subject None /data/data/de.belu.appstarter/busybox",
+     "t0": 1557949218089000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 2,
+      "corroborated": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/sl",
+     "t0": 1557950119281000000,
+     "t1": 1557950119281000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score file /system/bin/dex2oat",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 2
+     }
+    },
+    {
+     "n": 10,
+     "gt": 0,
+     "top": "learned/learned_score file /system/app/webview/webview.apk",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 10
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "learned/learned_score subject None com.tveazy.online",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 1
+     }
+    },
+    {
+     "n": 5,
+     "gt": 4,
+     "top": "novelty/novel_executable subject None /data/local/tmp/tester",
+     "t0": 1558124351180000000,
+     "t1": 1558124351180000000,
+     "layers": {
+      "novelty": 1,
+      "corroborated": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/busybox",
+     "t0": 1558125285093000000,
+     "t1": 1558125285093000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 6,
+     "gt": 0,
+     "top": "learned/learned_score subject None com.vavni.android.battleship",
+     "t0": 1558138020254000000,
+     "t1": 1558138920348000000,
+     "layers": {
+      "learned": 6
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score subject None mark.via.gp",
+     "t0": 1558138020254000000,
+     "t1": 1558138920348000000,
+     "layers": {
+      "learned": 2
+     }
+    }
+   ]
+  },
+  "R/G0": {
+   "incidents": 28,
+   "fp_incidents": 23,
+   "tp_incidents": 5,
+   "fp_inc_per_day": 7.67,
+   "attacks": 2,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "buried": [],
+   "max_alerts": 16,
+   "alerts": 123,
+   "list": [
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score file /system/bin/cmd",
+     "t0": 1557840764051000000,
+     "t1": 1557840764051000000,
+     "layers": {
+      "learned": 2
+     }
+    },
+    {
+     "n": 10,
+     "gt": 0,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1557840764051000000,
+     "t1": 1557848875002000000,
+     "layers": {
+      "learned": 10
+     }
+    },
+    {
+     "n": 8,
+     "gt": 0,
+     "top": "learned/learned_score subject None org.mozilla.fennec_vagrant",
+     "t0": 1557843467523000000,
+     "t1": 1557849776502000000,
+     "layers": {
+      "learned": 8
+     }
+    },
+    {
+     "n": 4,
+     "gt": 0,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1557879006281000000,
+     "t1": 1557881993526000000,
+     "layers": {
+      "learned": 4
+     }
+    },
+    {
+     "n": 5,
+     "gt": 0,
+     "top": "learned/learned_score subject None org.mozilla.fennec_vagrant",
+     "t0": 1557879006281000000,
+     "t1": 1557882900360000000,
+     "layers": {
+      "learned": 5
+     }
+    },
+    {
+     "n": 4,
+     "gt": 0,
+     "top": "learned/learned_score subject None flenix.net.flenixapk",
+     "t0": 1557879006281000000,
+     "t1": 1557881993526000000,
+     "layers": {
+      "learned": 4
+     }
+    },
+    {
+     "n": 7,
+     "gt": 0,
+     "top": "learned/learned_score netflow None None",
+     "t0": 1557881025576000000,
+     "t1": 1557882900360000000,
+     "layers": {
+      "learned": 7
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /system/bin/screencap",
+     "t0": 1557930171057000000,
+     "t1": 1557930171057000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None org.mozilla.fennec_vagrant:search",
+     "t0": 1557933836923000000,
+     "t1": 1557933836923000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.example.ScreenCapApp",
+     "t0": 1557943810096000000,
+     "t1": 1557943810096000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 3,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.android.documentsui",
+     "t0": 1557944710961000000,
+     "t1": 1557944710961000000,
+     "layers": {
+      "novelty": 3
+     }
+    },
+    {
+     "n": 5,
+     "gt": 4,
+     "top": "novelty/novel_executable subject None /data/data/de.belu.appstarter/busybox",
+     "t0": 1557949218089000000,
+     "t1": 1557949218089000000,
+     "layers": {
+      "novelty": 1,
+      "corroborated": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/sl",
+     "t0": 1557950119281000000,
+     "t1": 1557950119281000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score file /system/bin/dex2oat",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 2
+     }
+    },
+    {
+     "n": 10,
+     "gt": 0,
+     "top": "learned/learned_score file /system/app/webview/webview.apk",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 10
+     }
+    },
+    {
+     "n": 1,
+     "gt": 1,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 1
+     }
+    },
+    {
+     "n": 6,
+     "gt": 0,
+     "top": "learned/learned_score subject None org.mozilla.fennec_vagrant",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 6
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "learned/learned_score subject None com.tveazy.online",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 1
+     }
+    },
+    {
+     "n": 16,
+     "gt": 0,
+     "top": "learned/learned_score netflow None None",
+     "t0": 1558065600002000000,
+     "t1": 1558068331931000000,
+     "layers": {
+      "learned": 16
+     }
+    },
+    {
+     "n": 4,
+     "gt": 4,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1558065600002000000,
+     "t1": 1558068331931000000,
+     "layers": {
+      "learned": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /system/bin/screencap",
+     "t0": 1558067430366000000,
+     "t1": 1558067430366000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 3,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.android.documentsui",
+     "t0": 1558119830727000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 3
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/data/de.belu.appstarter/busybox",
+     "t0": 1558119830727000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 5,
+     "gt": 4,
+     "top": "novelty/novel_executable subject None /data/local/tmp/tester",
+     "t0": 1558124351180000000,
+     "t1": 1558124351180000000,
+     "layers": {
+      "novelty": 1,
+      "corroborated": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/busybox",
+     "t0": 1558125285093000000,
+     "t1": 1558125285093000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 12,
+     "gt": 3,
+     "top": "learned/learned_score netflow None None",
+     "t0": 1558138020254000000,
+     "t1": 1558139820373000000,
+     "layers": {
+      "learned": 12
+     }
+    },
+    {
+     "n": 6,
+     "gt": 0,
+     "top": "learned/learned_score subject None com.vavni.android.battleship",
+     "t0": 1558138020254000000,
+     "t1": 1558138920348000000,
+     "layers": {
+      "learned": 6
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score subject None mark.via.gp",
+     "t0": 1558138020254000000,
+     "t1": 1558138920348000000,
+     "layers": {
+      "learned": 2
+     }
+    }
+   ]
+  },
+  "R/G2": {
+   "incidents": 18,
+   "fp_incidents": 14,
+   "tp_incidents": 4,
+   "fp_inc_per_day": 4.67,
+   "attacks": 2,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "buried": [],
+   "max_alerts": 35,
+   "alerts": 123,
+   "list": [
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score file /system/bin/cmd",
+     "t0": 1557840764051000000,
+     "t1": 1557840764051000000,
+     "layers": {
+      "learned": 2
+     }
+    },
+    {
+     "n": 19,
+     "gt": 5,
+     "top": "learned/learned_score subject None system_server",
+     "t0": 1557840764051000000,
+     "t1": 1558068331931000000,
+     "layers": {
+      "learned": 19
+     }
+    },
+    {
+     "n": 19,
+     "gt": 0,
+     "top": "learned/learned_score subject None org.mozilla.fennec_vagrant",
+     "t0": 1557843467523000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 19
+     }
+    },
+    {
+     "n": 4,
+     "gt": 0,
+     "top": "learned/learned_score subject None flenix.net.flenixapk",
+     "t0": 1557879006281000000,
+     "t1": 1557881993526000000,
+     "layers": {
+      "learned": 4
+     }
+    },
+    {
+     "n": 35,
+     "gt": 3,
+     "top": "learned/learned_score netflow None None",
+     "t0": 1557881025576000000,
+     "t1": 1558139820373000000,
+     "layers": {
+      "learned": 35
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /system/bin/screencap",
+     "t0": 1557930171057000000,
+     "t1": 1558067430366000000,
+     "layers": {
+      "novelty": 2
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None org.mozilla.fennec_vagrant:search",
+     "t0": 1557933836923000000,
+     "t1": 1557933836923000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.example.ScreenCapApp",
+     "t0": 1557943810096000000,
+     "t1": 1557943810096000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 6,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None com.android.documentsui",
+     "t0": 1557944710961000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 6
+     }
+    },
+    {
+     "n": 6,
+     "gt": 4,
+     "top": "novelty/novel_executable subject None /data/data/de.belu.appstarter/busybox",
+     "t0": 1557949218089000000,
+     "t1": 1558119830727000000,
+     "layers": {
+      "novelty": 2,
+      "corroborated": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/sl",
+     "t0": 1557950119281000000,
+     "t1": 1557950119281000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score file /system/bin/dex2oat",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 2
+     }
+    },
+    {
+     "n": 10,
+     "gt": 0,
+     "top": "learned/learned_score file /system/app/webview/webview.apk",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 10
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "learned/learned_score subject None com.tveazy.online",
+     "t0": 1557965438194000000,
+     "t1": 1557965438194000000,
+     "layers": {
+      "learned": 1
+     }
+    },
+    {
+     "n": 5,
+     "gt": 4,
+     "top": "novelty/novel_executable subject None /data/local/tmp/tester",
+     "t0": 1558124351180000000,
+     "t1": 1558124351180000000,
+     "layers": {
+      "novelty": 1,
+      "corroborated": 4
+     }
+    },
+    {
+     "n": 1,
+     "gt": 0,
+     "top": "novelty/novel_executable subject None /data/local/tmp/busybox",
+     "t0": 1558125285093000000,
+     "t1": 1558125285093000000,
+     "layers": {
+      "novelty": 1
+     }
+    },
+    {
+     "n": 6,
+     "gt": 0,
+     "top": "learned/learned_score subject None com.vavni.android.battleship",
+     "t0": 1558138020254000000,
+     "t1": 1558138920348000000,
+     "layers": {
+      "learned": 6
+     }
+    },
+    {
+     "n": 2,
+     "gt": 0,
+     "top": "learned/learned_score subject None mark.via.gp",
+     "t0": 1558138020254000000,
+     "t1": 1558138920348000000,
+     "layers": {
+      "learned": 2
+     }
+    }
+   ]
+  }
+ }
+}

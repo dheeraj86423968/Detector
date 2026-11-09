@@ -1,0 +1,23 @@
+2026-11-09 11:04:29 - fitting word2vec on 199374 baseline nodes
+2026-11-09 11:04:53 - computing node features
+2026-11-09 11:11:05 - detector-1 seed 0 threshold 13.519
+2026-11-09 11:18:34 - detector-1 seed 1 threshold 20.003
+2026-11-09 11:25:18 - detector-1 seed 2 threshold 14.015
+2026-11-09 11:48:31 - detector-2 seed 0 threshold 58.229 val-loss 0.6840
+2026-11-09 12:03:34 - detector-2 seed 1 threshold 68.623 val-loss 0.6840
+2026-11-09 12:15:53 - detector-2 seed 2 threshold 132.493 val-loss 0.6898
+2026-11-09 12:30:52 - detector-2 seed 3 threshold 204.924 val-loss 0.6783
+2026-11-09 12:54:03 - detector-2 seed 4 threshold 113.926 val-loss 0.6548
+2026-11-09 12:54:03 - detector-2 aggregate 'mean' weights [0.2, 0.2, 0.2, 0.2, 0.2]
+2026-11-09 12:54:03 - fusion threshold 0.754
+2026-11-09 12:54:28 - layers: 93 known executables, 0 baseline remote addresses (0 recurring), benign alarm keys none
+12:54:28 0.6-config bundle 6604s
+2026-11-09 12:55:26 - detector-3: 19055421 edges, 3365 keys, 32632 table rows
+2026-11-09 12:55:28 - detector-3 thresholds proc 68.68 obj 73.52 (budget 10)
+2026-11-09 12:55:53 - layers: 93 known executables, 0 baseline remote addresses (0 recurring), benign alarm keys none
+2026-11-09 12:56:44 - final threshold 1.071 (validation nodes 36095, budget 10)
+12:56:44 0.7 released bundle 6740s
+13:00:09 scored 6945s
+13:00:09 R: attacks 2 TP 9 FP 49 (of which extra-GT 0) rows 123
+13:00:09 A: attacks 2 TP 9 FP 49 (of which extra-GT 0) rows 123
+13:00:09 N: attacks 2 TP 4 FP 15 (of which extra-GT 0) rows 19

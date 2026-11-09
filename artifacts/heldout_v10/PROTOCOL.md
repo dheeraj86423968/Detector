@@ -30,3 +30,21 @@ A with G0.
    false-positive incidents than N/G0.
 Both pass -> keep 0.10 in production. Rule 1 fails -> tell the user and recommend rolling back to the 0.8 image. Only rule 2
 fails -> recommend setting RECUR_NS to 0 (0.9 grouping). Results for R, A, N and every grouping are reported regardless.
+
+## Result (run once, 2026-11-09 13:00; results/ho10-CLEARSCOPE_E5.json, ho10-inc.json)
+Bundle trained in 6,604 s (0.6 config) + 136 s (0.7 released upgrade); 3 test days scored once.
+
+| | attacks (of 2) | TP nodes | FP nodes (per day) | alert rows | incidents G0 / FP | incidents G2 / FP | buried |
+|---|---|---|---|---|---|---|---|
+| R (0.7) | 2 | 9 | 49 (16.3) | 123 | 28 / 23 | 18 / 14 | 0 |
+| A (0.8.1) | 2 | 9 | 49 (16.3) | 123 | 28 / 23 | 18 / 14 | 0 |
+| **N (0.9 / 0.10)** | 2 | 4 | **15 (5.0)** | 19 | 11 / 9 | **8 / 6** | 0 |
+
+Rule 1: N finds 2 of 2 attacks (= A) with 15 false positives (A: 49) -> **pass**.
+Rule 2: N/G2 keeps both attacks, buries none, 6 false-positive incidents (N/G0: 9) -> **pass**.
+**Decision: keep 0.10 in production.**
+
+Noted, not part of the rules: N flags fewer ground-truth nodes than A (4 vs 9; the 5 others were learned-only and
+corroborated alerts that 0.9 removed) - same attacks, less of each attack shown. lockwatch_0517 (not in the PIDSMaker
+list, 17 nodes) is detected by no variant. Several "false" incidents are programs in /data/local/tmp (sl, busybox) and
+screen-capture apps, which look like unlabelled test activity; they are counted as false as the rules say.

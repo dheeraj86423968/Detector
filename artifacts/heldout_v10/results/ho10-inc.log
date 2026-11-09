@@ -1,0 +1,6 @@
+CLEARSCOPE_E5-clearscope N/G0: alerts    19 incidents   11 (FP    9, 3.0/day) attacks 2 buried 0
+CLEARSCOPE_E5-clearscope N/G2: alerts    19 incidents    8 (FP    6, 2.0/day) attacks 2 buried 0
+CLEARSCOPE_E5-clearscope A/G0: alerts   123 incidents   28 (FP   23, 7.67/day) attacks 2 buried 0
+CLEARSCOPE_E5-clearscope A/G2: alerts   123 incidents   18 (FP   14, 4.67/day) attacks 2 buried 0
+CLEARSCOPE_E5-clearscope R/G0: alerts   123 incidents   28 (FP   23, 7.67/day) attacks 2 buried 0
+CLEARSCOPE_E5-clearscope R/G2: alerts   123 incidents   18 (FP   14, 4.67/day) attacks 2 buried 0

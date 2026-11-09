@@ -1,0 +1,92 @@
+{
+ "set": "CLEARSCOPE_E5-clearscope",
+ "bundle": "/data/lab08/heldout/CLEARSCOPE_E5/clearscope/b07rel",
+ "n_attacks": 2,
+ "gt_nodes": 34,
+ "days": 3,
+ "extra_gt_nodes_seen": 18,
+ "variants": {
+  "R": {
+   "daily_budget": 20,
+   "near_alert_score": "final",
+   "repeat_corroborations": 0
+  },
+  "A": {
+   "daily_budget": 20,
+   "near_alert_score": "own",
+   "repeat_corroborations": 0
+  },
+  "N": {
+   "daily_budget": 0,
+   "near_alert_score": "own",
+   "repeat_corroborations": 1
+  }
+ },
+ "R": {
+  "TP": 9,
+  "FP": 49,
+  "recall": 0.265,
+  "attacks": 2,
+  "FP/day": 16.3,
+  "by_layer": {
+   "learned": 35,
+   "novelty": 15,
+   "corroborated": 8
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 6,
+   "learned": 1
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "FP_that_are_extra_gt": 0,
+  "rows": 123
+ },
+ "A": {
+  "TP": 9,
+  "FP": 49,
+  "recall": 0.265,
+  "attacks": 2,
+  "FP/day": 16.3,
+  "by_layer": {
+   "learned": 35,
+   "novelty": 15,
+   "corroborated": 8
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 6,
+   "learned": 1
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "FP_that_are_extra_gt": 0,
+  "rows": 123
+ },
+ "N": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "FP_that_are_extra_gt": 0,
+  "rows": 19
+ }
+}
