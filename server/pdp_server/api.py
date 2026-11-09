@@ -63,8 +63,6 @@ ALERT_STATUSES = ("open", "ack", "closed", "true_positive", "false_positive")
 FP_BUDGETS = (None, "99", "99.9", "99.99")
 AGENT_COMMANDS = ("refetch_bundle",)
 # 0.6: typed and range-checked in pdp_server.posture (approved_executables is refused: programs go on the allow list)
-CONFIG_KEYS = {"baseline_days", "tz", "retain_baseline_events", "train", "window_minutes", "fp_budget",
-               "learned_daily_budget", "learned_alerts", "periodic_retrain", "early_models"}
 SERVER_HOSTNAMES = os.environ.get("PDP_HOSTNAMES", "localhost").split(",")
 
 

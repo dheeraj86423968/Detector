@@ -22,12 +22,12 @@ def main():
     ap.add_argument("--config", default="{}", help="initial endpoint config JSON, e.g. '{\"baseline_days\": 3}'")
     ap.add_argument("--hours", type=int, default=24)
     a = ap.parse_args()
-    from pdp_server.api import CONFIG_KEYS, _validate_config
+    from pdp_server.posture import validate_config
     cfg = json.loads(a.config)
-    bad = set(cfg) - CONFIG_KEYS
-    if bad:
-        raise SystemExit(f"unknown config keys {sorted(bad)}")
-    _validate_config(cfg)
+    try:
+        validate_config(cfg)            # the console's rules: every configurable key (posture.CONFIG_SCHEMA), typed
+    except Exception as e:
+        raise SystemExit(f"bad config: {getattr(e, 'detail', e)}")
     token = secrets.token_urlsafe(24)
     from pdp_server.orgs import internal_org
     with db.conn() as c:   # operator tool: tokens for the provider's own (internal) organisation
