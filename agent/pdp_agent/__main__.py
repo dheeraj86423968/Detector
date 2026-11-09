@@ -49,7 +49,16 @@ def main():
         source = AuditdLive(src.get("log", "/var/log/audit/audit.log"))
     elif src["kind"] == "db-replay":
         from .sources.live import DatabaseReplay
-        source = DatabaseReplay(src["database"], src["days"], host=src.get("host", "postgres"), state=a.state, pace=float(src.get("pace", 0)))
+        nodes = None
+        if src.get("host_nodes"):     # one host of a multi-host database (pdp_server.tools.heldout_prep host partition)
+            import numpy as np
+            hn = src["host_nodes"]
+            nodes = {str(i) for i in np.load(hn["file"])[hn["key"].replace(":", "_")].tolist()}
+        source = DatabaseReplay(src["database"], src["days"], host=src.get("host", "postgres"), state=a.state, pace=float(src.get("pace", 0)),
+                                edr=bool(src.get("edr")), nodes=nodes)
+    elif src["kind"] == "store-replay":     # benchmark endpoints: events kept in window stores
+        from .sources.live import StoreReplay
+        source = StoreReplay(src["stores"], src["days"], state=a.state, pace=float(src.get("pace", 0)))
     elif src["kind"] == "strace":
         from .sources.strace_src import StraceLive
         source = StraceLive(command=src["command"], trace_dir=src.get("trace_dir"), batch=int(src.get("batch", 1000)))
