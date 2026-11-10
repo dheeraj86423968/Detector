@@ -1,0 +1,7 @@
+2026-11-09 14:56:54 - agent db-replay starting
+2026-11-09 14:57:14 - baseline day 2022-07-15 uploaded and completed
+2026-11-09 14:57:18 - baseline day 2022-07-16 uploaded and completed
+2026-11-09 14:57:22 - baseline day 2022-07-17 uploaded and completed
+2026-11-09 14:57:37 - baseline day 2022-07-18 uploaded and completed
+2026-11-09 15:02:10 - fleet prevalence: drop, 0 programs known from other endpoints' baselines
+2026-11-09 15:02:10 - bundle 03c3e0e9-26cc-4e9e-a66b-43c41c583ca4 verified and loaded (final model); 0 already learned events skipped for scoring

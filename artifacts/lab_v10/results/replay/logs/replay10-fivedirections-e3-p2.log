@@ -1,0 +1,67 @@
+2026-11-10 01:38:13 - agent db-replay starting
+2026-11-10 01:38:28 - entity ages restored for 169935 of 169935 entities
+2026-11-10 01:38:28 - fleet prevalence: drop, 3 programs known from other endpoints' baselines
+2026-11-10 01:38:28 - bundle 30eff6ad-0b5f-4bbd-a85c-140148d1b96d verified and loaded (final model); 0 already learned events skipped for scoring
+2026-11-10 01:38:46 - fleet prevalence: drop, 15 programs known from other endpoints' baselines
+2026-11-10 01:40:05 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:40:05 - reported 1 alerts in 0 windows
+2026-11-10 01:40:56 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:40:56 - reported 1 alerts in 0 windows
+2026-11-10 01:40:56 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:40:56 - reported 1 alerts in 0 windows
+2026-11-10 01:41:06 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:41:06 - reported 1 alerts in 0 windows
+2026-11-10 01:41:07 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:41:09 - reported 1 alerts in 0 windows
+2026-11-10 01:41:10 - reported 60 alerts in 1 windows
+2026-11-10 01:41:32 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:41:32 - reported 1 alerts in 0 windows
+2026-11-10 01:41:34 - reported 1 alerts in 1 windows
+2026-11-10 01:41:36 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:41:36 - reported 1 alerts in 0 windows
+2026-11-10 01:41:39 - reported 8 alerts in 1 windows
+2026-11-10 01:41:41 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:41:41 - reported 1 alerts in 0 windows
+2026-11-10 01:41:41 - real-time: 6 rule alerts (novel_executable)
+2026-11-10 01:41:41 - reported 6 alerts in 0 windows
+2026-11-10 01:41:43 - real-time: 7 rule alerts (novel_executable)
+2026-11-10 01:41:43 - reported 7 alerts in 0 windows
+2026-11-10 01:41:43 - reported 27 alerts in 1 windows
+2026-11-10 01:41:43 - real-time: 3 rule alerts (novel_executable)
+2026-11-10 01:41:43 - reported 3 alerts in 0 windows
+2026-11-10 01:41:45 - reported 7 alerts in 1 windows
+2026-11-10 01:41:46 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:41:46 - reported 1 alerts in 0 windows
+2026-11-10 01:41:48 - reported 4 alerts in 1 windows
+2026-11-10 01:43:58 - real-time: 3 rule alerts (novel_executable)
+2026-11-10 01:43:58 - reported 3 alerts in 0 windows
+2026-11-10 01:43:58 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:43:58 - reported 1 alerts in 0 windows
+2026-11-10 01:43:59 - real-time: 7 rule alerts (novel_executable)
+2026-11-10 01:43:59 - reported 7 alerts in 0 windows
+2026-11-10 01:44:00 - reported 30 alerts in 1 windows
+2026-11-10 01:44:04 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:44:04 - reported 1 alerts in 0 windows
+2026-11-10 01:44:06 - reported 13 alerts in 1 windows
+2026-11-10 01:46:40 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:46:40 - reported 1 alerts in 0 windows
+2026-11-10 01:46:55 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:46:55 - reported 1 alerts in 0 windows
+2026-11-10 01:46:59 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:46:59 - reported 1 alerts in 0 windows
+2026-11-10 01:47:07 - real-time: 4 rule alerts (novel_executable)
+2026-11-10 01:47:08 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:47:08 - reported 4 alerts in 0 windows
+2026-11-10 01:47:08 - reported 1 alerts in 0 windows
+2026-11-10 01:47:08 - reported 16 alerts in 1 windows
+2026-11-10 01:47:08 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:47:08 - reported 1 alerts in 0 windows
+2026-11-10 01:47:14 - reported 12 alerts in 1 windows
+2026-11-10 01:47:28 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:47:28 - reported 1 alerts in 0 windows
+2026-11-10 01:47:35 - reported 2 alerts in 1 windows
+2026-11-10 01:47:37 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:47:37 - reported 1 alerts in 0 windows
+2026-11-10 01:48:16 - registry compacted: 370645 -> 179136 entities in 2.7s; 167438 entity records deleted from disk
+2026-11-10 01:48:45 - reported 1 alerts in 1 windows
+2026-11-10 01:49:03 - reported 2 alerts in 1 windows

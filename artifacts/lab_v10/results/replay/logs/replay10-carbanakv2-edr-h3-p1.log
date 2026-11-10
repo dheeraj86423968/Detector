@@ -1,0 +1,12 @@
+2026-11-09 15:56:18 - agent store-replay starting
+2026-11-09 15:56:41 - baseline day 2024-04-19 uploaded and completed
+2026-11-09 15:56:43 - baseline day 2024-04-20 uploaded and completed
+2026-11-09 15:56:48 - baseline day 2024-04-22 uploaded and completed
+2026-11-09 15:56:51 - baseline day 2024-04-23 uploaded and completed
+2026-11-09 15:57:17 - baseline day 2024-04-24 uploaded and completed
+2026-11-09 15:57:41 - baseline day 2024-04-25 uploaded and completed
+2026-11-09 15:57:44 - baseline day 2024-04-26 uploaded and completed
+2026-11-09 15:58:01 - baseline day 2024-04-27 uploaded and completed
+2026-11-09 16:56:05 - fleet prevalence: drop, 111 programs known from other endpoints' baselines
+2026-11-09 16:56:05 - bundle 3c359662-d279-4938-8417-fb7d6fbbf6ac verified and loaded (final model); 0 already learned events skipped for scoring
+2026-11-09 16:56:05 - registry: 596239 entities, 596239 still needed; compaction skipped (too few to drop)

@@ -1,0 +1,71 @@
+15:30:29 CARBANAKV2_EDR-h1: enrolled as replay10-carbanakv2-edr-h1 (bcbfba89-12e6-406e-b240-66b6ca4efb6b), fleet replay10-carbanakv2
+15:30:32 CARBANAKV2_EDR-h2: enrolled as replay10-carbanakv2-edr-h2 (171856f8-5e48-4588-be9a-35b73443f9ea), fleet replay10-carbanakv2
+15:30:34 CARBANAKV2_EDR-h3: enrolled as replay10-carbanakv2-edr-h3 (044b62d3-5bdf-44a9-acb5-f7c9c8416257), fleet replay10-carbanakv2
+15:30:37 CARBANAKV2_EDR-h4: enrolled as replay10-carbanakv2-edr-h4 (0ad532d1-a99b-42d0-a70a-ca18bc96177f), fleet replay10-carbanakv2
+15:30:40 CARBANAKV2_EDR-h5: enrolled as replay10-carbanakv2-edr-h5 (692e910d-a4ae-4f76-94e6-81c228788b0d), fleet replay10-carbanakv2
+15:30:42 TRACE_E3-trace: enrolled as replay10-trace-e3-trace (85a1fe03-5b6d-4227-b27c-c5adeb69863d), fleet replay10-darpa-e3
+15:30:45 THEIA_E5-theia: enrolled as replay10-theia-e5-theia (bce13066-9fec-49d0-beab-0d90b5a6a910), fleet None
+15:30:48 CLEARSCOPE_E3: enrolled as replay10-clearscope-e3 (b99e0c7e-02c0-408c-9723-256ef2988372), fleet replay10-darpa-e3
+15:30:50 FIVEDIRECTIONS_E3: enrolled as replay10-fivedirections-e3 (b2e9cff8-157f-42f0-8286-06b67873a8dd), fleet replay10-darpa-e3
+15:30:55 THEIA_E3: enrolled as replay10-theia-e3 (cb360700-e4bd-40ea-88bb-61660e95cf59), fleet replay10-darpa-e3
+15:30:57 CADETS_E3: enrolled as replay10-cadets-e3 (61019b51-3565-4b61-8148-9a5490fb296c), fleet replay10-darpa-e3
+15:31:02 OPTC_H201: enrolled as replay10-optc-h201 (05b7b7c0-27da-4c4a-9fe7-f41cb6d18b10), fleet replay10-optc
+15:31:06 OPTC_H501: enrolled as replay10-optc-h501 (b490d674-58c4-403c-b679-122efa1a566a), fleet replay10-optc
+15:31:10 OPTC_H051: enrolled as replay10-optc-h051 (dbcbfcf3-d216-4312-a204-946994f5769f), fleet replay10-optc
+15:31:11 CARBANAKV2_EDR-h1: phase 1 (baseline ['2024-04-21', '2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26', '2024-04-28', '2024-04-29']) started
+15:31:11 CARBANAKV2_EDR-h2: phase 1 (baseline ['2024-04-20', '2024-04-23', '2024-04-29']) started
+15:56:16 CARBANAKV2_EDR-h2: phase 1 done, bundle e6e801bd-bbf6-414a-a547-c4dc3701fe50
+15:56:16 CARBANAKV2_EDR-h3: phase 1 (baseline ['2024-04-19', '2024-04-20', '2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26', '2024-04-27']) started
+16:37:24 CARBANAKV2_EDR-h1: phase 1 done, bundle 7a2cf4fd-9b1e-445d-9c33-dca09f90f682
+16:37:25 CARBANAKV2_EDR-h4: phase 1 (baseline ['2024-04-18', '2024-04-22', '2024-04-24', '2024-04-25', '2024-04-26', '2024-04-29']) started
+16:57:29 CARBANAKV2_EDR-h3: phase 1 done, bundle 3c359662-d279-4938-8417-fb7d6fbbf6ac
+16:57:29 CARBANAKV2_EDR-h5: phase 1 (baseline ['2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26', '2024-04-27', '2024-04-28', '2024-04-29']) started
+17:10:32 CARBANAKV2_EDR-h4: phase 1 done, bundle 16433f6c-82fd-4621-9799-0b49349db421
+17:11:32 CARBANAKV2_EDR-h5: phase 1 done, bundle 98f26106-52e0-4f7c-b349-db068042426b
+17:11:32 TRACE_E3-trace: phase 1 (baseline ['2018-04-02', '2018-04-03', '2018-04-04', '2018-04-05', '2018-04-06', '2018-04-07', '2018-04-08', '2018-04-09']) started
+17:11:33 THEIA_E5-theia: phase 1 (baseline ['2019-05-08', '2019-05-09', '2019-05-10', '2019-05-11']) started
+19:12:57 THEIA_E5-theia: phase 1 done, bundle 3efeeb81-d550-4c18-9a48-90c48f3c06d7
+19:12:57 CLEARSCOPE_E3: phase 1 (baseline ['2018-04-03', '2018-04-04', '2018-04-05', '2018-04-07', '2018-04-08', '2018-04-09', '2018-04-10']) started
+20:35:14 TRACE_E3-trace: phase 1 done, bundle 9ab50426-3113-4f03-a305-65eb2ae2ca21
+20:35:14 FIVEDIRECTIONS_E3: phase 1 (baseline ['2018-04-04', '2018-04-05', '2018-04-06', '2018-04-07', '2018-04-08']) started
+20:38:15 CLEARSCOPE_E3: phase 1 done, bundle a474b208-b02b-4e05-ac48-cd308c87b96b
+20:38:15 THEIA_E3: phase 1 (baseline ['2018-04-03', '2018-04-04', '2018-04-05', '2018-04-09']) started
+21:20:25 THEIA_E3: phase 1 done, bundle b53125e6-7ae4-4de9-b38b-49dcc8ce5879
+21:20:25 CADETS_E3: phase 1 (baseline ['2018-04-02', '2018-04-03', '2018-04-04', '2018-04-05', '2018-04-07', '2018-04-08', '2018-04-09', '2018-04-10']) started
+22:01:33 FIVEDIRECTIONS_E3: phase 1 done, bundle 30eff6ad-0b5f-4bbd-a85c-140148d1b96d
+22:01:34 OPTC_H201: phase 1 (baseline ['2019-09-19', '2019-09-20', '2019-09-21', '2019-09-22']) started
+22:25:39 CADETS_E3: phase 1 done, bundle 7c94d0c2-e761-484b-9fdb-9eb153f947bf
+22:25:40 OPTC_H501: phase 1 (baseline ['2019-09-19', '2019-09-20', '2019-09-21', '2019-09-22']) started
+23:06:48 OPTC_H201: phase 1 done, bundle 3e18b085-b234-4e11-acc9-c82324f4bf0c
+23:06:49 OPTC_H051: phase 1 (baseline ['2019-09-19', '2019-09-20', '2019-09-21', '2019-09-22']) started
+23:46:57 OPTC_H501: phase 1 done, bundle 2338bfaf-74e2-47c2-9d98-da5a86fabfcc
+00:34:02 OPTC_H051: phase 1 done, bundle eb4d654d-6637-4efb-9e92-ff881c5e1509
+00:34:03 CARBANAKV2_EDR-h1: phase 2 (test days ['2024-04-30', '2024-05-01', '2024-05-02', '2024-05-03', '2024-05-06', '2024-05-07', '2024-05-08', '2024-05-09']) started
+00:43:04 CARBANAKV2_EDR-h1: phase 2 done, 84 alerts, 13518 events of the last open window not scored
+00:43:04 CARBANAKV2_EDR-h2: phase 2 (test days ['2024-04-30', '2024-05-01', '2024-05-02', '2024-05-03', '2024-05-06', '2024-05-07', '2024-05-08', '2024-05-09', '2024-05-10']) started
+00:52:05 CARBANAKV2_EDR-h2: phase 2 done, 171 alerts, 2359 events of the last open window not scored
+00:52:05 CARBANAKV2_EDR-h3: phase 2 (test days ['2024-04-30', '2024-05-01', '2024-05-02', '2024-05-06', '2024-05-07', '2024-05-08', '2024-05-09']) started
+00:59:06 CARBANAKV2_EDR-h3: phase 2 done, 88 alerts, 4041 events of the last open window not scored
+00:59:06 CARBANAKV2_EDR-h4: phase 2 (test days ['2024-04-30', '2024-05-01', '2024-05-02', '2024-05-07', '2024-05-08', '2024-05-09', '2024-05-10']) started
+01:04:06 CARBANAKV2_EDR-h4: phase 2 done, 27 alerts, 1074 events of the last open window not scored
+01:04:07 CARBANAKV2_EDR-h5: phase 2 (test days ['2024-04-30', '2024-05-01', '2024-05-02', '2024-05-03', '2024-05-04', '2024-05-05', '2024-05-06', '2024-05-07', '2024-05-08', '2024-05-09', '2024-05-10']) started
+01:09:07 CARBANAKV2_EDR-h5: phase 2 done, 81 alerts, 398 events of the last open window not scored
+01:09:07 TRACE_E3-trace: phase 2 (test days ['2018-04-10', '2018-04-11', '2018-04-12', '2018-04-13']) started
+01:18:09 TRACE_E3-trace: phase 2 done, 79 alerts, 51939 events of the last open window not scored
+01:18:09 THEIA_E5-theia: phase 2 (test days ['2019-05-14', '2019-05-15']) started
+01:33:10 THEIA_E5-theia: phase 2 done, 161 alerts, 23587 events of the last open window not scored
+01:33:10 CLEARSCOPE_E3: phase 2 (test days ['2018-04-11', '2018-04-12']) started
+01:38:11 CLEARSCOPE_E3: phase 2 done, 0 alerts, 878 events of the last open window not scored
+01:38:11 FIVEDIRECTIONS_E3: phase 2 (test days ['2018-04-09', '2018-04-10', '2018-04-11']) started
+01:53:12 FIVEDIRECTIONS_E3: phase 2 done, 231 alerts, 19902 events of the last open window not scored
+01:53:12 THEIA_E3: phase 2 (test days ['2018-04-10', '2018-04-12', '2018-04-13']) started
+02:06:14 THEIA_E3: phase 2 done, 251 alerts, 53565 events of the last open window not scored
+02:06:14 CADETS_E3: phase 2 (test days ['2018-04-06', '2018-04-11', '2018-04-12', '2018-04-13']) started
+02:13:15 CADETS_E3: phase 2 done, 46 alerts, 11678 events of the last open window not scored
+02:13:15 OPTC_H201: phase 2 (test days ['2019-09-23', '2019-09-24', '2019-09-25']) started
+02:24:16 OPTC_H201: phase 2 done, 27 alerts, 10722 events of the last open window not scored
+02:24:16 OPTC_H501: phase 2 (test days ['2019-09-23', '2019-09-24', '2019-09-25']) started
+02:35:17 OPTC_H501: phase 2 done, 101 alerts, 18157 events of the last open window not scored
+02:35:18 OPTC_H051: phase 2 (test days ['2019-09-23', '2019-09-24', '2019-09-25']) started
+02:46:19 OPTC_H051: phase 2 done, 134 alerts, 11888 events of the last open window not scored
+02:46:19 all done

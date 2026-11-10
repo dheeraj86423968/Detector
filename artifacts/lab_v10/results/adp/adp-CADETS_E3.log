@@ -1,0 +1,7 @@
+17:47:25 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 555 program keys from 4 other endpoints
+17:48:14 scored 57s
+17:48:15 P0: attacks 3 TP 31 FP 16 rows 47 ADP 1.0 (learned only 0.727)
+17:48:15 P1: attacks 3 TP 31 FP 13 rows 44 ADP 1.0 (learned only 0.727)
+17:48:16 P1e: attacks 3 TP 31 FP 13 rows 44 ADP 1.0 (learned only 0.727)
+17:48:16 P2: attacks 3 TP 31 FP 16 rows 47 ADP 1.0 (learned only 0.727)
+17:48:17 P2e: attacks 3 TP 31 FP 16 rows 47 ADP 1.0 (learned only 0.727)

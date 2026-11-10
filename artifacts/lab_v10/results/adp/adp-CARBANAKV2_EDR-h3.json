@@ -1,0 +1,150 @@
+{
+ "set": "CARBANAKV2_EDR-h3",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h3/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 26,
+ "days": 7,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 2,
+  "FP": 86,
+  "recall": 0.077,
+  "attacks": 1,
+  "FP/day": 12.3,
+  "by_layer": {
+   "novelty": 59,
+   "corroborated": 15,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 88,
+  "ADP": 0.043,
+  "ADP_learned_only": 0.002,
+  "precision": 0.023
+ },
+ "P1": {
+  "TP": 1,
+  "FP": 62,
+  "recall": 0.038,
+  "attacks": 1,
+  "FP/day": 8.9,
+  "by_layer": {
+   "novelty": 37,
+   "corroborated": 12,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 63,
+  "ADP": 0.02,
+  "ADP_learned_only": 0.002,
+  "precision": 0.016
+ },
+ "P1e": {
+  "TP": 2,
+  "FP": 63,
+  "recall": 0.077,
+  "attacks": 1,
+  "FP/day": 9.0,
+  "by_layer": {
+   "novelty": 37,
+   "corroborated": 14,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 65,
+  "ADP": 0.043,
+  "ADP_learned_only": 0.002,
+  "precision": 0.031
+ },
+ "P2": {
+  "TP": 2,
+  "FP": 72,
+  "recall": 0.077,
+  "attacks": 1,
+  "FP/day": 10.3,
+  "by_layer": {
+   "novelty": 45,
+   "corroborated": 15,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 74,
+  "ADP": 0.043,
+  "ADP_learned_only": 0.002,
+  "precision": 0.027
+ },
+ "P2e": {
+  "TP": 2,
+  "FP": 72,
+  "recall": 0.077,
+  "attacks": 1,
+  "FP/day": 10.3,
+  "by_layer": {
+   "novelty": 45,
+   "corroborated": 15,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "rows": 74,
+  "ADP": 0.043,
+  "ADP_learned_only": 0.002,
+  "precision": 0.027
+ }
+}

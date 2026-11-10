@@ -1,0 +1,44 @@
+2026-11-09 15:19:59 - agent db-replay starting
+2026-11-09 15:20:58 - entity ages restored for 421919 of 421919 entities
+2026-11-09 15:20:58 - fleet prevalence: drop, 0 programs known from other endpoints' baselines
+2026-11-09 15:20:58 - bundle 18adb787-5e60-4af4-b956-ce1ce48eed10 verified and loaded (final model); 0 already learned events skipped for scoring
+2026-11-09 15:21:10 - real-time: 1 rule alerts (novel_executable)
+2026-11-09 15:21:10 - reported 1 alerts in 0 windows
+2026-11-09 15:21:12 - real-time: 3 rule alerts (novel_executable, untrusted_exec)
+2026-11-09 15:21:12 - reported 3 alerts in 0 windows
+2026-11-09 15:21:13 - real-time: 2 rule alerts (untrusted_code_network)
+2026-11-09 15:21:13 - reported 2 alerts in 0 windows
+2026-11-09 15:21:13 - reported 1 alerts in 2 windows
+2026-11-09 15:21:14 - real-time: 4 rule alerts (exfiltration, untrusted_exec)
+2026-11-09 15:21:14 - reported 4 alerts in 0 windows
+2026-11-09 15:21:14 - reported 1 alerts in 1 windows
+2026-11-09 15:21:15 - real-time: 7 rule alerts (novel_executable, untrusted_code_network, untrusted_exec)
+2026-11-09 15:21:15 - reported 7 alerts in 0 windows
+2026-11-09 15:21:15 - reported 2 alerts in 2 windows
+2026-11-09 15:21:19 - real-time: 4 rule alerts (exfiltration, untrusted_exec)
+2026-11-09 15:21:19 - reported 4 alerts in 0 windows
+2026-11-09 15:21:20 - real-time: 4 rule alerts (untrusted_code_network, untrusted_exec)
+2026-11-09 15:21:20 - reported 4 alerts in 0 windows
+2026-11-09 15:21:23 - real-time: 4 rule alerts (exfiltration, untrusted_exec)
+2026-11-09 15:21:23 - reported 4 alerts in 0 windows
+2026-11-09 15:21:23 - reported 1 alerts in 2 windows
+2026-11-09 15:21:24 - real-time: 1 rule alerts (novel_executable)
+2026-11-09 15:21:24 - real-time: 4 rule alerts (exfiltration, untrusted_exec)
+2026-11-09 15:21:24 - reported 1 alerts in 0 windows
+2026-11-09 15:21:24 - reported 4 alerts in 0 windows
+2026-11-09 15:21:24 - reported 1 alerts in 3 windows
+2026-11-09 15:21:25 - real-time: 1 rule alerts (novel_executable)
+2026-11-09 15:21:25 - reported 1 alerts in 0 windows
+2026-11-09 15:21:25 - reported 1 alerts in 2 windows
+2026-11-09 15:21:26 - real-time: 3 rule alerts (untrusted_code_network, untrusted_exec)
+2026-11-09 15:21:26 - reported 3 alerts in 0 windows
+2026-11-09 15:21:28 - real-time: 7 rule alerts (novel_executable, untrusted_code_network, untrusted_exec)
+2026-11-09 15:21:28 - real-time: 1 rule alerts (novel_executable)
+2026-11-09 15:21:28 - reported 7 alerts in 0 windows
+2026-11-09 15:21:28 - reported 1 alerts in 0 windows
+2026-11-09 15:21:28 - reported 1 alerts in 3 windows
+2026-11-09 15:21:29 - real-time: 2 rule alerts (exfiltration)
+2026-11-09 15:21:29 - real-time: 5 rule alerts (novel_executable, untrusted_code_network, untrusted_exec)
+2026-11-09 15:21:29 - reported 2 alerts in 0 windows
+2026-11-09 15:21:29 - reported 5 alerts in 0 windows
+2026-11-09 15:21:29 - reported 1 alerts in 1 windows

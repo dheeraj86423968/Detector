@@ -1,0 +1,32 @@
+2026-11-10 02:13:23 - agent db-replay starting
+2026-11-10 02:13:53 - entity ages restored for 2368199 of 2368199 entities
+2026-11-10 02:13:53 - fleet prevalence: drop, 0 programs known from other endpoints' baselines
+2026-11-10 02:13:53 - bundle 3e18b085-b234-4e11-acc9-c82324f4bf0c verified and loaded (final model); 0 already learned events skipped for scoring
+2026-11-10 02:14:18 - fleet prevalence: drop, 115 programs known from other endpoints' baselines
+2026-11-10 02:15:22 - real-time: 6 rule alerts (exfiltration, novel_executable)
+2026-11-10 02:15:23 - real-time: 4 rule alerts (exfiltration, novel_executable)
+2026-11-10 02:15:23 - reported 6 alerts in 0 windows
+2026-11-10 02:15:23 - reported 4 alerts in 0 windows
+2026-11-10 02:15:33 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 02:15:33 - reported 1 alerts in 0 windows
+2026-11-10 02:15:34 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 02:15:34 - reported 2 alerts in 0 windows
+2026-11-10 02:15:34 - real-time: 2 rule alerts (exfiltration)
+2026-11-10 02:15:34 - reported 2 alerts in 0 windows
+2026-11-10 02:15:46 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 02:15:46 - reported 1 alerts in 0 windows
+2026-11-10 02:15:46 - reported 1 alerts in 1 windows
+2026-11-10 02:16:43 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 02:16:43 - reported 1 alerts in 0 windows
+2026-11-10 02:17:22 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 02:17:22 - reported 2 alerts in 0 windows
+2026-11-10 02:17:23 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 02:17:23 - reported 1 alerts in 0 windows
+2026-11-10 02:17:27 - real-time: 2 rule alerts (exfiltration)
+2026-11-10 02:17:28 - reported 2 alerts in 0 windows
+2026-11-10 02:19:23 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 02:19:23 - reported 1 alerts in 0 windows
+2026-11-10 02:19:26 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 02:19:26 - reported 1 alerts in 0 windows
+2026-11-10 02:19:28 - real-time: 2 rule alerts (exfiltration)
+2026-11-10 02:19:28 - reported 2 alerts in 0 windows

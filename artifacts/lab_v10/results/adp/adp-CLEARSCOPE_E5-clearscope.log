@@ -1,0 +1,7 @@
+18:38:28 fleet ['CLEARSCOPE_E5-clearscope']: 0 program keys from 0 other endpoints
+18:43:02 scored 289s
+18:43:02 P0: attacks 2 TP 4 FP 15 rows 19 ADP 1.0 (learned only 0.199)
+18:43:03 P1: attacks 2 TP 4 FP 15 rows 19 ADP 1.0 (learned only 0.199)
+18:43:03 P1e: attacks 2 TP 4 FP 15 rows 19 ADP 1.0 (learned only 0.199)
+18:43:03 P2: attacks 2 TP 4 FP 15 rows 19 ADP 1.0 (learned only 0.199)
+18:43:03 P2e: attacks 2 TP 4 FP 15 rows 19 ADP 1.0 (learned only 0.199)

@@ -1,0 +1,33 @@
+2026-11-10 00:59:08 - agent store-replay starting
+2026-11-10 00:59:51 - entity ages restored for 332206 of 332206 entities
+2026-11-10 00:59:51 - fleet prevalence: drop, 123 programs known from other endpoints' baselines
+2026-11-10 00:59:51 - bundle 16433f6c-82fd-4621-9799-0b49349db421 verified and loaded (final model); 0 already learned events skipped for scoring
+2026-11-10 00:59:54 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 00:59:54 - reported 2 alerts in 0 windows
+2026-11-10 01:00:16 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:00:16 - reported 1 alerts in 0 windows
+2026-11-10 01:00:17 - real-time: 4 rule alerts (novel_executable)
+2026-11-10 01:00:17 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:00:18 - reported 4 alerts in 0 windows
+2026-11-10 01:00:18 - reported 1 alerts in 0 windows
+2026-11-10 01:00:19 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:00:19 - reported 1 alerts in 0 windows
+2026-11-10 01:00:20 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:00:20 - reported 1 alerts in 0 windows
+2026-11-10 01:00:22 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 01:00:22 - reported 2 alerts in 0 windows
+2026-11-10 01:00:25 - real-time: 2 rule alerts (untrusted_exec)
+2026-11-10 01:00:25 - reported 2 alerts in 0 windows
+2026-11-10 01:00:26 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:00:26 - reported 1 alerts in 0 windows
+2026-11-10 01:00:27 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:00:27 - reported 1 alerts in 0 windows
+2026-11-10 01:00:27 - reported 1 alerts in 2 windows
+2026-11-10 01:00:28 - real-time: 4 rule alerts (novel_executable)
+2026-11-10 01:00:28 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 01:00:28 - reported 4 alerts in 0 windows
+2026-11-10 01:00:28 - reported 1 alerts in 0 windows
+2026-11-10 01:00:29 - real-time: 2 rule alerts (novel_executable, untrusted_exec)
+2026-11-10 01:00:30 - reported 2 alerts in 0 windows
+2026-11-10 01:00:30 - real-time: 3 rule alerts (novel_executable, untrusted_exec)
+2026-11-10 01:00:30 - reported 3 alerts in 0 windows

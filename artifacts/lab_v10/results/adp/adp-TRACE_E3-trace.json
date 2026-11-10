@@ -1,0 +1,151 @@
+{
+ "set": "TRACE_E3-trace",
+ "bundle": "/data/lab08/heldout/TRACE_E3/trace/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 35,
+ "days": 4,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 9,
+  "FP": 70,
+  "recall": 0.257,
+  "attacks": 3,
+  "FP/day": 17.5,
+  "by_layer": {
+   "novelty": 78,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 9
+  },
+  "attacks_found": [
+   "node_trace_e3_firefox_0410",
+   "node_trace_e3_phishing_executable_0413",
+   "node_trace_e3_pine_0413"
+  ],
+  "rows": 79,
+  "ADP": 0.127,
+  "ADP_learned_only": 0.003,
+  "precision": 0.114
+ },
+ "P1": {
+  "TP": 9,
+  "FP": 70,
+  "recall": 0.257,
+  "attacks": 3,
+  "FP/day": 17.5,
+  "by_layer": {
+   "novelty": 78,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 9
+  },
+  "attacks_found": [
+   "node_trace_e3_firefox_0410",
+   "node_trace_e3_phishing_executable_0413",
+   "node_trace_e3_pine_0413"
+  ],
+  "rows": 79,
+  "ADP": 0.127,
+  "ADP_learned_only": 0.003,
+  "precision": 0.114
+ },
+ "P1e": {
+  "TP": 9,
+  "FP": 70,
+  "recall": 0.257,
+  "attacks": 3,
+  "FP/day": 17.5,
+  "by_layer": {
+   "novelty": 78,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 9
+  },
+  "attacks_found": [
+   "node_trace_e3_firefox_0410",
+   "node_trace_e3_phishing_executable_0413",
+   "node_trace_e3_pine_0413"
+  ],
+  "rows": 79,
+  "ADP": 0.127,
+  "ADP_learned_only": 0.003,
+  "precision": 0.114
+ },
+ "P2": {
+  "TP": 9,
+  "FP": 70,
+  "recall": 0.257,
+  "attacks": 3,
+  "FP/day": 17.5,
+  "by_layer": {
+   "novelty": 78,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 9
+  },
+  "attacks_found": [
+   "node_trace_e3_firefox_0410",
+   "node_trace_e3_phishing_executable_0413",
+   "node_trace_e3_pine_0413"
+  ],
+  "rows": 79,
+  "ADP": 0.127,
+  "ADP_learned_only": 0.003,
+  "precision": 0.114
+ },
+ "P2e": {
+  "TP": 9,
+  "FP": 70,
+  "recall": 0.257,
+  "attacks": 3,
+  "FP/day": 17.5,
+  "by_layer": {
+   "novelty": 78,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 9
+  },
+  "attacks_found": [
+   "node_trace_e3_firefox_0410",
+   "node_trace_e3_phishing_executable_0413",
+   "node_trace_e3_pine_0413"
+  ],
+  "rows": 79,
+  "ADP": 0.127,
+  "ADP_learned_only": 0.003,
+  "precision": 0.114
+ }
+}

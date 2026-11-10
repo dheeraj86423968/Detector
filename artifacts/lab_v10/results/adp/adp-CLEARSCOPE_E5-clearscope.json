@@ -1,0 +1,147 @@
+{
+ "set": "CLEARSCOPE_E5-clearscope",
+ "bundle": "/data/lab08/heldout/CLEARSCOPE_E5/clearscope/b07rel",
+ "fleet": [
+  "CLEARSCOPE_E5-clearscope"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 34,
+ "days": 3,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211
+ },
+ "P1": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211
+ },
+ "P1e": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211
+ },
+ "P2": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211
+ },
+ "P2e": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211
+ }
+}

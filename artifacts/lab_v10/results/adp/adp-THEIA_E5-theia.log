@@ -1,0 +1,7 @@
+18:04:04 fleet ['THEIA_E5-theia']: 0 program keys from 0 other endpoints
+18:11:13 scored 506s
+18:11:15 P0: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
+18:11:16 P1: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
+18:11:17 P1e: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
+18:11:19 P2: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
+18:11:20 P2e: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)

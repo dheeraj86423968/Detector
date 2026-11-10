@@ -1,0 +1,65 @@
+2026-11-10 00:52:08 - agent store-replay starting
+2026-11-10 00:52:49 - entity ages restored for 596239 of 596239 entities
+2026-11-10 00:52:49 - fleet prevalence: drop, 111 programs known from other endpoints' baselines
+2026-11-10 00:52:49 - bundle 3c359662-d279-4938-8417-fb7d6fbbf6ac verified and loaded (final model); 0 already learned events skipped for scoring
+2026-11-10 00:52:55 - fleet prevalence: drop, 134 programs known from other endpoints' baselines
+2026-11-10 00:52:55 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 00:52:55 - reported 2 alerts in 0 windows
+2026-11-10 00:52:59 - real-time: 4 rule alerts (exfiltration, novel_executable)
+2026-11-10 00:52:59 - reported 4 alerts in 0 windows
+2026-11-10 00:52:59 - real-time: 5 rule alerts (exfiltration, novel_executable)
+2026-11-10 00:53:00 - reported 5 alerts in 0 windows
+2026-11-10 00:53:00 - reported 4 alerts in 1 windows
+2026-11-10 00:53:01 - real-time: 2 rule alerts (exfiltration)
+2026-11-10 00:53:01 - reported 2 alerts in 0 windows
+2026-11-10 00:53:01 - real-time: 2 rule alerts (exfiltration)
+2026-11-10 00:53:01 - reported 2 alerts in 0 windows
+2026-11-10 00:53:05 - real-time: 2 rule alerts (exfiltration)
+2026-11-10 00:53:06 - reported 2 alerts in 0 windows
+2026-11-10 00:53:06 - real-time: 2 rule alerts (untrusted_exec)
+2026-11-10 00:53:06 - reported 2 alerts in 0 windows
+2026-11-10 00:53:11 - reported 1 alerts in 1 windows
+2026-11-10 00:53:17 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 00:53:18 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 00:53:18 - reported 2 alerts in 0 windows
+2026-11-10 00:53:18 - reported 2 alerts in 0 windows
+2026-11-10 00:53:22 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 00:53:22 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 00:53:22 - reported 1 alerts in 0 windows
+2026-11-10 00:53:22 - reported 1 alerts in 0 windows
+2026-11-10 00:53:23 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 00:53:23 - reported 1 alerts in 0 windows
+2026-11-10 00:53:26 - reported 1 alerts in 1 windows
+2026-11-10 00:53:36 - real-time: 4 rule alerts (exfiltration)
+2026-11-10 00:53:36 - reported 4 alerts in 0 windows
+2026-11-10 00:53:49 - real-time: 16 rule alerts (exfiltration, novel_executable, untrusted_exec)
+2026-11-10 00:53:49 - real-time: 2 rule alerts (untrusted_code_network)
+2026-11-10 00:53:49 - reported 16 alerts in 0 windows
+2026-11-10 00:53:49 - reported 2 alerts in 0 windows
+2026-11-10 00:53:51 - real-time: 2 rule alerts (exfiltration)
+2026-11-10 00:53:51 - reported 2 alerts in 0 windows
+2026-11-10 00:53:51 - reported 1 alerts in 1 windows
+2026-11-10 00:53:53 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 00:53:54 - reported 1 alerts in 0 windows
+2026-11-10 00:54:00 - real-time: 4 rule alerts (novel_executable)
+2026-11-10 00:54:00 - reported 4 alerts in 0 windows
+2026-11-10 00:54:02 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 00:54:03 - reported 2 alerts in 0 windows
+2026-11-10 00:54:06 - real-time: 5 rule alerts (novel_executable)
+2026-11-10 00:54:06 - reported 5 alerts in 0 windows
+2026-11-10 00:54:09 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 00:54:09 - reported 2 alerts in 0 windows
+2026-11-10 00:54:12 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 00:54:12 - reported 1 alerts in 0 windows
+2026-11-10 00:54:24 - reported 2 alerts in 1 windows
+2026-11-10 00:54:26 - real-time: 5 rule alerts (novel_executable)
+2026-11-10 00:54:26 - reported 5 alerts in 0 windows
+2026-11-10 00:54:26 - reported 2 alerts in 1 windows
+2026-11-10 00:54:28 - real-time: 2 rule alerts (novel_executable)
+2026-11-10 00:54:29 - reported 2 alerts in 0 windows
+2026-11-10 00:54:29 - reported 2 alerts in 1 windows
+2026-11-10 00:54:29 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 00:54:29 - reported 1 alerts in 0 windows
+2026-11-10 00:54:30 - real-time: 1 rule alerts (novel_executable)
+2026-11-10 00:54:31 - reported 1 alerts in 0 windows
+2026-11-10 00:54:31 - reported 1 alerts in 3 windows

@@ -1,0 +1,5 @@
+2026-11-10 01:33:13 - agent db-replay starting
+2026-11-10 01:33:16 - entity ages restored for 132161 of 132161 entities
+2026-11-10 01:33:16 - fleet prevalence: drop, 0 programs known from other endpoints' baselines
+2026-11-10 01:33:16 - bundle a474b208-b02b-4e05-ac48-cd308c87b96b verified and loaded (final model); 0 already learned events skipped for scoring
+2026-11-10 01:33:20 - fleet prevalence: drop, 15 programs known from other endpoints' baselines

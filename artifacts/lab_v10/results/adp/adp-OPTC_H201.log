@@ -1,0 +1,7 @@
+17:52:32 fleet ['OPTC_H201', 'OPTC_H501', 'OPTC_H051']: 136 program keys from 2 other endpoints
+17:54:40 scored 169s
+17:54:45 P0: attacks 1 TP 6 FP 19 rows 25 ADP 0.749 (learned only 0.999)
+17:54:48 P1: attacks 1 TP 6 FP 18 rows 24 ADP 0.749 (learned only 0.999)
+17:54:51 P1e: attacks 1 TP 6 FP 18 rows 24 ADP 0.749 (learned only 0.999)
+17:54:54 P2: attacks 1 TP 6 FP 19 rows 25 ADP 0.749 (learned only 0.999)
+17:54:57 P2e: attacks 1 TP 6 FP 19 rows 25 ADP 0.749 (learned only 0.999)

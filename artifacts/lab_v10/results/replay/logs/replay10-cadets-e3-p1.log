@@ -1,0 +1,12 @@
+2026-11-09 21:20:27 - agent db-replay starting
+2026-11-09 21:20:53 - baseline day 2018-04-02 uploaded and completed
+2026-11-09 21:21:44 - baseline day 2018-04-03 uploaded and completed
+2026-11-09 21:22:32 - baseline day 2018-04-04 uploaded and completed
+2026-11-09 21:23:35 - baseline day 2018-04-05 uploaded and completed
+2026-11-09 21:24:50 - baseline day 2018-04-07 uploaded and completed
+2026-11-09 21:26:02 - baseline day 2018-04-08 uploaded and completed
+2026-11-09 21:26:50 - baseline day 2018-04-09 uploaded and completed
+2026-11-09 21:27:45 - baseline day 2018-04-10 uploaded and completed
+2026-11-09 22:23:57 - fleet prevalence: drop, 3 programs known from other endpoints' baselines
+2026-11-09 22:23:57 - bundle 7c94d0c2-e761-484b-9fdb-9eb153f947bf verified and loaded (final model); 0 already learned events skipped for scoring
+2026-11-09 22:23:57 - registry: 469579 entities, 469579 still needed; compaction skipped (too few to drop)

@@ -1,0 +1,106 @@
+{
+ "set": "CLEARSCOPE_E3",
+ "bundle": "/data/lab08/5ef60025-b74e-417a-8e48-7ab1c7dbcd67/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 41,
+ "days": 2,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0
+ },
+ "P1": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0
+ },
+ "P1e": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0
+ },
+ "P2": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0
+ },
+ "P2e": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0
+ }
+}

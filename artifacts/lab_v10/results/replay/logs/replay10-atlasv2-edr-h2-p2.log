@@ -1,0 +1,19 @@
+2026-11-09 15:24:59 - agent db-replay starting
+2026-11-09 15:25:08 - fleet prevalence: drop, 0 programs known from other endpoints' baselines
+2026-11-09 15:25:08 - bundle 03c3e0e9-26cc-4e9e-a66b-43c41c583ca4 verified and loaded (final model); 0 already learned events skipped for scoring
+2026-11-09 15:25:14 - real-time: 1 rule alerts (novel_executable)
+2026-11-09 15:25:14 - reported 1 alerts in 0 windows
+2026-11-09 15:25:15 - real-time: 4 rule alerts (exfiltration, novel_executable, untrusted_exec)
+2026-11-09 15:25:15 - reported 4 alerts in 0 windows
+2026-11-09 15:25:18 - real-time: 4 rule alerts (untrusted_code_network, untrusted_exec)
+2026-11-09 15:25:18 - real-time: 1 rule alerts (novel_executable)
+2026-11-09 15:25:18 - reported 4 alerts in 0 windows
+2026-11-09 15:25:18 - reported 1 alerts in 0 windows
+2026-11-09 15:25:19 - real-time: 4 rule alerts (untrusted_code_network, untrusted_exec)
+2026-11-09 15:25:19 - reported 4 alerts in 0 windows
+2026-11-09 15:25:20 - real-time: 4 rule alerts (untrusted_code_network, untrusted_exec)
+2026-11-09 15:25:20 - reported 4 alerts in 0 windows
+2026-11-09 15:25:20 - real-time: 4 rule alerts (exfiltration, untrusted_exec)
+2026-11-09 15:25:21 - reported 4 alerts in 0 windows
+2026-11-09 15:25:21 - real-time: 4 rule alerts (exfiltration, novel_executable, untrusted_exec)
+2026-11-09 15:25:21 - reported 4 alerts in 0 windows

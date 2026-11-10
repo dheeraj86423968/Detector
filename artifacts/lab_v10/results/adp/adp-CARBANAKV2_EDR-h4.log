@@ -1,0 +1,7 @@
+18:37:42 fleet ['CARBANAKV2_EDR-h1', 'CARBANAKV2_EDR-h2', 'CARBANAKV2_EDR-h3', 'CARBANAKV2_EDR-h4', 'CARBANAKV2_EDR-h5']: 260 program keys from 4 other endpoints
+18:37:58 scored 74s
+18:37:58 P0: attacks 1 TP 3 FP 27 rows 30 ADP 0.125 (learned only 0.012)
+18:37:58 P1: attacks 1 TP 1 FP 13 rows 14 ADP 0.091 (learned only 0.012)
+18:37:59 P1e: attacks 1 TP 1 FP 13 rows 14 ADP 0.091 (learned only 0.012)
+18:37:59 P2: attacks 1 TP 3 FP 24 rows 27 ADP 0.13 (learned only 0.012)
+18:37:59 P2e: attacks 1 TP 3 FP 24 rows 27 ADP 0.13 (learned only 0.012)
