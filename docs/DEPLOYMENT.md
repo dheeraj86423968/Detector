@@ -254,7 +254,11 @@ Still to do per customer:
 * Per-tenant isolation if multi-tenant.
 * Restrict who can reach the console port (firewall / security group / VPN); it should not face the internet.
 * Scale: one GPU server serves tens of endpoints (training a sandbox-size baseline takes ~5 s on the L40S; a
-  DARPA-size week minutes). Add a second `worker-train` for parallel retrains if needed.
+  DARPA-size week 1-108 min). `worker-train` runs several trainings at once (0.11, `PDP_TRAIN_SLOTS`, default `auto`:
+  one per 10 GB of GPU memory, at most half the CPU cores and one per 12 GB of host memory, at most 4; 4 on the L40S
+  host). A slot beyond the first only starts a job while `PDP_TRAIN_GPU_FREE_GB` (8) of GPU memory and
+  `PDP_TRAIN_RAM_FREE_GB` (12) of host memory are free and no job started in the last `PDP_TRAIN_SETTLE_S` (120) s;
+  one job per endpoint at a time. Beyond that, add GPUs or a second `worker-train` host.
 
 ## Signing keys in a KMS
 

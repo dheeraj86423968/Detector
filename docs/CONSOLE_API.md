@@ -131,7 +131,8 @@ effective `config.approved_executables` from the allow list, and `posture`); `GE
 
 An incident is a group of alerts on one endpoint that are close in time (gap <= 30 min) and connected, and the same
 finding coming back within 7 days joins it (0.10); its id is the id of its
-first alert. Scores are never shown; what is shown is *why* (the detection's reason).
+first alert. Incidents with nothing but one or two new programs (no data-flow rule, no recognised behaviour) are one
+review digest per endpoint and UTC day (0.11): severity `low`, `"digest": true`, title "New programs to review: ...". Scores are never shown; what is shown is *why* (the detection's reason).
 
 `GET /api/incidents?status=open|all|investigating|resolved|false_positive&endpoint_id=&severity=&limit=100` →
 `{"ok": true, "incidents": [<incident summary>]}` newest first.

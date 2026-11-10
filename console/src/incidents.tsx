@@ -26,7 +26,8 @@ export function IncidentTable({ rows, showEndpoint = true, compact }: { rows: In
               <td className="cell-main">
                 <Link to={`/incidents/${i.id}`} className="row-title wrap2" onClick={e => e.stopPropagation()} title={i.title}><PathText text={i.title} max={48} /></Link>
                 <div className="row-meta">
-                  {!compact && (i.behaviours?.length
+                  {i.digest && <Chip title="New programs with no other evidence, collected into one item per endpoint and day. Review the list and mark them benign or a threat.">Review digest</Chip>}
+                  {!compact && !i.digest && (i.behaviours?.length
                     ? <>{i.behaviours.slice(0, 3).map(b => <Chip key={b.label} serious={b.serious} title={`${b.tactic}: ${b.text}`}>{b.label}</Chip>)}
                         {i.behaviours.length > 3 && <Chip title={i.behaviours.slice(3).map(b => b.label).join(", ")}>+{i.behaviours.length - 3} more</Chip>}</>
                     : i.tactics.map(t => <Chip key={t}>{t}</Chip>))}

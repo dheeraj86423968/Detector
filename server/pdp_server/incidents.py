@@ -125,7 +125,62 @@ def group(rows: list[dict]) -> list[list[dict]]:
     for g in out:
         final.extend(_split_connected(g) if any("context" in a for a in g) else [g])
     final.sort(key=lambda g: (str(g[0]["endpoint_id"]), g[0]["window_start_ns"], g[0]["id"]))
-    return merge_recurring(final, RECUR_NS) if RECUR_NS else final
+    final = merge_recurring(final, RECUR_NS) if RECUR_NS else final
+    return review_digest(final, DIGEST) if DIGEST != "off" else final
+
+
+# 0.11 review digest (artifacts/lab_v11): incidents whose only evidence is a new program or two (no data-flow rule, no
+# recognised behaviour) are folded into one low-severity "new programs" item per endpoint and UTC day instead of one
+# incident each. No alert is dropped. "new_programs": layer novelty only; "new_programs_and_learned": also a learned
+# detector agreeing with a new program (layer corroborated, rule learned_near_alert / novel_executable_repeat); "off".
+DIGEST = os.environ.get("PDP_INCIDENT_DIGEST", "new_programs_and_learned")
+DIGEST_CHAIN = 3          # this many distinct new programs in one incident stay an incident (a chain of new tools)
+DAY_NS = 86_400 * 1_000_000_000
+_NEW_PROGRAM_RULES = {"novel_executable", "novel_executable_repeat", "fleet_known_executable"}
+_LEARNED_AGREES = {"learned_near_alert", "novel_executable_repeat"}
+
+
+class Digest(list):
+    """A review digest: the weak incidents of one endpoint and day (see review_digest)."""
+
+
+def _program_of(a: dict) -> str:
+    return (_actor_in(a.get("reason")) or parse_label(a["ntype"], a["label"], a["node_uuid"], a.get("display"))["label"]).casefold()
+
+
+def is_weak(g: list[dict], mode: str = None, behaviours: list | None = None) -> bool:
+    """Only new-program evidence (see DIGEST), no recognised behaviour, fewer than DIGEST_CHAIN distinct new programs."""
+    mode = mode or DIGEST
+    if mode == "off":
+        return False
+    for a in g:
+        if a["layer"] == "novelty" and a["rule"] in _NEW_PROGRAM_RULES:
+            continue
+        if mode == "new_programs_and_learned" and a["layer"] == "corroborated" and a["rule"] in _LEARNED_AGREES:
+            continue
+        return False
+    progs = {_program_of(a) for a in g if a["layer"] == "novelty"}
+    if len(progs) >= DIGEST_CHAIN:
+        return False
+    found = behaviours if behaviours is not None else (beh.analyse(g) if any("context" in a for a in g) else [])
+    return not found
+
+
+def review_digest(groups: list[list[dict]], mode: str) -> list[list[dict]]:
+    """Fold the weak incidents of each endpoint and UTC day (of their first alert) into one Digest, kept at the
+    position (and id) of the day's first weak incident; later weak incidents join it, so its id stays stable."""
+    out: list[list[dict]] = []
+    at: dict[tuple, int] = {}
+    for g in groups:
+        if not is_weak(g, mode):
+            out.append(g); continue
+        k = (str(g[0]["endpoint_id"]), int(g[0]["window_start_ns"]) // DAY_NS)
+        j = at.get(k)
+        if j is None:
+            at[k] = len(out); out.append(Digest(g))
+        else:
+            out[j] = Digest(sorted(out[j] + g, key=lambda a: (a["window_start_ns"], a["id"])))
+    return out
 
 
 def subject(g: list[dict]) -> str:
@@ -232,6 +287,8 @@ def _ip_in(reason: str | None) -> str | None:
 
 
 def summarise(alerts: list[dict], behaviours: list[dict] | None = None) -> dict:
+    if isinstance(alerts, Digest) or alerts[0]["id"] in _DIGESTS:
+        return _summarise_digest(alerts)
     top = min(alerts, key=_det_key)
     rules = {a["rule"] for a in alerts if a["layer"] == "rules"}
     layers = {a["layer"] for a in alerts}
@@ -288,8 +345,20 @@ def summarise(alerts: list[dict], behaviours: list[dict] | None = None) -> dict:
             "alerts": len(alerts), "processes": len(procs), "status": incident_status(alerts), "behaviours": blist}
 
 
+def _summarise_digest(alerts: list[dict]) -> dict:
+    progs = sorted({_program_of(a) for a in alerts if a["layer"] == "novelty"})
+    procs = {a["node_uuid"] for a in alerts if a["ntype"] == "subject"}
+    title = (f"New programs to review: {', '.join(os.path.basename(p) or p for p in progs[:3])}"
+             + (f" and {len(progs) - 3} more" if len(progs) > 3 else ""))
+    return {"id": alerts[0]["id"], "endpoint_id": str(alerts[0]["endpoint_id"]), "endpoint_name": alerts[0]["endpoint_name"],
+            "first_ns": int(alerts[0]["window_start_ns"]), "last_ns": int(alerts[-1]["window_start_ns"]) + WINDOW_NS,
+            "severity": "low", "title": title, "tactics": ["Execution"], "alerts": len(alerts), "processes": len(procs),
+            "status": incident_status(alerts), "behaviours": [], "digest": True}
+
+
 _GROUP_CACHE: dict[str, tuple[tuple, list[list[int]]]] = {}
 _BEHAVIOURS: dict[int, list[dict]] = {}      # incident id -> recognised behaviours (computed with the grouping)
+_DIGESTS: set[int] = set()                   # ids of the incidents that are review digests (0.11)
 
 
 def grouped(c, scope, endpoint_id=None) -> list[list[dict]]:
@@ -309,8 +378,11 @@ def grouped(c, scope, endpoint_id=None) -> list[list[dict]]:
             if hit is not None:
                 for ids in hit[1]:
                     _BEHAVIOURS.pop(ids[0], None)
+                    _DIGESTS.discard(ids[0])
             for g in groups:
-                _BEHAVIOURS[g[0]["id"]] = beh.analyse(g)
+                _BEHAVIOURS[g[0]["id"]] = [] if isinstance(g, Digest) else beh.analyse(g)
+                if isinstance(g, Digest):
+                    _DIGESTS.add(g[0]["id"])
             hit = (key, [[a["id"] for a in g] for g in groups])
             _GROUP_CACHE[eid] = hit
         for g in hit[1]:

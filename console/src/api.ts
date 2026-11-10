@@ -153,7 +153,7 @@ export type DetectionType = "novelty" | "rules" | "corroborated" | "learned" | "
 export type Behaviour = { kind: string; label: string; tactic: string; text: string; node?: string | null; serious?: boolean };
 export type IncidentSummary = { id: number; endpoint_id: string; endpoint_name: string; first_ns: number; last_ns: number; severity: Severity;
   title: string; tactics: string[]; alerts: number; processes: number; status: IncidentStatus; behaviours?: Behaviour[];
-  assignee?: { id: number; name: string } | null };
+  assignee?: { id: number; name: string } | null; digest?: boolean };
 export type Detection = { type: DetectionType; rule?: string | null; reason?: string | null; alert_id?: number | null };
 export type GNode = { id: string; type: "process" | "file" | "network" | "group"; label: string; title?: string | null; details?: Record<string, string> | null;
   alerted?: boolean; detection?: Detection | null; first_ns?: number | null; count?: number };

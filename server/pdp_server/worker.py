@@ -4,7 +4,7 @@
   sim     {campaign_id} run an adversarial simulation campaign against the endpoint's bundle (sim/pdp_sim)
   command {...}       delivered to the agent via /status (left queued until the agent acknowledges)
 
-Run: python -m pdp_server.worker [--kinds ingest,train] [--device cuda|cpu]
+Run: python -m pdp_server.worker [--kinds ingest,train] [--device cuda|cpu] [--slots auto|N]
 """
 from __future__ import annotations
 
@@ -645,30 +645,141 @@ class Heartbeat:
 # Next job, fair between organisations: among queued jobs of this worker's kinds, the organisation whose last job of
 # that kind started longest ago (or never) goes first, then the oldest job; one busy organisation (or one huge host)
 # cannot keep the others waiting for its whole queue. Jobs without an endpoint (none today) count as one organisation.
+# 0.11: a worker runs several jobs at once (--slots), so an endpoint with a job of these kinds running is skipped (one
+# job per endpoint at a time: an early model and the final model of one endpoint must not race for its bundle).
 NEXT_JOB = """
+WITH k AS (SELECT %s::text[] AS kinds)
 UPDATE jobs SET state='running', started_at=now(), heartbeat=now() WHERE id = (
-  SELECT j.id FROM jobs j LEFT JOIN endpoints e ON e.id = j.endpoint_id
-  WHERE j.state='queued' AND j.kind = ANY(%s)
+  SELECT j.id FROM k, jobs j LEFT JOIN endpoints e ON e.id = j.endpoint_id
+  WHERE j.state='queued' AND j.kind = ANY(k.kinds)
     AND coalesce((j.params->>'not_before')::float8, 0) <= extract(epoch FROM now())
+    AND NOT EXISTS (SELECT 1 FROM jobs r WHERE r.endpoint_id = j.endpoint_id AND r.state = 'running' AND r.kind = ANY(k.kinds))
   ORDER BY (SELECT max(j2.started_at) FROM jobs j2 JOIN endpoints e2 ON e2.id = j2.endpoint_id
             WHERE e2.org_id IS NOT DISTINCT FROM e.org_id AND j2.kind = j.kind) ASC NULLS FIRST, j.created_at
   LIMIT 1 FOR UPDATE OF j SKIP LOCKED) RETURNING *"""
+
+# 0.11 parallel training. One training keeps one CPU core busy (Python loop over the window stream) and uses a few GB
+# of a large GPU (OpTC H051, 2.3 M nodes: 25 % GPU, < 3 GB GPU memory), so a GPU worker runs up to PDP_TRAIN_SLOTS
+# jobs at once, each in its own process (own CUDA context, no shared interpreter lock). Slot 0 always takes work (the
+# one-at-a-time behaviour of earlier versions); slots >= 1 only start a job while the GPU and the host keep the
+# headroom below free and no other slot started a job in the last ADMIT_SETTLE_S seconds (a starting job has not
+# allocated its memory yet). A job that still runs out of GPU memory is re-queued (gpu_oom_retry).
+ADMIT_GPU_FREE_GB = float(os.environ.get("PDP_TRAIN_GPU_FREE_GB", "8"))
+ADMIT_RAM_FREE_GB = float(os.environ.get("PDP_TRAIN_RAM_FREE_GB", "12"))
+ADMIT_SETTLE_S = int(os.environ.get("PDP_TRAIN_SETTLE_S", "120"))
+
+
+def auto_slots(device: str) -> int:
+    """Default number of parallel jobs: 1 on the CPU; on a GPU one per 10 GB of GPU memory, at most half the CPU cores
+    and one per 12 GB of host memory, capped at 4."""
+    if not device.startswith("cuda"):
+        return 1
+    import subprocess
+    try:   # nvidia-smi, not torch: the supervising process must not hold a CUDA context of its own
+        out = subprocess.run(["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits", "-i", "0"],
+                             capture_output=True, text=True, timeout=30).stdout
+        gpu_gb = float(out.strip().splitlines()[0]) / 1024
+    except Exception:  # noqa
+        return 1
+    ram_gb = _meminfo("MemTotal") / 2**30
+    return max(1, min(4, int(gpu_gb // 10), (os.cpu_count() or 2) // 2, int(ram_gb // 12) or 1))
+
+
+def _meminfo(field: str) -> float:
+    try:
+        for line in open("/proc/meminfo"):
+            if line.startswith(field + ":"):
+                return float(line.split()[1]) * 1024
+    except OSError:
+        pass
+    return 0.0
+
+
+def admit(slot: int, device: str, kinds: tuple) -> tuple[bool, str]:
+    """May this slot start a job now? (see the 0.11 note above)"""
+    if slot == 0 or not device.startswith("cuda"):
+        return True, ""
+    ram = _meminfo("MemAvailable") / 2**30
+    if ram < ADMIT_RAM_FREE_GB:
+        return False, f"host memory {ram:.1f} GB free < {ADMIT_RAM_FREE_GB:g}"
+    try:
+        import torch
+        free = torch.cuda.mem_get_info()[0] / 2**30
+    except Exception as e:  # noqa
+        return False, f"GPU memory unknown ({e})"
+    if free < ADMIT_GPU_FREE_GB:
+        return False, f"GPU memory {free:.1f} GB free < {ADMIT_GPU_FREE_GB:g}"
+    with db.conn() as c:
+        recent = db.q(c, "SELECT 1 FROM jobs WHERE state='running' AND kind = ANY(%s) AND started_at > now() - %s * interval '1 second' LIMIT 1",
+                      (list(kinds), ADMIT_SETTLE_S), one=True)
+    if recent:
+        return False, "another job started less than %d s ago" % ADMIT_SETTLE_S
+    return True, ""
+
+
+def supervise(argv: list[str], slots: int) -> None:
+    """Run `slots` worker processes (python -m pdp_server.worker ... --slot i) and restart any that exits."""
+    import signal
+    import subprocess
+    procs: dict[int, subprocess.Popen] = {}
+
+    def start(i):
+        procs[i] = subprocess.Popen([sys.executable, "-m", "pdp_server.worker", *argv, "--slot", str(i), "--slots", str(slots)])
+        log(f"slot {i}: started (pid {procs[i].pid})")
+
+    def stop(*_):
+        for p in procs.values():
+            p.terminate()
+        for p in procs.values():
+            try:
+                p.wait(timeout=20)
+            except subprocess.TimeoutExpired:
+                p.kill()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGINT, stop)
+    for i in range(slots):
+        start(i)
+    while True:
+        time.sleep(5)
+        for i, p in list(procs.items()):
+            if p.poll() is not None:
+                log(f"slot {i}: exited with {p.returncode}, restarting in 10 s")
+                time.sleep(10)
+                start(i)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--kinds", default="ingest,train")
     ap.add_argument("--device", default=os.environ.get("PDP_TRAIN_DEVICE", "cpu"))
+    ap.add_argument("--slots", default=os.environ.get("PDP_TRAIN_SLOTS", "auto"),
+                    help="jobs run at once (one process each); 'auto': by GPU memory, CPU cores and host memory (1 on the CPU)")
+    ap.add_argument("--slot", type=int, default=None, help=argparse.SUPPRESS)   # set by supervise() for its children
     a = ap.parse_args()
     kinds = tuple(a.kinds.split(","))
-    log(f"worker up: kinds={kinds} device={a.device}")
     if a.device.startswith("cuda"):
         import torch
         if not torch.cuda.is_available():
             log("WARNING: --device cuda but no GPU is visible to this container; falling back to cpu")
             a.device = "cpu"
-        else:
-            log(f"GPU: {torch.cuda.get_device_name(0)}, {torch.cuda.get_device_properties(0).total_memory / 2**30:.0f} GiB")
+    if a.slot is None:
+        slots = auto_slots(a.device) if a.slots == "auto" else max(1, int(a.slots))
+        if slots > 1:
+            log(f"worker up: kinds={kinds} device={a.device} slots={slots}")
+            argv = ["--kinds", a.kinds, "--device", a.device]
+            return supervise(argv, slots)
+        a.slot = 0
+    else:
+        slots = max(1, int(a.slots))
+    slot = a.slot
+    log(f"worker up: kinds={kinds} device={a.device}" + (f" slot {slot}/{slots}" if slots > 1 else ""))
+    if a.device.startswith("cuda"):
+        import torch
+        log(f"GPU: {torch.cuda.get_device_name(0)}, {torch.cuda.get_device_properties(0).total_memory / 2**30:.0f} GiB")
+        if slots > 1:   # the slots share the CPU cores: no slot's intra-op threads crowd out the others
+            torch.set_num_threads(max(1, (os.cpu_count() or 2) // slots))
     def requeue_stale():
         """Jobs left 'running' by a worker that died or was replaced (no heartbeat for 10 minutes) are re-queued:
         checked every minute, not only at start - a job interrupted by a worker restart had a fresh heartbeat at that
@@ -681,21 +792,29 @@ def main():
     requeue_stale()
     last_requeue = time.time()
     hb = Heartbeat()
+    last_why = ""
     while True:
         if time.time() - last_requeue > 60:
             requeue_stale()
             last_requeue = time.time()
         job = None
-        with db.conn() as c:
-            job = db.q(c, NEXT_JOB, (list(kinds),), one=True)
+        ok, why = admit(slot, a.device, kinds)
+        if ok:
+            with db.conn() as c:
+                job = db.q(c, NEXT_JOB, (list(kinds),), one=True)
+        elif why != last_why:
+            log(f"slot {slot}: not starting a job ({why})")
+        last_why = why
         if not job:
-            if "train" in kinds:
+            if slot == 0 and "train" in kinds:   # one scheduler per worker (the slots would race to queue the same job)
                 schedule_early_models()
                 schedule_refresh()
-            if "ingest" in kinds:
+            if slot == 0 and "ingest" in kinds:
                 apply_retention()
             time.sleep(5)
             continue
+        if slots > 1:
+            log(f"slot {slot}: job {job['id']} ({job['kind']}) for endpoint {job['endpoint_id']}")
         hb.start(job["id"])
         try:
             if job["kind"] == "ingest":

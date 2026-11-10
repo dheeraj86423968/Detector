@@ -23,6 +23,18 @@ incident's top alert, or its address; findings with no recorded program never me
 one (incidents.RECUR_NS; ids stay stable). Severity, tactics and status are recomputed over all its alerts, so new
 open alerts reopen it and an attack joining it raises its severity.
 
+**Review digest (0.11, artifacts/lab_v11).** An incident whose only evidence is one or two new programs (layer
+novelty; by default also a learned detector agreeing with a new program, layer corroborated with rule
+learned_near_alert / novel_executable_repeat), with no data-flow rule and no recognised behaviour, is folded into one
+low-severity item per endpoint and UTC day, "New programs to review: ..." (`digest: true`, the id of the day's first
+such incident). A chain of three or more distinct new programs stays an incident. No alert is dropped; marking the
+digest benign marks all its alerts. Server setting `PDP_INCIDENT_DIGEST` = `new_programs_and_learned` (default) |
+`new_programs` | `off`. 16 dev / seen sets (71 host-days; no unseen held-out set was available, so this is a
+development result): false items in the incident list 178 -> 100 (2.51 -> 1.41 per host-day), false items at medium or
+above 178 -> 52 (2.51 -> 0.73), false items at high or above (what channels notify by default) 38 -> 38 (0.54); the
+same 26 attacks detected and visible, the same one buried; one attack (TRACE firefox_0410, a single new program) is
+now only in a digest.
+
 **Also fixed:** the agent applied the allow list's trusted addresses and suppressed detections to the first model only;
 a new model (early models being replaced, periodic retraining) ran without them until the allow list changed.
 

@@ -1,0 +1,13 @@
+PROF registry 421919 nodes load 2.2s
+2026-11-10 10:10:04 - detector-1 seed 0 threshold 7.272
+2026-11-10 10:10:23 - detector-1 seed 1 threshold 8.452
+2026-11-10 10:11:01 - detector-1 seed 2 threshold 5.561
+2026-11-10 10:12:53 - detector-2 seed 0 threshold 7.347 val-loss 0.1336
+2026-11-10 10:14:44 - detector-2 seed 1 threshold 7.293 val-loss 0.1313
+2026-11-10 10:16:59 - detector-2 seed 2 threshold 7.755 val-loss 0.1337
+2026-11-10 10:17:52 - detector-2 seed 3 threshold 14.678 val-loss 0.1570
+2026-11-10 10:19:14 - detector-2 seed 4 threshold 7.370 val-loss 0.1358
+2026-11-10 10:19:15 - fusion threshold 1.000
+2026-11-10 10:19:21 - detector-3 thresholds proc 19.29 obj 41.08 (budget 10)
+2026-11-10 10:20:39 - final threshold 2.041 (validation nodes 113874, budget 10)
+PROF total 1058.9s rss_peak 3.3 GiB gpu_peak 1.4 GiB

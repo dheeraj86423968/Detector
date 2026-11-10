@@ -35,6 +35,17 @@ try:
             order.append("A" if str(j["endpoint_id"]) == eps["Fair A"] else "B")
             db.q(c, "UPDATE jobs SET state='done', finished_at=now() WHERE id=%s", (j["id"],))
     check(order[:3] in (["A", "B", "A"], ["B", "A", "A"]) and order.count("B") == 1, f"organisations take turns: {''.join(order)} (plain FIFO would be AAAAAB)")
+    # 0.11 parallel slots: an endpoint with a running job is skipped, other endpoints are not
+    with db.conn() as c:
+        db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, state, started_at) VALUES (%s,%s,'fairtest','running',now())", (str(uuid.uuid4()), eps["Fair A"]))
+        qa = str(uuid.uuid4())
+        db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, created_at) VALUES (%s,%s,'fairtest', now() - interval '2 hours')", (qa, eps["Fair A"]))
+        check(db.q(c, NEXT_JOB, (["fairtest"],), one=True) is None, "a second job of an endpoint with a running job waits")
+        qb = str(uuid.uuid4())
+        db.q(c, "INSERT INTO jobs (id, endpoint_id, kind) VALUES (%s,%s,'fairtest')", (qb, eps["Fair B"]))
+        j = db.q(c, NEXT_JOB, (["fairtest"],), one=True)
+        check(j is not None and str(j["id"]) == qb, "another endpoint's job runs meanwhile")
+        db.q(c, "DELETE FROM jobs WHERE kind='fairtest'")
     # a GPU job that ran out of GPU memory is re-queued for later, a bounded number of times; other errors fail it
     from pdp_server.worker import GPU_OOM_RETRIES, gpu_oom_retry, is_gpu_oom
     oom = RuntimeError("CUDA error: out of memory")

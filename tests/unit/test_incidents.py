@@ -5,6 +5,7 @@ import sys
 from pdp_server import incidents as I
 
 fails = 0
+_DIGEST, I.DIGEST = I.DIGEST, "off"     # the 0.9 / 0.10 grouping mechanics first; the 0.11 review digest at the end
 
 
 def check(cond, msg):
@@ -64,5 +65,39 @@ I.RECUR_NS = _r
 cr = I.clean_reason("corroborated", "runs C:/x/tool.exe, new on this endpoint but run during the baseline of 3 other endpoint(s); learned score 2.10 corroborates")
 check(cr == "runs C:/x/tool.exe, new on this endpoint but run during the baseline of 3 other endpoint(s), and it behaves unusually for this endpoint"
       and "score" not in cr, f"corroborated evidence keeps its reason without the score ({cr})")
+
+# 0.11 review digest: new-program-only incidents (no data-flow rule, no recognised behaviour, < 3 distinct new programs)
+# of one endpoint and UTC day become one low-severity item; everything else stays as it was
+I.DIGEST = _DIGEST
+check(_DIGEST == "new_programs_and_learned", f"the digest is on by default ({_DIGEST})")
+groups = I.group(rows)
+by = {tuple(sorted(a["id"] for a in g)): g for g in groups}
+check(set(by) == {(1, 2), (3, 4, 5)} and isinstance(by[(3, 4, 5)], I.Digest) and not isinstance(by[(1, 2)], I.Digest),
+      f"the attack chain stays an incident, the two new-program incidents of the day are one digest ({sorted(by)})")
+s = I.summarise(by[(3, 4, 5)])
+check(s["severity"] == "low" and s.get("digest") and s["id"] == 3 and s["title"] == "New programs to review: late, links",
+      f"digest: low severity, the first incident's id, programs in the title ({s['severity']}, {s['id']}, {s['title']})")
+check(I.summarise(by[(1, 2)])["severity"] == "critical", "the chain keeps its severity")
+D = 24 * 60 * M
+chain = [alert(30, "a", 0), alert(31, "b", M), alert(32, "c", 2 * M)]
+for x, y in ((30, 31), (31, 32)):
+    chain[y - 30]["context"]["edges"].append({"src": f"{['a', 'b', 'c'][x - 30]}", "dst": f"{['a', 'b', 'c'][y - 30]}", "op": "CLONE", "ts_ns": 0})
+g = I.group(chain)
+check(len(g) == 1 and not isinstance(g[0], I.Digest), "a chain of three new programs stays an incident")
+days = [alert(40, "p", 0), alert(41, "q", 2 * H), alert(42, "r", D + H)]
+g = I.group(days)
+check([tuple(a["id"] for a in x) for x in g] == [(40, 41), (42,)] and all(isinstance(x, I.Digest) for x in g), "one digest per endpoint and UTC day")
+other_ep = [alert(50, "p", 0), dict(alert(51, "q", H), endpoint_id="ep2")]
+check(len(I.group(other_ep)) == 2, "digests never mix endpoints")
+learned = [alert(60, "p", 0), alert(61, "p", M, layer="corroborated", rule="learned_near_alert", reason="runs /bin/p, which never ran during the baseline; learned score 2"),
+           alert(62, "q", 3 * H)]
+check([isinstance(x, I.Digest) for x in I.group(learned)] == [True] and len(I.group(learned)) == 1,
+      "default: a learned detector agreeing with a new program is still digest material")
+I.DIGEST = "new_programs"
+check(sorted(len(x) for x in I.group(learned)) == [1, 2] and sum(isinstance(x, I.Digest) for x in I.group(learned)) == 1,
+      "new_programs: the corroborated incident stays an incident")
+I.DIGEST = "off"
+check(not any(isinstance(x, I.Digest) for x in I.group(learned)), "off: no digest")
+I.DIGEST = _DIGEST
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

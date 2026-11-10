@@ -2,6 +2,8 @@ name: pdp
 # Server stack. Bring up with ./deploy/bringup.sh (generates PDP_DB_PASSWORD into deploy/.env on first run).
 x-db-env: &db-env
   PDP_DB_PASSWORD: ${PDP_DB_PASSWORD:?set PDP_DB_PASSWORD in deploy/.env (deploy/bringup.sh generates one)}
+  # server-wide settings every service that builds incidents reads (api, notifier, workers)
+  PDP_INCIDENT_DIGEST: ${PDP_INCIDENT_DIGEST:-new_programs_and_learned}
 # Key management (docs/DEPLOYMENT.md "Signing keys in a KMS"): PDP_KMS=transit keeps the CA and bundle-signing keys in
 # the KMS (bundled OpenBao, compose profile "kms", or an external Vault/OpenBao via PDP_KMS_ADDR).
 x-kms-env: &kms-env
@@ -106,7 +108,9 @@ services:
   worker-train:
     image: pdp/server:${PDP_VERSION:-dev}
     command: ["worker", "--kinds", "train,sim", "--device", "${PDP_TRAIN_DEVICE:-cpu}"]
-    environment: { <<: [*db-env, *kms-env] }
+    # parallel trainings (0.11): PDP_TRAIN_SLOTS auto | N, admission headroom (docs/DEPLOYMENT.md "Scale")
+    environment: { <<: [*db-env, *kms-env], PDP_TRAIN_SLOTS: "${PDP_TRAIN_SLOTS:-auto}", PDP_TRAIN_GPU_FREE_GB: "${PDP_TRAIN_GPU_FREE_GB:-8}",
+                   PDP_TRAIN_RAM_FREE_GB: "${PDP_TRAIN_RAM_FREE_GB:-12}", PDP_TRAIN_SETTLE_S: "${PDP_TRAIN_SETTLE_S:-120}" }
     shm_size: 8g
     volumes: [ pdp_data:/data, pdp_pki:/pki, pdp_pki_private:/pki/private, "${PDP_KMS_SECRETS:-./kms-secrets}/token:/run/pdp-kms:ro" ]
     networks: [ backend ]
