@@ -1,0 +1,5 @@
+12:40:23 fleet ['ATLASV2_EDR-h1', 'ATLASV2_EDR-h2']: 67 program keys from 1 other endpoints
+12:42:24 sigma: 1430 rules, 9 (rule, program) keys matched in the baseline (121s)
+12:42:24 ZK: 79 known programs re-fitted with backslash paths
+12:43:14 scored 183s
+12:43:14 ZK: attacks 0 det-only 0 TP 0 FP 43 rows 43

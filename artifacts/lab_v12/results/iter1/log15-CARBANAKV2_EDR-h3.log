@@ -1,0 +1,7 @@
+11:18:28 fleet ['CARBANAKV2_EDR-h1', 'CARBANAKV2_EDR-h2', 'CARBANAKV2_EDR-h3', 'CARBANAKV2_EDR-h4', 'CARBANAKV2_EDR-h5']: 263 program keys from 4 other endpoints
+11:23:12 sigma: 1430 rules, 10 (rule, program) keys matched in the baseline (281s)
+11:28:16 scored 669s
+11:28:18 Z0: attacks 1 det-only 1 TP 2 FP 72 rows 74
+11:28:18 Z1: attacks 1 det-only 1 TP 2 FP 88 rows 91
+11:28:18 Z2: attacks 1 det-only 1 TP 2 FP 76 rows 78
+11:28:18 Z3: attacks 1 det-only 1 TP 3 FP 85 rows 88

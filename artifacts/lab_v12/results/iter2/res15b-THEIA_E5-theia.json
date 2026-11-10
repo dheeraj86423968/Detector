@@ -1,0 +1,109 @@
+{
+ "set": "THEIA_E5-theia",
+ "bundle": "/data/lab08/heldout/THEIA_E5/theia/b07rel",
+ "fleet": [
+  "THEIA_E5-theia"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 66,
+ "days": 2,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 1,
+ "zk": null,
+ "bare_names": "absent",
+ "Z0": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 48.5,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {},
+  "rows": 97
+ },
+ "Z1": {
+  "TP": 0,
+  "FP": 100,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 50.0,
+  "by_layer": {
+   "rules": 36,
+   "novelty": 54,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {
+   "Linux Reverse Shell Indicator": [
+    3,
+    0
+   ]
+  },
+  "rows": 100
+ },
+ "Z2": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 48.5,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {},
+  "rows": 97
+ },
+ "Z3": {
+  "TP": 0,
+  "FP": 98,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 49.0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 34,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {
+   "Execution Of Script Located In Potentially Suspicious Directory": [
+    1,
+    0
+   ]
+  },
+  "rows": 98
+ }
+}

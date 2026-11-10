@@ -317,5 +317,14 @@ thin = _cov({"processes": 800, "processes_with_path": 0, "flows": 1000, "flows_w
 check("posture:telemetry_paths" in thin and "posture:telemetry_addresses" in thin, f"thin telemetry (no paths, no addresses) is a posture warning ({thin})")
 ok_ = _cov({"processes": 800, "processes_with_path": 790, "flows": 1000, "flows_with_address": 950, "exec_events": 0})
 check(not any(k.startswith("posture:telemetry") for k in ok_), "full telemetry without exec events (Windows) raises nothing")
+# 0.12 Sigma rules setting: off by default; turning it on is stricter, lowering it is a weakening
+check(P.weakenings({}, {"sigma": "high"}) == [] and P.weakenings({"sigma": "high"}, {"sigma": "medium"}) == [],
+      "turning Sigma rules on / up is not a weakening")
+w = P.weakenings({"sigma": "medium"}, {"sigma": "high"}) + P.weakenings({"sigma": "high"}, {})
+check(len(w) == 2 and all("SigmaHQ" in x for x in w), f"lowering or removing the Sigma setting is a weakening ({w})")
+try:
+    P.validate_config({"sigma": "all"}); check(False, "unknown Sigma level refused")
+except HTTPException:
+    check(True, "unknown Sigma level refused")
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

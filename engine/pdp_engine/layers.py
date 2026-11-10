@@ -98,7 +98,10 @@ _WIN_PATH = re.compile(r"^(?:/device/harddiskvolume\d+|/\?\?/[a-z]:|//\?/[a-z]:|
 _HAS_EXT = re.compile(r"\.[A-Za-z0-9]{1,4}$")
 
 
-def executable(label: str, full_paths: bool = False) -> str:
+_WIN_PATH_BS = re.compile(r"^(?:/device/harddiskvolume\d+|/\?\?/[a-z]:|//\?/[a-z]:|[a-z]:)[/\\]|^\\device\\harddiskvolume\d+\\|^\\\?\?\\[a-z]:\\", re.I)
+
+
+def executable(label: str, full_paths: bool = False, backslash_paths: bool = False) -> str:
     """The program of a process label 'subject <exe> <cmdline>': the exe path, or the first command-line token when
     the collector recorded no path (DARPA CADETS records only the process name).
 
@@ -112,13 +115,16 @@ def executable(label: str, full_paths: bool = False) -> str:
     if p in ("None", "", "null"):
         rest = parts[2].split() if len(parts) > 2 else []
         p = rest[0] if rest else "None"
-    elif full_paths and len(parts) > 2 and _WIN_PATH.match(p) and not _HAS_EXT.search(p.rsplit("/", 1)[-1]):
+    elif full_paths and len(parts) > 2 and (_WIN_PATH_BS if backslash_paths else _WIN_PATH).match(p) \
+            and not _HAS_EXT.search(re.split(r"[/\\]", p)[-1]):
+        # backslash_paths (0.12): EDR telemetry writes 'c:\program files\x\y.exe'; without it such a path was
+        # cut at the first space ('c:\program'), so every program under Program Files was one program
         words = parts[2].split(" ")
         for k, tok in enumerate(words[:8]):
             if not tok or tok[0] in "\"'-":
                 break
             cand = p + " " + " ".join(words[: k + 1])
-            if _HAS_EXT.search(cand.rsplit("/", 1)[-1]):
+            if _HAS_EXT.search(re.split(r"[/\\]", cand)[-1]):
                 return cand
     return p
 
@@ -326,7 +332,7 @@ class NoveltyLayer:
             if e.ntype != "subject":
                 continue
             self._checked.add(n)
-            exe = executable(e.label, self.full_paths)
+            exe = executable(e.label, self.full_paths, getattr(self, "backslash_paths", False))
             if self.is_known(exe):
                 continue
             if not first_t:
@@ -352,7 +358,7 @@ class NoveltyLayer:
         return out
 
     @staticmethod
-    def fit(windows_by_day, reg: Registry, full_paths: bool = False) -> set[str]:
+    def fit(windows_by_day, reg: Registry, full_paths: bool = False, backslash_paths: bool = False) -> set[str]:
         ents = reg.entities
         known = set()
         seen = set()
@@ -362,7 +368,7 @@ class NoveltyLayer:
                     if n not in seen:
                         seen.add(n)
                         if ents[n].ntype == "subject":
-                            known.add(executable(ents[n].label, full_paths))
+                            known.add(executable(ents[n].label, full_paths, backslash_paths))
         return known
 
 
@@ -757,6 +763,8 @@ ALWAYS_EVIDENCE = ("novel_executable_repeat",)      # by definition: the program
 # 0.10: a program new to this endpoint that ran during other endpoints' baselines (fleet prevalence) is evidence
 FLEET_KNOWN_RULE = "fleet_known_executable"
 ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + (FLEET_KNOWN_RULE,)
+# 0.12: a Sigma match whose (rule, program) also matched during the baseline is evidence (pdp_engine.sigma)
+ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + ("sigma_known",)
 
 
 @dataclass
@@ -785,6 +793,13 @@ class LayerConfig:
     connect_receives: bool = False     # a connection to an untrusted address taints the process (downloads via read())
     recurring_trust: bool = False      # retrain: an address new since the previous model is trusted only on >= 2 days
     relax_min_days: int = 1            # retrain: a key new since the previous model is relaxed only on >= N days
+    # 0.12 (artifacts/lab_v12): SigmaHQ rules. The (rule, program) pairs of these levels that match during the
+    # baseline are recorded in every new bundle (sigma_known: evidence when the layer is on); the layer itself runs
+    # only where an endpoint turns it on (setting "sigma"; lab_v12 did not accept it as a default: +1 attack found by
+    # the deterministic layers alone, +16.5 % false positives) or sigma_levels is set here.
+    sigma_fit_levels: tuple = ("medium", "high", "critical")
+    sigma_levels: tuple = ()
+    backslash_paths: bool = False      # layer 1 parses 'c:\program files\x.exe' (EDR telemetry) as one path
 
 
 class DeterministicLayers:
@@ -799,6 +814,8 @@ class DeterministicLayers:
                                      instances=cfg.get("novel_instances", 0), full_paths=cfg.get("full_paths", False),
                                      strict_keys=cfg.get("strict_program_key", False))
                         if cfg.get("novelty", True) else None)
+        if self.novelty is not None:   # 0.12 (lab_v12 ZK): Windows paths with spaces written with backslashes
+            self.novelty.backslash_paths = bool(cfg.get("backslash_paths", False))
         self.tags = (TagEngine(TagParams(**cfg.get("tags", {})), set(spec.get("trusted_ips", [])), spec.get("thresholds", {}),
                                n_preexisting, private_services=set(spec.get("private_services", [])),
                                full_paths=cfg.get("full_paths", False), image_exec=cfg.get("image_exec", False),
@@ -807,6 +824,19 @@ class DeterministicLayers:
                                persistence=cfg.get("persistence", False), connect_receives=cfg.get("connect_receives", False),
                                late_exfil=cfg.get("late_exfil", False))
                      if cfg.get("rules", True) else None)
+        self.sigma = None
+        sg = cfg.get("sigma")          # 0.12: {"levels": [...], "known": [...]} in a fitted layers.json
+        if sg:
+            self.set_sigma(sg.get("levels", ("high", "critical")), spec.get("sigma_known", ()), bare_names=sg.get("bare_names", "absent"))
+
+    def set_sigma(self, levels, known=(), rules=None, bare_names: str = "absent") -> None:
+        """0.12 Sigma layer (pdp_engine.sigma): SigmaHQ rules of these levels; `known` = (rule, program) keys that
+        matched during the baseline (evidence only). levels empty / None: off."""
+        if not levels:
+            self.sigma = None
+            return
+        from .sigma import SigmaLayer
+        self.sigma = SigmaLayer(tuple(levels), set(known or ()), rules=rules, bare_names=bare_names)
 
     @classmethod
     def load(cls, bundle_dir: str, n_preexisting: int, approved: set[str] | None = None) -> "DeterministicLayers | None":
@@ -834,6 +864,8 @@ class DeterministicLayers:
             self.novelty.reset()
         if self.tags is not None:
             self.tags.reset()
+        if getattr(self, "sigma", None) is not None:
+            self.sigma.reset()
 
     def keep_nodes(self, now: int) -> set[int]:
         return self.tags.keep_nodes(now) if self.tags is not None else set()
@@ -843,6 +875,8 @@ class DeterministicLayers:
             self.novelty.remap(old2new)
         if self.tags is not None:
             self.tags.remap(old2new)
+        if getattr(self, "sigma", None) is not None:
+            self.sigma.remap(old2new)
 
     def process(self, w: Window, reg: Registry, ids: np.ndarray) -> list[Hit]:
         hits = []
@@ -850,6 +884,8 @@ class DeterministicLayers:
             hits += self.novelty.process(w, reg, ids)
         if self.tags is not None:
             hits += self.tags.process(w, reg)
+        if getattr(self, "sigma", None) is not None:
+            hits += self.sigma.process(w, reg, ids)
         sup = getattr(self, "suppressed", None)
         if sup:   # a suppressed new program covers its repeat runs and its fleet-known runs too
             hits = [h for h in hits if (("novel_executable" if h.rule in ("novel_executable_repeat", FLEET_KNOWN_RULE) else h.rule), h.key) not in sup]
@@ -897,7 +933,13 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
     (rule, key) the previous model had not relaxed is relaxed only after benign alarms on >= N days. What was normal
     before stays normal. A first fit (no prior) trusts every baseline address and relaxes on one day, as before -
     stricter first fits cost 30-45 false positives on THEIA E3 (lab_v06) - and is covered by the exclusions."""
-    known = NoveltyLayer.fit((store.windows(d) for d in days), reg, cfg.full_paths)
+    known = NoveltyLayer.fit((store.windows(d) for d in days), reg, cfg.full_paths, cfg.backslash_paths)
+    sigma_known = []
+    if cfg.sigma_fit_levels:
+        from .sigma import SigmaLayer
+        sk = SigmaLayer.fit((store.windows(d) for d in days), reg, tuple(cfg.sigma_fit_levels))
+        ex_sig = {str(k) for r, k in ((exclude or {}).get("rule_keys") or ()) if str(r) in ("sigma", "sigma_known")}
+        sigma_known = sorted(sk - ex_sig)
     cov = {"processes": 0, "processes_with_path": 0, "flows": 0, "flows_with_address": 0, "exec_events": 0}
     ip_days: dict[str, set[int]] = defaultdict(set)
     first_day: dict[int, int] = {}
@@ -982,7 +1024,10 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
                                      "strict_addresses": cfg.strict_addresses, "script_exec": cfg.script_exec,
                                      "socket_io": cfg.socket_io, "persistence": cfg.persistence,
                                      "connect_receives": cfg.connect_receives, "late_exfil": cfg.late_exfil,
-                                     "recurring_trust": cfg.recurring_trust, "relax_min_days": cfg.relax_min_days},
+                                     "recurring_trust": cfg.recurring_trust, "relax_min_days": cfg.relax_min_days,
+                                     "backslash_paths": cfg.backslash_paths,
+                                     **({"sigma": {"levels": list(cfg.sigma_levels)}} if cfg.sigma_levels else {})},
+            **({"sigma_known": sigma_known} if cfg.sigma_fit_levels else {}),
             "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(runtime_ips), "thresholds": thr,
             "private_services": private_services,
             "benign_alarm_events": dict(eng.benign_count),

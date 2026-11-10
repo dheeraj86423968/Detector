@@ -1,0 +1,212 @@
+{
+ "set": "CARBANAKV2_EDR-h5",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h5/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 21,
+ "days": 11,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 3,
+ "zk": null,
+ "Z0": {
+  "TP": 14,
+  "FP": 89,
+  "recall": 0.667,
+  "attacks": 1,
+  "FP/day": 8.1,
+  "by_layer": {
+   "novelty": 38,
+   "corroborated": 63,
+   "rules": 2
+  },
+  "by_layer_tp": {
+   "corroborated": 5,
+   "novelty": 9
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {},
+  "rows": 110
+ },
+ "Z1": {
+  "TP": 14,
+  "FP": 104,
+  "recall": 0.667,
+  "attacks": 1,
+  "FP/day": 9.5,
+  "by_layer": {
+   "rules": 18,
+   "novelty": 38,
+   "corroborated": 62
+  },
+  "by_layer_tp": {
+   "corroborated": 4,
+   "novelty": 9,
+   "rules": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {
+   "Potential System DLL Sideloading From Non System Locations": [
+    20,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    11,
+    0
+   ],
+   "Potentially Suspicious Child Processes Spawned by ConHost": [
+    2,
+    0
+   ],
+   "Explorer NOUACCHECK Flag": [
+    1,
+    0
+   ],
+   "Suspicious Control Panel DLL Load": [
+    1,
+    1
+   ]
+  },
+  "rows": 145
+ },
+ "Z2": {
+  "TP": 14,
+  "FP": 100,
+  "recall": 0.667,
+  "attacks": 1,
+  "FP/day": 9.1,
+  "by_layer": {
+   "novelty": 38,
+   "corroborated": 70,
+   "rules": 6
+  },
+  "by_layer_tp": {
+   "corroborated": 4,
+   "novelty": 9,
+   "rules": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {
+   "Potential System DLL Sideloading From Non System Locations": [
+    13,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    8,
+    0
+   ],
+   "Potentially Suspicious Child Processes Spawned by ConHost": [
+    2,
+    0
+   ],
+   "Explorer NOUACCHECK Flag": [
+    1,
+    0
+   ],
+   "Suspicious Control Panel DLL Load": [
+    1,
+    1
+   ]
+  },
+  "rows": 135
+ },
+ "Z3": {
+  "TP": 14,
+  "FP": 108,
+  "recall": 0.667,
+  "attacks": 1,
+  "FP/day": 9.8,
+  "by_layer": {
+   "novelty": 38,
+   "corroborated": 73,
+   "rules": 11
+  },
+  "by_layer_tp": {
+   "corroborated": 3,
+   "novelty": 9,
+   "rules": 2
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {
+   "Potential System DLL Sideloading From Non System Locations": [
+    13,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    8,
+    0
+   ],
+   "Program Executed Using Proxy/Local Command Via SSH.EXE": [
+    3,
+    0
+   ],
+   "Potentially Suspicious Child Processes Spawned by ConHost": [
+    2,
+    0
+   ],
+   "Explorer NOUACCHECK Flag": [
+    1,
+    0
+   ],
+   "PowerShell Core DLL Loaded By Non PowerShell Process": [
+    1,
+    1
+   ],
+   "Suspicious Control Panel DLL Load": [
+    1,
+    1
+   ],
+   "Potentially Suspicious Rundll32 Activity": [
+    1,
+    1
+   ],
+   "Files With System Process Name In Unsuspected Locations": [
+    1,
+    0
+   ]
+  },
+  "rows": 143
+ }
+}

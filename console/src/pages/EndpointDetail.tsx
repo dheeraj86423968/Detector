@@ -324,6 +324,14 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
         </div>
       </Card>
       {data?.fleet && <FleetCard fleet={data.fleet} setCfg={setCfg} />}
+      <Card title="Industry detection rules" subtitle="SigmaHQ's community rules for known attacker techniques (Office starting a script host, credential-dumping tools, suspicious downloads...). They flag a technique even when the learned model sees nothing unusual. Changes reach the agent at its next check-in.">
+        <div className="setting-row">
+          <div><div className="setting-name">Sigma rules</div>
+            <div className="muted sm">{SIGMA_MODES.find(m => m.id === (cfg.sigma ?? "off"))?.title}. A rule that already matched during this endpoint's baseline only alerts when the learned model also finds the activity unusual; on models trained before this option, every match alerts until the next model. In our lab, high and critical rules added one attack found without the learned model and about 16 % more false positives, so they are off by default.</div></div>
+          <Segmented size="sm" value={String(cfg.sigma ?? "off")} options={SIGMA_MODES}
+            onChange={v => setCfg({ sigma: v }, `Sigma rules: ${SIGMA_MODES.find(m => m.id === v)!.label.toLowerCase()}`)} />
+        </div>
+      </Card>
       <Card title="Remove endpoint" className="danger-card">
         <div className="setting-row">
           <div><div className="setting-name">Remove {name}</div><div className="muted sm">Retire it (its alerts and incidents stay for the record) or delete it with all its data.</div></div>
@@ -337,6 +345,12 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
   );
 }
 
+
+const SIGMA_MODES: { id: string; label: string; title: string }[] = [
+  { id: "off", label: "Off", title: "Off (default)" },
+  { id: "high", label: "High and critical", title: "High and critical rules alert" },
+  { id: "medium", label: "Medium and up", title: "Medium, high and critical rules alert" },
+];
 
 const FLEET_MODES: { id: FleetMode; label: string; title: string }[] = [
   { id: "drop", label: "Don't alert", title: "A program that ran during other endpoints' baselines raises no new-program alert here. Its data flows are still checked." },

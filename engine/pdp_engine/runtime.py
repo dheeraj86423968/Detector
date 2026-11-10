@@ -343,6 +343,13 @@ class Runtime:
         if self.layers is not None:
             self.layers.set_fleet(programs, mode)
 
+    def set_sigma(self, levels=()) -> None:
+        """0.12 Sigma layer (endpoint setting, off by default - artifacts/lab_v12): SigmaHQ rules of these levels; the
+        bundle's baseline matches (layers.json sigma_known) are evidence. A bundle fitted before 0.12 has none, so
+        every match alerts until the next model."""
+        if self.layers is not None:
+            self.layers.set_sigma(tuple(levels or ()), self.layers.spec.get("sigma_known", ()))
+
     def set_allowlist(self, addresses=(), suppressed=()) -> None:
         """Console allow list: trusted addresses / networks and (rule, key) detections that must not alert."""
         if self.layers is not None:
@@ -561,9 +568,10 @@ def alert_tier(reasons: list[dict]) -> int:
         return 0
     layers = {x["layer"] for x in reasons}
     rules = {x["rule"] for x in reasons if x["layer"] == "rules"}
-    if rules & set(CRITICAL_RULES):
+    sigma = max((int(x.get("value") or 0) for x in reasons if x["layer"] == "rules" and x["rule"] == "sigma"), default=-1)
+    if rules & set(CRITICAL_RULES) or sigma >= 4:      # 0.12: a Sigma rule's own level (4 critical, 3 high)
         return 4
-    if "untrusted_exec" in rules or ("novelty" in layers and rules):
+    if "untrusted_exec" in rules or ("novelty" in layers and rules) or sigma == 3:
         return 3
     if layers & {"novelty", "rules", "corroborated"}:
         return 2

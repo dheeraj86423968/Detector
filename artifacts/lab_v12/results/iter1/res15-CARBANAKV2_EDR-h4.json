@@ -1,0 +1,192 @@
+{
+ "set": "CARBANAKV2_EDR-h4",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h4/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 21,
+ "days": 7,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 14,
+ "zk": null,
+ "Z0": {
+  "TP": 3,
+  "FP": 24,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.4,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {},
+  "rows": 27
+ },
+ "Z1": {
+  "TP": 5,
+  "FP": 39,
+  "recall": 0.238,
+  "attacks": 1,
+  "FP/day": 5.6,
+  "by_layer": {
+   "rules": 21,
+   "novelty": 22,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 2,
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {
+   "Windows Binaries Write Suspicious Extensions": [
+    7,
+    0
+   ],
+   "Potential System DLL Sideloading From Non System Locations": [
+    6,
+    1
+   ],
+   "Potentially Suspicious Child Processes Spawned by ConHost": [
+    2,
+    0
+   ],
+   "Potentially Suspicious Execution From Parent Process In Public Folder": [
+    2,
+    0
+   ],
+   "Script Interpreter Execution From Suspicious Folder": [
+    1,
+    1
+   ]
+  },
+  "rows": 45
+ },
+ "Z2": {
+  "TP": 5,
+  "FP": 29,
+  "recall": 0.238,
+  "attacks": 1,
+  "FP/day": 4.1,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 11,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 2,
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {
+   "Potential System DLL Sideloading From Non System Locations": [
+    2,
+    1
+   ],
+   "Potentially Suspicious Child Processes Spawned by ConHost": [
+    2,
+    0
+   ],
+   "Potentially Suspicious Execution From Parent Process In Public Folder": [
+    2,
+    0
+   ],
+   "Script Interpreter Execution From Suspicious Folder": [
+    1,
+    1
+   ]
+  },
+  "rows": 34
+ },
+ "Z3": {
+  "TP": 6,
+  "FP": 33,
+  "recall": 0.286,
+  "attacks": 1,
+  "FP/day": 4.7,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 16,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 3,
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {
+   "Program Executed Using Proxy/Local Command Via SSH.EXE": [
+    4,
+    1
+   ],
+   "Potential System DLL Sideloading From Non System Locations": [
+    2,
+    1
+   ],
+   "Files With System Process Name In Unsuspected Locations": [
+    2,
+    0
+   ],
+   "Potentially Suspicious Execution From Parent Process In Public Folder": [
+    2,
+    0
+   ],
+   "Potentially Suspicious Child Processes Spawned by ConHost": [
+    1,
+    0
+   ],
+   "Script Interpreter Execution From Suspicious Folder": [
+    1,
+    1
+   ]
+  },
+  "rows": 39
+ }
+}

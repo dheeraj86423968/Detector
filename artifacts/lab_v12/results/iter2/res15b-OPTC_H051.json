@@ -1,0 +1,288 @@
+{
+ "set": "OPTC_H051",
+ "bundle": "/data/lab08/6ca8a927-9474-45be-870a-52bd56133b0e/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 114,
+ "days": 3,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 81,
+ "zk": null,
+ "bare_names": "absent",
+ "Z0": {
+  "TP": 75,
+  "FP": 53,
+  "recall": 0.658,
+  "attacks": 1,
+  "FP/day": 17.7,
+  "by_layer": {
+   "novelty": 51,
+   "rules": 70,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "corroborated": 3,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "attacks_det": [
+   "h051_0925"
+  ],
+  "sigma_rules": {},
+  "rows": 134
+ },
+ "Z1": {
+  "TP": 79,
+  "FP": 152,
+  "recall": 0.693,
+  "attacks": 1,
+  "FP/day": 50.7,
+  "by_layer": {
+   "rules": 173,
+   "novelty": 51,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "rules": 49,
+   "corroborated": 3,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "attacks_det": [
+   "h051_0925"
+  ],
+  "sigma_rules": {
+   "Suspicious Process Parents": [
+    53,
+    0
+   ],
+   "Potentially Suspicious GoogleUpdate Child Process": [
+    18,
+    0
+   ],
+   "VBA DLL Loaded Via Office Application": [
+    7,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    7,
+    2
+   ],
+   "Potentially Suspicious Child Processes Spawned by ConHost": [
+    6,
+    0
+   ],
+   "Uncommon Svchost Command Line Parameter": [
+    2,
+    0
+   ],
+   "Suspicious Microsoft Office Child Process": [
+    2,
+    0
+   ],
+   "Uncommon File Created In Office Startup Folder": [
+    2,
+    0
+   ],
+   "Suspicious WmiPrvSE Child Process": [
+    2,
+    0
+   ],
+   "User Added to Remote Desktop Users Group": [
+    2,
+    0
+   ],
+   "Potential Credential Dumping Via LSASS Process Clone": [
+    2,
+    2
+   ],
+   "Uncommon Userinit Child Process": [
+    1,
+    0
+   ]
+  },
+  "rows": 239
+ },
+ "Z2": {
+  "TP": 76,
+  "FP": 84,
+  "recall": 0.667,
+  "attacks": 1,
+  "FP/day": 28.0,
+  "by_layer": {
+   "rules": 99,
+   "corroborated": 10,
+   "novelty": 51
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "corroborated": 4,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "attacks_det": [
+   "h051_0925"
+  ],
+  "sigma_rules": {
+   "Suspicious Process Parents": [
+    18,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    3,
+    1
+   ],
+   "Suspicious Microsoft Office Child Process": [
+    2,
+    0
+   ],
+   "Potentially Suspicious GoogleUpdate Child Process": [
+    2,
+    0
+   ],
+   "Uncommon File Created In Office Startup Folder": [
+    2,
+    0
+   ],
+   "Suspicious WmiPrvSE Child Process": [
+    2,
+    0
+   ],
+   "User Added to Remote Desktop Users Group": [
+    2,
+    0
+   ],
+   "VBA DLL Loaded Via Office Application": [
+    1,
+    0
+   ]
+  },
+  "rows": 166
+ },
+ "Z3": {
+  "TP": 77,
+  "FP": 103,
+  "recall": 0.675,
+  "attacks": 1,
+  "FP/day": 34.3,
+  "by_layer": {
+   "rules": 119,
+   "corroborated": 10,
+   "novelty": 51
+  },
+  "by_layer_tp": {
+   "rules": 46,
+   "corroborated": 4,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "attacks_det": [
+   "h051_0925"
+  ],
+  "sigma_rules": {
+   "Suspicious Process Parents": [
+    18,
+    0
+   ],
+   "Potential WWlib.DLL Sideloading": [
+    8,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    3,
+    1
+   ],
+   "PSScriptPolicyTest Creation By Uncommon Process": [
+    3,
+    0
+   ],
+   "Recon Command Output Piped To Findstr.EXE": [
+    3,
+    0
+   ],
+   "Suspicious Microsoft Office Child Process": [
+    2,
+    0
+   ],
+   "Potentially Suspicious GoogleUpdate Child Process": [
+    2,
+    0
+   ],
+   "Startup Folder File Write": [
+    2,
+    0
+   ],
+   "Suspicious WmiPrvSE Child Process": [
+    2,
+    0
+   ],
+   "Communication To Uncommon Destination Ports": [
+    2,
+    1
+   ],
+   "User Added to Remote Desktop Users Group": [
+    2,
+    0
+   ],
+   "User Added to Local Administrators Group": [
+    2,
+    0
+   ],
+   "Rundll32 Execution With Uncommon DLL Extension": [
+    1,
+    0
+   ],
+   "CredUI.DLL Loaded By Uncommon Process": [
+    1,
+    0
+   ],
+   "Uncommon File Created In Office Startup Folder": [
+    1,
+    0
+   ],
+   "PowerShell Core DLL Loaded By Non PowerShell Process": [
+    1,
+    0
+   ],
+   "Uncommon Outbound Kerberos Connection": [
+    1,
+    0
+   ],
+   "Microsoft VBA For Outlook Addin Loaded Via Outlook": [
+    1,
+    0
+   ]
+  },
+  "rows": 189
+ }
+}

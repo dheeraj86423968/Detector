@@ -1,0 +1,46 @@
+{
+ "set": "OPTC_H051",
+ "bundle": "/data/lab08/6ca8a927-9474-45be-870a-52bd56133b0e/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 114,
+ "days": 3,
+ "variants": {
+  "ZK": [
+   null,
+   false
+  ]
+ },
+ "sigma_known": 81,
+ "zk": "Z0",
+ "bare_names": "absent",
+ "ZK": {
+  "TP": 75,
+  "FP": 53,
+  "recall": 0.658,
+  "attacks": 1,
+  "FP/day": 17.7,
+  "by_layer": {
+   "novelty": 51,
+   "rules": 70,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "corroborated": 3,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "attacks_det": [
+   "h051_0925"
+  ],
+  "sigma_rules": {},
+  "rows": 134
+ }
+}

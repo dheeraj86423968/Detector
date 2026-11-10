@@ -1,4 +1,4 @@
-"""End-to-end check of the console fleet controls (0.10.1) through the real gateway: the fleet summary on the endpoint
+"""End-to-end check of the console fleet controls (0.10.1) and the Sigma rules setting (0.12) through the real gateway: the fleet summary on the endpoint
 page, setting and clearing a fleet name, the prevalence mode and the endpoint count, and which of those changes ask
 for a reason (weakening) - as the console's Settings tab sends them.
 
@@ -112,6 +112,10 @@ try:
     f = fleet(a)
     check(st == 200 and f.get("label") == "org" and f.get("named") is None and b in {m["id"] for m in f.get("members", [])},
           "name cleared: back in the organisation fleet with b")
+    # 0.12 Sigma rules setting (same Settings tab): off by default, on without a reason, lowering needs one
+    check(cfg(a, {"sigma": "high"})[0] == 200, "Sigma rules on (high): no reason")
+    check(cfg(a, {"sigma": "off"})[0] == 400, "Sigma rules off again asks for a reason")
+    check(cfg(a, {"sigma": "off"}, "e2e")[0] == 200 and cfg(a, {"sigma": "everything"})[0] in (400, 422), "with a reason: applied; unknown level refused")
 finally:
     for e in eids:
         if e:

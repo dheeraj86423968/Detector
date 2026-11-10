@@ -42,7 +42,10 @@ TACTIC_ORDER = ["Initial access", "Execution", "Persistence", "Privilege escalat
 # was recognised; it always stays in the behaviour list.
 TITLE_RANK = ["ransomware", "web_shell", "remote_shell", "cryptominer", "credential", "dns_tunnel", "staged_exfil",
               "c2_download", "dropped_exec", "persistence", "lateral", "masquerade", "log_wipe", "tool_download",
-              "exfiltration", "privesc_recon", "discovery"]
+              "sigma", "exfiltration", "privesc_recon", "discovery"]
+# 0.12 Sigma alerts (pdp_engine.sigma): "<image>: Sigma rule '<title>' (<level>[, T1218.010, ...])"
+_SIGMA_RE = re.compile(r"Sigma rule '(?P<t>.*?)' \((?P<l>informational|low|medium|high|critical)(?:, (?P<x>T\d+))?")
+SIGMA_TACTIC: dict = {}   # technique -> tactic is not in the rule text; Sigma findings count as Execution
 STATUS_OF_ACTION = {"open": "open", "investigating": "ack", "true_positive": "true_positive",
                     "false_positive": "false_positive", "resolved": "closed"}
 OP_LABEL = {"READ": "read", "WRITE": "wrote", "EXECUTE": "executed", "CLONE": "started", "CONNECT": "connected",
@@ -292,9 +295,10 @@ def summarise(alerts: list[dict], behaviours: list[dict] | None = None) -> dict:
     top = min(alerts, key=_det_key)
     rules = {a["rule"] for a in alerts if a["layer"] == "rules"}
     layers = {a["layer"] for a in alerts}
-    if rules & {"exfiltration", "untrusted_code_network"}:
+    sigma_lv = [m.group("l") for a in alerts if a["rule"] in ("sigma", "sigma_known") for m in [_SIGMA_RE.search(a.get("reason") or "")] if m]
+    if rules & {"exfiltration", "untrusted_code_network"} or "critical" in sigma_lv:
         severity = "critical"
-    elif "untrusted_exec" in rules or ("novelty" in layers and rules):
+    elif "untrusted_exec" in rules or ("novelty" in layers and rules) or "high" in sigma_lv:
         severity = "high"
     elif layers & {"novelty", "rules", "corroborated"}:
         severity = "medium"
@@ -312,6 +316,11 @@ def summarise(alerts: list[dict], behaviours: list[dict] | None = None) -> dict:
         elif a["rule"] == "untrusted_code_network" and not any(b["kind"] == "c2_download" for b in found):
             found.append({"kind": "c2_download", "label": "Downloaded program", "tactic": "Command and control",
                           "title": f"Downloaded program {actor} contacted {_ip_in(a['reason']) or 'an untrusted address'}", "text": clean_reason("rules", a["reason"])})
+        elif a["rule"] in ("sigma", "sigma_known"):
+            m = _SIGMA_RE.search(a.get("reason") or "")
+            if m and not any(b.get("label") == m.group("t") for b in found):
+                found.append({"kind": "sigma", "label": m.group("t"), "tactic": SIGMA_TACTIC.get(m.group("x") or "", "Execution"),
+                              "title": f"{m.group('t')}: {actor}", "text": clean_reason("rules", a["reason"])})
         elif a["rule"] == "untrusted_exec" and not any(b["kind"] == "dropped_exec" for b in found):
             found.append({"kind": "dropped_exec", "label": "Dropped program run", "tactic": "Execution",
                           "title": f"A dropped file was executed ({actor})", "text": clean_reason("rules", a["reason"])})

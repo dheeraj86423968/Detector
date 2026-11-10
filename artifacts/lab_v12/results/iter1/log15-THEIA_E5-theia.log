@@ -1,0 +1,7 @@
+11:41:30 fleet ['THEIA_E5-theia']: 0 program keys from 0 other endpoints
+11:42:53 sigma: 1430 rules, 1 (rule, program) keys matched in the baseline (78s)
+11:49:42 scored 570s
+11:49:42 Z0: attacks 0 det-only 0 TP 0 FP 97 rows 97
+11:49:42 Z1: attacks 0 det-only 0 TP 0 FP 100 rows 100
+11:49:42 Z2: attacks 0 det-only 0 TP 0 FP 97 rows 97
+11:49:42 Z3: attacks 0 det-only 0 TP 0 FP 98 rows 98

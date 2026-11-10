@@ -294,7 +294,8 @@ against `pdp_engine.trainer.TrainConfig`: a new engine field is not configurable
 `learned_daily_budget` 0-1000, `train.*_epochs` 1-100, `train.velox_runs` 1-10, at most 10 `train.orthrus_seeds`,
 `train.alert_layers` null or a non-empty list of layers, `train.corroboration_percentile` 99 / 99.9 / 99.99,
 `fleet_prevalence` drop / evidence / off, `fleet_min_endpoints` 1-1000, `fleet` a label or null for the default fleet
-(0.10, pdp_server.fleet: programs run during other endpoints' baselines). `GET /api/endpoints/{id}` returns `fleet`
+(0.10, pdp_server.fleet: programs run during other endpoints' baselines), `sigma` off / high / medium (0.12: SigmaHQ
+rules in the agent, off by default; lowering it needs a reason; docs/DETECTION_LAYERS.md 0.12). `GET /api/endpoints/{id}` returns `fleet`
 (0.10.1): the fleet the endpoint is in (`label`, "org" = its organisation's live endpoints, null = alone), its own
 `named` label, `mode`, `min_endpoints`, `defaults`, the other `members` and `known_programs`; the console's endpoint
 Settings tab edits these ("Programs known from other endpoints").

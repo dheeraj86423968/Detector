@@ -1,0 +1,47 @@
+{
+ "set": "CARBANAKV2_EDR-h5",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h5/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 21,
+ "days": 11,
+ "variants": {
+  "ZK": [
+   null,
+   false
+  ]
+ },
+ "sigma_known": 3,
+ "zk": "Z0",
+ "bare_names": "absent",
+ "ZK": {
+  "TP": 14,
+  "FP": 115,
+  "recall": 0.667,
+  "attacks": 1,
+  "FP/day": 10.5,
+  "by_layer": {
+   "novelty": 47,
+   "corroborated": 80,
+   "rules": 2
+  },
+  "by_layer_tp": {
+   "corroborated": 5,
+   "novelty": 9
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {},
+  "rows": 137
+ }
+}

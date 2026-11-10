@@ -1,0 +1,217 @@
+{
+ "set": "CARBANAKV2_EDR-h2",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h2/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 81,
+ "days": 9,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 20,
+ "zk": null,
+ "Z0": {
+  "TP": 39,
+  "FP": 131,
+  "recall": 0.481,
+  "attacks": 1,
+  "FP/day": 14.6,
+  "by_layer": {
+   "novelty": 66,
+   "rules": 104
+  },
+  "by_layer_tp": {
+   "novelty": 12,
+   "rules": 27
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {},
+  "rows": 173
+ },
+ "Z1": {
+  "TP": 42,
+  "FP": 158,
+  "recall": 0.519,
+  "attacks": 1,
+  "FP/day": 17.6,
+  "by_layer": {
+   "novelty": 66,
+   "rules": 134
+  },
+  "by_layer_tp": {
+   "novelty": 12,
+   "rules": 30
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {
+   "Potential System DLL Sideloading From Non System Locations": [
+    12,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    10,
+    0
+   ],
+   "Suspicious Binaries and Scripts in Public Folder": [
+    3,
+    0
+   ],
+   "Script Interpreter Execution From Suspicious Folder": [
+    3,
+    3
+   ],
+   "Potentially Suspicious Execution From Parent Process In Public Folder": [
+    2,
+    0
+   ],
+   "Windows Shell/Scripting Application File Write to Suspicious Folder": [
+    1,
+    0
+   ]
+  },
+  "rows": 204
+ },
+ "Z2": {
+  "TP": 42,
+  "FP": 149,
+  "recall": 0.519,
+  "attacks": 1,
+  "FP/day": 16.6,
+  "by_layer": {
+   "novelty": 66,
+   "rules": 125
+  },
+  "by_layer_tp": {
+   "novelty": 12,
+   "rules": 30
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {
+   "Potential System DLL Sideloading From Non System Locations": [
+    12,
+    0
+   ],
+   "Suspicious Binaries and Scripts in Public Folder": [
+    3,
+    0
+   ],
+   "Script Interpreter Execution From Suspicious Folder": [
+    3,
+    3
+   ],
+   "Potentially Suspicious Execution From Parent Process In Public Folder": [
+    2,
+    0
+   ],
+   "Windows Shell/Scripting Application File Write to Suspicious Folder": [
+    1,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    1,
+    0
+   ]
+  },
+  "rows": 195
+ },
+ "Z3": {
+  "TP": 43,
+  "FP": 154,
+  "recall": 0.531,
+  "attacks": 1,
+  "FP/day": 17.1,
+  "by_layer": {
+   "novelty": 66,
+   "rules": 131
+  },
+  "by_layer_tp": {
+   "novelty": 12,
+   "rules": 31
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "sigma_rules": {
+   "Potential System DLL Sideloading From Non System Locations": [
+    12,
+    0
+   ],
+   "Suspicious Binaries and Scripts in Public Folder": [
+    3,
+    0
+   ],
+   "Script Interpreter Execution From Suspicious Folder": [
+    3,
+    3
+   ],
+   "Potential Initial Access via DLL Search Order Hijacking": [
+    2,
+    0
+   ],
+   "PowerShell Core DLL Loaded By Non PowerShell Process": [
+    2,
+    0
+   ],
+   "Potentially Suspicious Execution From Parent Process In Public Folder": [
+    2,
+    0
+   ],
+   "WinSxS Executable File Creation By Non-System Process": [
+    1,
+    0
+   ],
+   "Startup Folder File Write": [
+    1,
+    1
+   ],
+   "Windows Shell/Scripting Application File Write to Suspicious Folder": [
+    1,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    1,
+    0
+   ]
+  },
+  "rows": 201
+ }
+}

@@ -1,0 +1,49 @@
+{
+ "set": "TRACE_E3-trace",
+ "bundle": "/data/lab08/heldout/TRACE_E3/trace/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 35,
+ "days": 4,
+ "variants": {
+  "ZK": [
+   null,
+   false
+  ]
+ },
+ "sigma_known": 1,
+ "zk": "Z0",
+ "bare_names": "absent",
+ "ZK": {
+  "TP": 9,
+  "FP": 92,
+  "recall": 0.257,
+  "attacks": 3,
+  "FP/day": 23.0,
+  "by_layer": {
+   "novelty": 100,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 9
+  },
+  "attacks_found": [
+   "node_trace_e3_firefox_0410",
+   "node_trace_e3_phishing_executable_0413",
+   "node_trace_e3_pine_0413"
+  ],
+  "attacks_det": [
+   "node_trace_e3_firefox_0410",
+   "node_trace_e3_phishing_executable_0413",
+   "node_trace_e3_pine_0413"
+  ],
+  "sigma_rules": {},
+  "rows": 101
+ }
+}

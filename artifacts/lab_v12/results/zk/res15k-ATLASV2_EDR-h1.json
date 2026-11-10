@@ -1,0 +1,54 @@
+{
+ "set": "ATLASV2_EDR-h1",
+ "bundle": "/data/lab08/heldout/ATLASV2_EDR/h1/v07rel",
+ "fleet": [
+  "ATLASV2_EDR-h1",
+  "ATLASV2_EDR-h2"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "days": 1,
+ "variants": {
+  "ZK": [
+   null,
+   false
+  ]
+ },
+ "sigma_known": 8,
+ "zk": "Z0",
+ "bare_names": "absent",
+ "ZK": {
+  "TP": 12,
+  "FP": 52,
+  "recall": 0.25,
+  "attacks": 8,
+  "FP/day": 52.0,
+  "by_layer": {
+   "novelty": 18,
+   "rules": 39,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "attacks_det": [
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "sigma_rules": {},
+  "rows": 64
+ }
+}

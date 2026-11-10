@@ -147,6 +147,14 @@ c._load_bundle("b1", bdir)                            # a model upgrade: new run
 ok = lambda r: (r.layers.suppressed == {("novel_executable", "/usr/bin/curl")} and r.layers.novelty.fleet == {"/usr/bin/wget": 3}  # noqa: E731
                 and r.layers.novelty.fleet_mode == "evidence")
 check(r1 is not c.runtime and ok(r1) and ok(c.runtime), "allow list and fleet programs are applied to the first and to every new model")
+# 0.12: the Sigma setting (off by default) reaches the model, and every new one
+check(c.runtime.layers.sigma is None, "Sigma rules off by default")
+c.state.set("config", dict(c.state.get("config"), sigma="high")); c._apply_layer_config(c.state.get("config"))
+check(c.runtime.layers.sigma is not None and c.runtime.layers.sigma.levels == ("high", "critical"), "sigma=high turns the layer on")
+c._load_bundle("b1", bdir)
+check(c.runtime.layers.sigma is not None, "and stays on for a newly loaded model")
+c.state.set("config", dict(c.state.get("config"), sigma="off")); c._apply_layer_config(c.state.get("config"))
+check(c.runtime.layers.sigma is None, "sigma=off turns it off again")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

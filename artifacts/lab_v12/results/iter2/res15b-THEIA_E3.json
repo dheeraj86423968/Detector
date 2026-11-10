@@ -1,0 +1,158 @@
+{
+ "set": "THEIA_E3",
+ "bundle": "/data/lab08/b4021490-6dd4-4dfb-8628-b3e55af27b90/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 118,
+ "days": 3,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 0,
+ "zk": null,
+ "bare_names": "absent",
+ "Z0": {
+  "TP": 109,
+  "FP": 86,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 28.7,
+  "by_layer": {
+   "corroborated": 14,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "attacks_det": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "sigma_rules": {},
+  "rows": 200
+ },
+ "Z1": {
+  "TP": 109,
+  "FP": 93,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 31.0,
+  "by_layer": {
+   "rules": 172,
+   "corroborated": 18,
+   "novelty": 12
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "attacks_det": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "sigma_rules": {
+   "Linux Reverse Shell Indicator": [
+    3,
+    0
+   ]
+  },
+  "rows": 207
+ },
+ "Z2": {
+  "TP": 109,
+  "FP": 93,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 31.0,
+  "by_layer": {
+   "rules": 172,
+   "corroborated": 18,
+   "novelty": 12
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "attacks_det": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "sigma_rules": {
+   "Linux Reverse Shell Indicator": [
+    3,
+    0
+   ]
+  },
+  "rows": 207
+ },
+ "Z3": {
+  "TP": 109,
+  "FP": 93,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 31.0,
+  "by_layer": {
+   "rules": 172,
+   "corroborated": 18,
+   "novelty": 12
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "attacks_det": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "sigma_rules": {
+   "Linux Reverse Shell Indicator": [
+    3,
+    0
+   ]
+  },
+  "rows": 207
+ }
+}

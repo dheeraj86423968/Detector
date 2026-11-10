@@ -1,0 +1,5 @@
+12:52:53 fleet ['THEIA_E5-theia']: 0 program keys from 0 other endpoints
+12:54:17 sigma: 1430 rules, 1 (rule, program) keys matched in the baseline (80s)
+12:54:19 ZK: 50 known programs re-fitted with backslash paths
+13:01:04 scored 569s
+13:01:05 ZK: attacks 0 det-only 0 TP 0 FP 99 rows 99

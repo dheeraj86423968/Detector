@@ -1,5 +1,48 @@
 # Layered detection (0.3, revised in 0.4-0.10)
 
+## 0.12 (2026-11-10): SigmaHQ rules as an endpoint option (artifacts/lab_v12)
+
+**Request:** rules that flag known attacker techniques even when the learned detectors score nothing unusual, without
+duplicate alerts, and without weakening the learned layers.
+
+**Sigma layer** (`pdp_engine.sigma`, inside the deterministic layers). SigmaHQ's community rules, release
+r2026-07-01, compiled by `pdp_server.tools.sigma_compile` into `pdp_engine/sigma_rules.json` (1,535 Windows and Linux
+rules; Detection Rule License 1.1, `pdp_engine/SIGMA_RULES_NOTICE.md`). Provenance events become Sigma events:
+process creation (CLONE parent -> child: Image, CommandLine, ParentImage, ParentCommandLine), image load (a process
+reads a .dll / .so / .sys file), file event (a write), network connection (a connection to a remote address).
+Fields the telemetry lacks (OriginalFileName, hashes, signatures, user) are absent; a rule whose filter needs one is
+left out, since it would fire more than its authors intended. A process recorded without a folder has no Image (no
+made-up location). An alert names the rule and its level (`rules` / `sigma`); a rule naming the parent process also
+marks the parent. **No duplicates:** each process is evaluated once per event kind and counterpart, each (rule,
+program) alerts once per UTC day, and all reasons of a node in a window are one alert. A (rule, program) pair that
+matched during the endpoint's baseline (`layers.json` `sigma_known`, fitted in every bundle from 0.12 on) is
+evidence: it alerts only when the learned score corroborates it. Incident severity follows the rule's Sigma level.
+
+**Endpoint setting** `sigma`: `off` (default) | `high` (high and critical rules) | `medium` (medium and up); console:
+endpoint Settings, "Industry detection rules". Lowering it is a weakening (reason required, audited). On a bundle
+fitted before 0.12 every match alerts until the next model. The learned layers are unchanged.
+
+**Why off by default** (16 dev / seen sets, 71 host-days, rule fixed before scoring: no attack lost, FP <= +15 %,
+notified false incidents <= +0.25 per host-day; best variant = baseline matches as evidence, high and critical):
+
+| | attacks | found by the deterministic layers alone | TP | FP |
+|---|---|---|---|---|
+| 0.10 | 26 | 21 | 333 | 1,051 |
+| + Sigma (iteration 1) | 26 | 22 | 352 | 1,272 (+21 %) |
+| + Sigma (iteration 2, folder-less processes absent) | 26 | 22 | 351 | 1,224 (+16.5 %) |
+
+Neither iteration passed (iteration 2 is a second look at the same data after a field-mapping fix, disclosed as
+such). The deterministic layers already find 21 of the 26 detected attacks on their own; the five found only through
+learned corroboration and the four found by nothing need fields this telemetry does not record (a Firefox exploit in
+plugin-container with no command line; FiveDirections and ClearScope record no program paths). No unseen held-out set
+was available; CADETS E5 remains the held-out check.
+
+**Open (found while building it):** `layers.executable` cuts a Windows path with spaces written with backslashes
+(`c:\program files\...`, ATLASv2 and CARBANAKv2 EDR telemetry) at the first space, so layer 1 sees every program
+under Program Files as one. The fix exists (`backslash_paths`, off); its lab test (ZK, +49 % FP) was confounded -
+fleet members kept old-parser program lists and the re-fit used fewer days than the released bundles - so it needs a
+clean re-test with every fleet member re-fitted before it can be turned on.
+
 ## 0.10 (2026-11-09): fleet prevalence and incident grouping
 
 Asked for: "do the incident grouping and program prevalence" - the two next steps of the 0.9 review (most 0.9 false

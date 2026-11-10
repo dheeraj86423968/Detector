@@ -1,0 +1,355 @@
+{
+ "set": "OPTC_H501",
+ "bundle": "/data/lab08/18978a51-ac8f-4afd-8f7a-c3003fa744c2/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 749,
+ "days": 3,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 149,
+ "zk": null,
+ "Z0": {
+  "TP": 17,
+  "FP": 70,
+  "recall": 0.023,
+  "attacks": 1,
+  "FP/day": 23.3,
+  "by_layer": {
+   "novelty": 35,
+   "corroborated": 33,
+   "rules": 19
+  },
+  "by_layer_tp": {
+   "corroborated": 7,
+   "rules": 8,
+   "novelty": 2
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "attacks_det": [
+   "h501_0924"
+  ],
+  "sigma_rules": {},
+  "rows": 100
+ },
+ "Z1": {
+  "TP": 18,
+  "FP": 256,
+  "recall": 0.024,
+  "attacks": 1,
+  "FP/day": 85.3,
+  "by_layer": {
+   "rules": 202,
+   "novelty": 35,
+   "corroborated": 37
+  },
+  "by_layer_tp": {
+   "corroborated": 8,
+   "rules": 8,
+   "novelty": 2
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "attacks_det": [
+   "h501_0924"
+  ],
+  "sigma_rules": {
+   "Suspicious Process Parents": [
+    84,
+    0
+   ],
+   "Potentially Suspicious GoogleUpdate Child Process": [
+    32,
+    0
+   ],
+   "System File Execution Location Anomaly": [
+    28,
+    0
+   ],
+   "Potentially Suspicious Child Processes Spawned by ConHost": [
+    10,
+    0
+   ],
+   "VBA DLL Loaded Via Office Application": [
+    6,
+    0
+   ],
+   "Suspicious Microsoft Office Child Process": [
+    4,
+    0
+   ],
+   "Uncommon Svchost Command Line Parameter": [
+    3,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    3,
+    1
+   ],
+   "Uncommon Userinit Child Process": [
+    3,
+    0
+   ],
+   "Legitimate Application Writing Files In Uncommon Location": [
+    2,
+    0
+   ],
+   "Windows Shell/Scripting Application File Write to Suspicious Folder": [
+    2,
+    0
+   ],
+   "VMToolsd Suspicious Child Process": [
+    2,
+    0
+   ],
+   "Suspicious WmiPrvSE Child Process": [
+    2,
+    0
+   ],
+   "Ping Hex IP": [
+    1,
+    0
+   ],
+   "OpenWith.exe Executes Specified Binary": [
+    1,
+    0
+   ],
+   "HackTool - Empire PowerShell Launch Parameters": [
+    1,
+    0
+   ],
+   "Potentially Suspicious Malware Callback Communication": [
+    1,
+    1
+   ],
+   "UAC Bypass Using EventVwr": [
+    1,
+    0
+   ]
+  },
+  "rows": 303
+ },
+ "Z2": {
+  "TP": 18,
+  "FP": 119,
+  "recall": 0.024,
+  "attacks": 1,
+  "FP/day": 39.7,
+  "by_layer": {
+   "rules": 62,
+   "corroborated": 40,
+   "novelty": 35
+  },
+  "by_layer_tp": {
+   "corroborated": 8,
+   "rules": 8,
+   "novelty": 2
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "attacks_det": [
+   "h501_0924"
+  ],
+  "sigma_rules": {
+   "Suspicious Process Parents": [
+    22,
+    0
+   ],
+   "Potentially Suspicious GoogleUpdate Child Process": [
+    9,
+    0
+   ],
+   "VBA DLL Loaded Via Office Application": [
+    3,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    2,
+    1
+   ],
+   "Uncommon Userinit Child Process": [
+    2,
+    0
+   ],
+   "Suspicious Microsoft Office Child Process": [
+    2,
+    0
+   ],
+   "VMToolsd Suspicious Child Process": [
+    2,
+    0
+   ],
+   "Suspicious WmiPrvSE Child Process": [
+    2,
+    0
+   ],
+   "OpenWith.exe Executes Specified Binary": [
+    1,
+    0
+   ],
+   "HackTool - Empire PowerShell Launch Parameters": [
+    1,
+    0
+   ],
+   "Potentially Suspicious Malware Callback Communication": [
+    1,
+    1
+   ],
+   "UAC Bypass Using EventVwr": [
+    1,
+    0
+   ],
+   "System File Execution Location Anomaly": [
+    1,
+    0
+   ]
+  },
+  "rows": 160
+ },
+ "Z3": {
+  "TP": 19,
+  "FP": 139,
+  "recall": 0.025,
+  "attacks": 1,
+  "FP/day": 46.3,
+  "by_layer": {
+   "rules": 77,
+   "novelty": 35,
+   "corroborated": 46
+  },
+  "by_layer_tp": {
+   "corroborated": 8,
+   "rules": 9,
+   "novelty": 2
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "attacks_det": [
+   "h501_0924"
+  ],
+  "sigma_rules": {
+   "Suspicious Process Parents": [
+    22,
+    0
+   ],
+   "Potentially Suspicious GoogleUpdate Child Process": [
+    9,
+    0
+   ],
+   "Recon Command Output Piped To Findstr.EXE": [
+    5,
+    0
+   ],
+   "Startup Folder File Write": [
+    3,
+    0
+   ],
+   "PSScriptPolicyTest Creation By Uncommon Process": [
+    3,
+    0
+   ],
+   "Potential WWlib.DLL Sideloading": [
+    3,
+    2
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    2,
+    1
+   ],
+   "Uncommon Userinit Child Process": [
+    2,
+    0
+   ],
+   "VBA DLL Loaded Via Office Application": [
+    2,
+    0
+   ],
+   "Suspicious Microsoft Office Child Process": [
+    2,
+    0
+   ],
+   "VMToolsd Suspicious Child Process": [
+    2,
+    0
+   ],
+   "Suspicious WmiPrvSE Child Process": [
+    2,
+    0
+   ],
+   "CredUI.DLL Loaded By Uncommon Process": [
+    1,
+    0
+   ],
+   "Rundll32 Execution With Uncommon DLL Extension": [
+    1,
+    0
+   ],
+   "OpenWith.exe Executes Specified Binary": [
+    1,
+    0
+   ],
+   "Conhost Spawned By Uncommon Parent Process": [
+    1,
+    0
+   ],
+   "Microsoft VBA For Outlook Addin Loaded Via Outlook": [
+    1,
+    0
+   ],
+   "HackTool - Empire PowerShell Launch Parameters": [
+    1,
+    0
+   ],
+   "Potentially Suspicious Malware Callback Communication": [
+    1,
+    1
+   ],
+   "UAC Bypass Using EventVwr": [
+    1,
+    0
+   ],
+   "PowerShell Module File Created By Non-PowerShell Process": [
+    1,
+    1
+   ],
+   "System File Execution Location Anomaly": [
+    1,
+    0
+   ],
+   "WinSxS Executable File Creation By Non-System Process": [
+    1,
+    0
+   ],
+   "Change PowerShell Policies to an Insecure Level": [
+    1,
+    0
+   ]
+  },
+  "rows": 188
+ }
+}

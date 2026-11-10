@@ -1,0 +1,7 @@
+11:37:25 fleet ['OPTC_H201', 'OPTC_H501', 'OPTC_H051']: 138 program keys from 2 other endpoints
+11:39:13 sigma: 1430 rules, 126 (rule, program) keys matched in the baseline (96s)
+11:42:16 scored 333s
+11:42:23 Z0: attacks 1 det-only 1 TP 75 FP 53 rows 134
+11:42:23 Z1: attacks 1 det-only 1 TP 79 FP 243 rows 332
+11:42:23 Z2: attacks 1 det-only 1 TP 76 FP 101 rows 184
+11:42:23 Z3: attacks 1 det-only 1 TP 77 FP 121 rows 208

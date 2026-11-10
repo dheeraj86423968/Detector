@@ -1,0 +1,7 @@
+11:56:55 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 550 program keys from 4 other endpoints
+11:57:23 sigma: 1430 rules, 15 (rule, program) keys matched in the baseline (27s)
+11:59:40 scored 201s
+11:59:41 Z0: attacks 2 det-only 1 TP 11 FP 166 rows 218
+11:59:41 Z1: attacks 2 det-only 1 TP 11 FP 202 rows 254
+11:59:41 Z2: attacks 2 det-only 1 TP 11 FP 166 rows 218
+11:59:41 Z3: attacks 2 det-only 1 TP 11 FP 174 rows 241

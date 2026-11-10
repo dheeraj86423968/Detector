@@ -1,0 +1,110 @@
+{
+ "set": "ATLASV2_EDR-h2",
+ "bundle": "/data/lab08/heldout/ATLASV2_EDR/h2/v07rel",
+ "fleet": [
+  "ATLASV2_EDR-h1",
+  "ATLASV2_EDR-h2"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 0,
+ "days": 1,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 9,
+ "zk": null,
+ "Z0": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {},
+  "rows": 26
+ },
+ "Z1": {
+  "TP": 0,
+  "FP": 27,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 27.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 23
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {
+   "Suspicious Control Panel DLL Load": [
+    1,
+    0
+   ]
+  },
+  "rows": 27
+ },
+ "Z2": {
+  "TP": 0,
+  "FP": 27,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 27.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 23
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {
+   "Suspicious Control Panel DLL Load": [
+    1,
+    0
+   ]
+  },
+  "rows": 27
+ },
+ "Z3": {
+  "TP": 0,
+  "FP": 27,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 27.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 23
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {
+   "Suspicious Control Panel DLL Load": [
+    1,
+    0
+   ]
+  },
+  "rows": 27
+ }
+}

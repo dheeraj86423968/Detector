@@ -1,0 +1,87 @@
+{
+ "set": "CLEARSCOPE_E3",
+ "bundle": "/data/lab08/5ef60025-b74e-417a-8e48-7ab1c7dbcd67/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 41,
+ "days": 2,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 0,
+ "zk": null,
+ "bare_names": "absent",
+ "Z0": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {},
+  "rows": 0
+ },
+ "Z1": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {},
+  "rows": 0
+ },
+ "Z2": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {},
+  "rows": 0
+ },
+ "Z3": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "sigma_rules": {},
+  "rows": 0
+ }
+}

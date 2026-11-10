@@ -1,0 +1,272 @@
+{
+ "set": "OPTC_H201",
+ "bundle": "/data/lab08/f85bab6a-0fce-4b21-81d8-dd967b8d4395/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 2905,
+ "days": 3,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 94,
+ "zk": null,
+ "bare_names": "absent",
+ "Z0": {
+  "TP": 6,
+  "FP": 19,
+  "recall": 0.002,
+  "attacks": 1,
+  "FP/day": 6.3,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 6
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "attacks_det": [
+   "h201_0923"
+  ],
+  "sigma_rules": {},
+  "rows": 25
+ },
+ "Z1": {
+  "TP": 9,
+  "FP": 130,
+  "recall": 0.003,
+  "attacks": 1,
+  "FP/day": 43.3,
+  "by_layer": {
+   "rules": 124,
+   "novelty": 14,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 9
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "attacks_det": [
+   "h201_0923"
+  ],
+  "sigma_rules": {
+   "Suspicious Process Parents": [
+    52,
+    0
+   ],
+   "Potentially Suspicious GoogleUpdate Child Process": [
+    38,
+    3
+   ],
+   "Potentially Suspicious Child Processes Spawned by ConHost": [
+    6,
+    0
+   ],
+   "VBA DLL Loaded Via Office Application": [
+    4,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    4,
+    1
+   ],
+   "Uncommon Svchost Command Line Parameter": [
+    3,
+    0
+   ],
+   "Suspicious Microsoft Office Child Process": [
+    2,
+    0
+   ],
+   "VMToolsd Suspicious Child Process": [
+    2,
+    0
+   ],
+   "Uncommon Userinit Child Process": [
+    1,
+    0
+   ],
+   "HackTool - Empire PowerShell Launch Parameters": [
+    1,
+    0
+   ],
+   "Ping Hex IP": [
+    1,
+    0
+   ],
+   "Suspicious PowerShell Parameter Substring": [
+    1,
+    0
+   ]
+  },
+  "rows": 140
+ },
+ "Z2": {
+  "TP": 9,
+  "FP": 58,
+  "recall": 0.003,
+  "attacks": 1,
+  "FP/day": 19.3,
+  "by_layer": {
+   "rules": 52,
+   "novelty": 14,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 9
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "attacks_det": [
+   "h201_0923"
+  ],
+  "sigma_rules": {
+   "Potentially Suspicious GoogleUpdate Child Process": [
+    25,
+    3
+   ],
+   "Suspicious Process Parents": [
+    9,
+    0
+   ],
+   "Suspicious Microsoft Office Child Process": [
+    2,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    2,
+    1
+   ],
+   "VMToolsd Suspicious Child Process": [
+    2,
+    0
+   ],
+   "HackTool - Empire PowerShell Launch Parameters": [
+    1,
+    0
+   ],
+   "Ping Hex IP": [
+    1,
+    0
+   ],
+   "Suspicious PowerShell Parameter Substring": [
+    1,
+    0
+   ]
+  },
+  "rows": 68
+ },
+ "Z3": {
+  "TP": 9,
+  "FP": 72,
+  "recall": 0.003,
+  "attacks": 1,
+  "FP/day": 24.0,
+  "by_layer": {
+   "rules": 65,
+   "novelty": 14,
+   "corroborated": 2
+  },
+  "by_layer_tp": {
+   "rules": 9
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "attacks_det": [
+   "h201_0923"
+  ],
+  "sigma_rules": {
+   "Potentially Suspicious GoogleUpdate Child Process": [
+    25,
+    3
+   ],
+   "Suspicious Process Parents": [
+    9,
+    0
+   ],
+   "PSScriptPolicyTest Creation By Uncommon Process": [
+    5,
+    0
+   ],
+   "Potential WWlib.DLL Sideloading": [
+    3,
+    0
+   ],
+   "Suspicious Microsoft Office Child Process": [
+    2,
+    0
+   ],
+   "Windows Binaries Write Suspicious Extensions": [
+    2,
+    1
+   ],
+   "WinSxS Executable File Creation By Non-System Process": [
+    2,
+    0
+   ],
+   "VMToolsd Suspicious Child Process": [
+    2,
+    0
+   ],
+   "Suspicious LNK Double Extension File Created": [
+    1,
+    0
+   ],
+   "HackTool - Empire PowerShell Launch Parameters": [
+    1,
+    0
+   ],
+   "Rundll32 Execution With Uncommon DLL Extension": [
+    1,
+    0
+   ],
+   "Ping Hex IP": [
+    1,
+    0
+   ],
+   "Suspicious PowerShell Parameter Substring": [
+    1,
+    0
+   ],
+   "Recon Command Output Piped To Findstr.EXE": [
+    1,
+    0
+   ],
+   "Startup Folder File Write": [
+    1,
+    0
+   ],
+   "PowerShell Core DLL Loaded By Non PowerShell Process": [
+    1,
+    0
+   ]
+  },
+  "rows": 83
+ }
+}

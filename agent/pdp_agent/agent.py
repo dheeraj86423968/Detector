@@ -34,7 +34,7 @@ from .config import Config
 from .state import State, disk_full
 from .transport import Transport, TransportError
 
-VERSION = "0.10.0"
+VERSION = "0.12.0"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 SCORE_MAX_ATTEMPTS = 2   # a window the detector fails on this many times (exception or crash) is skipped, not retried
 UNREPORTED_MAX = 500     # alert/window batches kept on disk while the server is unreachable
@@ -143,6 +143,9 @@ def _observable(src, op: str, dst):
         return ("write", p, path) if p else None
     return None
 
+
+# 0.12 endpoint setting "sigma" (artifacts/lab_v12): off (default) | high (high + critical) | medium (medium and up)
+SIGMA_LEVELS = {"off": (), "high": ("high", "critical"), "medium": ("medium", "high", "critical")}
 
 def log(msg):
     print(time.strftime("%Y-%m-%d %H:%M:%S"), "-", msg, flush=True)
@@ -669,7 +672,7 @@ class Agent:
         # 0.10: the allow list's addresses / suppressed detections and the fleet programs were applied to the previous
         # model only (their cached values made _apply_layer_config skip them): apply them to the new one
         self._approved = sorted(cfg.get("approved_executables") or [])
-        self._allow = self._fleet = None
+        self._allow = self._fleet = self._sigma = None
         self._apply_layer_config(cfg)
         wns = int(self.runtime.m.get("window_ns") or 0)
         if wns and wns != self.builder.window_ns and not self.builder.pending:   # windows as long as the bundle was trained on
@@ -716,6 +719,12 @@ class Agent:
             self.runtime.set_fleet_programs(dict(fleet[1]), fleet[0])
             log(f"fleet prevalence: {fleet[0] or 'off'}, {len(fleet[1])} programs known from other endpoints' baselines")
             self._fleet = fleet
+        sg = SIGMA_LEVELS.get(str(cfg.get("sigma") or "off"), ())
+        if sg != getattr(self, "_sigma", None) and hasattr(self.runtime, "set_sigma"):
+            self.runtime.set_sigma(sg)
+            if sg or getattr(self, "_sigma", None) is not None:
+                log(f"Sigma rules: {', '.join(sg) if sg else 'off'}")
+            self._sigma = sg
         allow = (sorted(cfg.get("trusted_addresses") or []), sorted(tuple(x) for x in (cfg.get("suppressed_detections") or [])))
         if allow != getattr(self, "_allow", None) and hasattr(self.runtime, "set_allowlist"):
             self.runtime.set_allowlist(*allow)

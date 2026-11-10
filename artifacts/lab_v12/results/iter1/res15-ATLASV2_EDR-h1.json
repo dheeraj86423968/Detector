@@ -1,0 +1,256 @@
+{
+ "set": "ATLASV2_EDR-h1",
+ "bundle": "/data/lab08/heldout/ATLASV2_EDR/h1/v07rel",
+ "fleet": [
+  "ATLASV2_EDR-h1",
+  "ATLASV2_EDR-h2"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "days": 1,
+ "variants": {
+  "Z0": [
+   null,
+   false
+  ],
+  "Z1": [
+   3,
+   false
+  ],
+  "Z2": [
+   3,
+   true
+  ],
+  "Z3": [
+   2,
+   true
+  ]
+ },
+ "sigma_known": 8,
+ "zk": null,
+ "Z0": {
+  "TP": 12,
+  "FP": 49,
+  "recall": 0.25,
+  "attacks": 8,
+  "FP/day": 49.0,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "attacks_det": [
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "sigma_rules": {},
+  "rows": 61
+ },
+ "Z1": {
+  "TP": 19,
+  "FP": 52,
+  "recall": 0.396,
+  "attacks": 8,
+  "FP/day": 52.0,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 6,
+   "rules": 52
+  },
+  "by_layer_tp": {
+   "corroborated": 4,
+   "novelty": 6,
+   "rules": 9
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "attacks_det": [
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "sigma_rules": {
+   "Suspicious Microsoft Office Child Process": [
+    4,
+    2
+   ],
+   "Suspicious MSHTA Child Process": [
+    3,
+    3
+   ],
+   "Potential LethalHTA Technique Execution": [
+    2,
+    0
+   ],
+   "Malicious Base64 Encoded PowerShell Keywords in Command Lines": [
+    2,
+    2
+   ],
+   "Suspicious PowerShell Parent Process": [
+    1,
+    1
+   ],
+   "File With Uncommon Extension Created By An Office Application": [
+    1,
+    1
+   ]
+  },
+  "rows": 71
+ },
+ "Z2": {
+  "TP": 19,
+  "FP": 52,
+  "recall": 0.396,
+  "attacks": 8,
+  "FP/day": 52.0,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 6,
+   "rules": 52
+  },
+  "by_layer_tp": {
+   "corroborated": 4,
+   "novelty": 6,
+   "rules": 9
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "attacks_det": [
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "sigma_rules": {
+   "Suspicious Microsoft Office Child Process": [
+    4,
+    2
+   ],
+   "Suspicious MSHTA Child Process": [
+    3,
+    3
+   ],
+   "Potential LethalHTA Technique Execution": [
+    2,
+    0
+   ],
+   "Malicious Base64 Encoded PowerShell Keywords in Command Lines": [
+    2,
+    2
+   ],
+   "Suspicious PowerShell Parent Process": [
+    1,
+    1
+   ],
+   "File With Uncommon Extension Created By An Office Application": [
+    1,
+    1
+   ]
+  },
+  "rows": 71
+ },
+ "Z3": {
+  "TP": 19,
+  "FP": 53,
+  "recall": 0.396,
+  "attacks": 8,
+  "FP/day": 53.0,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 7,
+   "rules": 52
+  },
+  "by_layer_tp": {
+   "corroborated": 4,
+   "novelty": 6,
+   "rules": 9
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "attacks_det": [
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "sigma_rules": {
+   "Suspicious Microsoft Office Child Process": [
+    4,
+    2
+   ],
+   "Suspicious MSHTA Child Process": [
+    3,
+    3
+   ],
+   "Potential LethalHTA Technique Execution": [
+    2,
+    0
+   ],
+   "Malicious Base64 Encoded PowerShell Keywords in Command Lines": [
+    2,
+    2
+   ],
+   "EVTX Created In Uncommon Location": [
+    1,
+    0
+   ],
+   "Potentially Suspicious Regsvr32 HTTP/FTP Pattern": [
+    1,
+    1
+   ],
+   "Office Application Initiated Network Connection Over Uncommon Ports": [
+    1,
+    1
+   ],
+   "File With Uncommon Extension Created By An Office Application": [
+    1,
+    1
+   ]
+  },
+  "rows": 73
+ }
+}

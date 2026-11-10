@@ -61,6 +61,8 @@ def _engine_path() -> None:
 # ================================================================================================ settings schema
 # ("int", lo, hi) | ("num", lo, hi) | ("bool",) | ("enum", values) | ("tz",) | ("train",) | ("intlist", n_lo, n_hi, lo, hi)
 # | ("numpair", lo, hi) | ("layers",) | ("label",)
+SIGMA_RANK = {"off": 0, "high": 1, "medium": 2}
+SIGMA_TEXT = {"off": "off", "high": "high and critical rules only", "medium": "medium, high and critical rules"}
 CONFIG_SCHEMA = {
     "baseline_days": ("int", 1, 60),
     "tz": ("tz",),
@@ -75,6 +77,7 @@ CONFIG_SCHEMA = {
     "fleet_prevalence": ("enum", ("evidence", "drop", "off")),   # 0.10 (pdp_server.fleet): programs from other baselines
     "fleet_min_endpoints": ("int", 1, 1000),
     "fleet": ("label",),
+    "sigma": ("enum", ("off", "high", "medium")),   # 0.12: SigmaHQ rules in the agent (artifacts/lab_v12); off by default
 }
 REJECTED_CONFIG = {
     "approved_executables": "approved_executables is no longer an endpoint setting: approve programs through the allow list "
@@ -257,7 +260,8 @@ def detection_settings(cfg: dict | None) -> dict:
             "retain_baseline_events": cfg.get("retain_baseline_events") is True,
             "fleet_prevalence": cfg.get("fleet_prevalence") if cfg.get("fleet_prevalence") in FLEET_STRENGTH else FLEET_DEFAULT_MODE,
             "fleet_min_endpoints": cfg.get("fleet_min_endpoints") if isinstance(cfg.get("fleet_min_endpoints"), int) else FLEET_DEFAULT_MIN,
-            "fleet": cfg.get("fleet")}
+            "fleet": cfg.get("fleet"),
+            "sigma": cfg.get("sigma") if cfg.get("sigma") in SIGMA_RANK else "off"}
 
 
 def alerting_layers(cfg: dict | None) -> set[str]:
@@ -333,6 +337,8 @@ def weakenings(before: dict | None, after: dict | None, kind: str | None = None)
         out.append(f"learned-alert threshold raised (fp_budget {b['fp_budget']} -> {a['fp_budget']})")
     if isinstance(a["baseline_days"], int) and isinstance(b["baseline_days"], int) and a["baseline_days"] < b["baseline_days"]:
         out.append(f"baseline shortened from {b['baseline_days']} to {a['baseline_days']} days")
+    if SIGMA_RANK[a["sigma"]] < SIGMA_RANK[b["sigma"]]:
+        out.append(f"industry detection rules (SigmaHQ) {SIGMA_TEXT[a['sigma']]} (was {SIGMA_TEXT[b['sigma']]})")
     if FLEET_STRENGTH[a["fleet_prevalence"]] < FLEET_STRENGTH[b["fleet_prevalence"]]:
         out.append(f"programs run on other endpoints {FLEET_TEXT[a['fleet_prevalence']]} (fleet prevalence "
                    f"{b['fleet_prevalence']} -> {a['fleet_prevalence']})")
