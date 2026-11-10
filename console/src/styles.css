@@ -176,7 +176,7 @@ input[type=checkbox], input[type=radio] { height: auto; box-shadow: none; accent
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .tab-count { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 0 6px; font-size: 11px; color: var(--muted); line-height: 17px; }
 .segmented { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px; }
-.segmented button { border: 0; background: none; font: inherit; font-weight: 550; color: var(--muted); padding: 0 12px; height: 28px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.segmented button { border: 0; background: none; font: inherit; font-weight: 550; color: var(--muted); padding: 0 12px; height: 28px; border-radius: 6px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
 .segmented button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
 .segmented.sm button { height: 26px; font-size: 12.5px; padding: 0 10px; }
 

@@ -107,3 +107,23 @@ def programs_for(c, ep: dict) -> dict[str, int]:
         if n >= k:
             out[prog] = n
     return out
+
+
+def summary(c, ep: dict) -> dict:
+    """What the console shows for one endpoint (0.10.1): its fleet (the effective label, or None when it is alone), the
+    settings in force and their defaults, the other members, and how many programs the agent currently treats as
+    known to the fleet."""
+    cfg = ep.get("config") or {}
+    mode, k = settings(cfg)
+    label = fleet_label(ep.get("kind"), cfg)
+    named = cfg.get("fleet") if isinstance(cfg.get("fleet"), str) and cfg.get("fleet").strip() else None
+    members = []
+    if label is not None and ep.get("org_id"):
+        rows = db.q(c, "SELECT id, name, kind, config, current_bundle FROM endpoints WHERE org_id = %s AND phase <> 'retired' "
+                       "ORDER BY name", (ep["org_id"],))
+        members = [{"id": str(r["id"]), "name": r.get("name") or str(r["id"]), "trained": bool(r.get("current_bundle"))}
+                   for r in rows if str(r["id"]) != str(ep["id"]) and fleet_label(r.get("kind"), r.get("config")) == label]
+    return {"label": label, "named": named, "default_label": fleet_label(ep.get("kind"), {}),
+            "mode": mode, "min_endpoints": k, "defaults": {"mode": DEFAULT_MODE, "min_endpoints": DEFAULT_MIN_ENDPOINTS},
+            "members": members[:200], "member_count": len(members), "trained_members": sum(m["trained"] for m in members),
+            "known_programs": len(programs_for(c, ep))}

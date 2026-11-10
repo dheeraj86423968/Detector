@@ -88,5 +88,25 @@ check(W({"fleet_prevalence": "evidence"}, {}) and W({"fleet_prevalence": "off"},
       "evidence/off -> drop (the default) and off -> evidence are weakening; the stricter settings are not")
 check(W({}, {"fleet_min_endpoints": 1}) and not W({}, {"fleet_min_endpoints": 5}), "fewer endpoints needed to call a program known is weakening")
 check(W({}, {"fleet": "big"}) and not W({}, {"fleet": "big", "fleet_prevalence": "off"}), "joining a fleet is weakening unless prevalence is off")
+# 0.10.1 console fleet controls: clearing the label (null), weakening by the fleet the endpoint is actually in, summary
+check(refused({"fleet": None}) is None, "fleet null (back to the default fleet) accepted")
+check(W({"fleet": "servers"}, {"fleet": None}, kind="live") and not W({"fleet": "lab"}, {"fleet": None}, kind="benchmark"),
+      "clearing the label: a live endpoint joins its organisation's fleet (weakening); a benchmark endpoint is alone again (not)")
+check(W({}, {"fleet": "lab"}, kind="benchmark") and W({}, {"fleet": "servers"}, kind="live")
+      and not W({"fleet": "lab"}, {"fleet": "lab", "fleet_min_endpoints": 3}, kind="benchmark")
+      and not W({}, {"fleet": "lab", "fleet_prevalence": "off"}, kind="benchmark"),
+      "with the kind: joining another fleet is weakening, staying in the same one or prevalence off is not")
+for r, n in zip(ROWS, ("ep-1", "ep-2", "ep-3", "bench-4", "other-org", "lab-6", "lab-7")):
+    r["name"] = n; r["current_bundle"] = r["bid"]
+ROWS[2]["current_bundle"] = None
+S1 = F.summary(None, ep("e1"))
+check(S1["label"] == "org" and S1["named"] is None and S1["default_label"] == "org" and [m["name"] for m in S1["members"]] == ["ep-2", "ep-3"]
+      and S1["member_count"] == 2 and S1["trained_members"] == 1,
+      f"summary of a live endpoint: the organisation fleet, its other live members and how many are trained ({S1})")
+check(S1["mode"] == "drop" and S1["min_endpoints"] == 2 and S1["known_programs"] == 2, "summary: settings in force and programs known")
+S4 = F.summary(None, ep("e4"))
+check(S4["label"] is None and S4["members"] == [] and S4["known_programs"] == 0, "summary of an unlabelled benchmark endpoint: alone")
+S6 = F.summary(None, ep("e6", fleet="lab", fleet_min_endpoints=1))
+check(S6["named"] == "lab" and [m["name"] for m in S6["members"]] == ["lab-7"] and S6["known_programs"] == 1, f"summary of a labelled fleet ({S6})")
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

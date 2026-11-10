@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronRight, FlaskConical, ListChecks, Loader2, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
-import { AllowEntry, AllowListResp, Check as CheckT, del, EndpointConfigResp, EndpointOverview, IncidentSummary, LifecycleStep, post, useApi, useCan } from "../api";
+import { AllowEntry, AllowListResp, Check as CheckT, del, EndpointConfigResp, EndpointOverview, FleetMode, FleetSummary, IncidentSummary, LifecycleStep, post, useApi, useCan } from "../api";
 import { AddAllowDialog, allowedText } from "../allowlist";
 import { AppliesTo } from "./AllowList";
 import { IsolationCard, useResponse } from "../respond";
@@ -9,7 +9,7 @@ import { RemoveEndpointDialog } from "../endpointRemove";
 import { DailyBars } from "../chart";
 import { DETECTION, fmtBytes, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtRel, plural } from "../format";
 import { IncidentTable } from "../incidents";
-import { AllowKindIcon, Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, Mid, PageHeader, ShowMore, Tabs, Toggle, useReasoned, useShowMore, useToast } from "../ui";
+import { AllowKindIcon, Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, Mid, PageHeader, Segmented, ShowMore, Tabs, Toggle, useReasoned, useShowMore, useToast } from "../ui";
 
 type Tab = "overview" | "incidents" | "settings";
 
@@ -323,6 +323,7 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
           </form>
         </div>
       </Card>
+      {data?.fleet && <FleetCard fleet={data.fleet} setCfg={setCfg} />}
       <Card title="Remove endpoint" className="danger-card">
         <div className="setting-row">
           <div><div className="setting-name">Remove {name}</div><div className="muted sm">Retire it (its alerts and incidents stay for the record) or delete it with all its data.</div></div>
@@ -336,6 +337,61 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
   );
 }
 
+
+const FLEET_MODES: { id: FleetMode; label: string; title: string }[] = [
+  { id: "drop", label: "Don't alert", title: "A program that ran during other endpoints' baselines raises no new-program alert here. Its data flows are still checked." },
+  { id: "evidence", label: "Alert if also unusual", title: "Such a program alerts as new only when the learned model also finds its behaviour unusual." },
+  { id: "off", label: "Alert as new", title: "Ignore the other endpoints: every program this endpoint did not run during its baseline alerts as new." },
+];
+
+/** Fleet prevalence (0.10): a program new on this endpoint but run during other endpoints' baselines is common in the
+ *  organisation. Which endpoints count, how many must have run it, and what happens then. Weakening changes ask for a
+ *  reason (the server decides). Takes effect at the agent's next check-in, without retraining. */
+function FleetCard({ fleet, setCfg }: { fleet: FleetSummary; setCfg: (config: Record<string, unknown>, ok: string) => Promise<void> }) {
+  const [label, setLabel] = useState(fleet.named ?? "");
+  const [minEp, setMinEp] = useState(String(fleet.min_endpoints));
+  useEffect(() => { setLabel(fleet.named ?? ""); setMinEp(String(fleet.min_endpoints)); }, [fleet.named, fleet.min_endpoints]);
+  const defaultText = fleet.default_label === "org" ? "all live endpoints of the organisation" : "not in a fleet";
+  const inText = fleet.label === null ? "Not in a fleet" : fleet.label === "org" && !fleet.named ? "All live endpoints of the organisation" : <>Fleet <b>{fleet.label}</b></>;
+  const off = fleet.mode === "off";
+  const shown = fleet.members.slice(0, 5).map(m => m.name).join(", ") + (fleet.member_count > 5 ? ` and ${fleet.member_count - 5} more` : "");
+  const labelOk = label === "" || /^[A-Za-z0-9][A-Za-z0-9 _.-]{0,63}$/.test(label);
+  const n = Math.max(1, Math.min(1000, parseInt(minEp, 10) || 0));
+  return (
+    <Card title="Programs known from other endpoints" subtitle="A program that is new on this endpoint but ran while other endpoints learned their normal behaviour is common in your organisation. Changes reach the agent at its next check-in, without retraining.">
+      <div className="setting-row">
+        <div className="min0">
+          <div className="setting-name">Fleet</div>
+          <div className="muted sm">{inText}{fleet.label !== null && <> · {fleet.member_count ? <>{plural(fleet.member_count, "other endpoint")} ({fleet.trained_members} with a baseline): {shown}</> : "no other endpoints yet"}</>}</div>
+          <div className="muted sm">Endpoints with the same fleet name share what they ran during their baselines, e.g. separate servers from workstations. Without a name: {defaultText}.</div>
+        </div>
+        <form className="inline-form" onSubmit={e => { e.preventDefault(); if (labelOk && label !== (fleet.named ?? "")) setCfg({ fleet: label === "" ? null : label }, label === "" ? "Fleet name removed" : `Fleet set to ${label}`); }}>
+          <input value={label} maxLength={64} placeholder="Default" onChange={e => setLabel(e.target.value)} style={{ width: 150 }} aria-label="Fleet name" aria-invalid={!labelOk} title={labelOk ? undefined : "Letters, digits, spaces, '_', '.' or '-'"} />
+          <button className="btn" disabled={!labelOk || label === (fleet.named ?? "")}>Save</button>
+        </form>
+      </div>
+      <div className="setting-row">
+        <div><div className="setting-name">A new program that ran on other endpoints</div>
+          <div className="muted sm">{FLEET_MODES.find(m => m.id === fleet.mode)?.title}{fleet.mode === fleet.defaults.mode ? " (default)" : ""}</div></div>
+        <Segmented size="sm" value={fleet.mode} options={FLEET_MODES}
+          onChange={v => setCfg({ fleet_prevalence: v }, `New programs that ran on other endpoints: ${FLEET_MODES.find(m => m.id === v)!.label.toLowerCase()}`)} />
+      </div>
+      <div className="setting-row">
+        <div><div className="setting-name">Known after</div>
+          <div className="muted sm">How many other endpoints must have run a program during their baselines. One endpoint alone cannot make a program known when this is 2 or more (default {fleet.defaults.min_endpoints}).</div></div>
+        <form className="inline-form" onSubmit={e => { e.preventDefault(); if (n !== fleet.min_endpoints) setCfg({ fleet_min_endpoints: n }, `Known after ${plural(n, "other endpoint")}`); }}>
+          <input type="number" min={1} max={1000} value={minEp} disabled={off} onChange={e => setMinEp(e.target.value)} style={{ width: 96 }} aria-label="Other endpoints needed" />
+          <button className="btn" disabled={off || n === fleet.min_endpoints}>Save</button>
+        </form>
+      </div>
+      <div className="muted sm" style={{ marginTop: 8 }}>
+        {fleet.label === null ? "This endpoint is not in a fleet: every program it did not run during its baseline alerts as new."
+          : off ? "Other endpoints are ignored: every program this endpoint did not run during its baseline alerts as new."
+          : `${plural(fleet.known_programs, "program")} currently known from other endpoints.`}
+      </div>
+    </Card>
+  );
+}
 
 /** The allow-list entries that apply to this endpoint (its own and fleet-wide ones). */
 function AllowCard({ id, name }: { id: string; name: string }) {

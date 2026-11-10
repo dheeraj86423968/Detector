@@ -857,6 +857,8 @@ def endpoint_detail(endpoint_id: str, s=Depends(session)):
         jobs = db.q(c, "SELECT id, kind, state, params, progress, error, created_at, finished_at FROM jobs WHERE endpoint_id=%s ORDER BY created_at DESC LIMIT 20", (endpoint_id,))
         days = db.q(c, "SELECT date, events, windows, complete FROM baseline_days WHERE endpoint_id=%s ORDER BY date", (endpoint_id,))
         pol = db.q(c, "SELECT manifest->'learned_policy' AS p FROM bundles WHERE id=%s", (ep["current_bundle"],), one=True) if ep["current_bundle"] else None
+        from .fleet import summary as fleet_summary
+        fleet = fleet_summary(c, ep)
     from .allowlist import effective_config
     with db.conn() as c:
         ep = dict(ep, config=effective_config(c, endpoint_id, ep["config"]))
@@ -864,6 +866,7 @@ def endpoint_detail(endpoint_id: str, s=Depends(session)):
             "jobs": [dict(j, id=str(j["id"])) for j in jobs], "baseline_days": [dict(d, date=str(d["date"])) for d in days],
             "timeline": endpoint_timeline(endpoint_id),
             "posture": _posture(endpoint_id),
+            "fleet": fleet,
             # what the agent does when the endpoint has no learned_alerts setting (the current bundle's policy)
             "learned_alerts_default": bool(((pol or {}).get("p") or {}).get("learned_alerts", True))}
 
@@ -888,12 +891,12 @@ def patch_config(endpoint_id: str, req: ConfigPatch, s=Depends(admin)):
     from . import posture
     _validate_config(req.config)
     with db.conn() as c:
-        cur = db.q(c, "SELECT config, name FROM endpoints WHERE id=%s FOR UPDATE", (endpoint_id,), one=True)
+        cur = db.q(c, "SELECT config, name, kind FROM endpoints WHERE id=%s FOR UPDATE", (endpoint_id,), one=True)
         if not cur:
             raise HTTPException(404)
         merged = {**(cur["config"] or {}), **req.config}
         posture.check_floor(merged)
-        weak = posture.weakenings(cur["config"], merged)
+        weak = posture.weakenings(cur["config"], merged, kind=cur["kind"] or "live")
         reason = posture.require_reason(weak, req.reason)
         row = db.q(c, "UPDATE endpoints SET config = config || %s WHERE id=%s RETURNING config, phase, baseline_days_done", (json.dumps(req.config), endpoint_id), one=True)
         posture.audit_change(c, s, "endpoint settings changed", f"endpoint_id={endpoint_id}", before=cur["config"], after=row["config"],

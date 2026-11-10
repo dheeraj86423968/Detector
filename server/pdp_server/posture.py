@@ -173,6 +173,8 @@ def _check_value(name: str, spec: tuple, v) -> None:
                                                               and spec[1] <= x <= spec[2] for x in v) and sum(v) > 0):
             _bad(f"{name} must be two numbers between {spec[1]:g} and {spec[2]:g}, not both 0")
     elif kind == "label":
+        if v is None:           # back to the default (fleet: the organisation's live endpoints / alone)
+            return
         if not (isinstance(v, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _.-]{0,63}", v)):
             _bad(f"{name} must be a label of 1 to 64 letters, digits, spaces, '_', '.' or '-'")
     elif kind == "layers":
@@ -281,8 +283,10 @@ def check_floor(cfg: dict) -> None:
              "at least one of them must stay on (retire the endpoint instead if it should not be protected)")
 
 
-def weakenings(before: dict | None, after: dict | None) -> list[str]:
-    """Human-readable list of the ways `after` detects less than `before` (both full stored configurations)."""
+def weakenings(before: dict | None, after: dict | None, kind: str | None = None) -> list[str]:
+    """Human-readable list of the ways `after` detects less than `before` (both full stored configurations). With the
+    endpoint's kind, a fleet change compares the fleets the endpoint is actually in (a live endpoint without a label is
+    in its organisation's fleet), so going back to the default fleet counts too."""
     b, a = detection_settings(before), detection_settings(after)
     out = []
     for k, what in (("layer_novelty", "novelty"), ("layer_rules", "rules")):
@@ -336,7 +340,13 @@ def weakenings(before: dict | None, after: dict | None) -> list[str]:
         if a["fleet_min_endpoints"] < b["fleet_min_endpoints"]:
             out.append(f"a program counts as known when {a['fleet_min_endpoints']} other endpoint(s) ran it during their baseline "
                        f"(was {b['fleet_min_endpoints']})")
-        if a["fleet"] and a["fleet"] != b["fleet"]:
+        if kind is not None:
+            from .fleet import fleet_label
+            fa, fb = fleet_label(kind, after), fleet_label(kind, before)
+            if fa is not None and fa != fb:
+                what = "its organisation's fleet" if fa == "org" and not (after or {}).get("fleet") else f"fleet {fa!r}"
+                out.append(f"endpoint joins {what}: programs run during its other endpoints' baselines no longer alert as new")
+        elif a["fleet"] and a["fleet"] != b["fleet"]:
             out.append(f"endpoint joins fleet {a['fleet']!r}: programs run during its other endpoints' baselines no longer alert as new")
     if a["retain_baseline_events"] and not b["retain_baseline_events"]:
         out.append("raw activity kept after training (privacy: every recorded process, file and connection is retained)")

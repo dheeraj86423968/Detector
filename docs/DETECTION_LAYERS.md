@@ -14,8 +14,9 @@ learned layer still see everything such a program does. Settings (endpoint confi
 drop (default) | evidence (alert only when the learned score corroborates, at most once per program and day) | off;
 `fleet_min_endpoints` (default 2: one endpoint's poisoned baseline cannot make a program known); `fleet` (a label:
 endpoints with the same label form a fleet; default: the organisation's live endpoints; benchmark / simulation
-endpoints are alone). Lowering the strictness, the number of endpoints, or joining a fleet is a weakening (reason
-required, audited).
+endpoints are alone). Lowering the strictness, the number of endpoints, or joining a fleet (including a live endpoint
+whose label is cleared, which rejoins its organisation's fleet) is a weakening (reason required, audited). Set in the
+console (endpoint Settings, "Programs known from other endpoints", 0.10.1) or through the API.
 
 **Incident grouping.** The same finding (same endpoint, same subject - the full path of the acting program of the
 incident's top alert, or its address; findings with no recorded program never merge) coming back within 7 days of its incident's last alert joins that incident instead of opening a new
