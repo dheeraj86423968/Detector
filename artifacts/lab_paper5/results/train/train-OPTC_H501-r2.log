@@ -1,0 +1,70 @@
+2026-11-11 20:34:42 - fitting word2vec on 1650422 baseline nodes
+2026-11-11 20:35:32 - computing node features
+2026-11-11 20:36:04 - detector-1 seed 100 epoch 0: train 0.5589 val 0.5504
+2026-11-11 20:36:23 - detector-1 seed 100 epoch 1: train 0.5524 val 0.5479
+2026-11-11 20:36:42 - detector-1 seed 100 epoch 2: train 0.5500 val 0.5425
+2026-11-11 20:37:00 - detector-1 seed 100 epoch 3: train 0.5483 val 0.5461
+2026-11-11 20:37:19 - detector-1 seed 100 epoch 4: train 0.5503 val 0.5428
+2026-11-11 20:37:38 - detector-1 seed 100 epoch 5: train 0.5482 val 0.5402
+2026-11-11 20:37:56 - detector-1 seed 100 epoch 6: train 0.5480 val 0.5449
+2026-11-11 20:38:15 - detector-1 seed 100 epoch 7: train 0.5481 val 0.5450
+2026-11-11 20:38:33 - detector-1 seed 100 epoch 8: train 0.5476 val 0.5409
+2026-11-11 20:38:35 - detector-1 seed 100 threshold 3.687
+2026-11-11 20:38:54 - detector-1 seed 101 epoch 0: train 0.5599 val 0.5509
+2026-11-11 20:39:12 - detector-1 seed 101 epoch 1: train 0.5510 val 0.5473
+2026-11-11 20:39:31 - detector-1 seed 101 epoch 2: train 0.5489 val 0.5427
+2026-11-11 20:39:50 - detector-1 seed 101 epoch 3: train 0.5492 val 0.5438
+2026-11-11 20:40:08 - detector-1 seed 101 epoch 4: train 0.5493 val 0.5430
+2026-11-11 20:40:26 - detector-1 seed 101 epoch 5: train 0.5491 val 0.5415
+2026-11-11 20:40:43 - detector-1 seed 101 epoch 6: train 0.5495 val 0.5481
+2026-11-11 20:41:00 - detector-1 seed 101 epoch 7: train 0.5473 val 0.5453
+2026-11-11 20:41:18 - detector-1 seed 101 epoch 8: train 0.5471 val 0.5417
+2026-11-11 20:41:19 - detector-1 seed 101 threshold 2.612
+2026-11-11 20:41:35 - detector-1 seed 102 epoch 0: train 0.5589 val 0.5495
+2026-11-11 20:41:51 - detector-1 seed 102 epoch 1: train 0.5503 val 0.5533
+2026-11-11 20:42:09 - detector-1 seed 102 epoch 2: train 0.5504 val 0.5476
+2026-11-11 20:42:27 - detector-1 seed 102 epoch 3: train 0.5488 val 0.5464
+2026-11-11 20:42:45 - detector-1 seed 102 epoch 4: train 0.5486 val 0.5406
+2026-11-11 20:43:03 - detector-1 seed 102 epoch 5: train 0.5481 val 0.5416
+2026-11-11 20:43:21 - detector-1 seed 102 epoch 6: train 0.5473 val 0.5402
+2026-11-11 20:43:38 - detector-1 seed 102 epoch 7: train 0.5459 val 0.5475
+2026-11-11 20:43:56 - detector-1 seed 102 epoch 8: train 0.5464 val 0.5507
+2026-11-11 20:44:14 - detector-1 seed 102 epoch 9: train 0.5466 val 0.5477
+2026-11-11 20:44:16 - detector-1 seed 102 threshold 4.851
+2026-11-11 20:45:23 - detector-2 seed 100 epoch 0: train 0.5774 val 0.5395
+2026-11-11 20:46:35 - detector-2 seed 100 epoch 1: train 0.5696 val 0.5474
+2026-11-11 20:47:52 - detector-2 seed 100 epoch 2: train 0.9026 val 1.0435
+2026-11-11 20:49:08 - detector-2 seed 100 epoch 3: train 0.8988 val 0.8426
+2026-11-11 20:49:55 - detector-2 seed 100 threshold 7.040 val-loss 0.5395
+2026-11-11 20:51:16 - detector-2 seed 101 epoch 0: train 0.5674 val 0.5434
+2026-11-11 20:52:44 - detector-2 seed 101 epoch 1: train 0.5571 val 0.5373
+2026-11-11 20:54:09 - detector-2 seed 101 epoch 2: train 0.6084 val 0.5484
+2026-11-11 20:55:25 - detector-2 seed 101 epoch 3: train 0.6291 val 0.5787
+2026-11-11 20:56:46 - detector-2 seed 101 epoch 4: train 0.6162 val 0.5466
+2026-11-11 20:57:36 - detector-2 seed 101 threshold 30.043 val-loss 0.5373
+2026-11-11 20:58:57 - detector-2 seed 102 epoch 0: train 0.5606 val 0.5373
+2026-11-11 21:00:35 - detector-2 seed 102 epoch 1: train 0.5833 val 0.5582
+2026-11-11 21:02:17 - detector-2 seed 102 epoch 2: train 0.5664 val 0.7206
+2026-11-11 21:04:01 - detector-2 seed 102 epoch 3: train 0.5836 val 0.5828
+2026-11-11 21:05:12 - detector-2 seed 102 threshold 55.819 val-loss 0.5373
+2026-11-11 21:06:33 - detector-2 seed 103 epoch 0: train 0.5792 val 0.5368
+2026-11-11 21:07:54 - detector-2 seed 103 epoch 1: train 0.5772 val 0.8010
+2026-11-11 21:09:32 - detector-2 seed 103 epoch 2: train 0.6328 val 0.5472
+2026-11-11 21:10:54 - detector-2 seed 103 epoch 3: train 0.5754 val 0.5400
+2026-11-11 21:11:45 - detector-2 seed 103 threshold 11.794 val-loss 0.5368
+2026-11-11 21:13:34 - detector-2 seed 104 epoch 0: train 0.5698 val 0.5428
+2026-11-11 21:15:06 - detector-2 seed 104 epoch 1: train 0.5658 val 0.5398
+2026-11-11 21:16:25 - detector-2 seed 104 epoch 2: train 0.5522 val 0.5444
+2026-11-11 21:17:46 - detector-2 seed 104 epoch 3: train 0.6106 val 0.6173
+2026-11-11 21:19:07 - detector-2 seed 104 epoch 4: train 0.6210 val 1.0706
+2026-11-11 21:19:58 - detector-2 seed 104 threshold 9.531 val-loss 0.5398
+2026-11-11 21:19:58 - detector-2 aggregate 'mean' weights [0.2, 0.2, 0.2, 0.2, 0.2]
+2026-11-11 21:20:00 - fusion threshold 0.806
+2026-11-11 21:20:37 - layers: 144 known executables, 123 baseline remote addresses (115 recurring), benign alarm keys exfiltration=5
+21:20:38 0.6-config bundle 2772s
+2026-11-11 21:22:04 - detector-3: 6245449 edges, 14705 keys, 119566 table rows
+2026-11-11 21:22:06 - detector-3 thresholds proc 38.36 obj 43.47 (budget 10)
+2026-11-11 21:22:42 - layers: 144 known executables, 123 baseline remote addresses (115 recurring), benign alarm keys exfiltration=5
+2026-11-11 21:24:16 - final threshold 1.200 (validation nodes 486928, budget 10)
+21:24:17 0.7 released bundle 2991s
+21:24:17 done; layers.json equal to run 1: True

@@ -1,0 +1,29 @@
+{
+ "set": "OPTC_H501",
+ "run": 2,
+ "seeds": {
+  "word2vec": 100,
+  "detector-1": [
+   100,
+   101,
+   102
+  ],
+  "detector-2": [
+   100,
+   101,
+   102,
+   103,
+   104
+  ]
+ },
+ "overrides": {},
+ "train_s": 2991,
+ "resumed_from_b06": false,
+ "layers_equal_run1": true,
+ "train_days": [
+  "2019-09-19",
+  "2019-09-20",
+  "2019-09-21"
+ ],
+ "val_day": "2019-09-22"
+}

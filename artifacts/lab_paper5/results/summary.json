@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-11 21:05 UTC",
+ "generated": "2026-11-11 22:46 UTC",
  "hosts": {
   "CADETS_E3": {
    "runs_completed": [
@@ -4207,7 +4207,11 @@
   },
   "OPTC_H501": {
    "runs_completed": [
-    1
+    1,
+    2,
+    3,
+    4,
+    5
    ],
    "runs": {
     "1": {
@@ -4257,67 +4261,285 @@
      "d2_r1_TP": 0,
      "d2_r1_FP": 0,
      "rescore_matches": true
+    },
+    "2": {
+     "attacks": 1,
+     "n_attacks": 1,
+     "TP": 17,
+     "FP": 70,
+     "precision": 0.195,
+     "ADP": 1.0,
+     "ADP_learned": 0.25,
+     "days": 3,
+     "incidents": 12,
+     "false_incidents": 10,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [
+      "h501_0924"
+     ],
+     "ADP_rand": 0.929,
+     "ADP_worst": 0.666,
+     "ADP_learned_rand": 0.291,
+     "ADP_learned_worst": 0.25,
+     "d1_ADP_rand": 0.115,
+     "d2_ADP_rand": 0.069,
+     "ADP_time": 0.783,
+     "L12_attacks": 1,
+     "L12_TP": 10,
+     "L12_FP": 44,
+     "L12_ADP_time": 0.783,
+     "L12_attacks_found": [
+      "h501_0924"
+     ],
+     "d1_attacks_found": [
+      "h501_0924"
+     ],
+     "d2_attacks_found": [],
+     "d1_attacks": 1,
+     "d1_TP": 1,
+     "d1_FP": 14,
+     "d1_ADP": 0.115,
+     "d1_r1_attacks": 0,
+     "d1_r1_TP": 0,
+     "d1_r1_FP": 2,
+     "d2_attacks": 0,
+     "d2_TP": 0,
+     "d2_FP": 5,
+     "d2_ADP": 0.071,
+     "d2_r1_attacks": 0,
+     "d2_r1_TP": 0,
+     "d2_r1_FP": 0
+    },
+    "3": {
+     "attacks": 1,
+     "n_attacks": 1,
+     "TP": 17,
+     "FP": 70,
+     "precision": 0.195,
+     "ADP": 1.0,
+     "ADP_learned": 0.25,
+     "days": 3,
+     "incidents": 12,
+     "false_incidents": 10,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [
+      "h501_0924"
+     ],
+     "ADP_rand": 0.929,
+     "ADP_worst": 0.666,
+     "ADP_learned_rand": 0.291,
+     "ADP_learned_worst": 0.25,
+     "d1_ADP_rand": 0.038,
+     "d2_ADP_rand": 0.093,
+     "ADP_time": 0.783,
+     "L12_attacks": 1,
+     "L12_TP": 10,
+     "L12_FP": 44,
+     "L12_ADP_time": 0.783,
+     "L12_attacks_found": [
+      "h501_0924"
+     ],
+     "d1_attacks_found": [],
+     "d2_attacks_found": [],
+     "d1_attacks": 0,
+     "d1_TP": 0,
+     "d1_FP": 2,
+     "d1_ADP": 0.038,
+     "d1_r1_attacks": 0,
+     "d1_r1_TP": 0,
+     "d1_r1_FP": 2,
+     "d2_attacks": 0,
+     "d2_TP": 0,
+     "d2_FP": 0,
+     "d2_ADP": 0.095,
+     "d2_r1_attacks": 0,
+     "d2_r1_TP": 0,
+     "d2_r1_FP": 0
+    },
+    "4": {
+     "attacks": 1,
+     "n_attacks": 1,
+     "TP": 17,
+     "FP": 70,
+     "precision": 0.195,
+     "ADP": 1.0,
+     "ADP_learned": 0.25,
+     "days": 3,
+     "incidents": 12,
+     "false_incidents": 10,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [
+      "h501_0924"
+     ],
+     "ADP_rand": 0.929,
+     "ADP_worst": 0.666,
+     "ADP_learned_rand": 0.291,
+     "ADP_learned_worst": 0.25,
+     "d1_ADP_rand": 0.02,
+     "d2_ADP_rand": 0.287,
+     "ADP_time": 0.783,
+     "L12_attacks": 1,
+     "L12_TP": 10,
+     "L12_FP": 44,
+     "L12_ADP_time": 0.783,
+     "L12_attacks_found": [
+      "h501_0924"
+     ],
+     "d1_attacks_found": [],
+     "d2_attacks_found": [
+      "h501_0924"
+     ],
+     "d1_attacks": 0,
+     "d1_TP": 0,
+     "d1_FP": 10,
+     "d1_ADP": 0.02,
+     "d1_r1_attacks": 0,
+     "d1_r1_TP": 0,
+     "d1_r1_FP": 6,
+     "d2_attacks": 1,
+     "d2_TP": 1,
+     "d2_FP": 5,
+     "d2_ADP": 0.333,
+     "d2_r1_attacks": 0,
+     "d2_r1_TP": 0,
+     "d2_r1_FP": 0
+    },
+    "5": {
+     "attacks": 1,
+     "n_attacks": 1,
+     "TP": 17,
+     "FP": 70,
+     "precision": 0.195,
+     "ADP": 1.0,
+     "ADP_learned": 0.25,
+     "days": 3,
+     "incidents": 12,
+     "false_incidents": 10,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [
+      "h501_0924"
+     ],
+     "ADP_rand": 0.929,
+     "ADP_worst": 0.666,
+     "ADP_learned_rand": 0.291,
+     "ADP_learned_worst": 0.25,
+     "d1_ADP_rand": 0.061,
+     "d2_ADP_rand": 0.725,
+     "ADP_time": 0.783,
+     "L12_attacks": 1,
+     "L12_TP": 10,
+     "L12_FP": 44,
+     "L12_ADP_time": 0.783,
+     "L12_attacks_found": [
+      "h501_0924"
+     ],
+     "d1_attacks_found": [],
+     "d2_attacks_found": [
+      "h501_0924"
+     ],
+     "d1_attacks": 0,
+     "d1_TP": 0,
+     "d1_FP": 9,
+     "d1_ADP": 0.061,
+     "d1_r1_attacks": 0,
+     "d1_r1_TP": 0,
+     "d1_r1_FP": 4,
+     "d2_attacks": 1,
+     "d2_TP": 1,
+     "d2_FP": 13,
+     "d2_ADP": 1.0,
+     "d2_r1_attacks": 1,
+     "d2_r1_TP": 1,
+     "d2_r1_FP": 5
     }
    },
    "summary": {
     "ADP_rand": {
-     "n": 1,
+     "n": 5,
      "mean": 0.929,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.929,
      "max": 0.929,
      "values": [
+      0.929,
+      0.929,
+      0.929,
+      0.929,
       0.929
      ]
     },
     "ADP_worst": {
-     "n": 1,
+     "n": 5,
      "mean": 0.666,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.666,
      "max": 0.666,
      "values": [
+      0.666,
+      0.666,
+      0.666,
+      0.666,
       0.666
      ]
     },
     "ADP_learned_rand": {
-     "n": 1,
+     "n": 5,
      "mean": 0.291,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.291,
      "max": 0.291,
      "values": [
+      0.291,
+      0.291,
+      0.291,
+      0.291,
       0.291
      ]
     },
     "ADP_learned_worst": {
-     "n": 1,
+     "n": 5,
      "mean": 0.25,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.25,
      "max": 0.25,
      "values": [
+      0.25,
+      0.25,
+      0.25,
+      0.25,
       0.25
      ]
     },
     "d1_ADP_rand": {
-     "n": 1,
-     "mean": 0.052,
-     "sd": null,
-     "min": 0.052,
-     "max": 0.052,
+     "n": 5,
+     "mean": 0.057,
+     "sd": 0.036,
+     "min": 0.02,
+     "max": 0.115,
      "values": [
-      0.052
+      0.052,
+      0.115,
+      0.038,
+      0.02,
+      0.061
      ]
     },
     "d2_ADP_rand": {
-     "n": 1,
-     "mean": 0.095,
-     "sd": null,
-     "min": 0.095,
-     "max": 0.095,
+     "n": 5,
+     "mean": 0.254,
+     "sd": 0.278,
+     "min": 0.069,
+     "max": 0.725,
      "values": [
-      0.095
+      0.095,
+      0.069,
+      0.093,
+      0.287,
+      0.725
      ]
     },
     "ADP_rand_3att": null,
@@ -4327,225 +4549,313 @@
     "d1_ADP_rand_3att": null,
     "d2_ADP_rand_3att": null,
     "ADP": {
-     "n": 1,
+     "n": 5,
      "mean": 1.0,
-     "sd": null,
+     "sd": 0.0,
      "min": 1.0,
      "max": 1.0,
      "values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
       1.0
      ]
     },
     "ADP_time": {
-     "n": 1,
+     "n": 5,
      "mean": 0.783,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.783,
      "max": 0.783,
      "values": [
+      0.783,
+      0.783,
+      0.783,
+      0.783,
       0.783
      ]
     },
     "L12_attacks": {
-     "n": 1,
+     "n": 5,
      "mean": 1,
-     "sd": null,
+     "sd": 0.0,
      "min": 1,
      "max": 1,
      "values": [
+      1,
+      1,
+      1,
+      1,
       1
      ]
     },
     "L12_TP": {
-     "n": 1,
+     "n": 5,
      "mean": 10,
-     "sd": null,
+     "sd": 0.0,
      "min": 10,
      "max": 10,
      "values": [
+      10,
+      10,
+      10,
+      10,
       10
      ]
     },
     "L12_FP": {
-     "n": 1,
+     "n": 5,
      "mean": 44,
-     "sd": null,
+     "sd": 0.0,
      "min": 44,
      "max": 44,
      "values": [
+      44,
+      44,
+      44,
+      44,
       44
      ]
     },
     "L12_ADP_time": {
-     "n": 1,
+     "n": 5,
      "mean": 0.783,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.783,
      "max": 0.783,
      "values": [
+      0.783,
+      0.783,
+      0.783,
+      0.783,
       0.783
      ]
     },
     "ADP_time_3att": null,
     "L12_ADP_time_3att": null,
     "ADP_learned": {
-     "n": 1,
+     "n": 5,
      "mean": 0.25,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.25,
      "max": 0.25,
      "values": [
+      0.25,
+      0.25,
+      0.25,
+      0.25,
       0.25
      ]
     },
     "attacks": {
-     "n": 1,
+     "n": 5,
      "mean": 1,
-     "sd": null,
+     "sd": 0.0,
      "min": 1,
      "max": 1,
      "values": [
+      1,
+      1,
+      1,
+      1,
       1
      ]
     },
     "TP": {
-     "n": 1,
+     "n": 5,
      "mean": 17,
-     "sd": null,
+     "sd": 0.0,
      "min": 17,
      "max": 17,
      "values": [
+      17,
+      17,
+      17,
+      17,
       17
      ]
     },
     "FP": {
-     "n": 1,
+     "n": 5,
      "mean": 70,
-     "sd": null,
+     "sd": 0.0,
      "min": 70,
      "max": 70,
      "values": [
+      70,
+      70,
+      70,
+      70,
       70
      ]
     },
     "precision": {
-     "n": 1,
+     "n": 5,
      "mean": 0.195,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.195,
      "max": 0.195,
      "values": [
+      0.195,
+      0.195,
+      0.195,
+      0.195,
       0.195
      ]
     },
     "incidents": {
-     "n": 1,
+     "n": 5,
      "mean": 12,
-     "sd": null,
+     "sd": 0.0,
      "min": 12,
      "max": 12,
      "values": [
+      12,
+      12,
+      12,
+      12,
       12
      ]
     },
     "false_incidents": {
-     "n": 1,
+     "n": 5,
      "mean": 10,
-     "sd": null,
+     "sd": 0.0,
      "min": 10,
      "max": 10,
      "values": [
+      10,
+      10,
+      10,
+      10,
       10
      ]
     },
     "buried": {
-     "n": 1,
+     "n": 5,
      "mean": 0,
-     "sd": null,
+     "sd": 0.0,
      "min": 0,
      "max": 0,
      "values": [
+      0,
+      0,
+      0,
+      0,
       0
      ]
     },
     "d1_attacks": {
-     "n": 1,
-     "mean": 0,
-     "sd": null,
+     "n": 5,
+     "mean": 0.2,
+     "sd": 0.447,
      "min": 0,
-     "max": 0,
+     "max": 1,
      "values": [
+      0,
+      1,
+      0,
+      0,
       0
      ]
     },
     "d1_TP": {
-     "n": 1,
-     "mean": 0,
-     "sd": null,
+     "n": 5,
+     "mean": 0.2,
+     "sd": 0.447,
      "min": 0,
-     "max": 0,
+     "max": 1,
      "values": [
+      0,
+      1,
+      0,
+      0,
       0
      ]
     },
     "d1_FP": {
-     "n": 1,
-     "mean": 2,
-     "sd": null,
+     "n": 5,
+     "mean": 7.4,
+     "sd": 5.273,
      "min": 2,
-     "max": 2,
+     "max": 14,
      "values": [
-      2
+      2,
+      14,
+      2,
+      10,
+      9
      ]
     },
     "d1_ADP": {
-     "n": 1,
-     "mean": 0.052,
-     "sd": null,
-     "min": 0.052,
-     "max": 0.052,
+     "n": 5,
+     "mean": 0.057,
+     "sd": 0.036,
+     "min": 0.02,
+     "max": 0.115,
      "values": [
-      0.052
+      0.052,
+      0.115,
+      0.038,
+      0.02,
+      0.061
      ]
     },
     "d2_attacks": {
-     "n": 1,
-     "mean": 0,
-     "sd": null,
+     "n": 5,
+     "mean": 0.4,
+     "sd": 0.548,
      "min": 0,
-     "max": 0,
+     "max": 1,
      "values": [
-      0
+      0,
+      0,
+      0,
+      1,
+      1
      ]
     },
     "d2_TP": {
-     "n": 1,
-     "mean": 0,
-     "sd": null,
+     "n": 5,
+     "mean": 0.4,
+     "sd": 0.548,
      "min": 0,
-     "max": 0,
+     "max": 1,
      "values": [
-      0
+      0,
+      0,
+      0,
+      1,
+      1
      ]
     },
     "d2_FP": {
-     "n": 1,
-     "mean": 7,
-     "sd": null,
-     "min": 7,
-     "max": 7,
+     "n": 5,
+     "mean": 6,
+     "sd": 4.69,
+     "min": 0,
+     "max": 13,
      "values": [
-      7
+      7,
+      5,
+      0,
+      5,
+      13
      ]
     },
     "d2_ADP": {
-     "n": 1,
-     "mean": 0.1,
-     "sd": null,
-     "min": 0.1,
-     "max": 0.1,
+     "n": 5,
+     "mean": 0.32,
+     "sd": 0.395,
+     "min": 0.071,
+     "max": 1.0,
      "values": [
-      0.1
+      0.1,
+      0.071,
+      0.095,
+      0.333,
+      1.0
      ]
     },
     "ADP_3att": null,
@@ -4559,6 +4869,18 @@
      "per_run": {
       "1": [
        "h501_0924"
+      ],
+      "2": [
+       "h501_0924"
+      ],
+      "3": [
+       "h501_0924"
+      ],
+      "4": [
+       "h501_0924"
+      ],
+      "5": [
+       "h501_0924"
       ]
      },
      "same_in_all_runs": true
@@ -4567,21 +4889,47 @@
      "per_run": {
       "1": [
        "h501_0924"
+      ],
+      "2": [
+       "h501_0924"
+      ],
+      "3": [
+       "h501_0924"
+      ],
+      "4": [
+       "h501_0924"
+      ],
+      "5": [
+       "h501_0924"
       ]
      },
      "same_in_all_runs": true
     },
     "d1_attacks_found": {
      "per_run": {
-      "1": []
+      "1": [],
+      "2": [
+       "h501_0924"
+      ],
+      "3": [],
+      "4": [],
+      "5": []
      },
-     "same_in_all_runs": true
+     "same_in_all_runs": false
     },
     "d2_attacks_found": {
      "per_run": {
-      "1": []
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [
+       "h501_0924"
+      ],
+      "5": [
+       "h501_0924"
+      ]
      },
-     "same_in_all_runs": true
+     "same_in_all_runs": false
     }
    }
   },
@@ -5134,6 +5482,12 @@
       "node_trace_e3_phishing_executable_0413",
       "node_trace_e3_pine_0413"
      ],
+     "ADP_rand": 0.133,
+     "ADP_worst": 0.123,
+     "ADP_learned_rand": 0.003,
+     "ADP_learned_worst": 0.003,
+     "d1_ADP_rand": 0.003,
+     "d2_ADP_rand": 0.003,
      "ADP_time": 0.424,
      "L12_attacks": 3,
      "L12_TP": 9,
@@ -5164,12 +5518,66 @@
     }
    },
    "summary": {
-    "ADP_rand": null,
-    "ADP_worst": null,
-    "ADP_learned_rand": null,
-    "ADP_learned_worst": null,
-    "d1_ADP_rand": null,
-    "d2_ADP_rand": null,
+    "ADP_rand": {
+     "n": 1,
+     "mean": 0.133,
+     "sd": null,
+     "min": 0.133,
+     "max": 0.133,
+     "values": [
+      0.133
+     ]
+    },
+    "ADP_worst": {
+     "n": 1,
+     "mean": 0.123,
+     "sd": null,
+     "min": 0.123,
+     "max": 0.123,
+     "values": [
+      0.123
+     ]
+    },
+    "ADP_learned_rand": {
+     "n": 1,
+     "mean": 0.003,
+     "sd": null,
+     "min": 0.003,
+     "max": 0.003,
+     "values": [
+      0.003
+     ]
+    },
+    "ADP_learned_worst": {
+     "n": 1,
+     "mean": 0.003,
+     "sd": null,
+     "min": 0.003,
+     "max": 0.003,
+     "values": [
+      0.003
+     ]
+    },
+    "d1_ADP_rand": {
+     "n": 1,
+     "mean": 0.003,
+     "sd": null,
+     "min": 0.003,
+     "max": 0.003,
+     "values": [
+      0.003
+     ]
+    },
+    "d2_ADP_rand": {
+     "n": 1,
+     "mean": 0.003,
+     "sd": null,
+     "min": 0.003,
+     "max": 0.003,
+     "values": [
+      0.003
+     ]
+    },
     "ADP_rand_3att": null,
     "ADP_worst_3att": null,
     "ADP_learned_rand_3att": null,
@@ -5461,6 +5869,12 @@
       "fivedirections_e3_excel_0409",
       "fivedirections_e3_firefox_0411"
      ],
+     "ADP_rand": 0.222,
+     "ADP_worst": 0.077,
+     "ADP_learned_rand": 0.03,
+     "ADP_learned_worst": 0.027,
+     "d1_ADP_rand": 0.075,
+     "d2_ADP_rand": 0.059,
      "ADP_time": 0.186,
      "L12_attacks": 1,
      "L12_TP": 1,
@@ -5495,12 +5909,66 @@
     }
    },
    "summary": {
-    "ADP_rand": null,
-    "ADP_worst": null,
-    "ADP_learned_rand": null,
-    "ADP_learned_worst": null,
-    "d1_ADP_rand": null,
-    "d2_ADP_rand": null,
+    "ADP_rand": {
+     "n": 1,
+     "mean": 0.222,
+     "sd": null,
+     "min": 0.222,
+     "max": 0.222,
+     "values": [
+      0.222
+     ]
+    },
+    "ADP_worst": {
+     "n": 1,
+     "mean": 0.077,
+     "sd": null,
+     "min": 0.077,
+     "max": 0.077,
+     "values": [
+      0.077
+     ]
+    },
+    "ADP_learned_rand": {
+     "n": 1,
+     "mean": 0.03,
+     "sd": null,
+     "min": 0.03,
+     "max": 0.03,
+     "values": [
+      0.03
+     ]
+    },
+    "ADP_learned_worst": {
+     "n": 1,
+     "mean": 0.027,
+     "sd": null,
+     "min": 0.027,
+     "max": 0.027,
+     "values": [
+      0.027
+     ]
+    },
+    "d1_ADP_rand": {
+     "n": 1,
+     "mean": 0.075,
+     "sd": null,
+     "min": 0.075,
+     "max": 0.075,
+     "values": [
+      0.075
+     ]
+    },
+    "d2_ADP_rand": {
+     "n": 1,
+     "mean": 0.059,
+     "sd": null,
+     "min": 0.059,
+     "max": 0.059,
+     "values": [
+      0.059
+     ]
+    },
     "ADP_rand_3att": null,
     "ADP_worst_3att": null,
     "ADP_learned_rand_3att": null,
@@ -5801,6 +6269,12 @@
       "atlasv2_edr_s3",
       "atlasv2_edr_s4"
      ],
+     "ADP_rand": 0.214,
+     "ADP_worst": 0.214,
+     "ADP_learned_rand": 0.371,
+     "ADP_learned_worst": 0.361,
+     "d1_ADP_rand": 0.047,
+     "d2_ADP_rand": 0.033,
      "ADP_time": 0.157,
      "L12_attacks": 4,
      "L12_TP": 6,
@@ -5832,12 +6306,66 @@
     }
    },
    "summary": {
-    "ADP_rand": null,
-    "ADP_worst": null,
-    "ADP_learned_rand": null,
-    "ADP_learned_worst": null,
-    "d1_ADP_rand": null,
-    "d2_ADP_rand": null,
+    "ADP_rand": {
+     "n": 1,
+     "mean": 0.214,
+     "sd": null,
+     "min": 0.214,
+     "max": 0.214,
+     "values": [
+      0.214
+     ]
+    },
+    "ADP_worst": {
+     "n": 1,
+     "mean": 0.214,
+     "sd": null,
+     "min": 0.214,
+     "max": 0.214,
+     "values": [
+      0.214
+     ]
+    },
+    "ADP_learned_rand": {
+     "n": 1,
+     "mean": 0.371,
+     "sd": null,
+     "min": 0.371,
+     "max": 0.371,
+     "values": [
+      0.371
+     ]
+    },
+    "ADP_learned_worst": {
+     "n": 1,
+     "mean": 0.361,
+     "sd": null,
+     "min": 0.361,
+     "max": 0.361,
+     "values": [
+      0.361
+     ]
+    },
+    "d1_ADP_rand": {
+     "n": 1,
+     "mean": 0.047,
+     "sd": null,
+     "min": 0.047,
+     "max": 0.047,
+     "values": [
+      0.047
+     ]
+    },
+    "d2_ADP_rand": {
+     "n": 1,
+     "mean": 0.033,
+     "sd": null,
+     "min": 0.033,
+     "max": 0.033,
+     "values": [
+      0.033
+     ]
+    },
     "ADP_rand_3att": null,
     "ADP_worst_3att": null,
     "ADP_learned_rand_3att": null,
@@ -6132,6 +6660,12 @@
      "buried": 0,
      "incident_source": "lab_v10",
      "attacks_found": [],
+     "ADP_rand": 0.0,
+     "ADP_worst": 0.0,
+     "ADP_learned_rand": 0.0,
+     "ADP_learned_worst": 0.0,
+     "d1_ADP_rand": 0.0,
+     "d2_ADP_rand": 0.0,
      "ADP_time": 0.0,
      "L12_attacks": 0,
      "L12_TP": 0,
@@ -6158,12 +6692,66 @@
     }
    },
    "summary": {
-    "ADP_rand": null,
-    "ADP_worst": null,
-    "ADP_learned_rand": null,
-    "ADP_learned_worst": null,
-    "d1_ADP_rand": null,
-    "d2_ADP_rand": null,
+    "ADP_rand": {
+     "n": 1,
+     "mean": 0.0,
+     "sd": null,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "ADP_worst": {
+     "n": 1,
+     "mean": 0.0,
+     "sd": null,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "ADP_learned_rand": {
+     "n": 1,
+     "mean": 0.0,
+     "sd": null,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "ADP_learned_worst": {
+     "n": 1,
+     "mean": 0.0,
+     "sd": null,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "d1_ADP_rand": {
+     "n": 1,
+     "mean": 0.0,
+     "sd": null,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "d2_ADP_rand": {
+     "n": 1,
+     "mean": 0.0,
+     "sd": null,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
     "ADP_rand_3att": null,
     "ADP_worst_3att": null,
     "ADP_learned_rand_3att": null,
@@ -6446,6 +7034,12 @@
      "attacks_found": [
       "carbanakv2_edr"
      ],
+     "ADP_rand": 0.061,
+     "ADP_worst": 0.061,
+     "ADP_learned_rand": 0.003,
+     "ADP_learned_worst": 0.003,
+     "d1_ADP_rand": 0.017,
+     "d2_ADP_rand": 0.014,
      "ADP_time": 0.086,
      "L12_attacks": 1,
      "L12_TP": 5,
@@ -6474,12 +7068,66 @@
     }
    },
    "summary": {
-    "ADP_rand": null,
-    "ADP_worst": null,
-    "ADP_learned_rand": null,
-    "ADP_learned_worst": null,
-    "d1_ADP_rand": null,
-    "d2_ADP_rand": null,
+    "ADP_rand": {
+     "n": 1,
+     "mean": 0.061,
+     "sd": null,
+     "min": 0.061,
+     "max": 0.061,
+     "values": [
+      0.061
+     ]
+    },
+    "ADP_worst": {
+     "n": 1,
+     "mean": 0.061,
+     "sd": null,
+     "min": 0.061,
+     "max": 0.061,
+     "values": [
+      0.061
+     ]
+    },
+    "ADP_learned_rand": {
+     "n": 1,
+     "mean": 0.003,
+     "sd": null,
+     "min": 0.003,
+     "max": 0.003,
+     "values": [
+      0.003
+     ]
+    },
+    "ADP_learned_worst": {
+     "n": 1,
+     "mean": 0.003,
+     "sd": null,
+     "min": 0.003,
+     "max": 0.003,
+     "values": [
+      0.003
+     ]
+    },
+    "d1_ADP_rand": {
+     "n": 1,
+     "mean": 0.017,
+     "sd": null,
+     "min": 0.017,
+     "max": 0.017,
+     "values": [
+      0.017
+     ]
+    },
+    "d2_ADP_rand": {
+     "n": 1,
+     "mean": 0.014,
+     "sd": null,
+     "min": 0.014,
+     "max": 0.014,
+     "values": [
+      0.014
+     ]
+    },
     "ADP_rand_3att": null,
     "ADP_worst_3att": null,
     "ADP_learned_rand_3att": null,
@@ -6766,6 +7414,12 @@
      "attacks_found": [
       "carbanakv2_edr"
      ],
+     "ADP_rand": 0.483,
+     "ADP_worst": 0.483,
+     "ADP_learned_rand": 0.004,
+     "ADP_learned_worst": 0.004,
+     "d1_ADP_rand": 0.002,
+     "d2_ADP_rand": 0.009,
      "ADP_time": 0.316,
      "L12_attacks": 1,
      "L12_TP": 39,
@@ -6794,12 +7448,66 @@
     }
    },
    "summary": {
-    "ADP_rand": null,
-    "ADP_worst": null,
-    "ADP_learned_rand": null,
-    "ADP_learned_worst": null,
-    "d1_ADP_rand": null,
-    "d2_ADP_rand": null,
+    "ADP_rand": {
+     "n": 1,
+     "mean": 0.483,
+     "sd": null,
+     "min": 0.483,
+     "max": 0.483,
+     "values": [
+      0.483
+     ]
+    },
+    "ADP_worst": {
+     "n": 1,
+     "mean": 0.483,
+     "sd": null,
+     "min": 0.483,
+     "max": 0.483,
+     "values": [
+      0.483
+     ]
+    },
+    "ADP_learned_rand": {
+     "n": 1,
+     "mean": 0.004,
+     "sd": null,
+     "min": 0.004,
+     "max": 0.004,
+     "values": [
+      0.004
+     ]
+    },
+    "ADP_learned_worst": {
+     "n": 1,
+     "mean": 0.004,
+     "sd": null,
+     "min": 0.004,
+     "max": 0.004,
+     "values": [
+      0.004
+     ]
+    },
+    "d1_ADP_rand": {
+     "n": 1,
+     "mean": 0.002,
+     "sd": null,
+     "min": 0.002,
+     "max": 0.002,
+     "values": [
+      0.002
+     ]
+    },
+    "d2_ADP_rand": {
+     "n": 1,
+     "mean": 0.009,
+     "sd": null,
+     "min": 0.009,
+     "max": 0.009,
+     "values": [
+      0.009
+     ]
+    },
     "ADP_rand_3att": null,
     "ADP_worst_3att": null,
     "ADP_learned_rand_3att": null,
@@ -7086,6 +7794,12 @@
      "attacks_found": [
       "carbanakv2_edr"
      ],
+     "ADP_rand": 0.043,
+     "ADP_worst": 0.043,
+     "ADP_learned_rand": 0.002,
+     "ADP_learned_worst": 0.002,
+     "d1_ADP_rand": 0.0,
+     "d2_ADP_rand": 0.0,
      "ADP_time": 0.029,
      "L12_attacks": 1,
      "L12_TP": 1,
@@ -7114,12 +7828,66 @@
     }
    },
    "summary": {
-    "ADP_rand": null,
-    "ADP_worst": null,
-    "ADP_learned_rand": null,
-    "ADP_learned_worst": null,
-    "d1_ADP_rand": null,
-    "d2_ADP_rand": null,
+    "ADP_rand": {
+     "n": 1,
+     "mean": 0.043,
+     "sd": null,
+     "min": 0.043,
+     "max": 0.043,
+     "values": [
+      0.043
+     ]
+    },
+    "ADP_worst": {
+     "n": 1,
+     "mean": 0.043,
+     "sd": null,
+     "min": 0.043,
+     "max": 0.043,
+     "values": [
+      0.043
+     ]
+    },
+    "ADP_learned_rand": {
+     "n": 1,
+     "mean": 0.002,
+     "sd": null,
+     "min": 0.002,
+     "max": 0.002,
+     "values": [
+      0.002
+     ]
+    },
+    "ADP_learned_worst": {
+     "n": 1,
+     "mean": 0.002,
+     "sd": null,
+     "min": 0.002,
+     "max": 0.002,
+     "values": [
+      0.002
+     ]
+    },
+    "d1_ADP_rand": {
+     "n": 1,
+     "mean": 0.0,
+     "sd": null,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
+    "d2_ADP_rand": {
+     "n": 1,
+     "mean": 0.0,
+     "sd": null,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
     "ADP_rand_3att": null,
     "ADP_worst_3att": null,
     "ADP_learned_rand_3att": null,
@@ -7406,6 +8174,12 @@
      "attacks_found": [
       "carbanakv2_edr"
      ],
+     "ADP_rand": 0.134,
+     "ADP_worst": 0.13,
+     "ADP_learned_rand": 0.012,
+     "ADP_learned_worst": 0.012,
+     "d1_ADP_rand": 0.001,
+     "d2_ADP_rand": 0.0,
      "ADP_time": 0.115,
      "L12_attacks": 1,
      "L12_TP": 3,
@@ -7434,12 +8208,66 @@
     }
    },
    "summary": {
-    "ADP_rand": null,
-    "ADP_worst": null,
-    "ADP_learned_rand": null,
-    "ADP_learned_worst": null,
-    "d1_ADP_rand": null,
-    "d2_ADP_rand": null,
+    "ADP_rand": {
+     "n": 1,
+     "mean": 0.134,
+     "sd": null,
+     "min": 0.134,
+     "max": 0.134,
+     "values": [
+      0.134
+     ]
+    },
+    "ADP_worst": {
+     "n": 1,
+     "mean": 0.13,
+     "sd": null,
+     "min": 0.13,
+     "max": 0.13,
+     "values": [
+      0.13
+     ]
+    },
+    "ADP_learned_rand": {
+     "n": 1,
+     "mean": 0.012,
+     "sd": null,
+     "min": 0.012,
+     "max": 0.012,
+     "values": [
+      0.012
+     ]
+    },
+    "ADP_learned_worst": {
+     "n": 1,
+     "mean": 0.012,
+     "sd": null,
+     "min": 0.012,
+     "max": 0.012,
+     "values": [
+      0.012
+     ]
+    },
+    "d1_ADP_rand": {
+     "n": 1,
+     "mean": 0.001,
+     "sd": null,
+     "min": 0.001,
+     "max": 0.001,
+     "values": [
+      0.001
+     ]
+    },
+    "d2_ADP_rand": {
+     "n": 1,
+     "mean": 0.0,
+     "sd": null,
+     "min": 0.0,
+     "max": 0.0,
+     "values": [
+      0.0
+     ]
+    },
     "ADP_rand_3att": null,
     "ADP_worst_3att": null,
     "ADP_learned_rand_3att": null,
@@ -7726,6 +8554,12 @@
      "attacks_found": [
       "carbanakv2_edr"
      ],
+     "ADP_rand": 1.0,
+     "ADP_worst": 1.0,
+     "ADP_learned_rand": 0.072,
+     "ADP_learned_worst": 0.071,
+     "d1_ADP_rand": 0.005,
+     "d2_ADP_rand": 0.033,
      "ADP_time": 0.825,
      "L12_attacks": 1,
      "L12_TP": 9,
@@ -7754,12 +8588,66 @@
     }
    },
    "summary": {
-    "ADP_rand": null,
-    "ADP_worst": null,
-    "ADP_learned_rand": null,
-    "ADP_learned_worst": null,
-    "d1_ADP_rand": null,
-    "d2_ADP_rand": null,
+    "ADP_rand": {
+     "n": 1,
+     "mean": 1.0,
+     "sd": null,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0
+     ]
+    },
+    "ADP_worst": {
+     "n": 1,
+     "mean": 1.0,
+     "sd": null,
+     "min": 1.0,
+     "max": 1.0,
+     "values": [
+      1.0
+     ]
+    },
+    "ADP_learned_rand": {
+     "n": 1,
+     "mean": 0.072,
+     "sd": null,
+     "min": 0.072,
+     "max": 0.072,
+     "values": [
+      0.072
+     ]
+    },
+    "ADP_learned_worst": {
+     "n": 1,
+     "mean": 0.071,
+     "sd": null,
+     "min": 0.071,
+     "max": 0.071,
+     "values": [
+      0.071
+     ]
+    },
+    "d1_ADP_rand": {
+     "n": 1,
+     "mean": 0.005,
+     "sd": null,
+     "min": 0.005,
+     "max": 0.005,
+     "values": [
+      0.005
+     ]
+    },
+    "d2_ADP_rand": {
+     "n": 1,
+     "mean": 0.033,
+     "sd": null,
+     "min": 0.033,
+     "max": 0.033,
+     "values": [
+      0.033
+     ]
+    },
     "ADP_rand_3att": null,
     "ADP_worst_3att": null,
     "ADP_learned_rand_3att": null,

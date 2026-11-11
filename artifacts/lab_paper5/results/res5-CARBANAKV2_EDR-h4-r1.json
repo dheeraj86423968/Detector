@@ -59,7 +59,21 @@
   "rows": 30,
   "ADP": 0.125,
   "ADP_learned_only": 0.012,
-  "precision": 0.1
+  "precision": 0.1,
+  "ADP_ties": {
+   "random_mean": 0.126,
+   "random_sd": 0.004,
+   "random_min": 0.12,
+   "random_max": 0.13,
+   "worst": 0.12
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.012,
+   "random_sd": 0.0,
+   "random_min": 0.012,
+   "random_max": 0.012,
+   "worst": 0.012
+  }
  },
  "P1": {
   "TP": 1,
@@ -145,6 +159,20 @@
     "max": 0.12,
     "seeds": 20
    }
+  },
+  "ADP_ties": {
+   "random_mean": 0.134,
+   "random_sd": 0.003,
+   "random_min": 0.13,
+   "random_max": 0.136,
+   "worst": 0.13
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.012,
+   "random_sd": 0.0,
+   "random_min": 0.012,
+   "random_max": 0.012,
+   "worst": 0.012
   }
  },
  "P2e": {
@@ -188,7 +216,13 @@
    "attacks_found": [],
    "threshold": 1.0
   },
-  "ADP": 0.001
+  "ADP": 0.001,
+  "ADP_ties": {
+   "random_mean": 0.001,
+   "random_sd": 0.0,
+   "random_min": 0.001,
+   "random_max": 0.001
+  }
  },
  "detector-2": {
   "val_max": {
@@ -209,6 +243,12 @@
    "attacks_found": [],
    "threshold": 1.0
   },
-  "ADP": 0.0
+  "ADP": 0.0,
+  "ADP_ties": {
+   "random_mean": 0.0,
+   "random_sd": 0.0,
+   "random_min": 0.0,
+   "random_max": 0.0
+  }
  }
 }
