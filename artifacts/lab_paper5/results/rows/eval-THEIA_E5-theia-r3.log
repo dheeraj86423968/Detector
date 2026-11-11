@@ -1,0 +1,12 @@
+13:52:19 validation replay 132s: ensemble thresholds {'detector-1': 0.8585848808288574, 'detector-2': 0.5580058395862579} (235129 nodes)
+13:53:43 fleet ['THEIA_E5-theia']: 0 program keys from 0 other endpoints
+14:01:35 scored 689s
+14:01:38 P0: attacks 0 TP 0 FP 114 rows 114 ADP 0.0 (learned only 0.0)
+14:01:39 P1: attacks 0 TP 0 FP 114 rows 114 ADP 0.0 (learned only 0.0)
+14:01:41 P1e: attacks 0 TP 0 FP 114 rows 114 ADP 0.0 (learned only 0.0)
+14:01:42 P2: attacks 0 TP 0 FP 114 rows 114 ADP 0.0 (learned only 0.0)
+14:01:43 P2e: attacks 0 TP 0 FP 114 rows 114 ADP 0.0 (learned only 0.0)
+14:02:13 amendment 1: triage ADP time tie-break {'mean': 0.0, 'min': 0.0, 'max': 0.001, 'seeds': 20}; layers 1-2 only {'TP': 0, 'FP': 87, 'recall': 0.0, 'attacks': 0, 'precision': 0.0, 'attacks_found': [], 'ADP_time_tiebreak': {'mean': 0.0, 'min': 0.0, 'max': 0.001, 'seeds': 20}}
+14:02:14 detector-1 alone: attacks 0 TP 0 FP 32 ADP 0.001
+14:02:15 detector-2 alone: attacks 0 TP 0 FP 9 ADP 0.0
+THEIA_E5-theia       P2/G2: alerts   114 incidents   26 (FP   26, 13.0/day) attacks 0 buried 0
