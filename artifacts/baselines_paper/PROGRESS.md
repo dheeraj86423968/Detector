@@ -93,3 +93,4 @@ are listed per file in results/join_rates.json.
 - 14:21 Velox CARBANAKv2 h1 s0: 0/1, TP 0 / FP 6. 14:31 step-5 data prepared (THEIA 1.16 GB, OpTC H051 2.68 GB). From ~14:40 all my GPU jobs wait: other users hold ~38 GB of the GPU (< 12 GB free).
 - 15:59 ORTHRUS CARBANAKv2 h1 s0 OOM-killed at 28 GB in the same TGN step (h1 has 1.30 M nodes; ATLASv2 h1 with 0.53 M nodes fit). Expected to fail likewise on h2/h3 (1.19 M / 1.06 M nodes); the queue records each attempt. ORTHRUS needs > 40 GB RAM above ~1 M nodes on this host.
 - 16:22 ProvFusion THEIA E3 s1 (regen-D config): refined labels 3/3 attacks, TP 68 / FP 4, tie-neutral ADP 0.967 (printed 0.987); ORTHRUS labels 2/2, TP 59 / FP 13, ADP 0.933.
+- 17:30 ProvFusion OpTC H051 s1 (its published config and seed; PIDSMaker optc_051 DB): 0/1 attack, TP 0 / FP 7; tie-neutral ADP 0.14 (printed 0.48); refined and ORTHRUS labels are identical on H051 (114 nodes). ORTHRUS CARBANAKv2 h2 s0 fit in 28 GB: 0/1, no alerts.
