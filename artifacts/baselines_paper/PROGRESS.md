@@ -83,3 +83,4 @@ are listed per file in results/join_rates.json.
 - Order from here (disk floor): TRACE ProvFusion s2, s3 -> delete TRACE merged data and DB -> PIDSMaker
   FiveDirections artifacts rebuilt, ORTHRUS s0-s2 (40 GB RAM, alone), Velox s3-s4 -> CARBANAKv2 PIDSMaker
   (3 seeds per system per host); ProvFusion CARBANAKv2 seeds 1-3 run in parallel; step 5 last.
+- 10:54 TRACE ProvFusion s2: 2/3 attacks, TP 3 / FP 9, tie-neutral ADP 0.36 (printed 0.65). CARBANAKv2 ProvFusion s1 on h1-h5 and s2 on h1 done (summary.md).
