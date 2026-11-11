@@ -1,12 +1,13 @@
-05:19:54 validation replay 31s: ensemble thresholds {'detector-1': 0.9611735343933105, 'detector-2': 0.9968356847763062} (34388 nodes)
-05:21:05 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 528 program keys from 4 other endpoints
-05:22:55 scored 212s
-05:22:58 P0: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
-05:23:00 P1: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
-05:23:01 P1e: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
-05:23:02 P2: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
-05:23:04 P2e: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
-05:23:34 amendment 1: triage ADP time tie-break {'mean': 0.622, 'min': 0.62, 'max': 0.626, 'seeds': 20}; layers 1-2 only {'TP': 100, 'FP': 81, 'recall': 0.847, 'attacks': 2, 'precision': 0.552, 'attacks_found': ['Browser_Extension_Drakon_Dropper', 'Firefox_Backdoor_Drakon_In_Memory'], 'ADP_time_tiebreak': {'mean': 0.628, 'min': 0.626, 'max': 0.631, 'seeds': 20}}
-05:23:34 detector-1 alone: attacks 2 TP 19 FP 75 ADP 1.0
-05:23:35 detector-2 alone: attacks 2 TP 8 FP 19 ADP 1.0
+19:34:14 validation replay 29s: ensemble thresholds {'detector-1': 0.9611735343933105, 'detector-2': 0.9968356847763062} (34388 nodes)
+19:35:22 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 528 program keys from 4 other endpoints
+19:37:04 scored 199s
+19:37:06 P0: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
+19:37:08 P1: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
+19:37:09 P1e: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
+19:37:10 P2: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
+19:37:11 P2e: attacks 2 TP 109 FP 86 rows 200 ADP 1.0 (learned only 1.0)
+19:38:37 amendment 2: P2 triage ADP ties {'random_mean': 1.0, 'random_sd': 0.0, 'random_min': 1.0, 'random_max': 1.0, 'worst': 1.0}; learned {'random_mean': 0.988, 'random_sd': 0.014, 'random_min': 0.949, 'random_max': 1.0, 'worst': 0.971}
+19:38:40 amendment 1: triage ADP time tie-break {'mean': 0.622, 'min': 0.62, 'max': 0.626, 'seeds': 20}; layers 1-2 only {'TP': 100, 'FP': 81, 'recall': 0.847, 'attacks': 2, 'precision': 0.552, 'attacks_found': ['Browser_Extension_Drakon_Dropper', 'Firefox_Backdoor_Drakon_In_Memory'], 'ADP_time_tiebreak': {'mean': 0.628, 'min': 0.626, 'max': 0.631, 'seeds': 20}}
+19:38:54 detector-1 alone: attacks 2 TP 19 FP 75 ADP 1.0
+19:39:09 detector-2 alone: attacks 2 TP 8 FP 19 ADP 1.0
 THEIA_E3             P2/G2: alerts   200 incidents    9 (FP    6, 2.0/day) attacks 2 buried 0

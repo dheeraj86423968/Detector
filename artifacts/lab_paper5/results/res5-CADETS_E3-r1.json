@@ -4,7 +4,7 @@
  "bundle": "/data/lab08/5eafc637-14c7-4074-b4d3-4e611dea925e/v07rel",
  "detector_thresholds": {
   "detector-1": 0.8406102657318115,
-  "detector-2": 0.848913562297821
+  "detector-2": 0.8489135742187501
  },
  "validation_nodes": 111331,
  "fleet": [
@@ -63,7 +63,21 @@
   "rows": 47,
   "ADP": 1.0,
   "ADP_learned_only": 0.727,
-  "precision": 0.66
+  "precision": 0.66,
+  "ADP_ties": {
+   "random_mean": 1.0,
+   "random_sd": 0.0,
+   "random_min": 1.0,
+   "random_max": 1.0,
+   "worst": 1.0
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.727,
+   "random_sd": 0.0,
+   "random_min": 0.727,
+   "random_max": 0.727,
+   "worst": 0.727
+  }
  },
  "P1": {
   "TP": 31,
@@ -165,6 +179,20 @@
     "max": 1.0,
     "seeds": 20
    }
+  },
+  "ADP_ties": {
+   "random_mean": 1.0,
+   "random_sd": 0.0,
+   "random_min": 1.0,
+   "random_max": 1.0,
+   "worst": 1.0
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.727,
+   "random_sd": 0.0,
+   "random_min": 0.727,
+   "random_max": 0.727,
+   "worst": 0.727
   }
  },
  "P2e": {
@@ -216,7 +244,13 @@
    ],
    "threshold": 1.0
   },
-  "ADP": 0.383
+  "ADP": 0.383,
+  "ADP_ties": {
+   "random_mean": 0.39,
+   "random_sd": 0.005,
+   "random_min": 0.384,
+   "random_max": 0.401
+  }
  },
  "detector-2": {
   "val_max": {
@@ -230,7 +264,7 @@
     "Nginx_Backdoor_12",
     "Nginx_Backdoor_13"
    ],
-   "threshold": 0.848913562297821
+   "threshold": 0.8489135742187501
   },
   "ratio_1": {
    "TP": 15,
@@ -244,6 +278,12 @@
    ],
    "threshold": 1.0
   },
-  "ADP": 0.966
+  "ADP": 0.966,
+  "ADP_ties": {
+   "random_mean": 0.966,
+   "random_sd": 0.0,
+   "random_min": 0.965,
+   "random_max": 0.966
+  }
  }
 }

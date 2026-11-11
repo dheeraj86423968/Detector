@@ -1,0 +1,13 @@
+20:41:11 validation replay 81s: ensemble thresholds {'detector-1': 0.954026997089386, 'detector-2': 0.9008198380470276} (442684 nodes)
+20:42:11 fleet ['OPTC_H201', 'OPTC_H501', 'OPTC_H051']: 136 program keys from 2 other endpoints
+20:43:56 scored 247s
+20:44:02 P0: attacks 1 TP 6 FP 19 rows 25 ADP 0.749 (learned only 0.999)
+20:44:05 P1: attacks 1 TP 6 FP 18 rows 24 ADP 0.749 (learned only 0.999)
+20:44:07 P1e: attacks 1 TP 6 FP 18 rows 24 ADP 0.749 (learned only 0.999)
+20:44:10 P2: attacks 1 TP 6 FP 19 rows 25 ADP 0.749 (learned only 0.999)
+20:44:13 P2e: attacks 1 TP 6 FP 19 rows 25 ADP 0.749 (learned only 0.999)
+20:47:45 amendment 2: P2 triage ADP ties {'random_mean': 0.749, 'random_sd': 0.0, 'random_min': 0.749, 'random_max': 0.749, 'worst': 0.749}; learned {'random_mean': 0.999, 'random_sd': 0.0, 'random_min': 0.999, 'random_max': 0.999, 'worst': 0.999}
+20:47:48 amendment 1: triage ADP time tie-break {'mean': 0.999, 'min': 0.999, 'max': 0.999, 'seeds': 20}; layers 1-2 only {'TP': 6, 'FP': 18, 'recall': 0.002, 'attacks': 1, 'precision': 0.25, 'attacks_found': ['h201_0923'], 'ADP_time_tiebreak': {'mean': 0.999, 'min': 0.999, 'max': 0.999, 'seeds': 20}}
+20:48:23 detector-1 alone: attacks 0 TP 0 FP 11 ADP 0.064
+20:48:57 detector-2 alone: attacks 0 TP 0 FP 0 ADP 0.142
+OPTC_H201            P2/G2: alerts    25 incidents   11 (FP   10, 3.33/day) attacks 1 buried 0

@@ -1,12 +1,13 @@
-05:54:04 validation replay 94s: ensemble thresholds {'detector-1': 1.0, 'detector-2': 0.8258931040763855} (486928 nodes)
-05:55:08 fleet ['OPTC_H201', 'OPTC_H501', 'OPTC_H051']: 132 program keys from 2 other endpoints
-05:57:17 scored 287s
-05:57:23 P0: attacks 1 TP 17 FP 77 rows 107 ADP 1.0 (learned only 0.25)
-05:57:26 P1: attacks 1 TP 17 FP 69 rows 99 ADP 1.0 (learned only 0.25)
-05:57:29 P1e: attacks 1 TP 17 FP 69 rows 99 ADP 1.0 (learned only 0.25)
-05:57:32 P2: attacks 1 TP 17 FP 70 rows 100 ADP 1.0 (learned only 0.25)
-05:57:35 P2e: attacks 1 TP 17 FP 70 rows 100 ADP 1.0 (learned only 0.25)
-05:58:49 amendment 1: triage ADP time tie-break {'mean': 0.783, 'min': 0.6, 'max': 1.0, 'seeds': 20}; layers 1-2 only {'TP': 10, 'FP': 44, 'recall': 0.013, 'attacks': 1, 'precision': 0.185, 'attacks_found': ['h501_0924'], 'ADP_time_tiebreak': {'mean': 0.783, 'min': 0.6, 'max': 1.0, 'seeds': 20}}
-05:58:51 detector-1 alone: attacks 0 TP 0 FP 2 ADP 0.052
-05:58:52 detector-2 alone: attacks 0 TP 0 FP 7 ADP 0.1
+20:31:30 validation replay 89s: ensemble thresholds {'detector-1': 1.0, 'detector-2': 0.8258930921554566} (486928 nodes)
+20:32:32 fleet ['OPTC_H201', 'OPTC_H501', 'OPTC_H051']: 132 program keys from 2 other endpoints
+20:34:31 scored 271s
+20:34:37 P0: attacks 1 TP 17 FP 77 rows 107 ADP 1.0 (learned only 0.25)
+20:34:40 P1: attacks 1 TP 17 FP 69 rows 99 ADP 1.0 (learned only 0.25)
+20:34:43 P1e: attacks 1 TP 17 FP 69 rows 99 ADP 1.0 (learned only 0.25)
+20:34:46 P2: attacks 1 TP 17 FP 70 rows 100 ADP 1.0 (learned only 0.25)
+20:34:49 P2e: attacks 1 TP 17 FP 70 rows 100 ADP 1.0 (learned only 0.25)
+20:38:24 amendment 2: P2 triage ADP ties {'random_mean': 0.929, 'random_sd': 0.124, 'random_min': 0.666, 'random_max': 1.0, 'worst': 0.666}; learned {'random_mean': 0.291, 'random_sd': 0.042, 'random_min': 0.25, 'random_max': 0.333, 'worst': 0.25}
+20:38:29 amendment 1: triage ADP time tie-break {'mean': 0.783, 'min': 0.6, 'max': 1.0, 'seeds': 20}; layers 1-2 only {'TP': 10, 'FP': 44, 'recall': 0.013, 'attacks': 1, 'precision': 0.185, 'attacks_found': ['h501_0924'], 'ADP_time_tiebreak': {'mean': 0.783, 'min': 0.6, 'max': 1.0, 'seeds': 20}}
+20:39:05 detector-1 alone: attacks 0 TP 0 FP 2 ADP 0.052
+20:39:40 detector-2 alone: attacks 0 TP 0 FP 7 ADP 0.1
 OPTC_H501            P2/G2: alerts   100 incidents   12 (FP   10, 3.33/day) attacks 1 buried 0

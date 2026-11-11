@@ -1,12 +1,13 @@
-05:23:53 validation replay 9s: ensemble thresholds {'detector-1': 0.9999866485595703, 'detector-2': 0.9497820734977723} (32059 nodes)
-05:23:59 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 622 program keys from 4 other endpoints
-05:24:17 scored 34s
-05:24:17 P0: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
-05:24:17 P1: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
-05:24:18 P1e: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
-05:24:18 P2: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
-05:24:18 P2e: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
-05:24:21 amendment 1: triage ADP time tie-break {'mean': 0.002, 'min': 0.0, 'max': 0.017, 'seeds': 20}; layers 1-2 only {'TP': 0, 'FP': 0, 'recall': 0.0, 'attacks': 0, 'precision': 0.0, 'attacks_found': [], 'ADP_time_tiebreak': {'mean': 0.002, 'min': 0.0, 'max': 0.017, 'seeds': 20}}
-05:24:21 detector-1 alone: attacks 1 TP 1 FP 126 ADP 0.333
-05:24:21 detector-2 alone: attacks 0 TP 0 FP 13 ADP 0.071
+19:39:22 validation replay 8s: ensemble thresholds {'detector-1': 0.9999866485595703, 'detector-2': 0.9497820854187012} (32059 nodes)
+19:39:29 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 622 program keys from 4 other endpoints
+19:39:44 scored 30s
+19:39:44 P0: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
+19:39:44 P1: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
+19:39:44 P1e: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
+19:39:45 P2: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
+19:39:45 P2e: attacks 0 TP 0 FP 0 rows 0 ADP 0.2 (learned only 0.2)
+19:39:55 amendment 2: P2 triage ADP ties {'random_mean': 0.187, 'random_sd': 0.016, 'random_min': 0.167, 'random_max': 0.2, 'worst': 0.167}; learned {'random_mean': 0.187, 'random_sd': 0.016, 'random_min': 0.167, 'random_max': 0.2, 'worst': 0.167}
+19:39:56 amendment 1: triage ADP time tie-break {'mean': 0.002, 'min': 0.0, 'max': 0.017, 'seeds': 20}; layers 1-2 only {'TP': 0, 'FP': 0, 'recall': 0.0, 'attacks': 0, 'precision': 0.0, 'attacks_found': [], 'ADP_time_tiebreak': {'mean': 0.002, 'min': 0.0, 'max': 0.017, 'seeds': 20}}
+19:39:57 detector-1 alone: attacks 1 TP 1 FP 126 ADP 0.333
+19:39:59 detector-2 alone: attacks 0 TP 0 FP 13 ADP 0.071
 CLEARSCOPE_E3        P2/G2: alerts     0 incidents    0 (FP    0, 0.0/day) attacks 0 buried 0

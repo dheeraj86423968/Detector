@@ -4,7 +4,7 @@
  "bundle": "/data/lab08/f85bab6a-0fce-4b21-81d8-dd967b8d4395/v07rel",
  "detector_thresholds": {
   "detector-1": 0.905745804309845,
-  "detector-2": 0.8799845814704896
+  "detector-2": 0.8799845457077027
  },
  "validation_nodes": 442684,
  "fleet": [
@@ -57,7 +57,21 @@
   "rows": 25,
   "ADP": 0.749,
   "ADP_learned_only": 0.999,
-  "precision": 0.24
+  "precision": 0.24,
+  "ADP_ties": {
+   "random_mean": 0.749,
+   "random_sd": 0.0,
+   "random_min": 0.749,
+   "random_max": 0.749,
+   "worst": 0.749
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.999,
+   "random_sd": 0.0,
+   "random_min": 0.999,
+   "random_max": 0.999,
+   "worst": 0.999
+  }
  },
  "P1": {
   "TP": 6,
@@ -145,6 +159,20 @@
     "max": 0.999,
     "seeds": 20
    }
+  },
+  "ADP_ties": {
+   "random_mean": 0.749,
+   "random_sd": 0.0,
+   "random_min": 0.749,
+   "random_max": 0.749,
+   "worst": 0.749
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.999,
+   "random_sd": 0.0,
+   "random_min": 0.999,
+   "random_max": 0.999,
+   "worst": 0.999
   }
  },
  "P2e": {
@@ -190,7 +218,13 @@
    "attacks_found": [],
    "threshold": 1.0
   },
-  "ADP": 0.132
+  "ADP": 0.132,
+  "ADP_ties": {
+   "random_mean": 0.138,
+   "random_sd": 0.005,
+   "random_min": 0.132,
+   "random_max": 0.142
+  }
  },
  "detector-2": {
   "val_max": {
@@ -200,7 +234,7 @@
    "attacks": 0,
    "precision": 0.0,
    "attacks_found": [],
-   "threshold": 0.8799845814704896
+   "threshold": 0.8799845457077027
   },
   "ratio_1": {
    "TP": 0,
@@ -211,6 +245,12 @@
    "attacks_found": [],
    "threshold": 1.0
   },
-  "ADP": 0.11
+  "ADP": 0.11,
+  "ADP_ties": {
+   "random_mean": 0.106,
+   "random_sd": 0.005,
+   "random_min": 0.099,
+   "random_max": 0.11
+  }
  }
 }

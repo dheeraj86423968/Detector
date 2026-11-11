@@ -1,12 +1,13 @@
-05:18:06 validation replay 21s: ensemble thresholds {'detector-1': 0.8406102657318115, 'detector-2': 0.848913562297821} (111331 nodes)
-05:18:17 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 555 program keys from 4 other endpoints
-05:19:05 scored 80s
-05:19:06 P0: attacks 3 TP 31 FP 16 rows 47 ADP 1.0 (learned only 0.727)
-05:19:06 P1: attacks 3 TP 31 FP 13 rows 44 ADP 1.0 (learned only 0.727)
-05:19:07 P1e: attacks 3 TP 31 FP 13 rows 44 ADP 1.0 (learned only 0.727)
-05:19:07 P2: attacks 3 TP 31 FP 16 rows 47 ADP 1.0 (learned only 0.727)
-05:19:08 P2e: attacks 3 TP 31 FP 16 rows 47 ADP 1.0 (learned only 0.727)
-05:19:18 amendment 1: triage ADP time tie-break {'mean': 1.0, 'min': 1.0, 'max': 1.0, 'seeds': 20}; layers 1-2 only {'TP': 29, 'FP': 15, 'recall': 0.426, 'attacks': 3, 'precision': 0.659, 'attacks_found': ['Nginx_Backdoor_06', 'Nginx_Backdoor_12', 'Nginx_Backdoor_13'], 'ADP_time_tiebreak': {'mean': 1.0, 'min': 1.0, 'max': 1.0, 'seeds': 20}}
-05:19:18 detector-1 alone: attacks 1 TP 6 FP 3 ADP 0.383
-05:19:18 detector-2 alone: attacks 3 TP 23 FP 9 ADP 0.966
+19:32:04 validation replay 20s: ensemble thresholds {'detector-1': 0.8406102657318115, 'detector-2': 0.8489135742187501} (111331 nodes)
+19:32:15 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 555 program keys from 4 other endpoints
+19:32:57 scored 73s
+19:32:58 P0: attacks 3 TP 31 FP 16 rows 47 ADP 1.0 (learned only 0.727)
+19:32:58 P1: attacks 3 TP 31 FP 13 rows 44 ADP 1.0 (learned only 0.727)
+19:32:59 P1e: attacks 3 TP 31 FP 13 rows 44 ADP 1.0 (learned only 0.727)
+19:32:59 P2: attacks 3 TP 31 FP 16 rows 47 ADP 1.0 (learned only 0.727)
+19:33:00 P2e: attacks 3 TP 31 FP 16 rows 47 ADP 1.0 (learned only 0.727)
+19:33:30 amendment 2: P2 triage ADP ties {'random_mean': 1.0, 'random_sd': 0.0, 'random_min': 1.0, 'random_max': 1.0, 'worst': 1.0}; learned {'random_mean': 0.727, 'random_sd': 0.0, 'random_min': 0.727, 'random_max': 0.727, 'worst': 0.727}
+19:33:31 amendment 1: triage ADP time tie-break {'mean': 1.0, 'min': 1.0, 'max': 1.0, 'seeds': 20}; layers 1-2 only {'TP': 29, 'FP': 15, 'recall': 0.426, 'attacks': 3, 'precision': 0.659, 'attacks_found': ['Nginx_Backdoor_06', 'Nginx_Backdoor_12', 'Nginx_Backdoor_13'], 'ADP_time_tiebreak': {'mean': 1.0, 'min': 1.0, 'max': 1.0, 'seeds': 20}}
+19:33:36 detector-1 alone: attacks 1 TP 6 FP 3 ADP 0.383
+19:33:41 detector-2 alone: attacks 3 TP 23 FP 9 ADP 0.966
 CADETS_E3            P2/G2: alerts    47 incidents   13 (FP   10, 2.5/day) attacks 3 buried 0

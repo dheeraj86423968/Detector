@@ -1,12 +1,13 @@
-05:26:56 validation replay 151s: ensemble thresholds {'detector-1': 0.8232560753822327, 'detector-2': 0.6613087058067322} (235129 nodes)
-05:28:23 fleet ['THEIA_E5-theia']: 0 program keys from 0 other endpoints
-05:36:18 scored 713s
-05:36:20 P0: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
-05:36:22 P1: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
-05:36:23 P1e: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
-05:36:24 P2: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
-05:36:26 P2e: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
-05:36:55 amendment 1: triage ADP time tie-break {'mean': 0.0, 'min': 0.0, 'max': 0.001, 'seeds': 20}; layers 1-2 only {'TP': 0, 'FP': 87, 'recall': 0.0, 'attacks': 0, 'precision': 0.0, 'attacks_found': [], 'ADP_time_tiebreak': {'mean': 0.0, 'min': 0.0, 'max': 0.001, 'seeds': 20}}
-05:36:56 detector-1 alone: attacks 0 TP 0 FP 59 ADP 0.001
-05:36:56 detector-2 alone: attacks 0 TP 0 FP 19 ADP 0.0
+19:42:17 validation replay 135s: ensemble thresholds {'detector-1': 0.8232560753822327, 'detector-2': 0.6613087058067322} (235129 nodes)
+19:43:41 fleet ['THEIA_E5-theia']: 0 program keys from 0 other endpoints
+19:49:36 scored 573s
+19:49:38 P0: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
+19:49:39 P1: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
+19:49:41 P1e: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
+19:49:42 P2: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
+19:49:43 P2e: attacks 0 TP 0 FP 97 rows 97 ADP 0.0 (learned only 0.0)
+19:51:16 amendment 2: P2 triage ADP ties {'random_mean': 0.0, 'random_sd': 0.0, 'random_min': 0.0, 'random_max': 0.0, 'worst': 0.0}; learned {'random_mean': 0.0, 'random_sd': 0.0, 'random_min': 0.0, 'random_max': 0.0, 'worst': 0.0}
+19:51:19 amendment 1: triage ADP time tie-break {'mean': 0.0, 'min': 0.0, 'max': 0.001, 'seeds': 20}; layers 1-2 only {'TP': 0, 'FP': 87, 'recall': 0.0, 'attacks': 0, 'precision': 0.0, 'attacks_found': [], 'ADP_time_tiebreak': {'mean': 0.0, 'min': 0.0, 'max': 0.001, 'seeds': 20}}
+19:51:35 detector-1 alone: attacks 0 TP 0 FP 59 ADP 0.001
+19:51:50 detector-2 alone: attacks 0 TP 0 FP 19 ADP 0.0
 THEIA_E5-theia       P2/G2: alerts    97 incidents   28 (FP   28, 14.0/day) attacks 0 buried 0

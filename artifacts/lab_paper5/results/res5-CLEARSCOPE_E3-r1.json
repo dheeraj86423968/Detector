@@ -4,7 +4,7 @@
  "bundle": "/data/lab08/5ef60025-b74e-417a-8e48-7ab1c7dbcd67/v07rel",
  "detector_thresholds": {
   "detector-1": 0.9999866485595703,
-  "detector-2": 0.9497820734977723
+  "detector-2": 0.9497820854187012
  },
  "validation_nodes": 32059,
  "fleet": [
@@ -51,7 +51,21 @@
   "rows": 0,
   "ADP": 0.2,
   "ADP_learned_only": 0.2,
-  "precision": 0.0
+  "precision": 0.0,
+  "ADP_ties": {
+   "random_mean": 0.187,
+   "random_sd": 0.016,
+   "random_min": 0.167,
+   "random_max": 0.2,
+   "worst": 0.167
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.187,
+   "random_sd": 0.016,
+   "random_min": 0.167,
+   "random_max": 0.2,
+   "worst": 0.167
+  }
  },
  "P1": {
   "TP": 0,
@@ -113,6 +127,20 @@
     "max": 0.017,
     "seeds": 20
    }
+  },
+  "ADP_ties": {
+   "random_mean": 0.187,
+   "random_sd": 0.016,
+   "random_min": 0.167,
+   "random_max": 0.2,
+   "worst": 0.167
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.187,
+   "random_sd": 0.016,
+   "random_min": 0.167,
+   "random_max": 0.2,
+   "worst": 0.167
   }
  },
  "P2e": {
@@ -152,7 +180,13 @@
    ],
    "threshold": 1.0
   },
-  "ADP": 0.333
+  "ADP": 0.333,
+  "ADP_ties": {
+   "random_mean": 0.304,
+   "random_sd": 0.04,
+   "random_min": 0.25,
+   "random_max": 0.333
+  }
  },
  "detector-2": {
   "val_max": {
@@ -162,7 +196,7 @@
    "attacks": 0,
    "precision": 0.0,
    "attacks_found": [],
-   "threshold": 0.9497820734977723
+   "threshold": 0.9497820854187012
   },
   "ratio_1": {
    "TP": 0,
@@ -173,6 +207,12 @@
    "attacks_found": [],
    "threshold": 1.0
   },
-  "ADP": 0.071
+  "ADP": 0.071,
+  "ADP_ties": {
+   "random_mean": 0.071,
+   "random_sd": 0.0,
+   "random_min": 0.071,
+   "random_max": 0.071
+  }
  }
 }

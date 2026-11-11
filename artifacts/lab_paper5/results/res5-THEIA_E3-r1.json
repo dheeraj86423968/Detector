@@ -62,7 +62,21 @@
   "rows": 200,
   "ADP": 1.0,
   "ADP_learned_only": 1.0,
-  "precision": 0.559
+  "precision": 0.559,
+  "ADP_ties": {
+   "random_mean": 1.0,
+   "random_sd": 0.0,
+   "random_min": 1.0,
+   "random_max": 1.0,
+   "worst": 1.0
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.988,
+   "random_sd": 0.014,
+   "random_min": 0.949,
+   "random_max": 1.0,
+   "worst": 0.971
+  }
  },
  "P1": {
   "TP": 109,
@@ -160,6 +174,20 @@
     "max": 0.631,
     "seeds": 20
    }
+  },
+  "ADP_ties": {
+   "random_mean": 1.0,
+   "random_sd": 0.0,
+   "random_min": 1.0,
+   "random_max": 1.0,
+   "worst": 1.0
+  },
+  "ADP_learned_only_ties": {
+   "random_mean": 0.988,
+   "random_sd": 0.014,
+   "random_min": 0.949,
+   "random_max": 1.0,
+   "worst": 0.971
   }
  },
  "P2e": {
@@ -212,7 +240,13 @@
    ],
    "threshold": 1.0
   },
-  "ADP": 1.0
+  "ADP": 1.0,
+  "ADP_ties": {
+   "random_mean": 1.0,
+   "random_sd": 0.0,
+   "random_min": 1.0,
+   "random_max": 1.0
+  }
  },
  "detector-2": {
   "val_max": {
@@ -239,6 +273,12 @@
    ],
    "threshold": 1.0
   },
-  "ADP": 1.0
+  "ADP": 1.0,
+  "ADP_ties": {
+   "random_mean": 1.0,
+   "random_sd": 0.0,
+   "random_min": 1.0,
+   "random_max": 1.0
+  }
  }
 }
