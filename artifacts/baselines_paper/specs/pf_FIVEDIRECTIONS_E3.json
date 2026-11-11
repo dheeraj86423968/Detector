@@ -1,0 +1,6 @@
+{"raw_dir": "", "database": "fivedirections_e3", "database_all_file": "fivedirections_e3", "num_node_types": 3, "num_edge_types": 10,
+ "year_month": "2018-04", "start_end_day_range": [4, 12],
+ "train_files": ["graph_4", "graph_5", "graph_6", "graph_7"], "val_files": ["graph_8"], "test_files": ["graph_9", "graph_10", "graph_11"], "unused_files": [],
+ "ground_truth_relative_path": ["E3-FIVEDIRECTIONS/node_fivedirections_e3_excel_0409.csv", "E3-FIVEDIRECTIONS/node_fivedirections_e3_firefox_0411.csv"],
+ "attack_to_time_window": [["E3-FIVEDIRECTIONS/node_fivedirections_e3_firefox_0411.csv", "2018-04-11 09:59:00", "2018-04-11 10:41:00"],
+                           ["E3-FIVEDIRECTIONS/node_fivedirections_e3_excel_0409.csv", "2018-04-09 15:06:00", "2018-04-09 15:43:00"]]}

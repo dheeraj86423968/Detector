@@ -1,0 +1,41 @@
+{
+ "raw_dir": "",
+ "num_node_types": 3,
+ "num_edge_types": 10,
+ "timezone": "US/Eastern",
+ "database": "fivedirections_e3",
+ "database_all_file": "fivedirections_e3",
+ "start_date": "2018-04-02",
+ "end_date": "2018-04-14",
+ "train_dates": [
+  "2018-04-04",
+  "2018-04-05",
+  "2018-04-06",
+  "2018-04-07"
+ ],
+ "val_dates": [
+  "2018-04-08"
+ ],
+ "test_dates": [
+  "2018-04-09",
+  "2018-04-10",
+  "2018-04-11"
+ ],
+ "unused_dates": [],
+ "ground_truth_relative_path": [
+  "E3-FIVEDIRECTIONS/node_fivedirections_e3_excel_0409.csv",
+  "E3-FIVEDIRECTIONS/node_fivedirections_e3_firefox_0411.csv"
+ ],
+ "attack_to_time_window": [
+  [
+   "E3-FIVEDIRECTIONS/node_fivedirections_e3_firefox_0411.csv",
+   "2018-04-11 09:59:00",
+   "2018-04-11 10:41:00"
+  ],
+  [
+   "E3-FIVEDIRECTIONS/node_fivedirections_e3_excel_0409.csv",
+   "2018-04-09 15:06:00",
+   "2018-04-09 15:43:00"
+  ]
+ ]
+}
