@@ -1,0 +1,334 @@
+{
+ "attacks": [
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m1",
+   "class": "missed",
+   "gt_layers": [],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m2",
+   "class": "rule_anchor",
+   "gt_layers": [],
+   "anchor_layers": [
+    "rules"
+   ],
+   "only_corroboration_on_gt": true
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m3",
+   "class": "rule_anchor",
+   "gt_layers": [],
+   "anchor_layers": [
+    "rules"
+   ],
+   "only_corroboration_on_gt": true
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m4",
+   "class": "rule_anchor",
+   "gt_layers": [],
+   "anchor_layers": [
+    "rules"
+   ],
+   "only_corroboration_on_gt": true
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m5",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m6",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_s1",
+   "class": "missed",
+   "gt_layers": [],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_s2",
+   "class": "rule_anchor",
+   "gt_layers": [],
+   "anchor_layers": [
+    "rules"
+   ],
+   "only_corroboration_on_gt": true
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_s3",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [
+    "novelty"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_s4",
+   "class": "rule_anchor",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [
+    "rules"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "CADETS_E3",
+   "attack": "Nginx_Backdoor_06",
+   "class": "rule_gt",
+   "gt_layers": [
+    "novelty",
+    "rules"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "CADETS_E3",
+   "attack": "Nginx_Backdoor_12",
+   "class": "rule_gt",
+   "gt_layers": [
+    "novelty",
+    "rules"
+   ],
+   "anchor_layers": [
+    "rules"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "CADETS_E3",
+   "attack": "Nginx_Backdoor_13",
+   "class": "rule_gt",
+   "gt_layers": [
+    "novelty",
+    "rules"
+   ],
+   "anchor_layers": [
+    "rules"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "CARBANAKV2_EDR-h1",
+   "attack": "carbanakv2_edr",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "CARBANAKV2_EDR-h2",
+   "attack": "carbanakv2_edr",
+   "class": "rule_gt",
+   "gt_layers": [
+    "novelty",
+    "rules"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "CARBANAKV2_EDR-h3",
+   "attack": "carbanakv2_edr",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [
+    "novelty"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "CARBANAKV2_EDR-h4",
+   "attack": "carbanakv2_edr",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "CARBANAKV2_EDR-h5",
+   "attack": "carbanakv2_edr",
+   "class": "rule_anchor",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [
+    "novelty",
+    "rules"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "CLEARSCOPE_E3",
+   "attack": "clearscope_e3_firefox_0411",
+   "class": "missed",
+   "gt_layers": [],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "FIVEDIRECTIONS_E3",
+   "attack": "fivedirections_e3_excel_0409",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [
+    "novelty"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "FIVEDIRECTIONS_E3",
+   "attack": "fivedirections_e3_firefox_0411",
+   "class": "novelty_anchor",
+   "gt_layers": [],
+   "anchor_layers": [
+    "novelty"
+   ],
+   "only_corroboration_on_gt": true
+  },
+  {
+   "set": "OPTC_H051",
+   "attack": "h051_0925",
+   "class": "rule_gt",
+   "gt_layers": [
+    "novelty",
+    "rules"
+   ],
+   "anchor_layers": [
+    "novelty",
+    "rules"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "OPTC_H201",
+   "attack": "h201_0923",
+   "class": "rule_gt",
+   "gt_layers": [
+    "rules"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "OPTC_H501",
+   "attack": "h501_0924",
+   "class": "rule_gt",
+   "gt_layers": [
+    "novelty",
+    "rules"
+   ],
+   "anchor_layers": [
+    "novelty",
+    "rules"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "THEIA_E3",
+   "attack": "Browser_Extension_Drakon_Dropper",
+   "class": "rule_gt",
+   "gt_layers": [
+    "novelty",
+    "rules"
+   ],
+   "anchor_layers": [
+    "rules"
+   ],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "THEIA_E3",
+   "attack": "Firefox_Backdoor_Drakon_In_Memory",
+   "class": "rule_gt",
+   "gt_layers": [
+    "novelty",
+    "rules"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "THEIA_E5-theia",
+   "attack": "node_THEIA_1_Firefox_Drakon_APT_BinFmt_Elevate_Inject",
+   "class": "missed",
+   "gt_layers": [],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "TRACE_E3-trace",
+   "attack": "node_trace_e3_firefox_0410",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "TRACE_E3-trace",
+   "attack": "node_trace_e3_phishing_executable_0413",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  },
+  {
+   "set": "TRACE_E3-trace",
+   "attack": "node_trace_e3_pine_0413",
+   "class": "novelty_gt",
+   "gt_layers": [
+    "novelty"
+   ],
+   "anchor_layers": [],
+   "only_corroboration_on_gt": false
+  }
+ ],
+ "classes": {
+  "missed": 4,
+  "rule_anchor": 6,
+  "novelty_gt": 10,
+  "rule_gt": 9,
+  "novelty_anchor": 1
+ }
+}
