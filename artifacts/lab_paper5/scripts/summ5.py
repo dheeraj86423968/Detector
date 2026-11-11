@@ -45,6 +45,15 @@ def metrics(s, r):
     if res is not None:
         m["n_attacks"] = res["n_attacks"]
         q = res["P2"]
+        if "ADP_ties" in q:     # amendment 2: random order within ties (headline) and worst case
+            m.update({"ADP_rand": q["ADP_ties"]["random_mean"], "ADP_worst": q["ADP_ties"]["worst"],
+                      "ADP_learned_rand": q["ADP_learned_only_ties"]["random_mean"], "ADP_learned_worst": q["ADP_learned_only_ties"]["worst"],
+                      "d1_ADP_rand": res["detector-1"]["ADP_ties"]["random_mean"], "d2_ADP_rand": res["detector-2"]["ADP_ties"]["random_mean"]})
+            ex = res.get("with_extra_gt")
+            if ex and "ADP_ties" in ex["P2"]:
+                m.update({"ADP_rand_3att": ex["P2"]["ADP_ties"]["random_mean"], "ADP_worst_3att": ex["P2"]["ADP_ties"]["worst"],
+                          "ADP_learned_rand_3att": ex["P2"]["ADP_learned_only_ties"]["random_mean"], "ADP_learned_worst_3att": ex["P2"]["ADP_learned_only_ties"]["worst"],
+                          "d1_ADP_rand_3att": ex["detector-1"]["ADP_ties"]["random_mean"], "d2_ADP_rand_3att": ex["detector-2"]["ADP_ties"]["random_mean"]})
         if "ADP_triage_time_tiebreak" in q:
             m["ADP_time"] = q["ADP_triage_time_tiebreak"]["mean"]
             l = q["layers12_only"]
@@ -73,7 +82,8 @@ def metrics(s, r):
     return m
 
 
-KEYS = ["ADP", "ADP_time", "L12_attacks", "L12_TP", "L12_FP", "L12_ADP_time", "ADP_time_3att", "L12_ADP_time_3att", "ADP_learned", "attacks", "TP", "FP", "precision", "incidents", "false_incidents", "buried",
+KEYS = ["ADP_rand", "ADP_worst", "ADP_learned_rand", "ADP_learned_worst", "d1_ADP_rand", "d2_ADP_rand", "ADP_rand_3att",
+        "ADP_worst_3att", "ADP_learned_rand_3att", "ADP_learned_worst_3att", "d1_ADP_rand_3att", "d2_ADP_rand_3att", "ADP", "ADP_time", "L12_attacks", "L12_TP", "L12_FP", "L12_ADP_time", "ADP_time_3att", "L12_ADP_time_3att", "ADP_learned", "attacks", "TP", "FP", "precision", "incidents", "false_incidents", "buried",
         "d1_attacks", "d1_TP", "d1_FP", "d1_ADP", "d2_attacks", "d2_TP", "d2_FP", "d2_ADP",
         "ADP_3att", "ADP_learned_3att", "attacks_3att", "d1_ADP_3att", "d2_ADP_3att"]
 
@@ -125,33 +135,41 @@ def main():
             return "-"
         fm = (lambda v: f"{v:.{nd}f}") if nd else (lambda v: f"{v:g}")
         sd = f" ± {x['sd']:.{max(nd, 1)}f}" if x["sd"] is not None else ""
-        return f"{fm(x['mean'])}{sd} ({fm(x['min'])}–{fm(x['max'])})"
+        nn = f" [n={x['n']}]" if x["n"] < len(a["runs_completed"]) else ""
+        return f"{fm(x['mean'])}{sd} ({fm(x['min'])}–{fm(x['max'])}){nn}"
 
     L = [f"# paper5 summary (generated {out['generated']})", "",
          "Per host: mean ± sample sd (min–max) over the completed runs. Run 1 = lab_v10's original numbers; runs 2-5 = new "
          "seeds (PROTOCOL.md). Triage = 0.10 operating point (P2) and its triage order; d1 / d2 = detector-1 (Velox) / "
-         "detector-2 (ORTHRUS) alone at their ensemble validation maximum.", ""]
-    L.append("| host | runs | ADP triage | ADP learned | attacks | TP | FP | false incid. | d1 attacks | d1 TP | d1 FP | d1 ADP | d2 attacks | d2 TP | d2 FP | d2 ADP |")
-    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+         "detector-2 (ORTHRUS) alone at their ensemble validation maximum.",
+         "",
+         "**ADP headline = expectation under a random order within ties (mean of 20 permutations; amendment 2).** 'stable' = the "
+         "node-id order inside ties used by lab_v10 / run 1 as published; 'worst' = ground-truth nodes last in every tie. "
+         "The time tie-break and L12 ADPs are random-order values by construction. Runs scored before amendment 2 (19:30 UTC "
+         "2026-11-11) have only the stable value, their per-node scores were not kept and their bundles were already deleted: "
+         "[n=k] marks a value available for k of the completed runs.", ""]
+    L.append("| host | runs | **ADP triage (random ties)** | ADP triage stable | ADP triage worst | **ADP learned (random ties)** | ADP learned stable | ADP learned worst | attacks | TP | FP | false incid. | d1 attacks | d1 TP | d1 FP | **d1 ADP (random)** | d1 ADP stable | d2 attacks | d2 TP | d2 FP | **d2 ADP (random)** | d2 ADP stable |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for s in PRIO:
         a = hosts[s]
         if not a["runs_completed"]:
-            L.append(f"| {s} | 0 | " + " | ".join(["-"] * 14) + " |"); continue
-        L.append(f"| {s}{' (held-out, seen)' if s == HO else ''} | {','.join(map(str, a['runs_completed']))} | {f(a, 'ADP')} | {f(a, 'ADP_learned')} | "
+            L.append(f"| {s} | 0 | " + " | ".join(["-"] * 20) + " |"); continue
+        L.append(f"| {s}{' (held-out, seen)' if s == HO else ''} | {','.join(map(str, a['runs_completed']))} | {f(a, 'ADP_rand')} | {f(a, 'ADP')} | {f(a, 'ADP_worst')} | "
+                 f"{f(a, 'ADP_learned_rand')} | {f(a, 'ADP_learned')} | {f(a, 'ADP_learned_worst')} | "
                  f"{f(a, 'attacks', 0)} | {f(a, 'TP', 0)} | {f(a, 'FP', 0)} | {f(a, 'false_incidents', 0)} | {f(a, 'd1_attacks', 0)} | {f(a, 'd1_TP', 0)} | "
-                 f"{f(a, 'd1_FP', 0)} | {f(a, 'd1_ADP')} | {f(a, 'd2_attacks', 0)} | {f(a, 'd2_TP', 0)} | {f(a, 'd2_FP', 0)} | {f(a, 'd2_ADP')} |")
+                 f"{f(a, 'd1_FP', 0)} | {f(a, 'd1_ADP_rand')} | {f(a, 'd1_ADP')} | {f(a, 'd2_attacks', 0)} | {f(a, 'd2_TP', 0)} | {f(a, 'd2_FP', 0)} | {f(a, 'd2_ADP_rand')} | {f(a, 'd2_ADP')} |")
     L += ["", "## What the learned score adds to ranking (amendment 1)", "",
           "ADP triage = 0.10 triage order (tier, then learned score); ADP time = same tiers, tie-break by first alert time then "
           "random (mean of 20 seeds); L12 = layers 1-2 alone (no corroborated / learned alerts), time tie-break.", "",
-          "| host | ADP triage | ADP time tie-break | L12 attacks | L12 TP | L12 FP | L12 ADP | detected set same in all runs (P2 / L12 / d1 / d2) |",
-          "|---|---|---|---|---|---|---|---|"]
+          "| host | ADP triage (random ties) | ADP triage stable | ADP time tie-break | L12 attacks | L12 TP | L12 FP | L12 ADP | detected set same in all runs (P2 / L12 / d1 / d2) |",
+          "|---|---|---|---|---|---|---|---|---|"]
     for s in PRIO:
         a = hosts[s]
         if not a["runs_completed"]:
             continue
         ds = a["detected_sets"]
         same = " / ".join(("yes" if ds[k]["same_in_all_runs"] else "NO") if ds[k]["per_run"] else "-" for k in ("attacks_found", "L12_attacks_found", "d1_attacks_found", "d2_attacks_found"))
-        L.append(f"| {s} | {f(a, 'ADP')} | {f(a, 'ADP_time')} | {f(a, 'L12_attacks', 0)} | {f(a, 'L12_TP', 0)} | {f(a, 'L12_FP', 0)} | {f(a, 'L12_ADP_time')} | {same} |")
+        L.append(f"| {s} | {f(a, 'ADP_rand')} | {f(a, 'ADP')} | {f(a, 'ADP_time')} | {f(a, 'L12_attacks', 0)} | {f(a, 'L12_TP', 0)} | {f(a, 'L12_FP', 0)} | {f(a, 'L12_ADP_time')} | {same} |")
     L += ["", "Detected attacks that differ between runs:"]
     for s in PRIO:
         for k, v in hosts[s]["detected_sets"].items():
@@ -159,18 +177,21 @@ def main():
                 L.append(f"- {s} {k}: " + "; ".join(f"r{r}: {', '.join(x) or 'none'}" for r, x in sorted(v["per_run"].items())))
     a = hosts[HO]
     if a["summary"].get("ADP_3att"):
-        L += ["", f"{HO} with Bilot et al.'s third attack: ADP triage {f(a, 'ADP_3att')}, learned {f(a, 'ADP_learned_3att')}, "
+        L += ["", f"{HO} with Bilot et al.'s third attack: ADP triage random ties {f(a, 'ADP_rand_3att')} (stable {f(a, 'ADP_3att')}, worst {f(a, 'ADP_worst_3att')}), "
+              f"learned random {f(a, 'ADP_learned_rand_3att')} (stable {f(a, 'ADP_learned_3att')}), d1 random {f(a, 'd1_ADP_rand_3att')}, d2 random {f(a, 'd2_ADP_rand_3att')}, "
               f"time tie-break {f(a, 'ADP_time_3att')}, L12 {f(a, 'L12_ADP_time_3att')}, attacks {f(a, 'attacks_3att', 0)}, d1 ADP {f(a, 'd1_ADP_3att')}, d2 ADP {f(a, 'd2_ADP_3att')}"]
     # mean ADP over the 8 DARPA comparison hosts, per run (only runs where all 8 exist)
     L += ["", "## Mean ADP over the 8 DARPA comparison hosts, per run (E5 ClearScope with 3 attacks, as in the paper's Table)", "",
-          "| run | ADP triage | ADP time tie-break | L12 ADP | ADP learned | d1 ADP | d2 ADP |", "|---|---|---|---|---|---|---|"]
+          "| run | **ADP triage (random ties)** | ADP triage stable | ADP triage worst | ADP time tie-break | L12 ADP | **ADP learned (random)** | ADP learned stable | ADP learned worst | **d1 ADP (random)** | d1 stable | **d2 ADP (random)** | d2 stable |",
+          "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in range(1, 6):
         ms = [per[s][r] for s in DARPA8]
         if all(m is not None for m in ms):
             def mean_of(k, k3=None):
                 v = [(m.get(k3) if (s == HO and k3) else m.get(k)) for s, m in zip(DARPA8, ms)]
                 return f"{stt.mean(v):.3f}" if all(x is not None for x in v) else "-"
-            L.append(f"| {r} | {mean_of('ADP', 'ADP_3att')} | {mean_of('ADP_time', 'ADP_time_3att')} | {mean_of('L12_ADP_time', 'L12_ADP_time_3att')} | {mean_of('ADP_learned', 'ADP_learned_3att')} | {mean_of('d1_ADP', 'd1_ADP_3att')} | {mean_of('d2_ADP', 'd2_ADP_3att')} |")
+            L.append(f"| {r} | {mean_of('ADP_rand', 'ADP_rand_3att')} | {mean_of('ADP', 'ADP_3att')} | {mean_of('ADP_worst', 'ADP_worst_3att')} | {mean_of('ADP_time', 'ADP_time_3att')} | {mean_of('L12_ADP_time', 'L12_ADP_time_3att')} | "
+                     f"{mean_of('ADP_learned_rand', 'ADP_learned_rand_3att')} | {mean_of('ADP_learned', 'ADP_learned_3att')} | {mean_of('ADP_learned_worst', 'ADP_learned_worst_3att')} | {mean_of('d1_ADP_rand', 'd1_ADP_rand_3att')} | {mean_of('d1_ADP', 'd1_ADP_3att')} | {mean_of('d2_ADP_rand', 'd2_ADP_rand_3att')} | {mean_of('d2_ADP', 'd2_ADP_3att')} |")
     L += ["", "## 16 development sets, totals per run (71 host-days; only runs where all 16 sets completed)", "",
           "| run | attacks (of 30) | TP | FP | FP / host-day | incidents | false incidents | false incid. / host-day | L12 attacks / TP / FP | d1 attacks / TP / FP | d2 attacks / TP / FP |",
           "|---|---|---|---|---|---|---|---|---|---|---|"]

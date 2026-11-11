@@ -4,7 +4,10 @@ bundles, as adp13), (2) detector-1 alone and detector-2 alone: the seed-ensemble
 calls, node score = max over test windows, threshold = max over validation-day nodes (validation day replayed from the
 validation-start state, detectors 1-2 only, as Trainer.calibrate_final), (3) amendment 1 (P2 only): ADP of the triage
 order with a non-learned tie-break (first alert time, then random; unalerted last in random order; 20 seeds) and layers
-1-2 alone (alerts with a novelty / rules reason only: operating point and the same time-ordered ADP), (4) with --gt-extra the base ground truth stays
+1-2 alone (alerts with a novelty / rules reason only: operating point and the same time-ordered ADP), (5) amendment 2:
+every stable-order ADP also as the expectation under a random order within ties (mean of 20 permutations) and, for the
+triage order and the learned score, the worst case (ground-truth nodes last within every tie); the per-node arrays are
+saved next to --out (scores5-*.npz) so that any ranking measure can be recomputed without the bundle, (4) with --gt-extra the base ground truth stays
 primary and the extra attacks are scored in a second block. adp13 docstring:
 ADP for the paper (artifacts/lab_v10/scripts/adp13.py = eval13.py + node ranking): as eval13, and in addition every
 test node's triage-order score (alert severity of each variant, pdp_engine.runtime.alert_tier, then the final learned
@@ -209,6 +212,23 @@ for k in VARIANTS:
 from pdp_engine.scoring import above
 
 
+def adp_ties(sc, labels, na, worst=False):
+    """amendment 2: ADP of the ranking `sc` with ties in random order (mean of NSEED permutations), and the worst case"""
+    v = []
+    for seed in range(NSEED):
+        u = np.random.default_rng(seed).random(len(sc))
+        order = np.lexsort((u, -sc))
+        r = np.empty(len(sc)); r[order] = -np.arange(len(sc), dtype=float)
+        v.append(adp(r, labels, na))
+    out = {"random_mean": round(float(np.mean(v)), 3), "random_sd": round(float(np.std(v)), 3), "random_min": round(float(min(v)), 3),
+           "random_max": round(float(max(v)), 3)}
+    if worst:
+        order = np.lexsort((labels.astype(int), -sc))
+        r = np.empty(len(sc)); r[order] = -np.arange(len(sc), dtype=float)
+        out["worst"] = round(adp(r, labels, na), 3)
+    return out
+
+
 def alone(R, thr, labels, na):
     r = np.nan_to_num(R[ix], nan=0.0, neginf=0.0, posinf=1e30)
     out = {}
@@ -218,6 +238,7 @@ def alone(R, thr, labels, na):
         m["attacks_found"] = sorted({x for j in np.where(pred & labels)[0] for x in na[j]}); m["threshold"] = t
         out[name] = m
     out["ADP"] = round(adp(r, labels, na), 3)
+    out["ADP_ties"] = adp_ties(r, labels, na)
     return out
 
 
@@ -251,6 +272,20 @@ def amendment1(labels, na):
 
 
 res["P2"].update(amendment1(labels, na))
+for k in ("P0", "P2"):
+    sc = np.array([SC.get(int(i), 0.0) for i in ix]); tr = np.array([TIER[k].get(int(i), 0) for i in ix])
+    res[k]["ADP_ties"] = adp_ties(tr * 1e6 + np.clip(sc, 0, 1e5), labels, na, worst=True)
+    res[k]["ADP_learned_only_ties"] = adp_ties(sc, labels, na, worst=True)
+log(f"amendment 2: P2 triage ADP ties {res['P2']['ADP_ties']}; learned {res['P2']['ADP_learned_only_ties']}")
+INF = np.iinfo(np.int64).max
+att_names = sorted(S.gt)
+np.savez_compressed(a.out.replace("/res5-", "/scores5-").replace(".json", ".npz"), uuid=np.array(uu), labels=labels,
+    attacks=np.array([[x in na[j] for x in att_names] for j in range(len(ix))], dtype=bool).reshape(len(ix), len(att_names)),
+    attack_names=np.array(att_names), tier_P2=np.array([TIER["P2"].get(int(i), 0) for i in ix], dtype=np.int8),
+    learned=np.array([SC.get(int(i), 0.0) for i in ix]), r1=R1[ix], r2=R2[ix],
+    first_alert_ns=np.array([FIRST_T.get(int(i), INF) for i in ix], dtype=np.int64),
+    tier_L12=np.array([L12_TIER.get(int(i), 0) for i in ix], dtype=np.int8),
+    first_L12_ns=np.array([L12_T.get(int(i), INF) for i in ix], dtype=np.int64), thresholds=np.array([THR["detector-1"], THR["detector-2"]]))
 log(f"amendment 1: triage ADP time tie-break {res['P2']['ADP_triage_time_tiebreak']}; layers 1-2 only {res['P2']['layers12_only']}")
 for k, R in (("detector-1", R1), ("detector-2", R2)):
     res[k] = alone(R, THR[k], labels, na)
@@ -261,7 +296,8 @@ if a.gt_extra:      # the extra attacks (Bilot et al.'s count): ADP of the same 
     sc = np.array([SC.get(int(i), 0.0) for i in ix]); ex = {"n_attacks": len(GTX), "attacks": sorted(GTX)}
     for k in ("P0", "P2"):
         tr = np.array([TIER[k].get(int(i), 0) for i in ix]); pred = np.array([int(i) in alerted[k] for i in ix])
-        ex[k] = {**at(pred, lx, nx), "ADP": round(adp(tr * 1e6 + np.clip(sc, 0, 1e5), lx, nx), 3), "ADP_learned_only": round(adp(sc, lx, nx), 3)}
+        ex[k] = {**at(pred, lx, nx), "ADP": round(adp(tr * 1e6 + np.clip(sc, 0, 1e5), lx, nx), 3), "ADP_learned_only": round(adp(sc, lx, nx), 3),
+                 "ADP_ties": adp_ties(tr * 1e6 + np.clip(sc, 0, 1e5), lx, nx, worst=True), "ADP_learned_only_ties": adp_ties(sc, lx, nx, worst=True)}
     for k, R in (("detector-1", R1), ("detector-2", R2)):
         ex[k] = alone(R, THR[k], lx, nx)
     ex["P2"].update(amendment1(lx, nx))

@@ -86,3 +86,19 @@ the same scoring pass (run 1: from the re-scoring of its bundles, which is why t
    reason. Operating point (attacks, TP, FP, precision) and the ADP of 1. on that tier / time.
 3. The set of detected attack names per run (P2, layers 1-2 only, detector-1 alone, detector-2 alone), to report
    whether the detected set changes across runs.
+
+## Amendment 2 (2026-11-11 19:40 UTC, coordinator request): ADP under random tie order (reporting change)
+Decided **after** seeing the tie analysis of the baselines agent (artifacts/baselines_paper/results/strata_ties.md: with the
+stable node-id order inside ties, run 1's triage ADP is 1.00 on FiveDirections where a random order gives 0.14, 1.00 vs
+0.93 on OpTC H501, 0.71 vs 0.84 on OpTC H051), and before the remaining runs were scored. It changes no run, threshold or
+alert; it changes which ADP is the headline.
+- Every ADP is also reported as the expectation under a random order within ties: mean over 20 permutations (seeds 0-19)
+  of the order (score desc, random), with sd / min / max. This applies to the triage order, the learned score alone,
+  detector-1 alone and detector-2 alone (the time tie-break and layers 1-2 ADPs of amendment 1 already break remaining ties
+  at random). For the triage order and the learned score, also the worst case (ground-truth nodes last in every tie).
+- **The random-tie value is the headline**; the stable value (lab_v10's and run 1's published convention) stays next to it.
+- eval5.py also saves each scored run's per-node arrays (tier, learned score, r1, r2, first alert times, layers 1-2 tier,
+  labels, attack membership) as scores5-<set>-r<run>.npz, so ranking measures can be recomputed without the bundle.
+- Run 1's bundles still exist and are re-scored. Runs 2-5 scored before this amendment (CADETS_E3, THEIA_E3,
+  CLEARSCOPE_E3, THEIA_E5-theia, OPTC_H051: 20 runs) kept neither per-node scores nor bundles, so their random-tie values
+  are not available without new training; they are reported as missing (stable value only), never estimated.
