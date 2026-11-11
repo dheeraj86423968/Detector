@@ -1,0 +1,6 @@
+18:53:01 fleet ['THEIA_E5-theia']: 0 program keys from 0 other endpoints
+18:53:01 score files: []
+18:53:01 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+18:59:29 scored 465s
+19:00:09 P2: attacks 0 TP 0 FP 97 +TP vs A0 0 ADP orig None ours 0.0005 rnd 0.0003
+19:00:09 A0: attacks 0 TP 0 FP 87

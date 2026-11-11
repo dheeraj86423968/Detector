@@ -1,0 +1,177 @@
+{
+ "set": "CARBANAKV2_EDR-h4",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h4/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 21,
+ "days": 7,
+ "nodes": 170414,
+ "HI": 2.0000999999999998,
+ "corroboration": 1.0001,
+ "daily_budget": 0,
+ "P0": {
+  "TP": 3,
+  "FP": 27,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.86,
+  "by_layer": {
+   "novelty": 25,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "ADP_tier_random20": 0.1338,
+  "ADP_tier_ours": 0.1249
+ },
+ "P2": {
+  "TP": 3,
+  "FP": 24,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.43,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "ADP_tier_random20": 0.1452,
+  "ADP_tier_ours": 0.1304,
+  "tp_only_via_learned": 0,
+  "attacks_only_via_learned": []
+ },
+ "A0": {
+  "TP": 3,
+  "FP": 23,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.29,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "ADP_tier_random20": 0.1494
+ },
+ "X:provfusion_CARBANAKV2_H4_s1": {
+  "TP": 3,
+  "FP": 23,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.29,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "ADP_tier_random20": 0.1494,
+  "ADP_tier_original": 0.1428,
+  "ADP_tier_ours": 0.1363,
+  "system_alone": {
+   "TP": 0,
+   "FP": 21,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 3.0,
+   "attacks_found": [],
+   "system_alerts_total": 21,
+   "system_alerts_in_lab_nodes": 21,
+   "lab_nodes_with_score": 170414
+  },
+  "tp_only_via_learned": 0,
+  "attacks_only_via_learned": []
+ },
+ "X:provfusion_CARBANAKV2_H4_s2": {
+  "TP": 3,
+  "FP": 23,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.29,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "ADP_tier_random20": 0.1494,
+  "ADP_tier_original": 0.1428,
+  "ADP_tier_ours": 0.1363,
+  "system_alone": {
+   "TP": 0,
+   "FP": 3,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 0.43,
+   "attacks_found": [],
+   "system_alerts_total": 3,
+   "system_alerts_in_lab_nodes": 3,
+   "lab_nodes_with_score": 170414
+  },
+  "tp_only_via_learned": 0,
+  "attacks_only_via_learned": []
+ },
+ "X:provfusion_CARBANAKV2_H4_s3": {
+  "TP": 3,
+  "FP": 23,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.29,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "ADP_tier_random20": 0.1494,
+  "ADP_tier_original": 0.1499,
+  "ADP_tier_ours": 0.1363,
+  "system_alone": {
+   "TP": 0,
+   "FP": 0,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 0.0,
+   "attacks_found": [],
+   "system_alerts_total": 0,
+   "system_alerts_in_lab_nodes": 0,
+   "lab_nodes_with_score": 170414
+  },
+  "tp_only_via_learned": 0,
+  "attacks_only_via_learned": []
+ }
+}

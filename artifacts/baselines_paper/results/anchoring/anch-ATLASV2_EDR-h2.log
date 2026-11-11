@@ -1,0 +1,6 @@
+18:41:40 fleet ['ATLASV2_EDR-h1', 'ATLASV2_EDR-h2']: 67 program keys from 1 other endpoints
+18:41:40 score files: []
+18:41:40 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+18:41:44 scored 16s
+18:41:45 P2: attacks 0 TP 0 FP 26 +TP vs A0 0 ADP orig None ours 0.0 rnd 0.0
+18:41:45 A0: attacks 0 TP 0 FP 26

@@ -1,0 +1,115 @@
+{
+ "set": "OPTC_H051",
+ "bundle": "/data/lab08/6ca8a927-9474-45be-870a-52bd56133b0e/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 114,
+ "days": 3,
+ "nodes": 1470238,
+ "HI": 2.0000999999999998,
+ "corroboration": 1.0001,
+ "daily_budget": 0,
+ "P0": {
+  "TP": 75,
+  "FP": 53,
+  "recall": 0.658,
+  "attacks": 1,
+  "FP/day": 17.67,
+  "by_layer": {
+   "novelty": 51,
+   "rules": 70,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "corroborated": 3,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "ADP_tier_random20": 0.9348,
+  "ADP_tier_ours": 0.7088
+ },
+ "P2": {
+  "TP": 75,
+  "FP": 53,
+  "recall": 0.658,
+  "attacks": 1,
+  "FP/day": 17.67,
+  "by_layer": {
+   "novelty": 51,
+   "rules": 70,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "corroborated": 3,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "ADP_tier_random20": 0.9348,
+  "ADP_tier_ours": 0.7088,
+  "tp_only_via_learned": 3,
+  "attacks_only_via_learned": []
+ },
+ "A0": {
+  "TP": 72,
+  "FP": 50,
+  "recall": 0.632,
+  "attacks": 1,
+  "FP/day": 16.67,
+  "by_layer": {
+   "novelty": 51,
+   "rules": 71
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "ADP_tier_random20": 0.9348
+ },
+ "X:provfusion_OPTC_h051_s1": {
+  "TP": 72,
+  "FP": 50,
+  "recall": 0.632,
+  "attacks": 1,
+  "FP/day": 16.67,
+  "by_layer": {
+   "novelty": 51,
+   "rules": 71
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "ADP_tier_random20": 0.9348,
+  "ADP_tier_original": 0.9047,
+  "ADP_tier_ours": 0.7088,
+  "system_alone": {
+   "TP": 0,
+   "FP": 7,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 2.33,
+   "attacks_found": [],
+   "system_alerts_total": 7,
+   "system_alerts_in_lab_nodes": 7,
+   "lab_nodes_with_score": 1470238
+  },
+  "tp_only_via_learned": 0,
+  "attacks_only_via_learned": []
+ }
+}

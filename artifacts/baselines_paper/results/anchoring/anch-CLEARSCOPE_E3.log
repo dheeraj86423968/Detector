@@ -1,0 +1,6 @@
+19:00:22 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 622 program keys from 4 other endpoints
+19:00:22 score files: []
+19:00:22 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+19:00:38 scored 22s
+19:00:43 P2: attacks 0 TP 0 FP 0 +TP vs A0 0 ADP orig None ours 0.2 rnd 0.0008
+19:00:43 A0: attacks 0 TP 0 FP 0

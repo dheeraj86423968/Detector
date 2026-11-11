@@ -1,0 +1,6 @@
+19:05:35 fleet ['CLEARSCOPE_E5-clearscope']: 0 program keys from 0 other endpoints
+19:05:35 score files: []
+19:05:35 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+19:10:19 scored 299s
+19:10:26 P2: attacks 2 TP 4 FP 15 +TP vs A0 2 ADP orig None ours 0.6679 rnd 0.2866
+19:10:26 A0: attacks 2 TP 2 FP 13

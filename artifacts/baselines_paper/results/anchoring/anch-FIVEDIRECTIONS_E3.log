@@ -1,0 +1,16 @@
+18:29:04 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 550 program keys from 4 other endpoints
+18:29:09 score files: [('X:provfusion_FIVEDIRECTIONS_E3_s1', 282820, 524), ('X:provfusion_FIVEDIRECTIONS_E3_s2', 282820, 42), ('X:provfusion_FIVEDIRECTIONS_E3_s3', 282820, 757), ('X:provfusion_FIVEDIRECTIONS_E3_s4', 282820, 112), ('X:provfusion_FIVEDIRECTIONS_E3_s5', 282820, 42), ('X:velox_FIVEDIRECTIONS_E3_s0', 282807, 11), ('X:velox_FIVEDIRECTIONS_E3_s1', 282807, 6), ('X:velox_FIVEDIRECTIONS_E3_s2', 282807, 43), ('X:velox_FIVEDIRECTIONS_E3_s3', 282807, 39), ('X:velox_FIVEDIRECTIONS_E3_s4', 282807, 13)]
+18:29:09 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+18:31:19 scored 170s
+18:32:21 P2: attacks 2 TP 11 FP 166 +TP vs A0 10 ADP orig None ours 0.9998 rnd 0.1653
+18:32:21 X:provfusion_FIVEDIRECTIONS_E3_s1: attacks 1 TP 2 FP 62 +TP vs A0 1 ADP orig 0.038 ours 0.0677 rnd 0.0825
+18:32:21 X:provfusion_FIVEDIRECTIONS_E3_s2: attacks 1 TP 2 FP 47 +TP vs A0 1 ADP orig 0.5062 ours 0.0745 rnd 0.0967
+18:32:21 X:provfusion_FIVEDIRECTIONS_E3_s3: attacks 2 TP 4 FP 68 +TP vs A0 3 ADP orig 0.1815 ours 0.2855 rnd 0.1658
+18:32:21 X:provfusion_FIVEDIRECTIONS_E3_s4: attacks 1 TP 2 FP 49 +TP vs A0 1 ADP orig 0.2537 ours 0.0705 rnd 0.095
+18:32:21 X:provfusion_FIVEDIRECTIONS_E3_s5: attacks 1 TP 2 FP 49 +TP vs A0 1 ADP orig 0.2585 ours 0.0705 rnd 0.095
+18:32:21 X:velox_FIVEDIRECTIONS_E3_s0: attacks 1 TP 2 FP 52 +TP vs A0 1 ADP orig 0.0959 ours 0.0697 rnd 0.0884
+18:32:21 X:velox_FIVEDIRECTIONS_E3_s1: attacks 1 TP 1 FP 47 +TP vs A0 0 ADP orig 0.1067 ours 0.0509 rnd 0.0403
+18:32:21 X:velox_FIVEDIRECTIONS_E3_s2: attacks 1 TP 3 FP 59 +TP vs A0 2 ADP orig 0.1056 ours 0.0715 rnd 0.1346
+18:32:21 X:velox_FIVEDIRECTIONS_E3_s3: attacks 1 TP 2 FP 58 +TP vs A0 1 ADP orig 0.1423 ours 0.0535 rnd 0.0877
+18:32:21 X:velox_FIVEDIRECTIONS_E3_s4: attacks 1 TP 1 FP 52 +TP vs A0 0 ADP orig 0.0655 ours 0.0491 rnd 0.0358
+18:32:21 A0: attacks 1 TP 1 FP 47

@@ -1,0 +1,126 @@
+{
+ "set": "THEIA_E3",
+ "bundle": "/data/lab08/b4021490-6dd4-4dfb-8628-b3e55af27b90/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 118,
+ "days": 3,
+ "nodes": 700902,
+ "HI": 2.0000999999999998,
+ "corroboration": 1.0001,
+ "daily_budget": 0,
+ "P0": {
+  "TP": 109,
+  "FP": 86,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 28.67,
+  "by_layer": {
+   "corroborated": 14,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "ADP_tier_random20": 0.7703,
+  "ADP_tier_ours": 0.9999
+ },
+ "P2": {
+  "TP": 109,
+  "FP": 86,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 28.67,
+  "by_layer": {
+   "corroborated": 14,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "ADP_tier_random20": 0.7703,
+  "ADP_tier_ours": 0.9999,
+  "tp_only_via_learned": 9,
+  "attacks_only_via_learned": []
+ },
+ "A0": {
+  "TP": 100,
+  "FP": 81,
+  "recall": 0.847,
+  "attacks": 2,
+  "FP/day": 27.0,
+  "by_layer": {
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "ADP_tier_random20": 0.7704
+ },
+ "X:provfusion_THEIA_E3_s1": {
+  "TP": 108,
+  "FP": 82,
+  "recall": 0.915,
+  "attacks": 2,
+  "FP/day": 27.33,
+  "by_layer": {
+   "novelty": 12,
+   "rules": 169,
+   "corroborated": 9
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 8
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "ADP_tier_random20": 0.7705,
+  "ADP_tier_original": 0.9073,
+  "ADP_tier_ours": 0.9999,
+  "system_alone": {
+   "TP": 59,
+   "FP": 13,
+   "recall": 0.5,
+   "attacks": 2,
+   "FP/day": 4.33,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "system_alerts_total": 72,
+   "system_alerts_in_lab_nodes": 72,
+   "lab_nodes_with_score": 700902
+  },
+  "tp_only_via_learned": 8,
+  "attacks_only_via_learned": []
+ }
+}

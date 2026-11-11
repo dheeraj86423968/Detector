@@ -1,0 +1,21 @@
+18:17:08 fleet ['ATLASV2_EDR-h1', 'ATLASV2_EDR-h2']: 67 program keys from 1 other endpoints
+18:17:10 score files: [('X:orthrus_non_snooped_ATLASV2_H1_s0', 108746, 105), ('X:orthrus_non_snooped_ATLASV2_H1_s1', 108746, 265), ('X:orthrus_non_snooped_ATLASV2_H1_s2', 108746, 192), ('X:orthrus_non_snooped_ATLASV2_H1_s3', 108746, 106), ('X:orthrus_non_snooped_ATLASV2_H1_s4', 108746, 132), ('X:provfusion_ATLASV2_H1_s1', 108746, 64), ('X:provfusion_ATLASV2_H1_s2', 108746, 49), ('X:provfusion_ATLASV2_H1_s3', 108746, 16), ('X:provfusion_ATLASV2_H1_s4', 108746, 53), ('X:provfusion_ATLASV2_H1_s5', 108746, 90), ('X:velox_ATLASV2_H1_s0', 108746, 0), ('X:velox_ATLASV2_H1_s1', 108746, 0), ('X:velox_ATLASV2_H1_s2', 108746, 0), ('X:velox_ATLASV2_H1_s3', 108746, 0), ('X:velox_ATLASV2_H1_s4', 108746, 2)]
+18:17:10 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+18:17:20 scored 83s
+18:17:49 P2: attacks 8 TP 12 FP 49 +TP vs A0 6 ADP orig None ours 0.2138 rnd 0.1585
+18:17:49 X:orthrus_non_snooped_ATLASV2_H1_s0: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0592 ours 0.1444 rnd 0.0473
+18:17:49 X:orthrus_non_snooped_ATLASV2_H1_s1: attacks 4 TP 6 FP 48 +TP vs A0 0 ADP orig 0.0531 ours 0.1411 rnd 0.0459
+18:17:49 X:orthrus_non_snooped_ATLASV2_H1_s2: attacks 5 TP 7 FP 49 +TP vs A0 1 ADP orig 0.0732 ours 0.1591 rnd 0.0642
+18:17:49 X:orthrus_non_snooped_ATLASV2_H1_s3: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0584 ours 0.1444 rnd 0.0473
+18:17:49 X:orthrus_non_snooped_ATLASV2_H1_s4: attacks 4 TP 6 FP 47 +TP vs A0 0 ADP orig 0.0575 ours 0.1426 rnd 0.0464
+18:17:49 X:provfusion_ATLASV2_H1_s1: attacks 4 TP 6 FP 47 +TP vs A0 0 ADP orig 0.0511 ours 0.1426 rnd 0.0464
+18:17:49 X:provfusion_ATLASV2_H1_s2: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0515 ours 0.1444 rnd 0.0473
+18:17:49 X:provfusion_ATLASV2_H1_s3: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0491 ours 0.1444 rnd 0.0473
+18:17:49 X:provfusion_ATLASV2_H1_s4: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0517 ours 0.1444 rnd 0.0473
+18:17:49 X:provfusion_ATLASV2_H1_s5: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0551 ours 0.1444 rnd 0.0473
+18:17:49 X:velox_ATLASV2_H1_s0: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0986 ours 0.1444 rnd 0.0473
+18:17:49 X:velox_ATLASV2_H1_s1: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0827 ours 0.1444 rnd 0.0473
+18:17:49 X:velox_ATLASV2_H1_s2: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0735 ours 0.1444 rnd 0.0473
+18:17:49 X:velox_ATLASV2_H1_s3: attacks 4 TP 6 FP 46 +TP vs A0 0 ADP orig 0.0847 ours 0.1444 rnd 0.0473
+18:17:49 X:velox_ATLASV2_H1_s4: attacks 4 TP 6 FP 47 +TP vs A0 0 ADP orig 0.0724 ours 0.1426 rnd 0.0464
+18:17:49 A0: attacks 4 TP 6 FP 46

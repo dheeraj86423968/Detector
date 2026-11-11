@@ -1,0 +1,12 @@
+18:08:43 fleet ['CARBANAKV2_EDR-h1', 'CARBANAKV2_EDR-h2', 'CARBANAKV2_EDR-h3', 'CARBANAKV2_EDR-h4', 'CARBANAKV2_EDR-h5']: 268 program keys from 4 other endpoints
+18:08:46 score files: [('X:orthrus_non_snooped_CARBANAKV2_H2_s0', 386556, 0), ('X:provfusion_CARBANAKV2_H2_s1', 386556, 21), ('X:provfusion_CARBANAKV2_H2_s2', 386556, 21), ('X:provfusion_CARBANAKV2_H2_s3', 386556, 24), ('X:velox_CARBANAKV2_H2_s0', 386556, 6), ('X:velox_CARBANAKV2_H2_s1', 386556, 0)]
+18:08:46 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+18:09:24 scored 219s
+18:10:25 P2: attacks 1 TP 39 FP 131 +TP vs A0 0 ADP orig None ours 0.4827 rnd 0.5874
+18:10:25 X:orthrus_non_snooped_CARBANAKV2_H2_s0: attacks 1 TP 39 FP 131 +TP vs A0 0 ADP orig 0.342 ours 0.4827 rnd 0.5874
+18:10:25 X:provfusion_CARBANAKV2_H2_s1: attacks 1 TP 39 FP 131 +TP vs A0 0 ADP orig 0.3181 ours 0.4827 rnd 0.5874
+18:10:25 X:provfusion_CARBANAKV2_H2_s2: attacks 1 TP 39 FP 131 +TP vs A0 0 ADP orig 0.3181 ours 0.4827 rnd 0.5874
+18:10:25 X:provfusion_CARBANAKV2_H2_s3: attacks 1 TP 39 FP 131 +TP vs A0 0 ADP orig 0.3181 ours 0.4827 rnd 0.5874
+18:10:25 X:velox_CARBANAKV2_H2_s0: attacks 1 TP 39 FP 131 +TP vs A0 0 ADP orig 0.6363 ours 0.4827 rnd 0.5874
+18:10:25 X:velox_CARBANAKV2_H2_s1: attacks 1 TP 39 FP 131 +TP vs A0 0 ADP orig 0.3888 ours 0.4827 rnd 0.5874
+18:10:25 A0: attacks 1 TP 39 FP 131

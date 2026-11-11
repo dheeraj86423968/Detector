@@ -109,3 +109,10 @@ are listed per file in results/join_rates.json.
   scripts/conv_store.py (minutes), re-run pf_prepare.py, then the runners in scripts/host_runners/ (they were
   written for /root/bl). Middle results of every ProvFusion run are kept in /root/bl/pf/*/runs (2.1 GB) so the
   scores can be recomputed without retraining.
+
+## Part 5: anchoring with the original systems' evidence (2026-11-11 18:00-19:15 UTC)
+- anchor13.py passes on all 17 lab sets (one each, after the protocol amendment b9fd50b). Sanity: variant P2 reproduces
+  res13/adp P2 attacks, TP, FP and ADP on all 12 hosts with score files.
+- Results: results/anchoring_summary.{md,json} (per host x system x seed + pooled), raw results/anchoring/anch-*.json.
+- STRATA tie robustness: results/strata_ties.{md,json}. Per-node dumps in /root/bl/anch (not committed).
+- Step 6 (ProvFusion THEIA/H051 seeds 2-3) not run: needs the image rebuilt (~10 GB) and ~3.5 h.

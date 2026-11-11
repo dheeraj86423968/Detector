@@ -1,0 +1,62 @@
+{
+ "set": "THEIA_E5-theia",
+ "bundle": "/data/lab08/heldout/THEIA_E5/theia/b07rel",
+ "fleet": [
+  "THEIA_E5-theia"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 66,
+ "days": 2,
+ "nodes": 749962,
+ "HI": 2.0000999999999998,
+ "corroboration": 1.0001,
+ "daily_budget": 0,
+ "P0": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 48.5,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "ADP_tier_random20": 0.0003,
+  "ADP_tier_ours": 0.0005
+ },
+ "P2": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 48.5,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "ADP_tier_random20": 0.0003,
+  "ADP_tier_ours": 0.0005,
+  "tp_only_via_learned": 0,
+  "attacks_only_via_learned": []
+ },
+ "A0": {
+  "TP": 0,
+  "FP": 87,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 43.5,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "ADP_tier_random20": 0.0003
+ }
+}

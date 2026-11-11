@@ -1,0 +1,203 @@
+{
+ "set": "CADETS_E3",
+ "bundle": "/data/lab08/5eafc637-14c7-4074-b4d3-4e611dea925e/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "nodes": 281585,
+ "HI": 2.0000999999999998,
+ "corroboration": 1.0001,
+ "daily_budget": 0,
+ "P0": {
+  "TP": 31,
+  "FP": 16,
+  "recall": 0.456,
+  "attacks": 3,
+  "FP/day": 4.0,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "ADP_tier_random20": 0.9999,
+  "ADP_tier_ours": 0.9999
+ },
+ "P2": {
+  "TP": 31,
+  "FP": 16,
+  "recall": 0.456,
+  "attacks": 3,
+  "FP/day": 4.0,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "ADP_tier_random20": 0.9999,
+  "ADP_tier_ours": 0.9999,
+  "tp_only_via_learned": 2,
+  "attacks_only_via_learned": []
+ },
+ "A0": {
+  "TP": 29,
+  "FP": 15,
+  "recall": 0.426,
+  "attacks": 3,
+  "FP/day": 3.75,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "ADP_tier_random20": 0.9999
+ },
+ "X:provfusion_CADETS_E3_s1": {
+  "TP": 29,
+  "FP": 15,
+  "recall": 0.426,
+  "attacks": 3,
+  "FP/day": 3.75,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "ADP_tier_random20": 0.9999,
+  "ADP_tier_original": 0.9999,
+  "ADP_tier_ours": 0.9999,
+  "system_alone": {
+   "TP": 12,
+   "FP": 1,
+   "recall": 0.176,
+   "attacks": 3,
+   "FP/day": 0.25,
+   "attacks_found": [
+    "Nginx_Backdoor_06",
+    "Nginx_Backdoor_12",
+    "Nginx_Backdoor_13"
+   ],
+   "system_alerts_total": 13,
+   "system_alerts_in_lab_nodes": 13,
+   "lab_nodes_with_score": 281585
+  },
+  "tp_only_via_learned": 0,
+  "attacks_only_via_learned": []
+ },
+ "X:provfusion_CADETS_E3_s2": {
+  "TP": 29,
+  "FP": 15,
+  "recall": 0.426,
+  "attacks": 3,
+  "FP/day": 3.75,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "ADP_tier_random20": 0.9999,
+  "ADP_tier_original": 0.9999,
+  "ADP_tier_ours": 0.9999,
+  "system_alone": {
+   "TP": 1,
+   "FP": 9,
+   "recall": 0.015,
+   "attacks": 1,
+   "FP/day": 2.25,
+   "attacks_found": [
+    "Nginx_Backdoor_12"
+   ],
+   "system_alerts_total": 10,
+   "system_alerts_in_lab_nodes": 10,
+   "lab_nodes_with_score": 281585
+  },
+  "tp_only_via_learned": 0,
+  "attacks_only_via_learned": []
+ },
+ "X:provfusion_CADETS_E3_s3": {
+  "TP": 29,
+  "FP": 15,
+  "recall": 0.426,
+  "attacks": 3,
+  "FP/day": 3.75,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "ADP_tier_random20": 0.9999,
+  "ADP_tier_original": 0.9999,
+  "ADP_tier_ours": 0.9999,
+  "system_alone": {
+   "TP": 0,
+   "FP": 13,
+   "recall": 0.0,
+   "attacks": 0,
+   "FP/day": 3.25,
+   "attacks_found": [],
+   "system_alerts_total": 13,
+   "system_alerts_in_lab_nodes": 13,
+   "lab_nodes_with_score": 281585
+  },
+  "tp_only_via_learned": 0,
+  "attacks_only_via_learned": []
+ }
+}

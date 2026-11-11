@@ -1,0 +1,6 @@
+18:47:33 fleet ['OPTC_H201', 'OPTC_H501', 'OPTC_H051']: 132 program keys from 2 other endpoints
+18:47:33 score files: []
+18:47:33 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+18:49:48 scored 179s
+18:51:28 P2: attacks 1 TP 17 FP 70 +TP vs A0 7 ADP orig None ours 0.9998 rnd 0.7239
+18:51:28 A0: attacks 1 TP 10 FP 44

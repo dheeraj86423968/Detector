@@ -1,0 +1,9 @@
+18:00:57 fleet ['CARBANAKV2_EDR-h1', 'CARBANAKV2_EDR-h2', 'CARBANAKV2_EDR-h3', 'CARBANAKV2_EDR-h4', 'CARBANAKV2_EDR-h5']: 285 program keys from 4 other endpoints
+18:00:57 score files: [('X:provfusion_CARBANAKV2_H5_s1', 40811, 38), ('X:provfusion_CARBANAKV2_H5_s2', 40811, 51), ('X:provfusion_CARBANAKV2_H5_s3', 40811, 38)]
+18:00:57 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+18:01:00 scored 7s
+18:01:03 P2: attacks 1 TP 14 FP 89 +TP vs A0 5 ADP orig None ours 0.9997 rnd 0.7297
+18:01:03 X:provfusion_CARBANAKV2_H5_s1: attacks 1 TP 9 FP 59 +TP vs A0 0 ADP orig 0.9997 ours 0.9997 rnd 0.7248
+18:01:03 X:provfusion_CARBANAKV2_H5_s2: attacks 1 TP 10 FP 59 +TP vs A0 1 ADP orig 0.9997 ours 0.9997 rnd 0.7248
+18:01:03 X:provfusion_CARBANAKV2_H5_s3: attacks 1 TP 10 FP 59 +TP vs A0 1 ADP orig 0.9997 ours 0.9997 rnd 0.7248
+18:01:03 A0: attacks 1 TP 9 FP 31

@@ -1,0 +1,9 @@
+18:18:04 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']: 555 program keys from 4 other endpoints
+18:18:05 score files: [('X:provfusion_CADETS_E3_s1', 281585, 13), ('X:provfusion_CADETS_E3_s2', 281585, 10), ('X:provfusion_CADETS_E3_s3', 281585, 13)]
+18:18:05 policy: corroboration 1.0001 daily_budget 0 learned_alerts True near_alert True score own -> HI 2.0000999999999998
+18:18:48 scored 53s
+18:19:15 P2: attacks 3 TP 31 FP 16 +TP vs A0 2 ADP orig None ours 0.9999 rnd 0.9999
+18:19:15 X:provfusion_CADETS_E3_s1: attacks 3 TP 29 FP 15 +TP vs A0 0 ADP orig 0.9999 ours 0.9999 rnd 0.9999
+18:19:15 X:provfusion_CADETS_E3_s2: attacks 3 TP 29 FP 15 +TP vs A0 0 ADP orig 0.9999 ours 0.9999 rnd 0.9999
+18:19:15 X:provfusion_CADETS_E3_s3: attacks 3 TP 29 FP 15 +TP vs A0 0 ADP orig 0.9999 ours 0.9999 rnd 0.9999
+18:19:15 A0: attacks 3 TP 29 FP 15
