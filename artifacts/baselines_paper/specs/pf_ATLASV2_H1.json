@@ -1,0 +1,44 @@
+{
+ "raw_dir": "",
+ "database": "bl_atlasv2_h1",
+ "database_all_file": "bl_atlasv2_h1",
+ "num_node_types": 3,
+ "num_edge_types": 10,
+ "year_month": "2022-07",
+ "start_end_day_range": [
+  15,
+  20
+ ],
+ "month_ranges": [
+  [
+   "2022-07",
+   15,
+   19
+  ]
+ ],
+ "train_files": [
+  "graph_15",
+  "graph_16",
+  "graph_17"
+ ],
+ "val_files": [
+  "graph_18"
+ ],
+ "test_files": [
+  "graph_19"
+ ],
+ "unused_files": [],
+ "ground_truth_relative_path": [
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_m1.csv",
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_m2.csv",
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_m3.csv",
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_m4.csv",
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_m5.csv",
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_m6.csv",
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_s1.csv",
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_s2.csv",
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_s3.csv",
+  "../../../conv/gt_atlasv2_h1/atlasv2_edr_s4.csv"
+ ],
+ "attack_to_time_window": []
+}

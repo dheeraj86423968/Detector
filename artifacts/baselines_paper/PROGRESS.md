@@ -41,3 +41,11 @@ are listed per file in results/join_rates.json.
 - 05:49 Velox FiveDirections s0 (last epoch): 1/2 attacks, TP 1 / FP 10, ADP 0.064 (= PIDSMaker's printout).
 - 06:02 ProvFusion CADETS s2 (published config, only the seed differs): 1/3 attacks, TP 1 / FP 9; ProvFusion's own
   printed ADP 0.637 (label-assisted tie order) vs tie-neutral 0.115, PIDSMaker ADP 0.084.
+- 06:14 ProvFusion FiveDirections data prepared (762 s; 36,112 nodes with empty labels got zero vectors); loss
+  weights by the rule: 30.0000,30.0000,0.1270,1.3154,30.0000,30.0000,30.0000,30.0000,3.4920,0.0000,0.0000. Seeds 1-5 queued (OPTC_h201 hyper-parameters).
+- 06:11 Velox FiveDirections s1: 0/2 attacks, TP 0 / FP 6, ADP 0.019.
+- 06:28 disk at 26 GB free: deleted the CADETS merged .pt (0.94 GB; regenerable deterministically) - CADETS seeds 4-5 deferred.
+- 06:20 ProvFusion CADETS s3: 0/3 attacks, TP 0 / FP 13; ProvFusion-printed ADP 0.441 vs tie-neutral 0.0005.
+- 06:24 ATLASv2 h1 ProvFusion data prepared (0.42 GB).
+- 06:33 ProvFusion FiveDirections s1 (OPTC_h201 config): 2/2 attacks, TP 2 / FP 522 (174 FP per test day);
+  tie-neutral ADP 0.008, ProvFusion-printed 0.090.

@@ -142,10 +142,30 @@ class InterningCursor:
         return getattr(self.cur, k)
 logger = G.get_logger(name="graph_construction_edge_fused_tw", filename=os.path.join(cfg.graph_construction.build_graphs._logs_dir, "g.log"))
 nodeid2msg = G.get_node_list(cur=cur, cfg=cfg)
-G.gen_edge_fused_tw(cur=InterningCursor(cur), nodeid2msg=nodeid2msg, logger=logger, cfg=cfg)
+# ProvFusion builds day strings as year_month + '-' + str(day + 1), which is invalid after the last day of a month
+# (e.g. '2024-04-31') and cannot span months. For such datasets the spec lists "month_ranges" [[ym, first, last],..]
+# (day numbers must not repeat across months) and an out-of-range day rolls over to the next month's first day.
+import datetime as _dt
+_orig_ns = G.datetime_to_ns_time_US
+def _ns_rollover(date):
+    try:
+        return _orig_ns(date)
+    except ValueError:
+        y, mo, rest = date.split("-", 2); d, hms = rest.split(" ")
+        first = _dt.date(int(y), int(mo), 1) + _dt.timedelta(days=int(d) - 1)
+        return _orig_ns(f"{first.isoformat()} {hms}")
+G.datetime_to_ns_time_US = _ns_rollover
+ranges = C.DATASET_DEFAULT_CONFIG[a.dataset].get("month_ranges") or [[ds.year_month, ds.start_end_day_range[0], ds.start_end_day_range[1] - 1]]
+for ym, d0, d1 in ranges:
+    cfg.defrost(); cfg.dataset.year_month = ym; cfg.dataset.start_end_day_range = (int(d0), int(d1) + 1)
+    G.gen_edge_fused_tw(cur=InterningCursor(cur), nodeid2msg=nodeid2msg, logger=logger, cfg=cfg)
 del nodeid2msg
+day_rank = {}
+for ym, d0, d1 in ranges:
+    for d in range(int(d0), int(d1) + 1):
+        day_rank[f"graph_{d}"] = len(day_rank)
 for sp in graphs:
-    idx = sorted(range(len(order[sp])), key=lambda i: int(order[sp][i].split("_")[1]))
+    idx = sorted(range(len(order[sp])), key=lambda i: day_rank.get(order[sp][i], int(order[sp][i].split("_")[1])))
     graphs[sp] = [graphs[sp][i] for i in idx]; rgraphs[sp] = [rgraphs[sp][i] for i in idx]; order[sp] = [order[sp][i] for i in idx]
     assert graphs[sp], f"empty split {sp}"
 num_features = graphs["train"][0].ndata["feat"].shape[1]
