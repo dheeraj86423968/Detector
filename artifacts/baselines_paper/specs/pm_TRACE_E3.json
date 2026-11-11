@@ -1,0 +1,51 @@
+{
+ "raw_dir": "",
+ "database": "bl_trace_e3",
+ "database_all_file": "bl_trace_e3",
+ "num_node_types": 3,
+ "num_edge_types": 10,
+ "timezone": "US/Eastern",
+ "start_date": "2018-04-02",
+ "end_date": "2018-04-13",
+ "train_dates": [
+  "2018-04-02",
+  "2018-04-03",
+  "2018-04-04",
+  "2018-04-05",
+  "2018-04-06",
+  "2018-04-07",
+  "2018-04-08"
+ ],
+ "val_dates": [
+  "2018-04-09"
+ ],
+ "test_dates": [
+  "2018-04-10",
+  "2018-04-11",
+  "2018-04-12",
+  "2018-04-13"
+ ],
+ "unused_dates": [],
+ "ground_truth_relative_path": [
+  "../../../conv/gt_trace_e3/node_trace_e3_firefox_0410.csv",
+  "../../../conv/gt_trace_e3/node_trace_e3_phishing_executable_0413.csv",
+  "../../../conv/gt_trace_e3/node_trace_e3_pine_0413.csv"
+ ],
+ "attack_to_time_window": [
+  [
+   "../../../conv/gt_trace_e3/node_trace_e3_firefox_0410.csv",
+   "2018-04-10 00:00:00",
+   "2018-04-13 23:59:59"
+  ],
+  [
+   "../../../conv/gt_trace_e3/node_trace_e3_phishing_executable_0413.csv",
+   "2018-04-10 00:00:00",
+   "2018-04-13 23:59:59"
+  ],
+  [
+   "../../../conv/gt_trace_e3/node_trace_e3_pine_0413.csv",
+   "2018-04-10 00:00:00",
+   "2018-04-13 23:59:59"
+  ]
+ ]
+}

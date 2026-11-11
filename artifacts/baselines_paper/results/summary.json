@@ -1,5 +1,43 @@
 [
  {
+  "host": "ATLASV2_H1",
+  "system": "provfusion",
+  "runs": [
+   {
+    "seed": 1,
+    "adp": 0.0003,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 64,
+    "FP_per_test_day": 64.0,
+    "precision": 0.0,
+    "adp_own_gt_first_ties": 0.2058,
+    "adp_pidsmaker": 0.0002,
+    "adp_worst": 0.0001,
+    "adp_vote_then_A123": 0.0073,
+    "adp_printed_by_provfusion": 0.2058
+   },
+   {
+    "seed": 5,
+    "adp": 0.0003,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 90,
+    "FP_per_test_day": 90.0,
+    "precision": 0.0,
+    "adp_own_gt_first_ties": 0.2727,
+    "adp_pidsmaker": 0.0002,
+    "adp_worst": 0.0001,
+    "adp_vote_then_A123": 0.0112,
+    "adp_printed_by_provfusion": 0.2727
+   }
+  ],
+  "adp_mean": 0.0,
+  "adp_sd": 0.0
+ },
+ {
   "host": "CADETS_E3",
   "system": "provfusion",
   "runs": [
@@ -85,10 +123,55 @@
     "adp_worst": 0.0176,
     "adp_vote_then_A123": 0.018,
     "adp_printed_by_provfusion": 0.1991
+   },
+   {
+    "seed": 3,
+    "adp": 0.0091,
+    "attacks": 2,
+    "n_attacks": 2,
+    "TP": 4,
+    "FP": 753,
+    "FP_per_test_day": 251.0,
+    "precision": 0.005,
+    "adp_own_gt_first_ties": 0.0874,
+    "adp_pidsmaker": 0.007,
+    "adp_worst": 0.007,
+    "adp_vote_then_A123": 0.0081,
+    "adp_printed_by_provfusion": 0.0874
+   },
+   {
+    "seed": 4,
+    "adp": 0.4004,
+    "attacks": 1,
+    "n_attacks": 2,
+    "TP": 1,
+    "FP": 111,
+    "FP_per_test_day": 37.0,
+    "precision": 0.009,
+    "adp_own_gt_first_ties": 0.5669,
+    "adp_pidsmaker": 0.5034,
+    "adp_worst": 0.2533,
+    "adp_vote_then_A123": 0.2535,
+    "adp_printed_by_provfusion": 0.5669
+   },
+   {
+    "seed": 5,
+    "adp": 0.0543,
+    "attacks": 1,
+    "n_attacks": 2,
+    "TP": 1,
+    "FP": 41,
+    "FP_per_test_day": 13.67,
+    "precision": 0.024,
+    "adp_own_gt_first_ties": 0.7133,
+    "adp_pidsmaker": 0.5004,
+    "adp_worst": 0.0132,
+    "adp_vote_then_A123": 0.2582,
+    "adp_printed_by_provfusion": 0.7133
    }
   ],
-  "adp_mean": 0.014,
-  "adp_sd": 0.009
+  "adp_mean": 0.098,
+  "adp_sd": 0.17
  },
  {
   "host": "FIVEDIRECTIONS_E3",

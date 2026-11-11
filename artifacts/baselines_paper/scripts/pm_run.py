@@ -15,6 +15,11 @@ from pidsmaker.config import config as PC
 ds = rest[1]
 if spec:
     PC.DATASET_DEFAULT_CONFIG[ds] = json.load(open(spec))
+    # PIDSMaker picks the relation vocabulary by dataset NAME. Converted lab hosts (conv_store.py) use the DARPA TC
+    # vocabulary, so their (new) names are registered as TC datasets.
+    from pidsmaker.utils import dataset_utils as DU
+    if ds not in DU.DARPA_TC_DATASETS and ds.startswith("TCFMT_"):
+        DU.DARPA_TC_DATASETS.add(ds)
 from pidsmaker.detection.evaluation_methods import node_evaluation as NE
 for fname in ("get_node_predictions", "get_node_predictions_node_level"):
     orig = getattr(NE, fname)

@@ -1,0 +1,55 @@
+{
+ "label": "ProvFusion ATLASV2_H1 seed5",
+ "results_file": "/d/runs/s5/save_middle_results/ATLASV2_H1_loss_sce_dim_64_nhd_2_nh_0.5_nl_2_lr_0.0015_lsf_0.001_mp_500_mpf_10_wd_0.0001_wdf_2e-06_gatedge_gat.pt",
+ "operating_point": {
+  "TP": 0,
+  "FP": 90,
+  "precision": 0.0,
+  "attacks": 0,
+  "n_attacks": 10,
+  "gt_nodes_evaluated": 48,
+  "nodes_evaluated": 108746,
+  "test_days": 1,
+  "FP_per_test_day": 90.0
+ },
+ "adp_votes": {
+  "adp_pidsmaker": 0.0002,
+  "adp13": 0.0003,
+  "adp_gt_first_ties": 0.2727,
+  "adp_worst_ties": 0.0001,
+  "distinct_scores": 7,
+  "adp_random_ties_mean": 0.0003,
+  "adp_random_ties_sd": 0.0002
+ },
+ "adp_votes_then_A123": {
+  "adp_pidsmaker": 0.0112,
+  "adp13": 0.0111,
+  "adp_gt_first_ties": 0.0112,
+  "adp_worst_ties": 0.0111,
+  "distinct_scores": 72294,
+  "adp_random_ties_mean": 0.0111,
+  "adp_random_ties_sd": 0.0
+ },
+ "gt_nodes_total": 48,
+ "gt_nodes_in_test_graphs": 48,
+ "attacks_with_gt_in_test_graphs": 10,
+ "per_detector_alerts": {
+  "1": 8,
+  "2": 33,
+  "3": 89,
+  "4": 89,
+  "5": 89,
+  "6": 99,
+  "7": 106
+ },
+ "vote_histogram": {
+  "0": 108622,
+  "1": 18,
+  "2": 7,
+  "3": 9,
+  "4": 8,
+  "5": 70,
+  "6": 12,
+  "7": 0
+ }
+}

@@ -56,3 +56,13 @@ are listed per file in results/join_rates.json.
   had made the queue start ORTHRUS s0 while Velox s2 still ran; ORTHRUS s0 was stopped and restarted). Step-5 THEIA
   prep postponed until the PIDSMaker FiveDirections artifacts (12 GB) are deleted.
 - 06:39 ProvFusion FiveDirections s2 finished (see results).
+- 06:46 ORTHRUS (orthrus_non_snooped) FiveDirections s0 OOM-killed at 28 GB (TGN last-neighbour graphs, 29 GB anon); s1 stopped. ORTHRUS will run alone with a 40 GB limit after Velox s3-s4; ProvFusion queues pause while it runs.
+- 07:09 free space fell to the watchdog trigger again (others' usage grew while mine was constant at ~14 GB);
+  the watchdog killed Velox FiveDirections s3 (evaluation), s4 (start) and ProvFusion ATLASv2 s1-s4. Decision:
+  delete the PIDSMaker FiveDirections artifacts (11.7 GB; regenerable in ~12 min) -> 38 GB free. Velox FiveDirections
+  has 3 completed seeds (0, 1, 2); ORTHRUS FiveDirections is pending (needs 40 GB RAM and the artifacts again).
+- 07:12 TRACE conversion started (bl_trace_e3).
+- 07:13 first ATLASv2 PIDSMaker attempts failed at once (dataset-name vocabulary, see PROTOCOL amendment 07:25);
+  restarted 07:23 as TCFMT_ATLASV2_H1.
+- 07:17-07:23 ProvFusion ATLASv2 h1 s5 and s1: 0/10 attacks, FP 90 and 64 (one test day); tie-neutral ADP 0.0003,
+  ProvFusion-printed 0.27 / 0.21.

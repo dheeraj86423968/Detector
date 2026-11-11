@@ -116,3 +116,8 @@ PIDSMaker: velox and orthrus_non_snooped unchanged, as in Part 2. Seeds as in Pa
   max_epoch_f 10, wd 1e-4, wdf 5e-5, lr_f 0.0005), published weights. Labels: ProvFusion's OPTC-h051 CSV (by UUID)
   and ORTHRUS h051. Published 16/30 (regen 22/20).
 - Seeds 1, 2, 3 (1 = published).
+
+### Environment amendment (07:25)
+PIDSMaker selects its relation vocabulary by dataset name (`atlasv2_h1` maps to its native 33-type ATLASv2
+vocabulary). Converted lab hosts use the DARPA TC vocabulary, so they run under the names `TCFMT_<HOST>`, registered
+as TC datasets by pm_run.py (E3 TRACE keeps the name TRACE_E3, already TC). No other effect.
