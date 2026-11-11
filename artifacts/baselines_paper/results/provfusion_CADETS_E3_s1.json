@@ -1,0 +1,55 @@
+{
+ "label": "ProvFusion CADETS_E3 seed1 published config",
+ "results_file": "/d/runs/s1/save_middle_results/CADETS_E3_loss_sce_dim_64_nhd_2_nh_0.3_nl_2_lr_0.0015_lsf_0.001_mp_5_mpf_50_wd_0.001_wdf_0.0001_gatedge_gat.pt",
+ "operating_point": {
+  "TP": 12,
+  "FP": 1,
+  "precision": 0.923,
+  "attacks": 3,
+  "n_attacks": 3,
+  "gt_nodes_evaluated": 68,
+  "nodes_evaluated": 281585,
+  "test_days": 4,
+  "FP_per_test_day": 0.25
+ },
+ "adp_votes": {
+  "adp_pidsmaker": 0.9659,
+  "adp13": 0.9815,
+  "adp_gt_first_ties": 0.9999,
+  "adp_worst_ties": 0.9038,
+  "distinct_scores": 5,
+  "adp_random_ties_mean": 0.9751,
+  "adp_random_ties_sd": 0.0274
+ },
+ "adp_votes_then_A123": {
+  "adp_pidsmaker": 0.9435,
+  "adp13": 0.9435,
+  "adp_gt_first_ties": 0.9435,
+  "adp_worst_ties": 0.9435,
+  "distinct_scores": 5658,
+  "adp_random_ties_mean": 0.9435,
+  "adp_random_ties_sd": 0.0
+ },
+ "gt_nodes_total": 72,
+ "gt_nodes_in_test_graphs": 68,
+ "attacks_with_gt_in_test_graphs": 3,
+ "per_detector_alerts": {
+  "1": 66,
+  "2": 2,
+  "3": 22,
+  "4": 14,
+  "5": 14,
+  "6": 16,
+  "7": 16
+ },
+ "vote_histogram": {
+  "0": 281493,
+  "1": 75,
+  "2": 2,
+  "3": 2,
+  "4": 0,
+  "5": 13,
+  "6": 0,
+  "7": 0
+ }
+}

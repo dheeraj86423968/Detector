@@ -46,15 +46,31 @@ from torch_geometric.data import TemporalData
 
 t0 = time.time()
 # stage 3 (featurization) first: it only reads node messages from the database
-W.main(cfg)
+_w2v = cfg.edge_featurization.embed_nodes.feature_word2vec._model_dir + "feature_word2vec.model"
+if os.path.exists(_w2v):
+    log(f"reusing word2vec model {_w2v} (same config hash, deterministic)")
+else:
+    W.main(cfg)
 log(f"word2vec done {time.time()-t0:.0f}s")
 fw = cfg.edge_featurization.embed_nodes.feature_word2vec
 cur, con = init_database_connection(cfg)
 indexid2msg = get_indexid2msg(cur, use_cmd=fw.use_cmd, use_port=fw.use_port)
 indexid2msg = dict(sorted(indexid2msg.items(), key=lambda item: int(item[0])))
+# ProvFusion crashes (ZeroDivisionError in cal_word_weight) on nodes whose label has no tokens (e.g. empty file
+# paths on FiveDirections). Such nodes get a zero vector, as PIDSMaker does for out-of-vocabulary words. Only
+# datasets that contain such nodes are affected (count recorded in prepare_stats.json).
+_orig_cww = E.cal_word_weight
+E.cal_word_weight = lambda n, p: [] if n == 0 else _orig_cww(n, p)
+import warnings; warnings.filterwarnings("ignore", category=RuntimeWarning)
 indexid2vec = E.get_indexid2vec(indexid2msg=indexid2msg, model_path=fw._model_dir + "feature_word2vec.model",
                                 use_node_types=fw.use_node_types, decline_percentage=fw.decline_rate)
 del indexid2msg
+emb_dim = cfg.edge_featurization.embed_nodes.emb_dim
+empty_label_nodes = 0
+for k, v in indexid2vec.items():
+    if np.ndim(v) != 1 or v.shape[0] != emb_dim or not np.all(np.isfinite(v)):
+        indexid2vec[k] = np.zeros(emb_dim, dtype=np.float32); empty_label_nodes += 1
+log(f"nodes with no label tokens (zero vector): {empty_label_nodes}")
 etype2oh = E.gen_relation_onehot(rel2id=E.rel2id)
 ntype2oh = E.gen_relation_onehot(rel2id=E.ntype2id)
 log(f"node vectors {len(indexid2vec)} {time.time()-t0:.0f}s")
@@ -114,6 +130,6 @@ num_features = graphs["train"][0].ndata["feat"].shape[1]
 edge_features = graphs["train"][0].edata["label"].shape[1]
 out = os.path.join(a.out, f"{a.dataset.lower()}_merged.pt")
 torch.save((graphs, torch.zeros(11), num_features, edge_features, 3, rgraphs), out)
-json.dump({"order": order, "days": stats, "train_fused_edge_type_counts": train_etypes,
+json.dump({"empty_label_nodes": empty_label_nodes, "order": order, "days": stats, "train_fused_edge_type_counts": train_etypes,
            "seconds": round(time.time() - t0)}, open(os.path.join(a.out, "prepare_stats.json"), "w"), indent=1)
 log(f"saved {out} {os.path.getsize(out)/1e9:.2f} GB, {time.time()-t0:.0f}s")
