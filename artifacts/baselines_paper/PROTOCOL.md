@@ -121,3 +121,30 @@ PIDSMaker: velox and orthrus_non_snooped unchanged, as in Part 2. Seeds as in Pa
 PIDSMaker selects its relation vocabulary by dataset name (`atlasv2_h1` maps to its native 33-type ATLASv2
 vocabulary). Converted lab hosts use the DARPA TC vocabulary, so they run under the names `TCFMT_<HOST>`, registered
 as TC datasets by pm_run.py (E3 TRACE keeps the name TRACE_E3, already TC). No other effect.
+
+## Part 5 (2026-11-11 18:05 UTC, before any run): anchoring with the original systems' learned evidence
+Question: do Velox / ORTHRUS / ProvFusion node scores, used as STRATA 0.10's learned evidence, extend layer-1/2
+alerts to further attack nodes when anchored, and how well do they order the triage queue?
+Code: `scripts/anchor13.py` = a copy of artifacts/lab_v10/scripts/adp13.py (0.10 lab evaluation, variant P2 = fleet
+prevalence k=2 drop, the released configuration) where ONLY the learned-detector evidence passed to the alert
+policy (`fused` and `own`) changes. Same bundles (v07rel / b07rel), layers 1-2, anchoring rule (evidence-rule
+corroboration and window-neighbour `learned_near_alert`), daily learned budget, test days, lab ground truth.
+Configurations per lab host (one pass per host, all variants on the same windows):
+- (a) A0 = layers 1-2 only: learned evidence 0 everywhere.
+- (b) P2 = 0.10 as released (our learned score) - must reproduce res13/adp-*.json P2 (sanity check).
+- (c) X:<score file> = layers 1-2 + anchored original evidence: a node is "learned above threshold" (fused = own =
+  max(corroboration threshold, 1) + 1) in EVERY window in which it appears iff its `alert` column is 1 (the
+  system's own threshold), else 0. Approximation: the original systems give one score per node for the whole test
+  period, so per-window evidence is not available.
+- (d) the original system alone: its alerted nodes restricted to the lab host's test nodes, lab ground truth.
+Reported: attacks, TP, FP, FP per test day; TP nodes and attacks of (b)/(c) not found by (a).
+Triage ADP (pdp_server.tools.darpa_eval.adp, stable sort): tier x 1e6 + second key, where second key is the original
+score (tie-preserving rank, nodes without a score lowest), our learned score (as res13/adp13), or a random order
+(mean of 20 shuffles, seed 0); tiers from the configuration named.
+Hosts/files: every score file in scores/ (CADETS, THEIA E3, OpTC H051, FiveDirections, TRACE, ATLASv2 h1,
+CARBANAKv2 h1-h5). Each configuration is scored once. Summary: results/anchoring_summary.{md,json}, with a pooled
+line per system (sums over host-seed runs).
+STRATA tie robustness (coordinator request): the same pass on all 17 lab sets (no score file needed) dumps P2's tier
+and learned score per node; for tier x 1e6 + our score we report the stable-order ADP, the expected ADP under random
+tie order (mean of 20 shuffles), the worst case (ground-truth nodes last within ties) and the share of ground-truth
+nodes in a tie group that contains a benign node -> results/strata_ties.md.
