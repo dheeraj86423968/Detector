@@ -94,3 +94,18 @@ are listed per file in results/join_rates.json.
 - 15:59 ORTHRUS CARBANAKv2 h1 s0 OOM-killed at 28 GB in the same TGN step (h1 has 1.30 M nodes; ATLASv2 h1 with 0.53 M nodes fit). Expected to fail likewise on h2/h3 (1.19 M / 1.06 M nodes); the queue records each attempt. ORTHRUS needs > 40 GB RAM above ~1 M nodes on this host.
 - 16:22 ProvFusion THEIA E3 s1 (regen-D config): refined labels 3/3 attacks, TP 68 / FP 4, tie-neutral ADP 0.967 (printed 0.987); ORTHRUS labels 2/2, TP 59 / FP 13, ADP 0.933.
 - 17:30 ProvFusion OpTC H051 s1 (its published config and seed; PIDSMaker optc_051 DB): 0/1 attack, TP 0 / FP 7; tie-neutral ADP 0.14 (printed 0.48); refined and ORTHRUS labels are identical on H051 (114 nodes). ORTHRUS CARBANAKv2 h2 s0 fit in 28 GB: 0/1, no alerts.
+- 17:35 **Host disk filled to ~1 GB free by the production backup job** (`pdp-backup-1` wrote a 31.7 GB
+  `deploy/backups/.work-*/models.tar` and then a 7.8 GB encrypted archive). The watchdog stopped my running jobs
+  (ProvFusion THEIA s2, OpTC H051 s2, ORTHRUS CARBANAKv2 h2 s1 were killed: exit 137; not results). To keep the
+  host alive I stopped all my queues and deleted all my regenerable data: my databases bl_atlasv2_h1 and
+  bl_carbanakv2_h1..5 (dropped), all ProvFusion merged data and PIDSMaker artifacts, and the docker image
+  baselines-pids:1 (it occupied far more than its nominal 5.5 GB: ~30 GB with the containerd snapshots of my
+  rebuilds - this is the main reason my footprint exceeded the 12 GB budget all day). Free space went from 1 GB to
+  45 GB; the backup then completed (17:41). I did not touch the backup container. Daily backups run ~17:30 and need
+  ~40 GB transiently.
+- 17:50 STOPPED here and handed back. Not run: CARBANAKv2 PIDSMaker on h2 (Velox s2, ORTHRUS s1-s2), h3, h4, h5;
+  ProvFusion THEIA / OpTC H051 seeds 2-3; ORTHRUS FiveDirections (OOM, infeasible at <= 40 GB); PIDSMaker TRACE
+  (disk, infeasible). How to resume: rebuild the image from scripts/Dockerfile, re-create the DBs with
+  scripts/conv_store.py (minutes), re-run pf_prepare.py, then the runners in scripts/host_runners/ (they were
+  written for /root/bl). Middle results of every ProvFusion run are kept in /root/bl/pf/*/runs (2.1 GB) so the
+  scores can be recomputed without retraining.

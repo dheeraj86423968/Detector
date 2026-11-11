@@ -1,6 +1,195 @@
 {
+ "orthrus_non_snooped_ATLASV2_H1_s0.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "orthrus_non_snooped_ATLASV2_H1_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "orthrus_non_snooped_ATLASV2_H1_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "orthrus_non_snooped_ATLASV2_H1_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "orthrus_non_snooped_ATLASV2_H1_s4.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_ATLASV2_H1_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_ATLASV2_H1_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_ATLASV2_H1_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_ATLASV2_H1_s4.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_ATLASV2_H1_s5.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_ATLASV2_H1_s0.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_ATLASV2_H1_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_ATLASV2_H1_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_ATLASV2_H1_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_ATLASV2_H1_s4.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/ATLASV2_EDR/h1/eval-test/registry.json",
+  "rows": 108746,
+  "rows_joined": 108746,
+  "gt_rows": 48,
+  "gt_rows_joined": 48,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "orthrus_non_snooped_CARBANAKV2_H2_s0.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h2/eval-test/registry.json",
+  "rows": 386556,
+  "rows_joined": 386556,
+  "gt_rows": 81,
+  "gt_rows_joined": 81,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H2_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h2/eval-test/registry.json",
+  "rows": 386556,
+  "rows_joined": 386556,
+  "gt_rows": 81,
+  "gt_rows_joined": 81,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H2_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h2/eval-test/registry.json",
+  "rows": 386556,
+  "rows_joined": 386556,
+  "gt_rows": 81,
+  "gt_rows_joined": 81,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H2_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h2/eval-test/registry.json",
+  "rows": 386556,
+  "rows_joined": 386556,
+  "gt_rows": 81,
+  "gt_rows_joined": 81,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_CARBANAKV2_H2_s0.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h2/eval-test/registry.json",
+  "rows": 386556,
+  "rows_joined": 386556,
+  "gt_rows": 81,
+  "gt_rows_joined": 81,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_CARBANAKV2_H2_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h2/eval-test/registry.json",
+  "rows": 386556,
+  "rows_joined": 386556,
+  "gt_rows": 81,
+  "gt_rows_joined": 81,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
  "provfusion_CADETS_E3_s1.csv.gz": {
-  "lab_registry": "/data/endpoints/5eafc637-14c7-4074-b4d3-4e611dea925e/eval-test/registry.json",
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/5eafc637-14c7-4074-b4d3-4e611dea925e/eval-test/registry.json",
   "rows": 281585,
   "rows_joined": 281585,
   "gt_rows": 68,
@@ -9,7 +198,7 @@
   "gt_join_rate": 1.0
  },
  "provfusion_CADETS_E3_s2.csv.gz": {
-  "lab_registry": "/data/endpoints/5eafc637-14c7-4074-b4d3-4e611dea925e/eval-test/registry.json",
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/5eafc637-14c7-4074-b4d3-4e611dea925e/eval-test/registry.json",
   "rows": 281585,
   "rows_joined": 281585,
   "gt_rows": 68,
@@ -18,7 +207,7 @@
   "gt_join_rate": 1.0
  },
  "provfusion_CADETS_E3_s3.csv.gz": {
-  "lab_registry": "/data/endpoints/5eafc637-14c7-4074-b4d3-4e611dea925e/eval-test/registry.json",
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/5eafc637-14c7-4074-b4d3-4e611dea925e/eval-test/registry.json",
   "rows": 281585,
   "rows_joined": 281585,
   "gt_rows": 68,
@@ -26,8 +215,179 @@
   "join_rate": 1.0,
   "gt_join_rate": 1.0
  },
+ "provfusion_CARBANAKV2_H1_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h1/eval-test/registry.json",
+  "rows": 537581,
+  "rows_joined": 537581,
+  "gt_rows": 63,
+  "gt_rows_joined": 63,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H1_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h1/eval-test/registry.json",
+  "rows": 537581,
+  "rows_joined": 537581,
+  "gt_rows": 63,
+  "gt_rows_joined": 63,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H1_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h1/eval-test/registry.json",
+  "rows": 537581,
+  "rows_joined": 537581,
+  "gt_rows": 63,
+  "gt_rows_joined": 63,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_CARBANAKV2_H1_s0.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h1/eval-test/registry.json",
+  "rows": 537581,
+  "rows_joined": 537581,
+  "gt_rows": 63,
+  "gt_rows_joined": 63,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_CARBANAKV2_H1_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h1/eval-test/registry.json",
+  "rows": 537581,
+  "rows_joined": 537581,
+  "gt_rows": 63,
+  "gt_rows_joined": 63,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_CARBANAKV2_H1_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h1/eval-test/registry.json",
+  "rows": 537581,
+  "rows_joined": 537581,
+  "gt_rows": 63,
+  "gt_rows_joined": 63,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H3_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h3/eval-test/registry.json",
+  "rows": 478433,
+  "rows_joined": 478433,
+  "gt_rows": 26,
+  "gt_rows_joined": 26,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H3_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h3/eval-test/registry.json",
+  "rows": 478433,
+  "rows_joined": 478433,
+  "gt_rows": 26,
+  "gt_rows_joined": 26,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H3_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h3/eval-test/registry.json",
+  "rows": 478433,
+  "rows_joined": 478433,
+  "gt_rows": 26,
+  "gt_rows_joined": 26,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H4_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h4/eval-test/registry.json",
+  "rows": 170414,
+  "rows_joined": 170414,
+  "gt_rows": 21,
+  "gt_rows_joined": 21,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H4_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h4/eval-test/registry.json",
+  "rows": 170414,
+  "rows_joined": 170414,
+  "gt_rows": 21,
+  "gt_rows_joined": 21,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H4_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h4/eval-test/registry.json",
+  "rows": 170414,
+  "rows_joined": 170414,
+  "gt_rows": 21,
+  "gt_rows_joined": 21,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H5_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h5/eval-test/registry.json",
+  "rows": 40811,
+  "rows_joined": 40811,
+  "gt_rows": 21,
+  "gt_rows_joined": 21,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H5_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h5/eval-test/registry.json",
+  "rows": 40811,
+  "rows_joined": 40811,
+  "gt_rows": 21,
+  "gt_rows_joined": 21,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CARBANAKV2_H5_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/CARBANAKV2_EDR/h5/eval-test/registry.json",
+  "rows": 40811,
+  "rows_joined": 40811,
+  "gt_rows": 21,
+  "gt_rows_joined": 21,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
  "provfusion_FIVEDIRECTIONS_E3_s1.csv.gz": {
-  "lab_registry": "/data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282820,
+  "rows_joined": 282820,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_FIVEDIRECTIONS_E3_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282820,
+  "rows_joined": 282820,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_FIVEDIRECTIONS_E3_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282820,
+  "rows_joined": 282820,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_FIVEDIRECTIONS_E3_s4.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282820,
+  "rows_joined": 282820,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_FIVEDIRECTIONS_E3_s5.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
   "rows": 282820,
   "rows_joined": 282820,
   "gt_rows": 108,
@@ -36,7 +396,7 @@
   "gt_join_rate": 1.0
  },
  "velox_FIVEDIRECTIONS_E3_s0.csv.gz": {
-  "lab_registry": "/data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
   "rows": 282807,
   "rows_joined": 282807,
   "gt_rows": 108,
@@ -45,11 +405,83 @@
   "gt_join_rate": 1.0
  },
  "velox_FIVEDIRECTIONS_E3_s1.csv.gz": {
-  "lab_registry": "/data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
   "rows": 282807,
   "rows_joined": 282807,
   "gt_rows": 108,
   "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_FIVEDIRECTIONS_E3_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282807,
+  "rows_joined": 282807,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_FIVEDIRECTIONS_E3_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282807,
+  "rows_joined": 282807,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_FIVEDIRECTIONS_E3_s4.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282807,
+  "rows_joined": 282807,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_OPTC_h051_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/6ca8a927-9474-45be-870a-52bd56133b0e/eval-test/registry.json",
+  "rows": 1470624,
+  "rows_joined": 1470335,
+  "gt_rows": 114,
+  "gt_rows_joined": 114,
+  "join_rate": 0.9998,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_THEIA_E3_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/endpoints/b4021490-6dd4-4dfb-8628-b3e55af27b90/eval-test/registry.json",
+  "rows": 700902,
+  "rows_joined": 700902,
+  "gt_rows": 129,
+  "gt_rows_joined": 129,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_TRACE_E3_s1.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/TRACE_E3/trace/eval-test/registry.json",
+  "rows": 1812223,
+  "rows_joined": 1812223,
+  "gt_rows": 35,
+  "gt_rows_joined": 35,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_TRACE_E3_s2.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/TRACE_E3/trace/eval-test/registry.json",
+  "rows": 1812223,
+  "rows_joined": 1812223,
+  "gt_rows": 35,
+  "gt_rows_joined": 35,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_TRACE_E3_s3.csv.gz": {
+  "lab_registry": "/var/lib/docker/volumes/pdp_pdp_data/_data/heldout/TRACE_E3/trace/eval-test/registry.json",
+  "rows": 1812223,
+  "rows_joined": 1812223,
+  "gt_rows": 35,
+  "gt_rows_joined": 35,
   "join_rate": 1.0,
   "gt_join_rate": 1.0
  }

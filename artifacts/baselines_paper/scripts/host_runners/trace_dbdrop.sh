@@ -1,0 +1,1 @@
+until grep -q "TRACE merged data deleted" /root/bl/pf_trace.log; do sleep 60; done; docker exec postgres psql -U postgres -c "DROP DATABASE bl_trace_e3" && echo "$(date +%T) bl_trace_e3 dropped (re-creatable with conv_store.py in ~2 min)" >> /root/bl/pf_trace.log

@@ -1,0 +1,5 @@
+09:19:13 trace s1 done
+10:54:10 trace s2 done
+12:27:21 trace s3 done
+12:28:00 TRACE merged data deleted
+12:28:52 bl_trace_e3 dropped (re-creatable with conv_store.py in ~2 min)

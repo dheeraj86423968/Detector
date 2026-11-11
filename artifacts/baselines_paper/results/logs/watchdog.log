@@ -1,0 +1,59 @@
+05:46:35 free 25G < 26G: stopping bl-* containers
+bl-pf-cadets-s2
+bl-pm-velox-5d-s0
+05:47:01 free 25G < 26G: stopping bl-* containers
+bl-pf-cadets-s3
+05:47:27 free 25G < 26G: stopping bl-* containers
+05:47:43 free 25G < 26G: stopping bl-* containers
+06:38:29 free 24G < 26G: stopping bl-* containers
+bl-pfprep-theia
+bl-pm-velox-FIVEDIRECTIONS_E3-s2
+07:09:31 free 27432288256 B < 25.6 GiB: stopping bl-* containers
+bl-pf-atlasv2_h1-s1
+bl-pm-velox-FIVEDIRECTIONS_E3-s3
+07:09:52 free 27432226816 B < 25.6 GiB: stopping bl-* containers
+bl-pf-atlasv2_h1-s2
+07:10:13 free 27428696064 B < 25.6 GiB: stopping bl-* containers
+bl-pf-atlasv2_h1-s3
+bl-pm-velox-FIVEDIRECTIONS_E3-s4
+07:10:33 free 27428614144 B < 25.6 GiB: stopping bl-* containers
+bl-pf-atlasv2_h1-s4
+17:34:54 free 27379507200 B < 25.6 GiB: stopping bl-* containers
+bl-pf-theia_e3-s2
+bl-pm-orthrus_non_snooped-CARBANAKV2_H2-s1
+17:35:17 free 6338236416 B < 25.6 GiB: stopping bl-* containers
+bl-pf-optc_h051-s2
+17:35:38 free 1440690176 B < 25.6 GiB: stopping bl-* containers
+bl-pf-theia_e3-s3
+17:35:59 free 896741376 B < 25.6 GiB: stopping bl-* containers
+17:36:09 free 673648640 B < 25.6 GiB: stopping bl-* containers
+17:36:19 free 9938677760 B < 25.6 GiB: stopping bl-* containers
+17:36:29 free 9681506304 B < 25.6 GiB: stopping bl-* containers
+17:36:39 free 9441644544 B < 25.6 GiB: stopping bl-* containers
+17:36:49 free 9209909248 B < 25.6 GiB: stopping bl-* containers
+17:36:59 free 8961658880 B < 25.6 GiB: stopping bl-* containers
+17:37:09 free 8730447872 B < 25.6 GiB: stopping bl-* containers
+17:37:20 free 8580239360 B < 25.6 GiB: stopping bl-* containers
+17:37:30 free 8417972224 B < 25.6 GiB: stopping bl-* containers
+17:37:40 free 8213463040 B < 25.6 GiB: stopping bl-* containers
+17:37:50 free 7967604736 B < 25.6 GiB: stopping bl-* containers
+17:38:00 free 7708082176 B < 25.6 GiB: stopping bl-* containers
+17:38:10 free 7534280704 B < 25.6 GiB: stopping bl-* containers
+17:38:20 free 7355756544 B < 25.6 GiB: stopping bl-* containers
+17:38:30 free 7094661120 B < 25.6 GiB: stopping bl-* containers
+17:38:40 free 6828056576 B < 25.6 GiB: stopping bl-* containers
+17:38:50 free 6574800896 B < 25.6 GiB: stopping bl-* containers
+17:39:01 free 6350946304 B < 25.6 GiB: stopping bl-* containers
+17:39:11 free 6094036992 B < 25.6 GiB: stopping bl-* containers
+17:39:21 free 5856804864 B < 25.6 GiB: stopping bl-* containers
+17:39:31 free 5616418816 B < 25.6 GiB: stopping bl-* containers
+17:39:41 free 5344837632 B < 25.6 GiB: stopping bl-* containers
+17:39:51 free 5085274112 B < 25.6 GiB: stopping bl-* containers
+17:40:01 free 4815822848 B < 25.6 GiB: stopping bl-* containers
+17:40:11 free 4649099264 B < 25.6 GiB: stopping bl-* containers
+17:40:21 free 4464812032 B < 25.6 GiB: stopping bl-* containers
+17:40:32 free 4216553472 B < 25.6 GiB: stopping bl-* containers
+17:40:42 free 3958603776 B < 25.6 GiB: stopping bl-* containers
+17:40:52 free 3796860928 B < 25.6 GiB: stopping bl-* containers
+17:41:02 free 3624108032 B < 25.6 GiB: stopping bl-* containers
+17:41:12 free 3462389760 B < 25.6 GiB: stopping bl-* containers
