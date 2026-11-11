@@ -70,3 +70,10 @@ are listed per file in results/join_rates.json.
   167,082 = lab manifests; DBs 0.04-0.81 GB). ProvFusion CARBANAKv2 queue: prep, then seeds 1-3 per host.
 - 07:37 Velox ATLASv2 h1 s0: no alerts at its threshold (0/10, TP 0 / FP 0), ADP 0.077.
 - Runners now start a GPU job only with >= 12 GB GPU and >= 12 GB RAM free and at most 2 of my GPU jobs running.
+- 07:44 TRACE ProvFusion data prepared (1877 s, 5.21 GB merged; day graphs ~0.7 M nodes). TRACE ProvFusion seed 1
+  started; needs ~27 GB RAM. Because of the disk floor, TRACE ProvFusion is limited to seeds 1-3, after which its
+  merged data is deleted so the FiveDirections PIDSMaker artifacts can be rebuilt for ORTHRUS (40 GB RAM, alone).
+- 07:44/07:49 Velox ATLASv2 s1/s2 failed (my edge-loss pruning raced with PIDSMaker's evaluation listing); fixed by
+  evaluating only the last epoch (pm_run.py) and requeued.
+- 08:30 ATLASv2 h1: ProvFusion 5 seeds, ORTHRUS 4 seeds, Velox 3 seeds done (summary.md).
+- 08:33 ProvFusion data prepared for CARBANAKv2 h1-h5.

@@ -4,7 +4,9 @@ Headline ADP: ProvFusion = expected ADP under random tie order of its integer vo
 
 | host | system | seeds | ADP mean ± sd (min-max) | ProvFusion-printed ADP per seed | attacks found per seed | TP per seed | FP per seed | FP/test day (mean) |
 |---|---|---|---|---|---|---|---|---|
-| ATLASV2_H1 | provfusion | 1,5 | 0.00 ± 0.00 (0.00-0.00) | 0.2058, 0.2727 | 0/10, 0/10 | 0, 0 | 64, 90 | 77.0 |
+| ATLASV2_H1 | orthrus_non_snooped | 0,1,2,3 | 0.01 ± 0.00 (0.01-0.01) | -, -, -, - | 0/10, 0/10, 1/10, 0/10 | 0, 0, 1, 0 | 105, 265, 191, 106 | 166.8 |
+| ATLASV2_H1 | provfusion | 1,2,3,4,5 | 0.00 ± 0.00 (0.00-0.00) | 0.2058, 0.2, 0.2423, 0.2721, 0.2727 | 0/10, 0/10, 0/10, 1/10, 0/10 | 0, 0, 0, 1, 0 | 64, 49, 16, 52, 90 | 54.2 |
+| ATLASV2_H1 | velox | 0,3,4 | 0.06 ± 0.02 (0.04-0.08) | -, -, - | 0/10, 0/10, 0/10 | 0, 0, 0 | 0, 0, 2 | 0.7 |
 | CADETS_E3 | provfusion | 1,2,3 | 0.36 ± 0.53 (0.00-0.98) | 0.9999, 0.6372, 0.4409 | 3/3, 1/3, 0/3 | 12, 1, 0 | 1, 9, 13 | 1.9 |
 | FIVEDIRECTIONS_E3 | provfusion | 1,2,3,4,5 | 0.10 ± 0.17 (0.01-0.40) | 0.0898, 0.1991, 0.0874, 0.5669, 0.7133 | 2/2, 1/2, 2/2, 1/2, 1/2 | 2, 1, 4, 1, 1 | 522, 41, 753, 111, 41 | 97.9 |
 | FIVEDIRECTIONS_E3 | velox | 0,1,2 | 0.05 ± 0.03 (0.02-0.07) | -, -, - | 1/2, 0/2, 1/2 | 1, 0, 3 | 10, 6, 40 | 6.2 |

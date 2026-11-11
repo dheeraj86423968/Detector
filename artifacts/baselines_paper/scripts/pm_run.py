@@ -39,6 +39,15 @@ for fname in ("plot_scores_with_paths_node_level", "plot_scores_neat", "plot_sco
               "plot_discrimination_metric"):
     if hasattr(NE, fname):
         setattr(NE, fname, lambda *a, **k: None)
+# Headline = last evaluated epoch only (PROTOCOL amendment 05:55): evaluate just that epoch, so pruning older epochs'
+# edge losses can never race with the evaluation's directory listing.
+from pidsmaker.tasks import evaluation as EV
+_orig_lds = EV.listdir_sorted
+def _last_only(path):
+    files = _orig_lds(path)
+    ep = [f for f in files if f.startswith("model_epoch_")]
+    return [max(ep, key=lambda f: int(f.split("_")[-1]))] if ep else files
+EV.listdir_sorted = _last_only
 import runpy
 sys.argv = ["pidsmaker/main.py"] + rest
 os.environ.setdefault("WANDB_MODE", "disabled")

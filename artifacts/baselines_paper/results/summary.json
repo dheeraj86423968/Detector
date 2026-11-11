@@ -1,6 +1,58 @@
 [
  {
   "host": "ATLASV2_H1",
+  "system": "orthrus_non_snooped",
+  "runs": [
+   {
+    "seed": 0,
+    "adp": 0.0101,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 105,
+    "FP_per_test_day": 105.0,
+    "precision": 0.0,
+    "adp13": 0.0101
+   },
+   {
+    "seed": 1,
+    "adp": 0.0099,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 265,
+    "FP_per_test_day": 265.0,
+    "precision": 0.0,
+    "adp13": 0.0099
+   },
+   {
+    "seed": 2,
+    "adp": 0.009,
+    "attacks": 1,
+    "n_attacks": 10,
+    "TP": 1,
+    "FP": 191,
+    "FP_per_test_day": 191.0,
+    "precision": 0.005,
+    "adp13": 0.009
+   },
+   {
+    "seed": 3,
+    "adp": 0.0096,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 106,
+    "FP_per_test_day": 106.0,
+    "precision": 0.0,
+    "adp13": 0.0095
+   }
+  ],
+  "adp_mean": 0.01,
+  "adp_sd": 0.0
+ },
+ {
+  "host": "ATLASV2_H1",
   "system": "provfusion",
   "runs": [
    {
@@ -19,6 +71,51 @@
     "adp_printed_by_provfusion": 0.2058
    },
    {
+    "seed": 2,
+    "adp": 0.0003,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 49,
+    "FP_per_test_day": 49.0,
+    "precision": 0.0,
+    "adp_own_gt_first_ties": 0.2,
+    "adp_pidsmaker": 0.0002,
+    "adp_worst": 0.0001,
+    "adp_vote_then_A123": 0.0066,
+    "adp_printed_by_provfusion": 0.2
+   },
+   {
+    "seed": 3,
+    "adp": 0.0003,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 16,
+    "FP_per_test_day": 16.0,
+    "precision": 0.0,
+    "adp_own_gt_first_ties": 0.2423,
+    "adp_pidsmaker": 0.0002,
+    "adp_worst": 0.0001,
+    "adp_vote_then_A123": 0.0058,
+    "adp_printed_by_provfusion": 0.2423
+   },
+   {
+    "seed": 4,
+    "adp": 0.0027,
+    "attacks": 1,
+    "n_attacks": 10,
+    "TP": 1,
+    "FP": 52,
+    "FP_per_test_day": 52.0,
+    "precision": 0.019,
+    "adp_own_gt_first_ties": 0.2721,
+    "adp_pidsmaker": 0.003,
+    "adp_worst": 0.0019,
+    "adp_vote_then_A123": 0.0079,
+    "adp_printed_by_provfusion": 0.2721
+   },
+   {
     "seed": 5,
     "adp": 0.0003,
     "attacks": 0,
@@ -34,8 +131,49 @@
     "adp_printed_by_provfusion": 0.2727
    }
   ],
-  "adp_mean": 0.0,
-  "adp_sd": 0.0
+  "adp_mean": 0.001,
+  "adp_sd": 0.001
+ },
+ {
+  "host": "ATLASV2_H1",
+  "system": "velox",
+  "runs": [
+   {
+    "seed": 0,
+    "adp": 0.0769,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 0,
+    "FP_per_test_day": 0.0,
+    "precision": 0.0,
+    "adp13": 0.0771
+   },
+   {
+    "seed": 3,
+    "adp": 0.0552,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 0,
+    "FP_per_test_day": 0.0,
+    "precision": 0.0,
+    "adp13": 0.0552
+   },
+   {
+    "seed": 4,
+    "adp": 0.0409,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 2,
+    "FP_per_test_day": 2.0,
+    "precision": 0.0,
+    "adp13": 0.0409
+   }
+  ],
+  "adp_mean": 0.058,
+  "adp_sd": 0.018
  },
  {
   "host": "CADETS_E3",
