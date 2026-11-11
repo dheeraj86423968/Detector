@@ -1,0 +1,59 @@
+[
+ {
+  "host": "CADETS_E3",
+  "system": "provfusion",
+  "runs": [
+   {
+    "seed": 1,
+    "adp": 0.9751,
+    "attacks": 3,
+    "n_attacks": 3,
+    "TP": 12,
+    "FP": 1,
+    "FP_per_test_day": 0.25,
+    "precision": 0.923,
+    "adp_own_gt_first_ties": 0.9999,
+    "adp_pidsmaker": 0.9659,
+    "adp_worst": 0.9038,
+    "adp_vote_then_A123": 0.9435,
+    "adp_printed_by_provfusion": 0.9999
+   },
+   {
+    "seed": 2,
+    "adp": 0.115,
+    "attacks": 1,
+    "n_attacks": 3,
+    "TP": 1,
+    "FP": 9,
+    "FP_per_test_day": 2.25,
+    "precision": 0.1,
+    "adp_own_gt_first_ties": 0.645,
+    "adp_pidsmaker": 0.0842,
+    "adp_worst": 0.0417,
+    "adp_vote_then_A123": 0.222,
+    "adp_printed_by_provfusion": 0.6372
+   }
+  ],
+  "adp_mean": 0.545,
+  "adp_sd": 0.608
+ },
+ {
+  "host": "FIVEDIRECTIONS_E3",
+  "system": "velox",
+  "runs": [
+   {
+    "seed": 0,
+    "adp": 0.0639,
+    "attacks": 1,
+    "n_attacks": 2,
+    "TP": 1,
+    "FP": 10,
+    "FP_per_test_day": 3.33,
+    "precision": 0.091,
+    "adp13": 0.0639
+   }
+  ],
+  "adp_mean": 0.064,
+  "adp_sd": 0.0
+ }
+]

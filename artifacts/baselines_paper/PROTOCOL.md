@@ -88,3 +88,11 @@ PIDSMaker itself uses (`compute_class_weights`): w_c = N / (K n_c) over the edge
 published vectors), 0 for absent classes and for class 10 (self loops), as in every published vector.
 Environment amendment: the image's DGL is the CUDA build 2.2.1+cu121 (conda channel dglteam; data.dgl.ai is not
 reachable from this host); the first CADETS attempt failed before training with DGL's CPU build.
+
+### Amendment (05:55, disk; before any PIDSMaker result was looked at)
+The disk floor (25 GB free) was reached during the first Velox FiveDirections run (PIDSMaker artifacts: edge
+embeddings 8.7 GB + edge losses per evaluated epoch + ~150 MB of figures per epoch). From now on: (1) the heavy
+figures are disabled (no effect on numbers); (2) while a run trains, only the newest epoch's edge losses are kept,
+so PIDSMaker evaluates only the LAST epoch = our pre-registered headline. The best_adp reference (test-selected) is
+dropped. (3) PIDSMaker on E3 TRACE needs ~18 GB of edge embeddings for 17.8 M fused edges and is not feasible with
+the disk floor; it will be attempted only if space is freed by someone else.

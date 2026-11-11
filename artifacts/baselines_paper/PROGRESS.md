@@ -17,3 +17,27 @@
   Results: results/provfusion_CADETS_E3_s1.json; scores: scores/provfusion_CADETS_E3_s1.csv.gz (join 100 %).
 - 05:21 ProvFusion crashed on FiveDirections (ZeroDivisionError on nodes with empty labels): such nodes get a zero
   vector (pf_prepare.py; count logged).
+
+## Node-level score files (scores/, for the anchoring step)
+One gzip CSV per (system, host, seed): `scores/<system>_<HOST>_s<seed>.csv.gz`, system in {provfusion, velox,
+orthrus_non_snooped (= ORTHRUS as re-evaluated by Bilot et al.)}. One row per node of the system's TEST graphs.
+- `index_id`: join key = the framework index_id = PIDSMaker DB `index_id` = ORTHRUS GT CSV column 3 = the `uuid`
+  field of our lab registry (`eval-test/registry.json` of the lab host). For converted hosts (TRACE, ATLASv2,
+  CARBANAKv2) the DB was built from our registry, so the key is our uuid by construction.
+- `score`: the system's own node ranking score (higher = more anomalous). Velox/ORTHRUS: PIDSMaker node score
+  (max edge loss over test windows, src and dst) of the last training epoch. ProvFusion: 10 * vote + A123, where
+  vote = max over test days of the number of its 7 detectors that fire (0..7, its ADP score) and A123 = max over test
+  days of A1+A2+A3' (its "method 6" sum, label-free tie-break); `vote` and `a123_max` are also given separately.
+- `alert`: 1 if the system alerts the node at its OWN operating point (Velox/ORTHRUS: PIDSMaker max-val-loss
+  threshold; ProvFusion: vote >= 4 on some test day). `gt`: 1 if ground-truth node (the labels used in results/).
+Join check (scripts/join_check.py): fraction of rows and of GT rows whose index_id is in the lab registry; results
+are listed per file in results/join_rates.json.
+
+## Log (continued)
+- 05:47 watchdog stopped Velox FiveDirections s0 (evaluation) and CADETS s2/s3 at 25 GB free; FiveDirections
+  ProvFusion prep had been OOM-killed (28 GB) at the 10 M-event day 04-09. Fixes: pm_run.py no-op figures,
+  pm_run.sh keeps only the newest epoch's edge losses (protocol amendment), pf_prepare.py interns repeated strings
+  of the event rows (same values/order).
+- 05:49 Velox FiveDirections s0 (last epoch): 1/2 attacks, TP 1 / FP 10, ADP 0.064 (= PIDSMaker's printout).
+- 06:02 ProvFusion CADETS s2 (published config, only the seed differs): 1/3 attacks, TP 1 / FP 9; ProvFusion's own
+  printed ADP 0.637 (label-assisted tie order) vs tie-neutral 0.115, PIDSMaker ADP 0.084.

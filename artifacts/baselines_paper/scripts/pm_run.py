@@ -27,6 +27,12 @@ for fname in ("get_node_predictions", "get_node_predictions_node_level"):
                     open(os.path.join(dump, f"{ep}.pkl"), "wb"))
         return out
     setattr(NE, fname, wrapped)
+# Disk: PIDSMaker writes several large figures per evaluated epoch (~150 MB/epoch on FiveDirections). They do not
+# affect any number, so they are replaced by no-ops (the ADP function, which also draws, is kept).
+for fname in ("plot_scores_with_paths_node_level", "plot_scores_neat", "plot_scores_distribution",
+              "plot_discrimination_metric"):
+    if hasattr(NE, fname):
+        setattr(NE, fname, lambda *a, **k: None)
 import runpy
 sys.argv = ["pidsmaker/main.py"] + rest
 os.environ.setdefault("WANDB_MODE", "disabled")

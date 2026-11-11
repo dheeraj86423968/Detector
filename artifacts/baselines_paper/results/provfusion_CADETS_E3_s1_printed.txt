@@ -1,0 +1,3 @@
+Final Voted (>=4):            TP=12, FP=1
+The adp score is: 0.9998792549319033
+(source: docker logs of bl-pf-cadets-s1, copied 05:34 before the container was removed)

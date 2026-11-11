@@ -118,9 +118,31 @@ def intercept_save(obj, path, *a_, **k_):
 
 
 G.torch = types.SimpleNamespace(save=intercept_save)
+
+
+class InterningCursor:
+    """Memory only: fetchall() returns the same rows, read in batches, with the repeated node-id / operation strings
+    interned (a 10M-event day otherwise needs > 28 GB in gen_edge_fused_tw). Values and order are unchanged."""
+    def __init__(self, cur):
+        self.cur = cur
+    def execute(self, *a_, **k_):
+        return self.cur.execute(*a_, **k_)
+    def fetchall(self):
+        out, it = [], sys.intern
+        while True:
+            rows = self.cur.fetchmany(500000)
+            if not rows:
+                return out
+            for r in rows:
+                if len(r) == 8:
+                    out.append((it(r[0]), it(r[1]), it(r[2]), it(r[3]), it(r[4]), r[5], r[6], r[7]))
+                else:
+                    out.append(r)
+    def __getattr__(self, k):
+        return getattr(self.cur, k)
 logger = G.get_logger(name="graph_construction_edge_fused_tw", filename=os.path.join(cfg.graph_construction.build_graphs._logs_dir, "g.log"))
 nodeid2msg = G.get_node_list(cur=cur, cfg=cfg)
-G.gen_edge_fused_tw(cur=cur, nodeid2msg=nodeid2msg, logger=logger, cfg=cfg)
+G.gen_edge_fused_tw(cur=InterningCursor(cur), nodeid2msg=nodeid2msg, logger=logger, cfg=cfg)
 del nodeid2msg
 for sp in graphs:
     idx = sorted(range(len(order[sp])), key=lambda i: int(order[sp][i].split("_")[1]))
