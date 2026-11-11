@@ -74,3 +74,15 @@ TRACE_E3, FIVEDIRECTIONS_E3, ATLASV2 h1/h2, CARBANAKV2 h1-h5. At most two traini
 with >= 10 GB free GPU memory and >= 12 GB available RAM; containers run with --oom-score-adj 800 and a memory limit.
 Bundles are deleted after scoring except manifest.json, calibration.json, layers.json (small). A host or run that
 fails is reported as failed with its error; nothing is estimated or filled in.
+
+## Amendment 1 (2026-11-11 05:10 UTC, coordinator request; before any run 2-5 bundle was scored)
+Added measures, no new training, for every scored run and host (P2, the 0.10 configuration), computed by eval5.py from
+the same scoring pass (run 1: from the re-scoring of its bundles, which is why the re-scoring of run 1 was repeated):
+1. ADP of the triage order with the learned tie-break replaced by a non-learned one: alert tier (desc), then the node's
+   first alert time (window start, first first), then a random order; unalerted nodes last in random order. Ties that
+   remain at equal tier and time are also broken by the random order. Mean (and min / max) over 20 random seeds (0-19).
+2. Layers 1-2 only: nodes with at least one alert reason from layer 1 (novelty) or layer 2 (rules), i.e. no
+   corroborated and no learned alerts; tier = alert_tier of those reasons only, first time = first window with such a
+   reason. Operating point (attacks, TP, FP, precision) and the ADP of 1. on that tier / time.
+3. The set of detected attack names per run (P2, layers 1-2 only, detector-1 alone, detector-2 alone), to report
+   whether the detected set changes across runs.
