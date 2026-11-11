@@ -1,0 +1,8 @@
+07:56:44 resuming from the complete /data/paper5/THEIA_E3/r3/b06 (same run and seeds)
+07:56:44 0.6-config bundle 0s
+2026-11-11 07:57:14 - detector-3: 2919135 edges, 79201 keys, 401100 table rows
+2026-11-11 07:57:15 - detector-3 thresholds proc 52.58 obj 48.68 (budget 10)
+2026-11-11 07:57:22 - layers: 130 known executables, 158 baseline remote addresses (144 recurring), benign alarm keys exfiltration=1
+2026-11-11 07:57:51 - final threshold 1.080 (validation nodes 34388, budget 10)
+07:57:52 0.7 released bundle 67s
+07:57:52 done; layers.json equal to run 1: True

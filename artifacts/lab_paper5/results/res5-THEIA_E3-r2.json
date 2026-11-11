@@ -1,0 +1,244 @@
+{
+ "set": "THEIA_E3",
+ "run": 2,
+ "bundle": "/data/paper5/THEIA_E3/r2/b07",
+ "detector_thresholds": {
+  "detector-1": 0.9541236758232117,
+  "detector-2": 0.9932237386703491
+ },
+ "validation_nodes": 34388,
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 118,
+ "days": 3,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 109,
+  "FP": 88,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 29.3,
+  "by_layer": {
+   "corroborated": 16,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "rows": 202,
+  "ADP": 1.0,
+  "ADP_learned_only": 1.0,
+  "precision": 0.553
+ },
+ "P1": {
+  "TP": 109,
+  "FP": 88,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 29.3,
+  "by_layer": {
+   "corroborated": 16,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "rows": 202,
+  "ADP": 1.0,
+  "ADP_learned_only": 1.0,
+  "precision": 0.553
+ },
+ "P1e": {
+  "TP": 109,
+  "FP": 88,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 29.3,
+  "by_layer": {
+   "corroborated": 16,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "rows": 202,
+  "ADP": 1.0,
+  "ADP_learned_only": 1.0,
+  "precision": 0.553
+ },
+ "P2": {
+  "TP": 109,
+  "FP": 88,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 29.3,
+  "by_layer": {
+   "corroborated": 16,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "rows": 202,
+  "ADP": 1.0,
+  "ADP_learned_only": 1.0,
+  "precision": 0.553,
+  "ADP_triage_time_tiebreak": {
+   "mean": 0.622,
+   "min": 0.62,
+   "max": 0.626,
+   "seeds": 20
+  },
+  "layers12_only": {
+   "TP": 100,
+   "FP": 81,
+   "recall": 0.847,
+   "attacks": 2,
+   "precision": 0.552,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "ADP_time_tiebreak": {
+    "mean": 0.628,
+    "min": 0.626,
+    "max": 0.631,
+    "seeds": 20
+   }
+  }
+ },
+ "P2e": {
+  "TP": 109,
+  "FP": 88,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 29.3,
+  "by_layer": {
+   "corroborated": 16,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "rows": 202,
+  "ADP": 1.0,
+  "ADP_learned_only": 1.0,
+  "precision": 0.553
+ },
+ "detector-1": {
+  "val_max": {
+   "TP": 19,
+   "FP": 36,
+   "recall": 0.161,
+   "attacks": 2,
+   "precision": 0.345,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "threshold": 0.9541236758232117
+  },
+  "ratio_1": {
+   "TP": 19,
+   "FP": 30,
+   "recall": 0.161,
+   "attacks": 2,
+   "precision": 0.388,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "threshold": 1.0
+  },
+  "ADP": 1.0
+ },
+ "detector-2": {
+  "val_max": {
+   "TP": 8,
+   "FP": 28,
+   "recall": 0.068,
+   "attacks": 2,
+   "precision": 0.222,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "threshold": 0.9932237386703491
+  },
+  "ratio_1": {
+   "TP": 8,
+   "FP": 28,
+   "recall": 0.068,
+   "attacks": 2,
+   "precision": 0.222,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "threshold": 1.0
+  },
+  "ADP": 0.275
+ }
+}

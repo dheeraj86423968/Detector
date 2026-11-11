@@ -42,17 +42,26 @@ if __name__ == "__main__":
     os.makedirs(od, exist_ok=True)
     if os.path.exists(b7 + "/manifest.json") and json.load(open(b7 + "/manifest.json")).get("calibration", {}).get("final", {}).get("pending") is None:
         log(f"{b7} exists"); sys.exit(0)
-    for d in (b6, b7):
+    m6 = json.load(open(b6 + "/manifest.json")) if os.path.exists(b6 + "/manifest.json") else {}
+    resume = m6.get("paper5_seeds") == seeds and m6.get("paper5_run") == r   # a complete b06 of this run: only upgrade
+    for d in ((b7,) if resume else (b6, b7)):
         if os.path.exists(d):
             shutil.rmtree(d)
     t0 = time.time()
     base_store = S.base_store()
-    Trainer(base_store, list(S.train_days), S.val_day, cfg6, b6).run({"endpoint": s, "paper5_run": r, "paper5_seeds": seeds})
+    if resume:
+        log(f"resuming from the complete {b6} (same run and seeds)")
+    else:
+        Trainer(base_store, list(S.train_days), S.val_day, cfg6, b6).run({"endpoint": s, "paper5_run": r, "paper5_seeds": seeds})
     log(f"0.6-config bundle {time.time()-t0:.0f}s")
     # disk: the upgrade's copy of b06 hard-links the files instead of copying them (b06 is deleted right after; files
     # the upgrade rewrites are written whole by json.dump / write_manifest, so b07's content is the same as with a copy)
     _ct = shutil.copytree
-    shutil.copytree = lambda src, dst, **kw: _ct(src, dst, copy_function=os.link, **kw)
+    def _linktree(src, dst, *a, **kw):     # the recursive calls pass copy_function positionally (already os.link)
+        if not a:
+            kw["copy_function"] = os.link
+        return _ct(src, dst, *a, **kw)
+    shutil.copytree = _linktree
     try:
         upgrade_bundle_07(b6, b7, base_store, cfg7)
     finally:
@@ -60,6 +69,6 @@ if __name__ == "__main__":
     log(f"0.7 released bundle {time.time()-t0:.0f}s")
     shutil.rmtree(b6)
     same = json.load(open(b7 + "/layers.json")) == json.load(open(run1_bundle(s) + "/layers.json"))
-    json.dump({"set": s, "run": r, "seeds": seeds, "overrides": ov, "train_s": round(time.time() - t0), "layers_equal_run1": same,
+    json.dump({"set": s, "run": r, "seeds": seeds, "overrides": ov, "train_s": round(time.time() - t0), "resumed_from_b06": resume, "layers_equal_run1": same,
                "train_days": S.train_days, "val_day": S.val_day}, open(od + "/train5.json", "w"), indent=1)
     log(f"done; layers.json equal to run 1: {same}")

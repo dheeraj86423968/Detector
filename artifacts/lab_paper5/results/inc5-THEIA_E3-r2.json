@@ -1,0 +1,19 @@
+{
+ "THEIA_E3": {
+  "days": 3,
+  "P2/G2": {
+   "incidents": 9,
+   "fp_incidents": 6,
+   "tp_incidents": 3,
+   "fp_inc_per_day": 2.0,
+   "attacks": 2,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "buried": [],
+   "max_alerts": 185,
+   "alerts": 202
+  }
+ }
+}

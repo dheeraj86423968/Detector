@@ -1,0 +1,182 @@
+{
+ "set": "CLEARSCOPE_E3",
+ "run": 4,
+ "bundle": "/data/paper5/CLEARSCOPE_E3/r4/b07",
+ "detector_thresholds": {
+  "detector-1": 1.0,
+  "detector-2": 0.8676869630813598
+ },
+ "validation_nodes": 32059,
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 41,
+ "days": 2,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0
+ },
+ "P1": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0
+ },
+ "P1e": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0
+ },
+ "P2": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0,
+  "ADP_triage_time_tiebreak": {
+   "mean": 0.002,
+   "min": 0.0,
+   "max": 0.017,
+   "seeds": 20
+  },
+  "layers12_only": {
+   "TP": 0,
+   "FP": 0,
+   "recall": 0.0,
+   "attacks": 0,
+   "precision": 0.0,
+   "attacks_found": [],
+   "ADP_time_tiebreak": {
+    "mean": 0.002,
+    "min": 0.0,
+    "max": 0.017,
+    "seeds": 20
+   }
+  }
+ },
+ "P2e": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 0,
+  "ADP": 0.2,
+  "ADP_learned_only": 0.2,
+  "precision": 0.0
+ },
+ "detector-1": {
+  "val_max": {
+   "TP": 1,
+   "FP": 123,
+   "recall": 0.024,
+   "attacks": 1,
+   "precision": 0.008,
+   "attacks_found": [
+    "clearscope_e3_firefox_0411"
+   ],
+   "threshold": 1.0
+  },
+  "ratio_1": {
+   "TP": 1,
+   "FP": 123,
+   "recall": 0.024,
+   "attacks": 1,
+   "precision": 0.008,
+   "attacks_found": [
+    "clearscope_e3_firefox_0411"
+   ],
+   "threshold": 1.0
+  },
+  "ADP": 0.333
+ },
+ "detector-2": {
+  "val_max": {
+   "TP": 1,
+   "FP": 31,
+   "recall": 0.024,
+   "attacks": 1,
+   "precision": 0.031,
+   "attacks_found": [
+    "clearscope_e3_firefox_0411"
+   ],
+   "threshold": 0.8676869630813598
+  },
+  "ratio_1": {
+   "TP": 1,
+   "FP": 2,
+   "recall": 0.024,
+   "attacks": 1,
+   "precision": 0.333,
+   "attacks_found": [
+    "clearscope_e3_firefox_0411"
+   ],
+   "threshold": 1.0
+  },
+  "ADP": 0.333
+ }
+}

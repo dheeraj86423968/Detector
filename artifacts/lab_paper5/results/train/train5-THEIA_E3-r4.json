@@ -1,0 +1,32 @@
+{
+ "set": "THEIA_E3",
+ "run": 4,
+ "seeds": {
+  "word2vec": 300,
+  "detector-1": [
+   300,
+   301,
+   302
+  ],
+  "detector-2": [
+   300,
+   301,
+   302,
+   303,
+   304
+  ]
+ },
+ "overrides": {
+  "orthrus_hid_dim": 128,
+  "orthrus_out_dim": 128
+ },
+ "train_s": 65,
+ "resumed_from_b06": true,
+ "layers_equal_run1": true,
+ "train_days": [
+  "2018-04-03",
+  "2018-04-04",
+  "2018-04-05"
+ ],
+ "val_day": "2018-04-09"
+}
