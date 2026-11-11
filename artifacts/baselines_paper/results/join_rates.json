@@ -1,0 +1,56 @@
+{
+ "provfusion_CADETS_E3_s1.csv.gz": {
+  "lab_registry": "/data/endpoints/5eafc637-14c7-4074-b4d3-4e611dea925e/eval-test/registry.json",
+  "rows": 281585,
+  "rows_joined": 281585,
+  "gt_rows": 68,
+  "gt_rows_joined": 68,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CADETS_E3_s2.csv.gz": {
+  "lab_registry": "/data/endpoints/5eafc637-14c7-4074-b4d3-4e611dea925e/eval-test/registry.json",
+  "rows": 281585,
+  "rows_joined": 281585,
+  "gt_rows": 68,
+  "gt_rows_joined": 68,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_CADETS_E3_s3.csv.gz": {
+  "lab_registry": "/data/endpoints/5eafc637-14c7-4074-b4d3-4e611dea925e/eval-test/registry.json",
+  "rows": 281585,
+  "rows_joined": 281585,
+  "gt_rows": 68,
+  "gt_rows_joined": 68,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "provfusion_FIVEDIRECTIONS_E3_s1.csv.gz": {
+  "lab_registry": "/data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282820,
+  "rows_joined": 282820,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_FIVEDIRECTIONS_E3_s0.csv.gz": {
+  "lab_registry": "/data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282807,
+  "rows_joined": 282807,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ },
+ "velox_FIVEDIRECTIONS_E3_s1.csv.gz": {
+  "lab_registry": "/data/endpoints/01ca45e0-721f-4181-a4cb-33682335812a/eval-test/registry.json",
+  "rows": 282807,
+  "rows_joined": 282807,
+  "gt_rows": 108,
+  "gt_rows_joined": 108,
+  "join_rate": 1.0,
+  "gt_join_rate": 1.0
+ }
+}

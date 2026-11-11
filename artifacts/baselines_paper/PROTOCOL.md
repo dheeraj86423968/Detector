@@ -96,3 +96,23 @@ figures are disabled (no effect on numbers); (2) while a run trains, only the ne
 so PIDSMaker evaluates only the LAST epoch = our pre-registered headline. The best_adp reference (test-selected) is
 dropped. (3) PIDSMaker on E3 TRACE needs ~18 GB of edge embeddings for 17.8 M fused edges and is not feasible with
 the disk floor; it will be attempted only if space is freed by someone else.
+
+## Part 3: EDR hosts (written 06:40, before any EDR run was scored)
+ATLASv2 h1 (test day 07-19, 10 attacks, 48 GT nodes) and CARBANAKv2 h1-h5 (1 attack each, GT = CSV rows in the
+host's registry: 63/81/26/21/21 ids). Databases `bl_atlasv2_h1`, `bl_carbanakv2_h1..5` from conv_store.py; specs
+from gen_specs.py (days = lab manifest lists; US/Eastern days). ProvFusion: OPTC_h201 hyper-parameters, loss weights
+by the rule; ProvFusion's day construction cannot span months, so for CARBANAKv2 `pf_prepare.py` runs its unchanged
+construction once per month ("month_ranges") and rolls an invalid day string (e.g. 2024-04-31) over to the next day.
+PIDSMaker: velox and orthrus_non_snooped unchanged, as in Part 2. Seeds as in Part 2.
+
+## Part 4 (step 5): ProvFusion across seeds on hosts with published ProvFusion results (written 06:40)
+- E3 THEIA: ProvFusion's own THEIA_E3 split (train 04-02..05, val 04-09, test 04-10, 12, 13) and the complete
+  raw-log ("regen, D") row: num_hidden 64, num_heads 8, mask_rate 0.3, lr 0.0015, max_epoch 20, max_epoch_f 50,
+  weight_decay 0.001, weight_decay_f 1e-5, lr_f 0.001, loss weights DATASET_WEIGHTS["THEIA_E3"]. Published regen
+  result 99/3 (paper 91/2). Labels: (a) ProvFusion's refined CSVs (3 attacks incl. its added phishing_email),
+  resolved by node UUID in `theia_e3`; (b) ORTHRUS CSVs (2 attacks).
+- OpTC H051: PIDSMaker DB `optc_051` (OpTC vocabulary = ProvFusion's rel2id_optc), ProvFusion's OPTC_h051 split
+  (train 09-19..21, val 09-22, test 09-23..25) and row (64, 8 heads, mask 0.5, lr 0.0015, max_epoch 500,
+  max_epoch_f 10, wd 1e-4, wdf 5e-5, lr_f 0.0005), published weights. Labels: ProvFusion's OPTC-h051 CSV (by UUID)
+  and ORTHRUS h051. Published 16/30 (regen 22/20).
+- Seeds 1, 2, 3 (1 = published).
