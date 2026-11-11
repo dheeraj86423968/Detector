@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-11 14:02 UTC",
+ "generated": "2026-11-11 16:21 UTC",
  "hosts": {
   "CADETS_E3": {
    "runs_completed": [
@@ -1949,7 +1949,9 @@
    "runs_completed": [
     1,
     2,
-    3
+    3,
+    4,
+    5
    ],
    "runs": {
     "1": {
@@ -2063,23 +2065,99 @@
      "d2_r1_attacks": 0,
      "d2_r1_TP": 0,
      "d2_r1_FP": 0
+    },
+    "4": {
+     "attacks": 0,
+     "n_attacks": 1,
+     "TP": 0,
+     "FP": 109,
+     "precision": 0.0,
+     "ADP": 0.0,
+     "ADP_learned": 0.0,
+     "days": 2,
+     "incidents": 28,
+     "false_incidents": 28,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [],
+     "ADP_time": 0.0,
+     "L12_attacks": 0,
+     "L12_TP": 0,
+     "L12_FP": 87,
+     "L12_ADP_time": 0.0,
+     "L12_attacks_found": [],
+     "d1_attacks_found": [],
+     "d2_attacks_found": [],
+     "d1_attacks": 0,
+     "d1_TP": 0,
+     "d1_FP": 18,
+     "d1_ADP": 0.0,
+     "d1_r1_attacks": 0,
+     "d1_r1_TP": 0,
+     "d1_r1_FP": 0,
+     "d2_attacks": 0,
+     "d2_TP": 0,
+     "d2_FP": 14,
+     "d2_ADP": 0.0,
+     "d2_r1_attacks": 0,
+     "d2_r1_TP": 0,
+     "d2_r1_FP": 13
+    },
+    "5": {
+     "attacks": 0,
+     "n_attacks": 1,
+     "TP": 0,
+     "FP": 100,
+     "precision": 0.0,
+     "ADP": 0.0,
+     "ADP_learned": 0.0,
+     "days": 2,
+     "incidents": 29,
+     "false_incidents": 29,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [],
+     "ADP_time": 0.0,
+     "L12_attacks": 0,
+     "L12_TP": 0,
+     "L12_FP": 87,
+     "L12_ADP_time": 0.0,
+     "L12_attacks_found": [],
+     "d1_attacks_found": [],
+     "d2_attacks_found": [],
+     "d1_attacks": 0,
+     "d1_TP": 0,
+     "d1_FP": 4,
+     "d1_ADP": 0.0,
+     "d1_r1_attacks": 0,
+     "d1_r1_TP": 0,
+     "d1_r1_FP": 2,
+     "d2_attacks": 0,
+     "d2_TP": 0,
+     "d2_FP": 14,
+     "d2_ADP": 0.0,
+     "d2_r1_attacks": 0,
+     "d2_r1_TP": 0,
+     "d2_r1_FP": 11
     }
    },
    "summary": {
     "ADP": {
-     "n": 3,
+     "n": 5,
      "mean": 0.0,
-     "sd": 0.001,
+     "sd": 0.0,
      "min": 0.0,
      "max": 0.001,
      "values": [
       0.0,
       0.001,
+      0.0,
+      0.0,
       0.0
      ]
     },
     "ADP_time": {
-     "n": 3,
+     "n": 5,
      "mean": 0.0,
      "sd": 0.0,
      "min": 0.0,
@@ -2087,23 +2165,27 @@
      "values": [
       0.0,
       0.0,
+      0.0,
+      0.0,
       0.0
      ]
     },
     "L12_attacks": {
-     "n": 3,
+     "n": 5,
      "mean": 0,
      "sd": 0.0,
      "min": 0,
      "max": 0,
      "values": [
+      0,
+      0,
       0,
       0,
       0
      ]
     },
     "L12_TP": {
-     "n": 3,
+     "n": 5,
      "mean": 0,
      "sd": 0.0,
      "min": 0,
@@ -2111,11 +2193,13 @@
      "values": [
       0,
       0,
+      0,
+      0,
       0
      ]
     },
     "L12_FP": {
-     "n": 3,
+     "n": 5,
      "mean": 87,
      "sd": 0.0,
      "min": 87,
@@ -2123,16 +2207,20 @@
      "values": [
       87,
       87,
+      87,
+      87,
       87
      ]
     },
     "L12_ADP_time": {
-     "n": 3,
+     "n": 5,
      "mean": 0.0,
      "sd": 0.0,
      "min": 0.0,
      "max": 0.0,
      "values": [
+      0.0,
+      0.0,
       0.0,
       0.0,
       0.0
@@ -2141,163 +2229,189 @@
     "ADP_time_3att": null,
     "L12_ADP_time_3att": null,
     "ADP_learned": {
-     "n": 3,
+     "n": 5,
      "mean": 0.0,
-     "sd": 0.001,
+     "sd": 0.0,
      "min": 0.0,
      "max": 0.001,
      "values": [
       0.0,
       0.001,
+      0.0,
+      0.0,
       0.0
      ]
     },
     "attacks": {
-     "n": 3,
+     "n": 5,
      "mean": 0,
      "sd": 0.0,
      "min": 0,
      "max": 0,
      "values": [
+      0,
+      0,
       0,
       0,
       0
      ]
     },
     "TP": {
-     "n": 3,
+     "n": 5,
      "mean": 0,
      "sd": 0.0,
      "min": 0,
      "max": 0,
      "values": [
+      0,
+      0,
       0,
       0,
       0
      ]
     },
     "FP": {
-     "n": 3,
-     "mean": 102,
-     "sd": 10.44,
+     "n": 5,
+     "mean": 103,
+     "sd": 8.155,
      "min": 95,
      "max": 114,
      "values": [
       97,
       95,
-      114
+      114,
+      109,
+      100
      ]
     },
     "precision": {
-     "n": 3,
+     "n": 5,
      "mean": 0.0,
      "sd": 0.0,
      "min": 0.0,
      "max": 0.0,
      "values": [
+      0.0,
+      0.0,
       0.0,
       0.0,
       0.0
      ]
     },
     "incidents": {
-     "n": 3,
-     "mean": 27.667,
-     "sd": 1.528,
+     "n": 5,
+     "mean": 28,
+     "sd": 1.225,
      "min": 26,
      "max": 29,
      "values": [
       28,
       29,
-      26
+      26,
+      28,
+      29
      ]
     },
     "false_incidents": {
-     "n": 3,
-     "mean": 27.667,
-     "sd": 1.528,
+     "n": 5,
+     "mean": 28,
+     "sd": 1.225,
      "min": 26,
      "max": 29,
      "values": [
       28,
       29,
-      26
+      26,
+      28,
+      29
      ]
     },
     "buried": {
-     "n": 3,
+     "n": 5,
      "mean": 0,
      "sd": 0.0,
      "min": 0,
      "max": 0,
      "values": [
+      0,
+      0,
       0,
       0,
       0
      ]
     },
     "d1_attacks": {
-     "n": 3,
+     "n": 5,
      "mean": 0,
      "sd": 0.0,
      "min": 0,
      "max": 0,
      "values": [
+      0,
+      0,
       0,
       0,
       0
      ]
     },
     "d1_TP": {
-     "n": 3,
+     "n": 5,
      "mean": 0,
      "sd": 0.0,
      "min": 0,
      "max": 0,
      "values": [
+      0,
+      0,
       0,
       0,
       0
      ]
     },
     "d1_FP": {
-     "n": 3,
-     "mean": 48.667,
-     "sd": 14.572,
-     "min": 32,
+     "n": 5,
+     "mean": 33.6,
+     "sd": 23.586,
+     "min": 4,
      "max": 59,
      "values": [
       59,
       55,
-      32
+      32,
+      18,
+      4
      ]
     },
     "d1_ADP": {
-     "n": 3,
+     "n": 5,
      "mean": 0.001,
-     "sd": 0.0,
-     "min": 0.001,
+     "sd": 0.001,
+     "min": 0.0,
      "max": 0.001,
      "values": [
       0.001,
       0.001,
-      0.001
+      0.001,
+      0.0,
+      0.0
      ]
     },
     "d2_attacks": {
-     "n": 3,
+     "n": 5,
      "mean": 0,
      "sd": 0.0,
      "min": 0,
      "max": 0,
      "values": [
+      0,
+      0,
       0,
       0,
       0
      ]
     },
     "d2_TP": {
-     "n": 3,
+     "n": 5,
      "mean": 0,
      "sd": 0.0,
      "min": 0,
@@ -2305,28 +2419,34 @@
      "values": [
       0,
       0,
+      0,
+      0,
       0
      ]
     },
     "d2_FP": {
-     "n": 3,
-     "mean": 14.667,
-     "sd": 5.132,
+     "n": 5,
+     "mean": 14.4,
+     "sd": 3.647,
      "min": 9,
      "max": 19,
      "values": [
       19,
       16,
-      9
+      9,
+      14,
+      14
      ]
     },
     "d2_ADP": {
-     "n": 3,
+     "n": 5,
      "mean": 0.0,
      "sd": 0.0,
      "min": 0.0,
      "max": 0.0,
      "values": [
+      0.0,
+      0.0,
       0.0,
       0.0,
       0.0
@@ -2343,7 +2463,9 @@
      "per_run": {
       "1": [],
       "2": [],
-      "3": []
+      "3": [],
+      "4": [],
+      "5": []
      },
      "same_in_all_runs": true
     },
@@ -2351,7 +2473,9 @@
      "per_run": {
       "1": [],
       "2": [],
-      "3": []
+      "3": [],
+      "4": [],
+      "5": []
      },
      "same_in_all_runs": true
     },
@@ -2359,7 +2483,9 @@
      "per_run": {
       "1": [],
       "2": [],
-      "3": []
+      "3": [],
+      "4": [],
+      "5": []
      },
      "same_in_all_runs": true
     },
@@ -2367,7 +2493,9 @@
      "per_run": {
       "1": [],
       "2": [],
-      "3": []
+      "3": [],
+      "4": [],
+      "5": []
      },
      "same_in_all_runs": true
     }

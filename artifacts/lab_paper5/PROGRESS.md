@@ -1,4 +1,4 @@
-# paper5 progress (updated 2026-11-11 14:02 UTC)
+# paper5 progress (updated 2026-11-11 16:21 UTC)
 
 Status per host: runs trained (bundle present) / scored. Runs 2-5 are new seeds; run 1 = lab_v10 (re-scored for d1/d2).
 
@@ -7,7 +7,7 @@ Status per host: runs trained (bundle present) / scored. Runs 2-5 are new seeds;
 | CADETS_E3 | 2,3,4,5 | 1,2,3,4,5 | - |
 | THEIA_E3 | 2,3,4,5 | 1,2,3,4,5 | - |
 | CLEARSCOPE_E3 | 2,3,4,5 | 1,2,3,4,5 | - |
-| THEIA_E5-theia | 2,3 | 1,2,3 | - |
+| THEIA_E5-theia | 2,3,4,5 | 1,2,3,4,5 | - |
 | OPTC_H051 | - | 1 | - |
 | OPTC_H201 | - | 1 | - |
 | OPTC_H501 | - | 1 | - |

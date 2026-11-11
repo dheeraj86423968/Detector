@@ -1,0 +1,190 @@
+{
+ "set": "THEIA_E5-theia",
+ "run": 4,
+ "bundle": "/data/paper5/THEIA_E5-theia/r4/b07",
+ "detector_thresholds": {
+  "detector-1": 0.7304124236106873,
+  "detector-2": 0.8259191274642944
+ },
+ "validation_nodes": 235129,
+ "fleet": [
+  "THEIA_E5-theia"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 66,
+ "days": 2,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 0,
+  "FP": 109,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 54.5,
+  "by_layer": {
+   "novelty": 54,
+   "corroborated": 22,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 109,
+  "ADP": 0.0,
+  "ADP_learned_only": 0.0,
+  "precision": 0.0
+ },
+ "P1": {
+  "TP": 0,
+  "FP": 109,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 54.5,
+  "by_layer": {
+   "novelty": 54,
+   "corroborated": 22,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 109,
+  "ADP": 0.0,
+  "ADP_learned_only": 0.0,
+  "precision": 0.0
+ },
+ "P1e": {
+  "TP": 0,
+  "FP": 109,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 54.5,
+  "by_layer": {
+   "novelty": 54,
+   "corroborated": 22,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 109,
+  "ADP": 0.0,
+  "ADP_learned_only": 0.0,
+  "precision": 0.0
+ },
+ "P2": {
+  "TP": 0,
+  "FP": 109,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 54.5,
+  "by_layer": {
+   "novelty": 54,
+   "corroborated": 22,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 109,
+  "ADP": 0.0,
+  "ADP_learned_only": 0.0,
+  "precision": 0.0,
+  "ADP_triage_time_tiebreak": {
+   "mean": 0.0,
+   "min": 0.0,
+   "max": 0.001,
+   "seeds": 20
+  },
+  "layers12_only": {
+   "TP": 0,
+   "FP": 87,
+   "recall": 0.0,
+   "attacks": 0,
+   "precision": 0.0,
+   "attacks_found": [],
+   "ADP_time_tiebreak": {
+    "mean": 0.0,
+    "min": 0.0,
+    "max": 0.001,
+    "seeds": 20
+   }
+  }
+ },
+ "P2e": {
+  "TP": 0,
+  "FP": 109,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 54.5,
+  "by_layer": {
+   "novelty": 54,
+   "corroborated": 22,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "rows": 109,
+  "ADP": 0.0,
+  "ADP_learned_only": 0.0,
+  "precision": 0.0
+ },
+ "detector-1": {
+  "val_max": {
+   "TP": 0,
+   "FP": 18,
+   "recall": 0.0,
+   "attacks": 0,
+   "precision": 0.0,
+   "attacks_found": [],
+   "threshold": 0.7304124236106873
+  },
+  "ratio_1": {
+   "TP": 0,
+   "FP": 0,
+   "recall": 0.0,
+   "attacks": 0,
+   "precision": 0.0,
+   "attacks_found": [],
+   "threshold": 1.0
+  },
+  "ADP": 0.0
+ },
+ "detector-2": {
+  "val_max": {
+   "TP": 0,
+   "FP": 14,
+   "recall": 0.0,
+   "attacks": 0,
+   "precision": 0.0,
+   "attacks_found": [],
+   "threshold": 0.8259191274642944
+  },
+  "ratio_1": {
+   "TP": 0,
+   "FP": 13,
+   "recall": 0.0,
+   "attacks": 0,
+   "precision": 0.0,
+   "attacks_found": [],
+   "threshold": 1.0
+  },
+  "ADP": 0.0
+ }
+}
