@@ -1,0 +1,55 @@
+{
+ "label": "ProvFusion THEIA_E3 seed1, ORTHRUS labels",
+ "results_file": "/d/runs/s1/save_middle_results/THEIA_E3_loss_sce_dim_64_nhd_8_nh_0.3_nl_2_lr_0.0015_lsf_0.001_mp_20_mpf_50_wd_0.001_wdf_1e-05_gatedge_gat.pt",
+ "operating_point": {
+  "TP": 59,
+  "FP": 13,
+  "precision": 0.819,
+  "attacks": 2,
+  "n_attacks": 2,
+  "gt_nodes_evaluated": 118,
+  "nodes_evaluated": 700902,
+  "test_days": 3,
+  "FP_per_test_day": 4.33
+ },
+ "adp_votes": {
+  "adp_pidsmaker": 0.9571,
+  "adp13": 0.9999,
+  "adp_gt_first_ties": 0.9999,
+  "adp_worst_ties": 0.8194,
+  "distinct_scores": 5,
+  "adp_random_ties_mean": 0.9329,
+  "adp_random_ties_sd": 0.0555
+ },
+ "adp_votes_then_A123": {
+  "adp_pidsmaker": 0.8837,
+  "adp13": 0.8834,
+  "adp_gt_first_ties": 0.8851,
+  "adp_worst_ties": 0.8834,
+  "distinct_scores": 47663,
+  "adp_random_ties_mean": 0.8839,
+  "adp_random_ties_sd": 0.0006
+ },
+ "gt_nodes_total": 118,
+ "gt_nodes_in_test_graphs": 118,
+ "attacks_with_gt_in_test_graphs": 2,
+ "per_detector_alerts": {
+  "1": 25,
+  "2": 5,
+  "3": 86,
+  "4": 72,
+  "5": 86,
+  "6": 1168,
+  "7": 94
+ },
+ "vote_histogram": {
+  "0": 699672,
+  "1": 1140,
+  "2": 0,
+  "3": 18,
+  "4": 18,
+  "5": 54,
+  "6": 0,
+  "7": 0
+ }
+}
