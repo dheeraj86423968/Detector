@@ -66,3 +66,7 @@ are listed per file in results/join_rates.json.
   restarted 07:23 as TCFMT_ATLASV2_H1.
 - 07:17-07:23 ProvFusion ATLASv2 h1 s5 and s1: 0/10 attacks, FP 90 and 64 (one test day); tie-neutral ADP 0.0003,
   ProvFusion-printed 0.27 / 0.21.
+- 07:30 CARBANAKv2 h1-h5 converted (bl_carbanakv2_h1..5; fused edges 3,567,640 / 2,974,345 / 2,939,711 / 1,569,353 /
+  167,082 = lab manifests; DBs 0.04-0.81 GB). ProvFusion CARBANAKv2 queue: prep, then seeds 1-3 per host.
+- 07:37 Velox ATLASv2 h1 s0: no alerts at its threshold (0/10, TP 0 / FP 0), ADP 0.077.
+- Runners now start a GPU job only with >= 12 GB GPU and >= 12 GB RAM free and at most 2 of my GPU jobs running.

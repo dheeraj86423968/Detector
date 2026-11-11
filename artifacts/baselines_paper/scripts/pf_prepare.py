@@ -25,6 +25,8 @@ if a.spec:
     C.DATASET_DEFAULT_CONFIG[a.dataset] = json.load(open(a.spec))
 if a.db:
     C.DATASET_DEFAULT_CONFIG[a.dataset]["database"] = C.DATASET_DEFAULT_CONFIG[a.dataset]["database_all_file"] = a.db
+if a.dataset in getattr(C, "OPTC_DATASETS", set()):
+    C.rel2id = C.rel2id_optc   # exactly what data_preparation/optc/prepare_data_optc.py does at startup
 C.ROOT_ARTIFACT_DIR = os.path.join(a.out, "artifacts")
 C.DATABASE_DEFAULT_CONFIG.update(host=os.environ.get("DB_HOST", "postgres"), password=os.environ.get("DB_PASSWORD", "postgres"))
 args = C.get_runtime_required_args(args=[a.dataset])

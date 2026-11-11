@@ -1,0 +1,40 @@
+{
+ "raw_dir": "",
+ "database": "bl_carbanakv2_h4",
+ "database_all_file": "bl_carbanakv2_h4",
+ "num_node_types": 3,
+ "num_edge_types": 10,
+ "timezone": "US/Eastern",
+ "start_date": "2024-04-18",
+ "end_date": "2024-05-10",
+ "train_dates": [
+  "2024-04-18",
+  "2024-04-22",
+  "2024-04-24",
+  "2024-04-25",
+  "2024-04-26"
+ ],
+ "val_dates": [
+  "2024-04-29"
+ ],
+ "test_dates": [
+  "2024-04-30",
+  "2024-05-01",
+  "2024-05-02",
+  "2024-05-07",
+  "2024-05-08",
+  "2024-05-09",
+  "2024-05-10"
+ ],
+ "unused_dates": [],
+ "ground_truth_relative_path": [
+  "../../../conv/gt_carbanakv2_h4/carbanakv2_edr.csv"
+ ],
+ "attack_to_time_window": [
+  [
+   "../../../conv/gt_carbanakv2_h4/carbanakv2_edr.csv",
+   "2024-04-30 00:00:00",
+   "2024-05-10 23:59:59"
+  ]
+ ]
+}

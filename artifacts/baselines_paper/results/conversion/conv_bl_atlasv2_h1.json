@@ -1,0 +1,68 @@
+{
+ "set": "/data/heldout/ATLASV2_EDR/h1",
+ "db": "bl_atlasv2_h1",
+ "nodes": {
+  "subject": 33229,
+  "file": 475465,
+  "netflow": 19484
+ },
+ "fused_edges_per_day": {
+  "2022-07-15": 241470,
+  "2022-07-16": 270484,
+  "2022-07-17": 237731,
+  "2022-07-18": 266844,
+  "2022-07-19": 310327
+ },
+ "gt": {
+  "atlasv2_edr_m1.csv": {
+   "csv_rows": 1,
+   "in_host": 1
+  },
+  "atlasv2_edr_m2.csv": {
+   "csv_rows": 1,
+   "in_host": 1
+  },
+  "atlasv2_edr_m3.csv": {
+   "csv_rows": 1,
+   "in_host": 1
+  },
+  "atlasv2_edr_m4.csv": {
+   "csv_rows": 5,
+   "in_host": 5
+  },
+  "atlasv2_edr_m5.csv": {
+   "csv_rows": 23,
+   "in_host": 23
+  },
+  "atlasv2_edr_m6.csv": {
+   "csv_rows": 18,
+   "in_host": 18
+  },
+  "atlasv2_edr_s1.csv": {
+   "csv_rows": 1,
+   "in_host": 1
+  },
+  "atlasv2_edr_s2.csv": {
+   "csv_rows": 1,
+   "in_host": 1
+  },
+  "atlasv2_edr_s3.csv": {
+   "csv_rows": 16,
+   "in_host": 16
+  },
+  "atlasv2_edr_s4.csv": {
+   "csv_rows": 22,
+   "in_host": 22
+  }
+ },
+ "db_bytes": 303781555,
+ "train_days": [
+  "2022-07-15",
+  "2022-07-16",
+  "2022-07-17"
+ ],
+ "val_day": "2022-07-18",
+ "test_days": [
+  "2022-07-19"
+ ]
+}
