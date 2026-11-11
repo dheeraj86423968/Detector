@@ -46,6 +46,17 @@
     "FP_per_test_day": 106.0,
     "precision": 0.0,
     "adp13": 0.0095
+   },
+   {
+    "seed": 4,
+    "adp": 0.01,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 132,
+    "FP_per_test_day": 132.0,
+    "precision": 0.0,
+    "adp13": 0.01
    }
   ],
   "adp_mean": 0.01,
@@ -150,6 +161,28 @@
     "adp13": 0.0771
    },
    {
+    "seed": 1,
+    "adp": 0.0483,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 0,
+    "FP_per_test_day": 0.0,
+    "precision": 0.0,
+    "adp13": 0.0487
+   },
+   {
+    "seed": 2,
+    "adp": 0.041,
+    "attacks": 0,
+    "n_attacks": 10,
+    "TP": 0,
+    "FP": 0,
+    "FP_per_test_day": 0.0,
+    "precision": 0.0,
+    "adp13": 0.041
+   },
+   {
     "seed": 3,
     "adp": 0.0552,
     "attacks": 0,
@@ -172,8 +205,8 @@
     "adp13": 0.0409
    }
   ],
-  "adp_mean": 0.058,
-  "adp_sd": 0.018
+  "adp_mean": 0.052,
+  "adp_sd": 0.015
  },
  {
   "host": "CADETS_E3",
@@ -227,6 +260,29 @@
   ],
   "adp_mean": 0.364,
   "adp_sd": 0.533
+ },
+ {
+  "host": "CARBANAKV2_H1",
+  "system": "provfusion",
+  "runs": [
+   {
+    "seed": 1,
+    "adp": 0.1513,
+    "attacks": 1,
+    "n_attacks": 1,
+    "TP": 2,
+    "FP": 48,
+    "FP_per_test_day": 6.0,
+    "precision": 0.04,
+    "adp_own_gt_first_ties": 0.9999,
+    "adp_pidsmaker": 0.0869,
+    "adp_worst": 0.0851,
+    "adp_vote_then_A123": 0.0888,
+    "adp_printed_by_provfusion": 0.9999
+   }
+  ],
+  "adp_mean": 0.151,
+  "adp_sd": 0.0
  },
  {
   "host": "FIVEDIRECTIONS_E3",
@@ -351,5 +407,28 @@
   ],
   "adp_mean": 0.052,
   "adp_sd": 0.03
+ },
+ {
+  "host": "TRACE_E3",
+  "system": "provfusion",
+  "runs": [
+   {
+    "seed": 1,
+    "adp": 0.188,
+    "attacks": 1,
+    "n_attacks": 3,
+    "TP": 1,
+    "FP": 4,
+    "FP_per_test_day": 1.0,
+    "precision": 0.2,
+    "adp_own_gt_first_ties": 0.4807,
+    "adp_pidsmaker": 0.1362,
+    "adp_worst": 0.1179,
+    "adp_vote_then_A123": 0.2357,
+    "adp_printed_by_provfusion": 0.4807
+   }
+  ],
+  "adp_mean": 0.188,
+  "adp_sd": 0.0
  }
 ]

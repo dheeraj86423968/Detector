@@ -1,0 +1,2 @@
+  Final Voted (>=4):            TP=2, FP=48
+The adp score is: 0.999941404179091

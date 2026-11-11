@@ -77,3 +77,9 @@ are listed per file in results/join_rates.json.
   evaluating only the last epoch (pm_run.py) and requeued.
 - 08:30 ATLASv2 h1: ProvFusion 5 seeds, ORTHRUS 4 seeds, Velox 3 seeds done (summary.md).
 - 08:33 ProvFusion data prepared for CARBANAKv2 h1-h5.
+- 09:18 ATLASv2 h1 PIDSMaker complete (Velox 5 seeds, ORTHRUS 5 seeds). TRACE ProvFusion s1: 1/3 attacks, TP 1 /
+  FP 4 (1 FP/day), tie-neutral ADP 0.19, ProvFusion-printed 0.48. CARBANAKv2 h1 ProvFusion s1: 1/1, TP 2 / FP 48,
+  tie-neutral ADP 0.15, ProvFusion-printed 0.9999.
+- Order from here (disk floor): TRACE ProvFusion s2, s3 -> delete TRACE merged data and DB -> PIDSMaker
+  FiveDirections artifacts rebuilt, ORTHRUS s0-s2 (40 GB RAM, alone), Velox s3-s4 -> CARBANAKv2 PIDSMaker
+  (3 seeds per system per host); ProvFusion CARBANAKv2 seeds 1-3 run in parallel; step 5 last.

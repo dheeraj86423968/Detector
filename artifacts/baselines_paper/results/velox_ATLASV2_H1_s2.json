@@ -1,0 +1,64 @@
+{
+ "label": "velox ATLASV2_H1 seed 2",
+ "headline_last_epoch": {
+  "epoch_file": "model_epoch_11.pkl",
+  "thr": 9.531907081604004,
+  "operating_point": {
+   "TP": 0,
+   "FP": 0,
+   "precision": 0.0,
+   "attacks": 0,
+   "n_attacks": 10,
+   "gt_nodes_evaluated": 48,
+   "nodes_evaluated": 108746,
+   "test_days": 1,
+   "FP_per_test_day": 0.0
+  },
+  "adp": {
+   "adp_pidsmaker": 0.041,
+   "adp13": 0.041,
+   "adp_gt_first_ties": 0.041,
+   "adp_worst_ties": 0.0408,
+   "distinct_scores": 21679,
+   "adp_random_ties_mean": 0.0409,
+   "adp_random_ties_sd": 0.0001
+  },
+  "attacks_with_gt_in_test_graphs": 10,
+  "pidsmaker_labels_equal_csv_labels": true
+ },
+ "reference_best_adp_epoch": {
+  "epoch_file": "model_epoch_11.pkl",
+  "thr": 9.531907081604004,
+  "operating_point": {
+   "TP": 0,
+   "FP": 0,
+   "precision": 0.0,
+   "attacks": 0,
+   "n_attacks": 10,
+   "gt_nodes_evaluated": 48,
+   "nodes_evaluated": 108746,
+   "test_days": 1,
+   "FP_per_test_day": 0.0
+  },
+  "adp": {
+   "adp_pidsmaker": 0.041,
+   "adp13": 0.041,
+   "adp_gt_first_ties": 0.041,
+   "adp_worst_ties": 0.0408,
+   "distinct_scores": 21679,
+   "adp_random_ties_mean": 0.0409,
+   "adp_random_ties_sd": 0.0001
+  },
+  "attacks_with_gt_in_test_graphs": 10,
+  "pidsmaker_labels_equal_csv_labels": true
+ },
+ "all_epochs": [
+  {
+   "epoch_file": "model_epoch_11.pkl",
+   "adp_pidsmaker": 0.041,
+   "TP": 0,
+   "FP": 0,
+   "attacks": 0
+  }
+ ]
+}

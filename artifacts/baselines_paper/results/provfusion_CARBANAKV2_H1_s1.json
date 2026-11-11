@@ -1,0 +1,55 @@
+{
+ "label": "ProvFusion CARBANAKV2_H1 seed1",
+ "results_file": "/d/runs/s1/save_middle_results/CARBANAKV2_H1_loss_sce_dim_64_nhd_2_nh_0.5_nl_2_lr_0.0015_lsf_0.001_mp_500_mpf_10_wd_0.0001_wdf_2e-06_gatedge_gat.pt",
+ "operating_point": {
+  "TP": 2,
+  "FP": 48,
+  "precision": 0.04,
+  "attacks": 1,
+  "n_attacks": 1,
+  "gt_nodes_evaluated": 63,
+  "nodes_evaluated": 537581,
+  "test_days": 8,
+  "FP_per_test_day": 6.0
+ },
+ "adp_votes": {
+  "adp_pidsmaker": 0.0869,
+  "adp13": 0.0895,
+  "adp_gt_first_ties": 0.9999,
+  "adp_worst_ties": 0.0851,
+  "distinct_scores": 5,
+  "adp_random_ties_mean": 0.1513,
+  "adp_random_ties_sd": 0.1716
+ },
+ "adp_votes_then_A123": {
+  "adp_pidsmaker": 0.0888,
+  "adp13": 0.0888,
+  "adp_gt_first_ties": 0.0888,
+  "adp_worst_ties": 0.0888,
+  "distinct_scores": 147726,
+  "adp_random_ties_mean": 0.0888,
+  "adp_random_ties_sd": 0.0
+ },
+ "gt_nodes_total": 63,
+ "gt_nodes_in_test_graphs": 63,
+ "attacks_with_gt_in_test_graphs": 1,
+ "per_detector_alerts": {
+  "1": 7,
+  "2": 4,
+  "3": 59,
+  "4": 137,
+  "5": 140,
+  "6": 19,
+  "7": 128
+ },
+ "vote_histogram": {
+  "0": 537401,
+  "1": 39,
+  "2": 18,
+  "3": 73,
+  "4": 50,
+  "5": 0,
+  "6": 0,
+  "7": 0
+ }
+}
