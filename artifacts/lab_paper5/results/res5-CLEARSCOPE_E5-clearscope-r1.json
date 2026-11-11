@@ -1,0 +1,325 @@
+{
+ "set": "CLEARSCOPE_E5-clearscope",
+ "run": 1,
+ "bundle": "/data/lab08/heldout/CLEARSCOPE_E5/clearscope/b07rel",
+ "detector_thresholds": {
+  "detector-1": 0.7409270405769348,
+  "detector-2": 0.6516431473195553
+ },
+ "validation_nodes": 36095,
+ "fleet": [
+  "CLEARSCOPE_E5-clearscope"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 34,
+ "days": 3,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211
+ },
+ "P1": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211
+ },
+ "P1e": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211
+ },
+ "P2": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211,
+  "ADP_triage_time_tiebreak": {
+   "mean": 0.236,
+   "min": 0.222,
+   "max": 0.246,
+   "seeds": 20
+  },
+  "layers12_only": {
+   "TP": 2,
+   "FP": 13,
+   "recall": 0.059,
+   "attacks": 2,
+   "precision": 0.133,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "ADP_time_tiebreak": {
+    "mean": 0.143,
+    "min": 0.143,
+    "max": 0.143,
+    "seeds": 20
+   }
+  }
+ },
+ "P2e": {
+  "TP": 4,
+  "FP": 15,
+  "recall": 0.118,
+  "attacks": 2,
+  "FP/day": 5.0,
+  "by_layer": {
+   "novelty": 15,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "novelty": 2,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "rows": 19,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.199,
+  "precision": 0.211
+ },
+ "detector-1": {
+  "val_max": {
+   "TP": 8,
+   "FP": 17,
+   "recall": 0.235,
+   "attacks": 2,
+   "precision": 0.32,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "threshold": 0.7409270405769348
+  },
+  "ratio_1": {
+   "TP": 2,
+   "FP": 5,
+   "recall": 0.059,
+   "attacks": 2,
+   "precision": 0.286,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "threshold": 1.0
+  },
+  "ADP": 0.917
+ },
+ "detector-2": {
+  "val_max": {
+   "TP": 3,
+   "FP": 1728,
+   "recall": 0.088,
+   "attacks": 2,
+   "precision": 0.002,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "threshold": 0.6516431473195553
+  },
+  "ratio_1": {
+   "TP": 0,
+   "FP": 10,
+   "recall": 0.0,
+   "attacks": 0,
+   "precision": 0.0,
+   "attacks_found": [],
+   "threshold": 1.0
+  },
+  "ADP": 0.06
+ },
+ "with_extra_gt": {
+  "n_attacks": 3,
+  "attacks": [
+   "clearscope_e5_lockwatch_0517",
+   "node_clearscope_e5_appstarter_0515",
+   "node_clearscope_e5_tester_0517"
+  ],
+  "P0": {
+   "TP": 4,
+   "FP": 15,
+   "recall": 0.078,
+   "attacks": 2,
+   "ADP": 0.668,
+   "ADP_learned_only": 0.134
+  },
+  "P2": {
+   "TP": 4,
+   "FP": 15,
+   "recall": 0.078,
+   "attacks": 2,
+   "ADP": 0.668,
+   "ADP_learned_only": 0.134,
+   "ADP_triage_time_tiebreak": {
+    "mean": 0.158,
+    "min": 0.148,
+    "max": 0.165,
+    "seeds": 20
+   },
+   "layers12_only": {
+    "TP": 2,
+    "FP": 13,
+    "recall": 0.039,
+    "attacks": 2,
+    "precision": 0.133,
+    "attacks_found": [
+     "node_clearscope_e5_appstarter_0515",
+     "node_clearscope_e5_tester_0517"
+    ],
+    "ADP_time_tiebreak": {
+     "mean": 0.095,
+     "min": 0.095,
+     "max": 0.097,
+     "seeds": 20
+    }
+   }
+  },
+  "detector-1": {
+   "val_max": {
+    "TP": 8,
+    "FP": 17,
+    "recall": 0.157,
+    "attacks": 2,
+    "precision": 0.32,
+    "attacks_found": [
+     "node_clearscope_e5_appstarter_0515",
+     "node_clearscope_e5_tester_0517"
+    ],
+    "threshold": 0.7409270405769348
+   },
+   "ratio_1": {
+    "TP": 2,
+    "FP": 5,
+    "recall": 0.039,
+    "attacks": 2,
+    "precision": 0.286,
+    "attacks_found": [
+     "node_clearscope_e5_appstarter_0515",
+     "node_clearscope_e5_tester_0517"
+    ],
+    "threshold": 1.0
+   },
+   "ADP": 0.611
+  },
+  "detector-2": {
+   "val_max": {
+    "TP": 3,
+    "FP": 1728,
+    "recall": 0.059,
+    "attacks": 2,
+    "precision": 0.002,
+    "attacks_found": [
+     "node_clearscope_e5_appstarter_0515",
+     "node_clearscope_e5_tester_0517"
+    ],
+    "threshold": 0.6516431473195553
+   },
+   "ratio_1": {
+    "TP": 0,
+    "FP": 10,
+    "recall": 0.0,
+    "attacks": 0,
+    "precision": 0.0,
+    "attacks_found": [],
+    "threshold": 1.0
+   },
+   "ADP": 0.04
+  }
+ }
+}

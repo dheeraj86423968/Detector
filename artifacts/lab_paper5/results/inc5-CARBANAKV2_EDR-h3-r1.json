@@ -1,0 +1,20 @@
+{
+ "CARBANAKV2_EDR-h3": {
+  "days": 7,
+  "P2/G2": {
+   "incidents": 9,
+   "fp_incidents": 8,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 1.14,
+   "attacks": 1,
+   "attacks_found": [
+    "carbanakv2_edr"
+   ],
+   "buried": [
+    "carbanakv2_edr"
+   ],
+   "max_alerts": 26,
+   "alerts": 74
+  }
+ }
+}

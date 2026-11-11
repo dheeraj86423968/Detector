@@ -1,0 +1,16 @@
+{
+ "ATLASV2_EDR-h2": {
+  "days": 1,
+  "P2/G2": {
+   "incidents": 2,
+   "fp_incidents": 2,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 2.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 25,
+   "alerts": 26
+  }
+ }
+}

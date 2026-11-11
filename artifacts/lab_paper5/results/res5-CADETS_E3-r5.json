@@ -1,0 +1,250 @@
+{
+ "set": "CADETS_E3",
+ "run": 5,
+ "bundle": "/data/paper5/CADETS_E3/r5/b07",
+ "detector_thresholds": {
+  "detector-1": 0.8843919634819031,
+  "detector-2": 0.8882354795932769
+ },
+ "validation_nodes": 111331,
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 32,
+  "FP": 16,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 4.0,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 3
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "rows": 48,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.957,
+  "precision": 0.667
+ },
+ "P1": {
+  "TP": 32,
+  "FP": 13,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 3.2,
+  "by_layer": {
+   "novelty": 18,
+   "rules": 23,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 3
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "rows": 45,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.957,
+  "precision": 0.711
+ },
+ "P1e": {
+  "TP": 32,
+  "FP": 13,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 3.2,
+  "by_layer": {
+   "novelty": 18,
+   "rules": 23,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 3
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "rows": 45,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.957,
+  "precision": 0.711
+ },
+ "P2": {
+  "TP": 32,
+  "FP": 16,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 4.0,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 3
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "rows": 48,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.957,
+  "precision": 0.667,
+  "ADP_triage_time_tiebreak": {
+   "mean": 1.0,
+   "min": 1.0,
+   "max": 1.0,
+   "seeds": 20
+  },
+  "layers12_only": {
+   "TP": 29,
+   "FP": 15,
+   "recall": 0.426,
+   "attacks": 3,
+   "precision": 0.659,
+   "attacks_found": [
+    "Nginx_Backdoor_06",
+    "Nginx_Backdoor_12",
+    "Nginx_Backdoor_13"
+   ],
+   "ADP_time_tiebreak": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0,
+    "seeds": 20
+   }
+  }
+ },
+ "P2e": {
+  "TP": 32,
+  "FP": 16,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 4.0,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 4
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 3
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "rows": 48,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.957,
+  "precision": 0.667
+ },
+ "detector-1": {
+  "val_max": {
+   "TP": 3,
+   "FP": 0,
+   "recall": 0.044,
+   "attacks": 1,
+   "precision": 1.0,
+   "attacks_found": [
+    "Nginx_Backdoor_12"
+   ],
+   "threshold": 0.8843919634819031
+  },
+  "ratio_1": {
+   "TP": 3,
+   "FP": 0,
+   "recall": 0.044,
+   "attacks": 1,
+   "precision": 1.0,
+   "attacks_found": [
+    "Nginx_Backdoor_12"
+   ],
+   "threshold": 1.0
+  },
+  "ADP": 0.436
+ },
+ "detector-2": {
+  "val_max": {
+   "TP": 17,
+   "FP": 8,
+   "recall": 0.25,
+   "attacks": 3,
+   "precision": 0.68,
+   "attacks_found": [
+    "Nginx_Backdoor_06",
+    "Nginx_Backdoor_12",
+    "Nginx_Backdoor_13"
+   ],
+   "threshold": 0.8882354795932769
+  },
+  "ratio_1": {
+   "TP": 10,
+   "FP": 4,
+   "recall": 0.147,
+   "attacks": 3,
+   "precision": 0.714,
+   "attacks_found": [
+    "Nginx_Backdoor_06",
+    "Nginx_Backdoor_12",
+    "Nginx_Backdoor_13"
+   ],
+   "threshold": 1.0
+  },
+  "ADP": 0.97
+ }
+}

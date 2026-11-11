@@ -1,0 +1,19 @@
+{
+ "CLEARSCOPE_E5-clearscope": {
+  "days": 3,
+  "P2/G2": {
+   "incidents": 8,
+   "fp_incidents": 6,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 2.0,
+   "attacks": 2,
+   "attacks_found": [
+    "node_clearscope_e5_appstarter_0515",
+    "node_clearscope_e5_tester_0517"
+   ],
+   "buried": [],
+   "max_alerts": 6,
+   "alerts": 19
+  }
+ }
+}

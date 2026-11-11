@@ -49,7 +49,14 @@ if __name__ == "__main__":
     base_store = S.base_store()
     Trainer(base_store, list(S.train_days), S.val_day, cfg6, b6).run({"endpoint": s, "paper5_run": r, "paper5_seeds": seeds})
     log(f"0.6-config bundle {time.time()-t0:.0f}s")
-    upgrade_bundle_07(b6, b7, base_store, cfg7)
+    # disk: the upgrade's copy of b06 hard-links the files instead of copying them (b06 is deleted right after; files
+    # the upgrade rewrites are written whole by json.dump / write_manifest, so b07's content is the same as with a copy)
+    _ct = shutil.copytree
+    shutil.copytree = lambda src, dst, **kw: _ct(src, dst, copy_function=os.link, **kw)
+    try:
+        upgrade_bundle_07(b6, b7, base_store, cfg7)
+    finally:
+        shutil.copytree = _ct
     log(f"0.7 released bundle {time.time()-t0:.0f}s")
     shutil.rmtree(b6)
     same = json.load(open(b7 + "/layers.json")) == json.load(open(run1_bundle(s) + "/layers.json"))

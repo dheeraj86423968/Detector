@@ -1,0 +1,19 @@
+{
+ "FIVEDIRECTIONS_E3": {
+  "days": 3,
+  "P2/G2": {
+   "incidents": 10,
+   "fp_incidents": 6,
+   "tp_incidents": 4,
+   "fp_inc_per_day": 2.0,
+   "attacks": 2,
+   "attacks_found": [
+    "fivedirections_e3_excel_0409",
+    "fivedirections_e3_firefox_0411"
+   ],
+   "buried": [],
+   "max_alerts": 68,
+   "alerts": 218
+  }
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "ATLASV2_EDR-h1": {
+  "days": 1,
+  "P2/G2": {
+   "incidents": 5,
+   "fp_incidents": 3,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 3.0,
+   "attacks": 8,
+   "attacks_found": [
+    "atlasv2_edr_m2",
+    "atlasv2_edr_m3",
+    "atlasv2_edr_m4",
+    "atlasv2_edr_m5",
+    "atlasv2_edr_m6",
+    "atlasv2_edr_s2",
+    "atlasv2_edr_s3",
+    "atlasv2_edr_s4"
+   ],
+   "buried": [],
+   "max_alerts": 42,
+   "alerts": 61
+  }
+ }
+}

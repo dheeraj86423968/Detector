@@ -1,0 +1,20 @@
+{
+ "CADETS_E3": {
+  "days": 4,
+  "P2/G2": {
+   "incidents": 13,
+   "fp_incidents": 9,
+   "tp_incidents": 4,
+   "fp_inc_per_day": 2.25,
+   "attacks": 3,
+   "attacks_found": [
+    "Nginx_Backdoor_06",
+    "Nginx_Backdoor_12",
+    "Nginx_Backdoor_13"
+   ],
+   "buried": [],
+   "max_alerts": 21,
+   "alerts": 44
+  }
+ }
+}

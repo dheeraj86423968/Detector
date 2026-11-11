@@ -1,0 +1,232 @@
+{
+ "set": "FIVEDIRECTIONS_E3",
+ "run": 1,
+ "bundle": "/data/lab08/01ca45e0-721f-4181-a4cb-33682335812a/v07rel",
+ "detector_thresholds": {
+  "detector-1": 0.9325376152992249,
+  "detector-2": 0.9564519286155702
+ },
+ "validation_nodes": 58841,
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 108,
+ "days": 3,
+ "variants": {
+  "P0": [
+   0,
+   null
+  ],
+  "P1": [
+   1,
+   "drop"
+  ],
+  "P1e": [
+   1,
+   "evidence"
+  ],
+  "P2": [
+   2,
+   "drop"
+  ],
+  "P2e": [
+   2,
+   "evidence"
+  ]
+ },
+ "P0": {
+  "TP": 11,
+  "FP": 166,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 55.3,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 129
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "rows": 218,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.067,
+  "precision": 0.062
+ },
+ "P1": {
+  "TP": 11,
+  "FP": 152,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 50.7,
+  "by_layer": {
+   "novelty": 36,
+   "corroborated": 127
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "rows": 204,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.067,
+  "precision": 0.067
+ },
+ "P1e": {
+  "TP": 11,
+  "FP": 153,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 51.0,
+  "by_layer": {
+   "novelty": 36,
+   "corroborated": 128
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "rows": 205,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.067,
+  "precision": 0.067
+ },
+ "P2": {
+  "TP": 11,
+  "FP": 166,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 55.3,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 129
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "rows": 218,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.067,
+  "precision": 0.062,
+  "ADP_triage_time_tiebreak": {
+   "mean": 0.186,
+   "min": 0.107,
+   "max": 0.5,
+   "seeds": 20
+  },
+  "layers12_only": {
+   "TP": 1,
+   "FP": 47,
+   "recall": 0.009,
+   "attacks": 1,
+   "precision": 0.021,
+   "attacks_found": [
+    "fivedirections_e3_excel_0409"
+   ],
+   "ADP_time_tiebreak": {
+    "mean": 0.02,
+    "min": 0.02,
+    "max": 0.025,
+    "seeds": 20
+   }
+  }
+ },
+ "P2e": {
+  "TP": 11,
+  "FP": 166,
+  "recall": 0.102,
+  "attacks": 2,
+  "FP/day": 55.3,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 129
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "rows": 218,
+  "ADP": 1.0,
+  "ADP_learned_only": 0.067,
+  "precision": 0.062
+ },
+ "detector-1": {
+  "val_max": {
+   "TP": 4,
+   "FP": 72,
+   "recall": 0.037,
+   "attacks": 2,
+   "precision": 0.053,
+   "attacks_found": [
+    "fivedirections_e3_excel_0409",
+    "fivedirections_e3_firefox_0411"
+   ],
+   "threshold": 0.9325376152992249
+  },
+  "ratio_1": {
+   "TP": 3,
+   "FP": 44,
+   "recall": 0.028,
+   "attacks": 2,
+   "precision": 0.064,
+   "attacks_found": [
+    "fivedirections_e3_excel_0409",
+    "fivedirections_e3_firefox_0411"
+   ],
+   "threshold": 1.0
+  },
+  "ADP": 0.075
+ },
+ "detector-2": {
+  "val_max": {
+   "TP": 7,
+   "FP": 182,
+   "recall": 0.065,
+   "attacks": 2,
+   "precision": 0.037,
+   "attacks_found": [
+    "fivedirections_e3_excel_0409",
+    "fivedirections_e3_firefox_0411"
+   ],
+   "threshold": 0.9564519286155702
+  },
+  "ratio_1": {
+   "TP": 3,
+   "FP": 66,
+   "recall": 0.028,
+   "attacks": 1,
+   "precision": 0.043,
+   "attacks_found": [
+    "fivedirections_e3_firefox_0411"
+   ],
+   "threshold": 1.0
+  },
+  "ADP": 0.06
+ }
+}
