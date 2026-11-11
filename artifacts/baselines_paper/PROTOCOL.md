@@ -78,3 +78,13 @@ ProvFusion on new hosts (no per-host tuning; nothing is looked at except trainin
   - Common flags as in the README; `--use_cfg` entry = the identical entry of all provenance datasets in configs.yml.
 - Loss weights (DATASET_WEIGHTS, required per dataset): rule fixed in the next section from training data only.
 - Seeds `--seeds 1..5` (1 = the published seed), 5 if time allows, else 3, else 1.
+
+### Loss-weight rule for ProvFusion on new datasets (written 05:20, from CADETS TRAINING data only)
+ProvFusion's DATASET_WEIGHTS are described as "manually tuned". On CADETS E3 training graphs no simple formula
+reproduces them (checked: balanced N/(K n_c), N/(10 n_c), N/(11 n_c), sqrt(N/n_c); none matches, ordering is
+similar). For a dataset without published weights we therefore use the standard balanced class weights that
+PIDSMaker itself uses (`compute_class_weights`): w_c = N / (K n_c) over the edge-type labels of the TRAINING graphs
+(after ProvFusion's DGL conversion), K = number of present classes among 0..9, capped at 30 (the cap in all
+published vectors), 0 for absent classes and for class 10 (self loops), as in every published vector.
+Environment amendment: the image's DGL is the CUDA build 2.2.1+cu121 (conda channel dglteam; data.dgl.ai is not
+reachable from this host); the first CADETS attempt failed before training with DGL's CPU build.

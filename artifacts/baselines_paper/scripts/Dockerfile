@@ -9,6 +9,11 @@ RUN pip install psycopg2-binary==2.9.9 tqdm scikit-learn==1.6.1 networkx==3.2.1 
     matplotlib==3.9.4 wandb==0.24.2 chardet==5.2.0 nltk==3.8.1 igraph==0.11.5 cairocffi==1.7.0 wget==3.2 gensim==4.4.0 pytz==2024.1 \
     pandas==2.3.3 yacs==0.1.8 transformers==4.39.3 numpy==1.26.4 umap-learn==0.5.6 flask==3.0.3 tensorboardX==2.6.2.2 ogb PyYAML pydantic
 RUN useradd -u 1000 -m runner
-RUN pip install torchdata==0.7.1 PyMetis==2023.1.1
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
+RUN pip install torchdata==0.7.1 PyMetis==2023.1.1 && pip uninstall -y dgl && cd /tmp && \
+    python -c "import urllib.request as u; u.urlretrieve('https://conda.anaconda.org/dglteam/label/th21_cu121/linux-64/dgl-2.2.1.th21.cu121-py39_0.tar.bz2','dgl.tar.bz2')" && \
+    python -c "import tarfile; tarfile.open('dgl.tar.bz2').extractall('dglpkg')" && cp -r dglpkg/lib/python3.9/site-packages/dgl* /usr/local/lib/python3.9/site-packages/ && rm -rf dgl.tar.bz2 dglpkg
+RUN pip install --no-deps nvidia-cuda-runtime-cu12==12.1.105 nvidia-cusparse-cu12==12.1.0.106 nvidia-nvjitlink-cu12==12.1.105
+ENV LD_LIBRARY_PATH=/usr/local/lib/python3.9/site-packages/torch/lib:/usr/local/lib/python3.9/site-packages/nvidia/cuda_runtime/lib:/usr/local/lib/python3.9/site-packages/nvidia/cusparse/lib:/usr/local/lib/python3.9/site-packages/nvidia/nvjitlink/lib
 USER runner
 WORKDIR /work
