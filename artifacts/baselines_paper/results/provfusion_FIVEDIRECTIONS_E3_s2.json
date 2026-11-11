@@ -1,0 +1,55 @@
+{
+ "label": "ProvFusion FIVEDIRECTIONS_E3 seed2",
+ "results_file": "/d/runs/s2/save_middle_results/FIVEDIRECTIONS_E3_loss_sce_dim_64_nhd_2_nh_0.5_nl_2_lr_0.0015_lsf_0.001_mp_500_mpf_10_wd_0.0001_wdf_2e-06_gatedge_gat.pt",
+ "operating_point": {
+  "TP": 1,
+  "FP": 41,
+  "precision": 0.024,
+  "attacks": 1,
+  "n_attacks": 2,
+  "gt_nodes_evaluated": 108,
+  "nodes_evaluated": 282820,
+  "test_days": 3,
+  "FP_per_test_day": 13.67
+ },
+ "adp_votes": {
+  "adp_pidsmaker": 0.0199,
+  "adp13": 0.0234,
+  "adp_gt_first_ties": 0.1991,
+  "adp_worst_ties": 0.0176,
+  "distinct_scores": 7,
+  "adp_random_ties_mean": 0.0198,
+  "adp_random_ties_sd": 0.0026
+ },
+ "adp_votes_then_A123": {
+  "adp_pidsmaker": 0.018,
+  "adp13": 0.0177,
+  "adp_gt_first_ties": 0.018,
+  "adp_worst_ties": 0.0177,
+  "distinct_scores": 102374,
+  "adp_random_ties_mean": 0.0178,
+  "adp_random_ties_sd": 0.0001
+ },
+ "gt_nodes_total": 108,
+ "gt_nodes_in_test_graphs": 108,
+ "attacks_with_gt_in_test_graphs": 2,
+ "per_detector_alerts": {
+  "1": 170,
+  "2": 109,
+  "3": 2,
+  "4": 252,
+  "5": 91,
+  "6": 37,
+  "7": 40
+ },
+ "vote_histogram": {
+  "0": 282381,
+  "1": 348,
+  "2": 39,
+  "3": 10,
+  "4": 2,
+  "5": 3,
+  "6": 37,
+  "7": 0
+ }
+}

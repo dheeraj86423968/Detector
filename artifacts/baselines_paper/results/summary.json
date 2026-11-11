@@ -70,10 +70,25 @@
     "adp_worst": 0.0055,
     "adp_vote_then_A123": 0.0077,
     "adp_printed_by_provfusion": 0.0898
+   },
+   {
+    "seed": 2,
+    "adp": 0.0198,
+    "attacks": 1,
+    "n_attacks": 2,
+    "TP": 1,
+    "FP": 41,
+    "FP_per_test_day": 13.67,
+    "precision": 0.024,
+    "adp_own_gt_first_ties": 0.1991,
+    "adp_pidsmaker": 0.0199,
+    "adp_worst": 0.0176,
+    "adp_vote_then_A123": 0.018,
+    "adp_printed_by_provfusion": 0.1991
    }
   ],
-  "adp_mean": 0.008,
-  "adp_sd": 0.0
+  "adp_mean": 0.014,
+  "adp_sd": 0.009
  },
  {
   "host": "FIVEDIRECTIONS_E3",
@@ -100,9 +115,20 @@
     "FP_per_test_day": 2.0,
     "precision": 0.0,
     "adp13": 0.0185
+   },
+   {
+    "seed": 2,
+    "adp": 0.0739,
+    "attacks": 1,
+    "n_attacks": 2,
+    "TP": 3,
+    "FP": 40,
+    "FP_per_test_day": 13.33,
+    "precision": 0.07,
+    "adp13": 0.0739
    }
   ],
-  "adp_mean": 0.041,
-  "adp_sd": 0.032
+  "adp_mean": 0.052,
+  "adp_sd": 0.03
  }
 ]

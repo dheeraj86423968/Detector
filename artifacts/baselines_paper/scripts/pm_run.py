@@ -25,7 +25,8 @@ for fname in ("get_node_predictions", "get_node_predictions_node_level"):
         pickle.dump({"thr": float(thr), "results": {int(k): (float(v["score"]), int(v["y_hat"]), int(v["y_true"]))
                                                     for k, v in results.items()}},
                     open(os.path.join(dump, f"{ep}.pkl"), "wb"))
-        return out
+        # disk: drop the per-edge score table PIDSMaker would pickle next to the figures (not used by any metric)
+        return (out[0], out[1], None) + tuple(out[3:]) if len(out) >= 3 else out
     setattr(NE, fname, wrapped)
 # Disk: PIDSMaker writes several large figures per evaluated epoch (~150 MB/epoch on FiveDirections). They do not
 # affect any number, so they are replaced by no-ops (the ADP function, which also draws, is kept).

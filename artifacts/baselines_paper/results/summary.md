@@ -5,5 +5,5 @@ Headline ADP: ProvFusion = expected ADP under random tie order of its integer vo
 | host | system | seeds | ADP mean ± sd (min-max) | ProvFusion-printed ADP per seed | attacks found per seed | TP per seed | FP per seed | FP/test day (mean) |
 |---|---|---|---|---|---|---|---|---|
 | CADETS_E3 | provfusion | 1,2,3 | 0.36 ± 0.53 (0.00-0.98) | 0.9999, 0.6372, 0.4409 | 3/3, 1/3, 0/3 | 12, 1, 0 | 1, 9, 13 | 1.9 |
-| FIVEDIRECTIONS_E3 | provfusion | 1 | 0.01 ± 0.00 (0.01-0.01) | 0.0898 | 2/2 | 2 | 522 | 174.0 |
-| FIVEDIRECTIONS_E3 | velox | 0,1 | 0.04 ± 0.03 (0.02-0.06) | -, - | 1/2, 0/2 | 1, 0 | 10, 6 | 2.7 |
+| FIVEDIRECTIONS_E3 | provfusion | 1,2 | 0.01 ± 0.01 (0.01-0.02) | 0.0898, 0.1991 | 2/2, 1/2 | 2, 1 | 522, 41 | 93.8 |
+| FIVEDIRECTIONS_E3 | velox | 0,1,2 | 0.05 ± 0.03 (0.02-0.07) | -, -, - | 1/2, 0/2, 1/2 | 1, 0, 3 | 10, 6, 40 | 6.2 |

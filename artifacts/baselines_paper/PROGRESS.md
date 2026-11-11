@@ -49,3 +49,10 @@ are listed per file in results/join_rates.json.
 - 06:24 ATLASv2 h1 ProvFusion data prepared (0.42 GB).
 - 06:33 ProvFusion FiveDirections s1 (OPTC_h201 config): 2/2 attacks, TP 2 / FP 522 (174 FP per test day);
   tie-neutral ADP 0.008, ProvFusion-printed 0.090.
+- 06:38 **disk floor breached briefly**: free space fell to 24.x GB during the Velox FiveDirections s2 evaluation
+  (PIDSMaker pickles a 4 M-row edge-score table + THEIA prep); the watchdog stopped Velox s2 and the THEIA prep
+  within 10 s. (The watchdog used rounded-up GB; it now uses bytes with a 25.6 GiB trigger.) Fixes: pm_run.py drops
+  the edge-score table (not used by any metric); pm_run.sh waits with `docker wait` (a transient inspect failure
+  had made the queue start ORTHRUS s0 while Velox s2 still ran; ORTHRUS s0 was stopped and restarted). Step-5 THEIA
+  prep postponed until the PIDSMaker FiveDirections artifacts (12 GB) are deleted.
+- 06:39 ProvFusion FiveDirections s2 finished (see results).
