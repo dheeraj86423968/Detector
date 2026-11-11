@@ -90,3 +90,4 @@ are listed per file in results/join_rates.json.
   More than 40 GB cannot be given while keeping >= 12 GB free for the shared host (62 GB total). Remaining
   ORTHRUS FiveDirections seeds cancelled; Velox s3-s4 and then CARBANAKv2 PIDSMaker continue.
 - 13:09 CARBANAKv2 h1-h5 ProvFusion seeds 1-3 complete (merged data deleted). 13:19 Velox FiveDirections s3 done.
+- 14:21 Velox CARBANAKv2 h1 s0: 0/1, TP 0 / FP 6. 14:31 step-5 data prepared (THEIA 1.16 GB, OpTC H051 2.68 GB). From ~14:40 all my GPU jobs wait: other users hold ~38 GB of the GPU (< 12 GB free).

@@ -315,6 +315,25 @@
   "adp_sd": 0.145
  },
  {
+  "host": "CARBANAKV2_H1",
+  "system": "velox",
+  "runs": [
+   {
+    "seed": 0,
+    "adp": 0.0117,
+    "attacks": 0,
+    "n_attacks": 1,
+    "TP": 0,
+    "FP": 6,
+    "FP_per_test_day": 0.75,
+    "precision": 0.0,
+    "adp13": 0.0119
+   }
+  ],
+  "adp_mean": 0.012,
+  "adp_sd": 0.0
+ },
+ {
   "host": "CARBANAKV2_H2",
   "system": "provfusion",
   "runs": [
@@ -656,10 +675,21 @@
     "FP_per_test_day": 12.33,
     "precision": 0.051,
     "adp13": 0.0949
+   },
+   {
+    "seed": 4,
+    "adp": 0.0474,
+    "attacks": 0,
+    "n_attacks": 2,
+    "TP": 0,
+    "FP": 13,
+    "FP_per_test_day": 4.33,
+    "precision": 0.0,
+    "adp13": 0.0474
    }
   ],
-  "adp_mean": 0.066,
-  "adp_sd": 0.036
+  "adp_mean": 0.062,
+  "adp_sd": 0.033
  },
  {
   "host": "TRACE_E3",
