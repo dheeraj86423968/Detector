@@ -84,3 +84,8 @@ are listed per file in results/join_rates.json.
   FiveDirections artifacts rebuilt, ORTHRUS s0-s2 (40 GB RAM, alone), Velox s3-s4 -> CARBANAKv2 PIDSMaker
   (3 seeds per system per host); ProvFusion CARBANAKv2 seeds 1-3 run in parallel; step 5 last.
 - 10:54 TRACE ProvFusion s2: 2/3 attacks, TP 3 / FP 9, tie-neutral ADP 0.36 (printed 0.65). CARBANAKv2 ProvFusion s1 on h1-h5 and s2 on h1 done (summary.md).
+- 12:27 TRACE ProvFusion s3 done; TRACE merged data (5.2 GB) deleted and bl_trace_e3 dropped (TRACE limited to 3 seeds). CARBANAKv2 h1 ProvFusion s1-s3 done; its merged data deleted.
+- 12:45 **ORTHRUS (orthrus_non_snooped) on FiveDirections is infeasible on this host**: OOM-killed again with a
+  40 GB limit in PIDSMaker's "Computing TGN last neighbor graphs" (42 GB anon RSS; earlier 29 GB at 28 GB limit).
+  More than 40 GB cannot be given while keeping >= 12 GB free for the shared host (62 GB total). Remaining
+  ORTHRUS FiveDirections seeds cancelled; Velox s3-s4 and then CARBANAKv2 PIDSMaker continue.
