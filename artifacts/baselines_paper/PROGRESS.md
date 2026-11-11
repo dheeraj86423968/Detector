@@ -89,3 +89,4 @@ are listed per file in results/join_rates.json.
   40 GB limit in PIDSMaker's "Computing TGN last neighbor graphs" (42 GB anon RSS; earlier 29 GB at 28 GB limit).
   More than 40 GB cannot be given while keeping >= 12 GB free for the shared host (62 GB total). Remaining
   ORTHRUS FiveDirections seeds cancelled; Velox s3-s4 and then CARBANAKv2 PIDSMaker continue.
+- 13:09 CARBANAKv2 h1-h5 ProvFusion seeds 1-3 complete (merged data deleted). 13:19 Velox FiveDirections s3 done.
