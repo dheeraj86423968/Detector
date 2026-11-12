@@ -59,19 +59,14 @@ RULES = {
     "exfiltration": "a process that read sensitive data sends to an untrusted address",
     "untrusted_code_network": "a program loaded from an untrusted file communicates with an untrusted address",
     "untrusted_persistence": "a process with untrusted code or data writes to an autostart location",
-    "untrusted_exec_repeat": "another start of a program that already raised 'untrusted_exec' today (evidence)",
-    "exfiltration_repeat": "the same program sending to the same untrusted address again today (evidence)",
-    "untrusted_code_network_repeat": "the same untrusted program talking to the same address again today (evidence)",
-    "untrusted_persistence_repeat": "the same program writing to the same autostart location again today (evidence)",
+    "untrusted_exec_repeat": "another start of an untrusted file that already alerted and has not changed since (evidence)",
 }
-# 0.13 (`rule_instances`): the layer-2 alarms that alert on their own are raised once per (alarm, program, counterpart)
-# and UTC day - the counterpart is the remote address of a network alarm; an executed file and an autostart location
-# are already in the alarm's key. Further process instances the same day are '<alarm>_repeat' evidence (they alert
-# only when the learned score corroborates, at most once per program and day), as layer 1 has treated repeat runs of a
-# new program since 0.4: one updated browser started a thousand times is one finding. A different program, a different
-# address or the next day alerts again.
-INSTANCE_RULES = ("untrusted_exec", "exfiltration", "untrusted_code_network", "untrusted_persistence")
-REPEAT_RULES = tuple(r + "_repeat" for r in INSTANCE_RULES)
+# 0.13 (`exec_once`): an untrusted file that is executed alerts once per version of its content. Starting the same,
+# unchanged file again is 'untrusted_exec_repeat' evidence (it alerts only when the learned score corroborates, at most
+# once per program and day): the finding is that untrusted content was brought in and run, and one self-updated
+# browser started a thousand times is that finding once. A file written again - a new download, a new payload at
+# the same path - is a new version and alerts again, also the same day; so do other files and other alarms.
+REPEAT_RULES = ("untrusted_exec_repeat",)
 
 # credential / secret stores (initial confidentiality 1). Deliberately short: a broad list taints every process.
 SENSITIVE = re.compile(r"(^/etc/(shadow|gshadow|sudoers|master\.passwd|spwd\.db)$|^/etc/sudoers\.d/|/\.ssh/|"
@@ -420,7 +415,7 @@ class TagParams:
 
 
 class _Tag:
-    __slots__ = ("code", "data", "t", "conf", "exec", "origin", "exec_script")
+    __slots__ = ("code", "data", "t", "conf", "exec", "origin", "exec_script", "wv")
 
     def __init__(self, itg: float, conf: float, origin: int):
         self.code = 1.0       # processes: code integrity
@@ -430,6 +425,7 @@ class _Tag:
         self.exec = False     # process image has executed a file (live collectors: one node per image)
         self.origin = origin  # node that introduced the lowest integrity (for explanations)
         self.exec_script = False   # script_exec: an interpreter process has loaded its script
+        self.wv = 0                # files: writes seen (content version, exec_once)
 
 
 class TagEngine:
@@ -455,7 +451,7 @@ class TagEngine:
         # backslash_paths - programs are parsed like layer 1's option of that name ('c:\program files\x\y.exe').
         self.key_norm, self.backslash_paths, self.version_names = bool(key_norm), bool(backslash_paths), bool(version_names)
         self._nk: dict[str, str] = {}
-        self.rule_instances = 0             # > 0: alerts per (alarm, program, counterpart) and day (INSTANCE_RULES)
+        self.exec_once = False              # untrusted_exec once per version of the executed file (REPEAT_RULES)
         self.p = params
         self.strict_addresses = bool(strict_addresses)
         self.script_exec = bool(script_exec)
@@ -499,8 +495,7 @@ class TagEngine:
         self._lbl: dict[int, str] = {}
         self._script: dict[int, str | None] = {}         # script_exec: process -> its script argument (None: not a script run)
         self._peer: dict[int, int] = {}                  # late_exfil: process -> its latest untrusted peer (netflow node)
-        self._inst: dict[tuple, int] = {}                # rule_instances: (alarm, program key, counterpart) -> alerts today
-        self._inst_day = None
+        self._exec_alerted: dict[int, int] = {}          # exec_once: file node -> content version that alerted
 
     # ---- helpers
     def _label(self, reg: Registry, n: int) -> str:
@@ -591,27 +586,30 @@ class TagEngine:
             self._nk[key] = k
         return k
 
-    def _check(self, out: list, rule: str, key: str, value: float, nodes: tuple, ts: int, detail: str, obj: str = ""):
+    def _exec(self, out: list, fnode: int, f: "_Tag", key: str, nodes: tuple, ts: int, detail: str) -> None:
+        """untrusted_exec of file `fnode` (tag f); with exec_once, a version of the file that already alerted is a
+        repeat."""
+        if self.exec_once and self._exec_alerted.get(fnode) == f.wv:
+            self._check(out, "untrusted_exec_repeat", key, f.data, nodes, ts, detail + " (this file already alerted and has not changed since)")
+        elif self._check(out, "untrusted_exec", key, f.data, nodes, ts, detail) and self.exec_once:
+            self._exec_alerted[fnode] = f.wv
+
+    def _check(self, out: list, rule: str, key: str, value: float, nodes: tuple, ts: int, detail: str) -> bool:
+        base = rule[:-7] if rule in REPEAT_RULES else rule       # a repeat shares its alarm's thresholds and once-per-node
         if self.fit_mode:
             if value < self.p.untrusted:
-                k = (rule, self.norm_key(key))
+                k = (base, self.norm_key(key))
                 if value < self.benign_min.get(k, 2.0):
                     self.benign_min[k] = value
                 self.benign_days[k].add(self.cur_day)
-                self.benign_count[rule] += 1
-            return
-        thr = self.thr.get(rule, {}).get(self.norm_key(key), self.p.untrusted)
-        if value < thr and (rule, nodes[0]) not in self._fired:
-            self._fired.add((rule, nodes[0]))
-            if self.rule_instances and rule in INSTANCE_RULES:
-                day = ts // 86_400_000_000_000
-                if day != self._inst_day:
-                    self._inst_day, self._inst = day, {}
-                ik = (rule, program_key(key, True, self.version_names) if " @ " not in key else key, obj)
-                c = self._inst[ik] = self._inst.get(ik, 0) + 1
-                if c > self.rule_instances:
-                    rule, detail = rule + "_repeat", f"{detail} (instance #{c} today)"
+                self.benign_count[base] += 1
+            return False
+        thr = self.thr.get(base, {}).get(self.norm_key(key), self.p.untrusted)
+        if value < thr and (base, nodes[0]) not in self._fired:
+            self._fired.add((base, nodes[0]))
             out.append(Hit("rules", rule, key, round(float(value), 3), nodes, ts, detail))
+            return True
+        return False
 
     def _why(self, reg: Registry, t: _Tag) -> str:
         o = t.origin
@@ -669,6 +667,7 @@ class TagEngine:
                 if t.origin is not None and t.origin >= 0:
                     out.add(t.origin)
         out.update(self._untrusted_files.values())
+        out.update(n for n in self._exec_alerted if n in self.tags and self.tags[n].data < self.p.untrusted)   # exec_once: files that alerted
         return out
 
     def remap(self, old2new) -> None:
@@ -688,6 +687,7 @@ class TagEngine:
         self._peer = {m[n]: m[v] for n, v in self._peer.items() if m[n] >= 0 and m[v] >= 0}
         self._fired = {(r, m[n]) for r, n in self._fired if m[n] >= 0}
         self._untrusted_files = {k: m[n] for k, n in self._untrusted_files.items() if m[n] >= 0}
+        self._exec_alerted = {m[n]: v for n, v in self._exec_alerted.items() if m[n] >= 0}
         if "_net_nodes" in self.__dict__:
             self._net_nodes = {m[n] for n in self._net_nodes if m[n] >= 0}
 
@@ -709,8 +709,7 @@ class TagEngine:
                 self._lower(q, n.data, s, now)
                 if q.code < U and n.data < U:
                     self._check(out, "untrusted_code_network", self._label(reg, d), max(q.code, n.data), (d, s), now,
-                                f"{self._label(reg, d)} (loaded from untrusted {self._why(reg, q)}) receives from {self._label(reg, s)}",
-                                obj=self._label(reg, s))
+                                f"{self._label(reg, d)} (loaded from untrusted {self._why(reg, q)}) receives from {self._label(reg, s)}")
             elif e == READ:                                 # file -> process
                 f, q = self._tag(reg, s), self._tag(reg, d)
                 if self.script_exec and not q.exec_script:
@@ -719,8 +718,8 @@ class TagEngine:
                         q.exec_script = True                # the interpreter loads its script: the script's content is code
                         path = self._label(reg, s)
                         if f.data < U:
-                            self._check(out, "untrusted_exec", path, f.data, (d, s), now,
-                                        f"{self._label(reg, d)} runs script {path}, whose content came from untrusted {self._why(reg, f)}")
+                            self._exec(out, s, f, path, (d, s), now,
+                                       f"{self._label(reg, d)} runs script {path}, whose content came from untrusted {self._why(reg, f)}")
                         if f.data < q.code:
                             q.code = f.data
                             q.origin = f.origin
@@ -733,15 +732,13 @@ class TagEngine:
                         peer = self._peer[d]
                         prog = self._label(reg, d)
                         self._check(out, "exfiltration", prog, max(1.0 - q.conf, self._tag(reg, peer).data), (d, peer), now,
-                                    f"{prog}, connected to untrusted {self._label(reg, peer)}, reads sensitive {self._label(reg, s)}",
-                                    obj=self._label(reg, peer))
+                                    f"{prog}, connected to untrusted {self._label(reg, peer)}, reads sensitive {self._label(reg, s)}")
             elif e == EXECUTE:                              # file -> process
                 f, q = self._tag(reg, s), self._tag(reg, d)
                 prog = self._label(reg, s)
                 prog = prog if prog not in ("None", "") else self._label(reg, d)
                 if f.data < U:
-                    self._check(out, "untrusted_exec", prog, f.data, (d, s), now,
-                                f"executes {prog}, whose content came from untrusted {self._why(reg, f)}")
+                    self._exec(out, s, f, prog, (d, s), now, f"executes {prog}, whose content came from untrusted {self._why(reg, f)}")
                 q.code, q.exec = f.data, True
                 if f.data < 1.0:
                     q.origin = f.origin
@@ -759,8 +756,7 @@ class TagEngine:
                         f = self._tag(reg, fid)
                         prog = self._label(reg, d)
                         if f.data < U:
-                            self._check(out, "untrusted_exec", prog, f.data, (d, fid), now,
-                                        f"starts {prog}, whose content came from untrusted {self._why(reg, f)}")
+                            self._exec(out, fid, f, prog, (d, fid), now, f"starts {prog}, whose content came from untrusted {self._why(reg, f)}")
                         c.code, c.exec = min(c.code, f.data), True
                         if f.data < 1.0:
                             c.origin = f.origin
@@ -788,6 +784,7 @@ class TagEngine:
                     if PERSISTENCE.search(cp):
                         self._check(out, "untrusted_persistence", f"{self._label(reg, s)} @ {dir_key(cp, 3)}", v, (s, d), now,
                                     f"{self._label(reg, s)} with untrusted input from {self._why(reg, q)} writes autostart location {path}")
+                f.wv += 1                                   # the file's content changed (exec_once: a new version)
                 if v < f.data:
                     f.data, f.origin = v, (q.origin if v < 1.0 else f.origin)
                 if self.image_exec and f.data < U and path not in ("None", ""):
@@ -813,11 +810,10 @@ class TagEngine:
                     prog = self._label(reg, s)
                     if q.conf >= p.sensitive:
                         self._check(out, "exfiltration", prog, max(1.0 - q.conf, n.data), (s, d), now,
-                                    f"{prog}, which read sensitive data, sends to untrusted {self._label(reg, d)}", obj=self._label(reg, d))
+                                    f"{prog}, which read sensitive data, sends to untrusted {self._label(reg, d)}")
                     if q.code < U:
                         self._check(out, "untrusted_code_network", prog, max(q.code, n.data), (s, d), now,
-                                    f"{prog} (loaded from untrusted {self._why(reg, q)}) sends to untrusted {self._label(reg, d)}",
-                                    obj=self._label(reg, d))
+                                    f"{prog} (loaded from untrusted {self._why(reg, q)}) sends to untrusted {self._label(reg, d)}")
         return out
 
     # ---- calibration
@@ -842,7 +838,7 @@ FLEET_KNOWN_RULE = "fleet_known_executable"
 ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + (FLEET_KNOWN_RULE,)
 # 0.12: a Sigma match whose (rule, program) also matched during the baseline is evidence (pdp_engine.sigma)
 ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + ("sigma_known",)
-ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + REPEAT_RULES     # 0.13: repeat instances of a layer-2 alarm (rule_instances)
+ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + REPEAT_RULES     # 0.13: another start of an untrusted file that already alerted (exec_once)
 
 
 @dataclass
@@ -882,7 +878,7 @@ class LayerConfig:
     rule_key_norm: bool = False        # layer 2 thresholds by program identity (program_key), not by raw path
     rule_backslash_paths: bool = False # layer 2 parses backslash paths with spaces like layer 1's backslash_paths
     version_names: bool = False        # program identity collapses versions inside directory and file names
-    rule_instances: int = 0            # > 0: layer-2 alarms alert N times per (alarm, program, counterpart) and day
+    exec_once: bool = False            # untrusted_exec alerts once per version of the executed file
 
 
 class DeterministicLayers:
@@ -912,7 +908,7 @@ class DeterministicLayers:
                                backslash_paths=cfg.get("rule_backslash_paths", False), version_names=cfg.get("version_names", False))
                      if cfg.get("rules", True) else None)
         if self.tags is not None:
-            self.tags.rule_instances = int(cfg.get("rule_instances", 0) or 0)
+            self.tags.exec_once = bool(cfg.get("exec_once", False))
         self.sigma = None
         sg = cfg.get("sigma")          # 0.12: {"levels": [...], "known": [...]} in a fitted layers.json
         if sg:
@@ -1118,7 +1114,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
                                      "recurring_trust": cfg.recurring_trust, "relax_min_days": cfg.relax_min_days,
                                      "backslash_paths": cfg.backslash_paths, "rule_key_norm": cfg.rule_key_norm,
                                      "rule_backslash_paths": cfg.rule_backslash_paths, "version_names": cfg.version_names,
-                                     "rule_instances": cfg.rule_instances,
+                                     "exec_once": cfg.exec_once,
                                      **({"sigma": {"levels": list(cfg.sigma_levels)}} if cfg.sigma_levels else {})},
             **({"sigma_known": sigma_known} if cfg.sigma_fit_levels else {}),
             "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(runtime_ips), "thresholds": thr,

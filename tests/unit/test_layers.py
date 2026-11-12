@@ -560,11 +560,11 @@ stream = [(W["cdn"], "RECVFROM", W["upd"]), (W["upd"], "WRITE", W["appfile"]), (
           (W["a2"], "SENDTO", W["c2a"]), (W["sam"], "READ", W["a3"]), (W["a3"], "SENDTO", W["c2b"])]
 
 
-def wrules(**kw):
-    inst = kw.pop("rule_instances", 0)
+def wrules(stream_=None, **kw):
+    once = kw.pop("exec_once", False)
     eng = TagEngine(TagParams(), set(), kw.pop("thr", None), 0, full_paths=True, image_exec=True, **kw)
-    eng.rule_instances = inst
-    return [(h.rule, h.key, h.nodes[0]) for h in eng.process(win(stream), wreg)]
+    eng.exec_once = once
+    return [(h.rule, h.key, h.nodes[0]) for h in eng.process(win(stream_ or stream), wreg)]
 
 
 h_old = wrules()
@@ -573,12 +573,14 @@ check(not any(r == "untrusted_exec" for r, _, _ in h_old) and all(k == r"c:\prog
 h_new = wrules(backslash_paths=True)
 check(sorted(n for r, _, n in h_new if r == "untrusted_exec") == sorted([W["a1"], W["a2"], W["a3"]]) and all(k == APP for r, k, _ in h_new),
       "rule_backslash_paths: every start of the program written from an untrusted address is an untrusted exec, keyed by its full path")
-h_cap = wrules(backslash_paths=True, rule_instances=1)
+h_cap = wrules(backslash_paths=True, exec_once=True)
 check([r for r, _, n in h_cap if r.startswith("untrusted_exec")] == ["untrusted_exec", "untrusted_exec_repeat", "untrusted_exec_repeat"],
-      "rule_instances: the first start alerts, later starts the same day are repeat evidence")
-ex = [(r, n) for r, _, n in h_cap if r.startswith("exfiltration")]
-check(ex == [("exfiltration", W["a1"]), ("exfiltration_repeat", W["a2"]), ("exfiltration", W["a3"])],
-      "rule_instances: the same program sending to the same address again is a repeat; another address alerts")
+      "exec_once: the first start of the untrusted file alerts, later starts of the unchanged file are repeat evidence")
+check([r for r, _, n in h_cap if r.startswith("exfiltration")] == ["exfiltration"] * 3, "exec_once leaves the other alarms per process")
+again = stream[:3] + [(W["cdn"], "RECVFROM", W["upd"]), (W["upd"], "WRITE", W["appfile"])] + stream[3:5]
+h_ver = wrules(again, backslash_paths=True, exec_once=True)
+check([r for r, _, n in h_ver if r.startswith("untrusted_exec")] == ["untrusted_exec", "untrusted_exec", "untrusted_exec_repeat"],
+      "exec_once: the file written again is a new version and alerts again")
 from pdp_engine.layers import ALWAYS_EVIDENCE as _AE, REPEAT_RULES as _RR
 check(set(_RR) <= set(_AE), "repeat alarms are evidence (they alert only when the learned score corroborates)")
 V1, V2 = r"c:\users\a\appdata\local\app\2.0.1\x.exe", r"c:\users\a\appdata\local\app\2.0.2\x.exe"
@@ -596,7 +598,7 @@ def vrules(**kw):
 check("untrusted_exec" in vrules(thr_key=V1) and "untrusted_exec" not in vrules(thr_key=_pk(V1, True), key_norm=True),
       "rule_key_norm: the baseline's benign alarm of version 2.0.1 covers version 2.0.2 (by raw path it does not)")
 from pdp_engine.layers import LayerConfig as _LC
-check(not any((_LC().rule_key_norm, _LC().rule_backslash_paths, _LC().version_names, _LC().rule_instances)), "the 0.13 options are off by default")
+check(not any((_LC().rule_key_norm, _LC().rule_backslash_paths, _LC().version_names, _LC().exec_once)), "the 0.13 options are off by default")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)
