@@ -136,3 +136,16 @@ dry run `scripts/survey_launder.py`, no scoring). Definition:
 Dry run: payloads exist only where the collector records EXECUTE (CADETS 8, THEIA E3 4, ClearScope E5 1; TRACE not
 surveyed yet); Windows sets have none (no EXECUTE events; layer 2's image_exec path link is already broken by the
 LotL relabelling), so there laundering = LotL. All sets are scored with the same variants P2 / F3 / L12.
+
+## Amendment 2 (2026-11-12 06:55 UTC; POST HOC, after the reference and LotL results of 15 sets were seen)
+Observation: under LotL several attacks stay detected only through corroboration anchored by layer-1 alerts on new
+programs the attacker ran but the ground truth does not label (CARBANAKv2 h3/h5: ssh-keygen.exe, scp.exe,
+configure-smremoting.exe; FiveDirections: whoami, tasklist, netstat, cmd.exe, PowerShell). The pre-registered transform
+renames only programs of ground-truth nodes, so it understates a full LotL attacker, who would avoid those too.
+Added, labelled as a post-hoc sensitivity bound (not replacing the pre-registered result): **lotlall** = the same
+rule applied to EVERY program new to layer 1 in the test windows (ground truth or not; `lotl.build(all_new=True)`).
+Layer 1 then raises nothing on the test data; benign new programs are renamed too, so its FP change mixes the
+attacker's and benign activity and is reported as such. Same variants (P2 / F3 / L12), all 16 sets + CLEARSCOPE_E5.
+Incident counts use a frozen copy of the 0.10 shipped grouping (`scripts/incidents010.py` = server/pdp_server/
+incidents.py at 70b6a57): the current server code includes 0.11's new-program review digest and does not reproduce
+inc13-final.json (153 vs 94 false incidents on 15 sets); with the frozen copy the reference reproduces it exactly.

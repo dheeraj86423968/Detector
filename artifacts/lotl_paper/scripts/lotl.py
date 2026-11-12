@@ -24,7 +24,9 @@ def kind_of(key: str) -> str:
     return "shell" if (INTERPRETER.match(name) or name in WIN_SHELLS or SCRIPT_EXT.search(base)) else "process"
 
 
-def build(S, reg, bdir, N, test_nodes):
+def build(S, reg, bdir, N, test_nodes, all_new=False):
+    """all_new (amendment 2, 'lotlall'): every program new to layer 1 in the test windows is a target, not only
+    those of ground-truth nodes (the attacker's unlabelled tools too; benign new programs as well)."""
     lay = DeterministicLayers.load(bdir, N)
     nov = lay.novelty
     fp, bs = nov.full_paths, getattr(nov, "backslash_paths", False)
@@ -59,8 +61,8 @@ def build(S, reg, bdir, N, test_nodes):
 
     # target programs: unseen in the baseline (layer 1's own test, fleet prevalence ignored) and run by a GT node
     tkeys = {}
-    for u in S.allgt:
-        i = reg.get(u)
+    cand = sorted(test_nodes) if all_new else [reg.get(u) for u in S.allgt]
+    for i in cand:
         if i is None or i not in test_nodes or ents[i].ntype != "subject":
             continue
         x = exe_of(ents[i].label)

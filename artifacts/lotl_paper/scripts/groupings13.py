@@ -1,5 +1,5 @@
 """Grouping variants of lab 0.10 grid 2 (artifacts/lab_v10/PROTOCOL.md), run through the server's own code."""
-from pdp_server import incidents as inc
+import incidents010 as inc   # lotl_paper: 0.10 shipped grouping (frozen), as inc13-final.json
 
 H = 3600 * 10**9
 

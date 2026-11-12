@@ -11,7 +11,7 @@ DEV = ["ATLASV2_EDR-h1", "ATLASV2_EDR-h2", "CADETS_E3", "CARBANAKV2_EDR-h1", "CA
        "THEIA_E3", "THEIA_E5-theia", "TRACE_E3-trace"]
 EXTRA = ["CLEARSCOPE_E5-clearscope"]
 V = ["P2", "F3", "L12"]
-TR = [t for t in ("none", "lotl", "launder") if glob.glob(f"{OUT}/res-{t}-*.json")]
+TR = [t for t in ("none", "lotl", "launder", "lotlall") if glob.glob(f"{OUT}/res-{t}-*.json")]
 res = {t: {} for t in TR}
 for t in TR:
     for f in glob.glob(f"{OUT}/res-{t}-*.json"):

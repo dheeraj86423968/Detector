@@ -4,7 +4,7 @@ but every incident holding the attack's alerts has < 10 % ground-truth alerts).
 Usage: inc13.py [--grouping G0,...] [--variants P0,...] rows13-*.json.gz > out.json"""
 import argparse, gzip, importlib, json, sys
 from collections import Counter, defaultdict
-from pdp_server import incidents as inc
+import incidents010 as inc   # lotl_paper: 0.10 shipped grouping (frozen), as inc13-final.json
 
 ap = argparse.ArgumentParser(); ap.add_argument("files", nargs="+"); ap.add_argument("--grouping", default="G0")
 ap.add_argument("--variants", default="P0"); ap.add_argument("--detail", action="store_true")

@@ -32,7 +32,7 @@ EARLY_NS = 2 * 3600 * 10**9
 ORDER = {"novelty": 0, "rules": 1, "corroborated": 2, "learned": 3}
 
 ap = argparse.ArgumentParser(); ap.add_argument("set"); ap.add_argument("--out", required=True); ap.add_argument("--rows", required=True)
-ap.add_argument("--transform", choices=["none", "lotl", "launder"], required=True); ap.add_argument("--map", default="")
+ap.add_argument("--transform", choices=["none", "lotl", "launder", "lotlall"], required=True); ap.add_argument("--map", default="")
 ap.add_argument("--gt-extra", default="")
 a = ap.parse_args()
 S = Set(a.set)
@@ -52,7 +52,7 @@ if a.transform != "none":
     for d in S.test_days:
         for w in st.windows(d):
             test_nodes.update(np.unique(np.concatenate([w.src, w.dst])).tolist())
-    relabel, rep = lotl.build(S, reg, bdir, N, test_nodes)
+    relabel, rep = lotl.build(S, reg, bdir, N, test_nodes, all_new=(a.transform == "lotlall"))
     orig_label = {i: reg.entities[i].label for i in relabel}
     lotl.apply(reg, relabel)
     tinfo["lotl"] = rep
