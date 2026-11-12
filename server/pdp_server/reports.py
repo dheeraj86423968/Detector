@@ -14,11 +14,16 @@ router = APIRouter()
 SEVS = ("critical", "high", "medium", "low")
 
 
-def weekly(c, org_id, end: datetime | None = None) -> dict:
+def weekly(c, org_id, end: datetime | None = None, scope: list | None = None) -> dict:
+    """scope: the endpoint ids the reader may see (a user limited to some endpoints gets the report of those only;
+    it used to cover the whole organisation). None: all (the organisation's e-mailed summary)."""
     end = end or datetime.now(timezone.utc)
     start = end - timedelta(days=7)
     lo, hi = int(start.timestamp() * 1e9), int(end.timestamp() * 1e9)
     eps = db.q(c, "SELECT id, name, phase, last_seen FROM endpoints WHERE org_id=%s AND kind='live' AND phase <> 'retired'", (org_id,))
+    if scope is not None:
+        allowed = {str(x) for x in scope}
+        eps = [e for e in eps if str(e["id"]) in allowed]
     ids = sorted(str(e["id"]) for e in eps)
     incs = incidents.list_incidents(c, ids) if ids else []
     new = [i for i in incs if lo <= i["first_ns"] < hi]
@@ -53,4 +58,4 @@ def weekly_text(w: dict, org_name: str, console: str) -> str:
 @router.get("/api/reports/weekly")
 def weekly_report(s=Depends(session)):
     with db.conn() as c:
-        return {"ok": True, "org": s.get("org_name"), **weekly(c, s["org"])}
+        return {"ok": True, "org": s.get("org_name"), **weekly(c, s["org"], scope=sorted(s["scope"]))}

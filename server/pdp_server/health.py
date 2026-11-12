@@ -47,8 +47,8 @@ def problems(row: dict, target_version: str | None = None) -> list[dict]:
     lw = h.get("last_window_end_ns") or 0
     if row.get("current_bundle") and lw and h.get("at") and time.time() - float(h["at"]) < 300 and time.time() - lw / 1e9 > BEHIND_S:
         out.append({"key": "behind", "level": "warning", "text": f"Detection is {int((time.time() - lw / 1e9) // 60)} minutes behind the endpoint's activity"})
-    u = h.get("update") or {}
-    for v in u.get("failed") or []:
+    u = h.get("update") if isinstance(h.get("update"), dict) else {}      # stored health is agent-supplied: any shape
+    for v in (u.get("failed") if isinstance(u.get("failed"), list) else []):
         if v == target_version:
             out.append({"key": f"update_failed:{v}", "level": "warning", "text": f"Agent {v} did not start on this endpoint and was rolled back; it stays on {row.get('agent_version')}"})
     if target_version and row.get("agent_version") and row.get("agent_version") != target_version and u and not u.get("updater"):

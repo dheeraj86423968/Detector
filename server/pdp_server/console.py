@@ -135,14 +135,18 @@ def overview(s=Depends(session)):
                 summ = check_summary(ck)
                 if summ["verdict"] == "fail":
                     attention.append({"kind": "check_failed", "endpoint_id": e["id"], "endpoint_name": e["name"], "text": f"{e['name']}: {summ['verdict_text']}"})
-    with db.conn() as c:
-        for r in db.q(c, "SELECT id, name, health FROM endpoints WHERE phase<>'retired' AND coalesce((health->>'collector_lost_1h')::bigint, "
-                         "(health->>'collector_lost')::bigint, 0) + coalesce((health->>'collector_behind_1h')::bigint, 0) > 0"):
-            if any(str(r["id"]) == e["id"] for e in live):
-                h = r["health"]
-                n = (h.get("collector_lost_1h", h.get("collector_lost")) or 0) + (h.get("collector_behind_1h") or 0)
-                attention.append({"kind": "dropping_events", "endpoint_id": str(r["id"]), "endpoint_name": r["name"],
-                                  "text": f"{r['name']}: the collector missed {n:,} events{' in the last hour' if 'collector_lost_1h' in h else ''} (host too busy during a burst)"})
+    with db.conn() as c:       # only the caller's endpoints; the counts are read in Python (stored health is agent-supplied)
+        rows = db.q(c, "SELECT id, name, health FROM endpoints WHERE id = ANY(%s::uuid[])", ([e["id"] for e in live],))
+    for r in rows:
+        h = r["health"] if isinstance(r["health"], dict) else {}
+
+        def num(k):
+            v = h.get(k)
+            return int(v) if isinstance(v, (int, float)) and not isinstance(v, bool) and v == v and abs(v) < 2 ** 62 else 0
+        n = (num("collector_lost_1h") if h.get("collector_lost_1h") is not None else num("collector_lost")) + num("collector_behind_1h")
+        if n > 0:
+            attention.append({"kind": "dropping_events", "endpoint_id": str(r["id"]), "endpoint_name": r["name"],
+                              "text": f"{r['name']}: the collector missed {n:,} events{' in the last hour' if 'collector_lost_1h' in h else ''} (host too busy during a burst)"})
     sev = {k: sum(1 for i in active if i["severity"] == k) for k in ("critical", "high", "medium", "low")}
     return {"ok": True,
             "endpoints": {"total": len(live), "protected": sum(e["state"] == "protected" for e in live),

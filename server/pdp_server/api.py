@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 import psycopg2.extras
 
@@ -218,11 +218,14 @@ def _quota(ep: dict, rows: int, request: Request) -> int:
     """Daily ingest budget (security review F11): 429 when this upload would exceed it. -> the upload's bytes."""
     from . import integrity
     nbytes = int(request.headers.get("content-length") or 0)
-    try:
-        with db.conn() as c:
+    refused = None
+    with db.conn() as c:
+        try:
             integrity.check_quota(c, ep, rows, nbytes)
-    except integrity.IngestError as e:
-        raise HTTPException(e.status, str(e))
+        except integrity.IngestError as e:      # caught inside the block: the finding and the security event it wrote
+            refused = e                         # are committed (raising through db.conn() rolled them back)
+    if refused is not None:
+        raise HTTPException(refused.status, str(refused))
     return nbytes
 
 
@@ -283,7 +286,10 @@ class DayComplete(BaseModel):
 def day_complete(endpoint_id: str, req: DayComplete, ep=Depends(agent_endpoint)):
     with db.conn() as c:
         db.q(c, "INSERT INTO baseline_days (endpoint_id, date, complete, completed_at) VALUES (%s,%s,true,now()) ON CONFLICT (endpoint_id, date) DO UPDATE SET complete=true, completed_at=COALESCE(baseline_days.completed_at, now())", (endpoint_id, req.date))
-        db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, params) VALUES (%s,%s,'ingest',%s)", (pki.new_id(), endpoint_id, json.dumps({"date": req.date})))
+        # a repeated day-complete (the agent retries when the answer was lost) does not queue the day's ingest again
+        if not db.q(c, "SELECT 1 FROM jobs WHERE endpoint_id=%s AND kind='ingest' AND state IN ('queued','running') AND params->>'date' = %s",
+                    (endpoint_id, req.date), one=True):
+            db.q(c, "INSERT INTO jobs (id, endpoint_id, kind, params) VALUES (%s,%s,'ingest',%s)", (pki.new_id(), endpoint_id, json.dumps({"date": req.date})))
     return {"ok": True}
 
 
@@ -372,9 +378,65 @@ async def upload_windows(endpoint_id: str, request: Request, ep=Depends(agent_en
     return {"ok": True, "rows": len(rows)}
 
 
+def _num(v, default=0.0) -> float:
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return default
+    return f if f == f and abs(f) != float("inf") else default
+
+
+def _text(v, cap: int) -> str | None:
+    return None if v is None else (v if isinstance(v, str) else str(v))[:cap].replace("\x00", "")
+
+
+def clean_alert(r) -> dict | None:
+    """An uploaded alert row in the shape every reader assumes, or None when it names no node. Alerts are read by
+    pages and jobs shared across an organisation (incident grouping, graphs, allow list, SIEM feed, notifier): a row
+    with a context edge lacking `src`, a null score or a non-object reason used to raise there - one endpoint could
+    take the incident and alert pages down for its organisation and stop the SIEM feed at that row for good."""
+    if not isinstance(r, dict) or not isinstance(r.get("node"), dict):
+        return None
+    node = r["node"]
+    if not isinstance(node.get("uuid"), str) or not node["uuid"]:
+        return None
+    try:
+        ws = int(r.get("window_start_ns") or 0)
+    except (TypeError, ValueError):
+        ws = 0
+    ctx = r.get("context") if isinstance(r.get("context"), dict) else {}
+    nodes = [n for n in ctx.get("nodes") or [] if isinstance(n, dict) and isinstance(n.get("uuid"), str)] if isinstance(ctx.get("nodes"), list) else []
+    for n in nodes:
+        for k in ("label", "ntype"):
+            if k in n and not isinstance(n[k], str):
+                n[k] = str(n[k]) if n[k] is not None else ""
+    edges = []
+    for e in ctx.get("edges") if isinstance(ctx.get("edges"), list) else []:
+        if isinstance(e, dict) and all(isinstance(e.get(k), str) for k in ("src", "dst", "op")):
+            e["ts_ns"] = int(_num(e.get("ts_ns"), 0))
+            edges.append(e)
+    ctx = {**ctx, "nodes": nodes, "edges": edges}
+    reasons = [x for x in r.get("reasons") or [] if isinstance(x, dict)] if isinstance(r.get("reasons"), list) else []
+    for x in reasons:
+        for k in ("layer", "rule", "detail", "key"):
+            if k in x and x[k] is not None and not isinstance(x[k], str):
+                x[k] = str(x[k])
+    seq = r.get("seq")
+    return {"window_start_ns": max(-INT_BOUND, min(INT_BOUND, ws)),
+            "node": {"uuid": node["uuid"][:200], "ntype": _text(node.get("ntype"), 32) or "subject", "label": _text(node.get("label"), 20000) or "",
+                     "display": node.get("display") if isinstance(node.get("display"), dict) else {}},
+            "fused": _num(r.get("fused")), "r1": _num(r.get("r1")), "r2": _num(r.get("r2")), "context": ctx,
+            "layer": _text(r.get("layer"), 32) or "learned", "rule": _text(r.get("rule"), 200), "reason": _text(r.get("reason"), 20000),
+            "reasons": reasons, "aid": r.get("aid"),
+            "seq": seq if isinstance(seq, int) and not isinstance(seq, bool) and abs(seq) < INT_BOUND else None}
+
+
 @app.post("/v1/endpoints/{endpoint_id}/alerts")
 async def upload_alerts(endpoint_id: str, request: Request, ep=Depends(agent_endpoint)):
-    rows = [r async for r in ndjson_rows(request)]
+    raw = [r async for r in ndjson_rows(request)]
+    rows = [x for x in (clean_alert(r) for r in raw) if x is not None]
+    if len(rows) < len(raw):
+        print(f"alerts upload from {endpoint_id}: {len(raw) - len(rows)} malformed row(s) dropped", flush=True)
     with db.conn() as c:
         with c.cursor() as cur:
             # 0.6: aid = the agent's idempotency key (a retried upload is stored once); seq = its alert sequence number
@@ -430,6 +492,27 @@ class Heartbeat(BaseModel):
     lost_seqs: dict | None = None         # {"w"|"a": [[lo, hi], ...]} dropped by the agent's own queue limit
     score_failures: int | None = None     # windows the detector failed on (skipped), since install / last 24 h
     score_failures_24h: int | None = None
+
+    @model_validator(mode="after")
+    def _bounded(self):
+        """A heartbeat is stored as the endpoint's health and read by queries and pages shared with other endpoints
+        (overview, update rollout, notifier): numbers are kept inside what Postgres bigint / JSON hold and `update`
+        in its documented shape, so one endpoint's odd values cannot raise there."""
+        import math
+        for k, v in list(self.__dict__.items()):
+            if isinstance(v, bool):
+                continue
+            if isinstance(v, int):
+                self.__dict__[k] = max(-INT_BOUND, min(INT_BOUND, v))
+            elif isinstance(v, float) and not math.isfinite(v):
+                self.__dict__[k] = 0.0
+        if self.update is not None:
+            from .updates import clean_update
+            self.__dict__["update"] = clean_update(self.update)
+        return self
+
+
+INT_BOUND = 2 ** 62       # well inside bigint; nanosecond timestamps fit
 
 
 @app.post("/v1/endpoints/{endpoint_id}/heartbeat")
@@ -564,12 +647,16 @@ def oidc_callback(request: Request, code: str | None = None, state: str | None =
         return _sso_error(str(e))
     if not ident["role"]:
         with db.conn() as c:   # lost access at the IdP: also end any session the account still has
-            db.q(c, "UPDATE users SET disabled=true WHERE oidc_issuer=%s AND oidc_sub=%s", (ident["iss"], ident["sub"]))
+            # (sessions are ended by a new session generation, not by disabling the account: `disabled` is the admin's
+            # switch, and a sign-in must never undo it)
+            db.q(c, "UPDATE users SET session_gen = session_gen + 1 WHERE oidc_issuer=%s AND oidc_sub=%s", (ident["iss"], ident["sub"]))
         return _sso_error(f"{ident['username']} is not in a group that has access to PDP")
     with db.conn() as c:
-        u = db.q(c, "SELECT id FROM users WHERE oidc_issuer=%s AND oidc_sub=%s", (ident["iss"], ident["sub"]), one=True)
+        u = db.q(c, "SELECT id, disabled FROM users WHERE oidc_issuer=%s AND oidc_sub=%s", (ident["iss"], ident["sub"]), one=True)
+        if u and u["disabled"]:     # an admin disabled this account in the console: signing in again does not re-enable it
+            return _sso_error(f"the account {ident['username']} is disabled; an administrator can enable it again")
         if u:
-            db.q(c, "UPDATE users SET role=%s, email=%s, disabled=false, last_login=now() WHERE id=%s", (ident["role"], ident["email"], u["id"]))
+            db.q(c, "UPDATE users SET role=%s, email=%s, last_login=now() WHERE id=%s", (ident["role"], ident["email"], u["id"]))
             uid = u["id"]
         else:
             clash = db.q(c, "SELECT auth FROM users WHERE username=%s", (ident["username"],), one=True)
@@ -862,6 +949,8 @@ def endpoint_detail(endpoint_id: str, s=Depends(session)):
         pol = db.q(c, "SELECT manifest->'learned_policy' AS p FROM bundles WHERE id=%s", (ep["current_bundle"],), one=True) if ep["current_bundle"] else None
         from .fleet import summary as fleet_summary
         fleet = fleet_summary(c, ep)
+        # the other members are named only as far as the reader may see them (member_count stays the fleet's size)
+        fleet["members"] = [m for m in fleet["members"] if m["id"] in s["scope"]]
     from .allowlist import effective_config
     with db.conn() as c:
         ep = dict(ep, config=effective_config(c, endpoint_id, ep["config"]))
@@ -990,7 +1079,7 @@ def delete_endpoint(endpoint_id: str, s=Depends(admin)):
     import shutil
     require_endpoint(s, endpoint_id)
     with db.conn() as c:
-        ep = db.q(c, "SELECT id, name FROM endpoints WHERE id=%s AND org_id=%s", (endpoint_id, s["org"]), one=True)
+        ep = db.q(c, "SELECT id, name, kind FROM endpoints WHERE id=%s AND org_id=%s", (endpoint_id, s["org"]), one=True)
         if not ep:
             raise HTTPException(404, "not found")
         from .allowlist import forget_endpoint
@@ -999,8 +1088,20 @@ def delete_endpoint(endpoint_id: str, s=Depends(admin)):
         db.q(c, "UPDATE users SET endpoints = endpoints - %s WHERE endpoints ? %s", (endpoint_id, endpoint_id))
         db.q(c, "DELETE FROM endpoints WHERE id=%s", (endpoint_id,))       # cascades: jobs, bundles, windows, alerts, days, uploads
     db.drop_telemetry(endpoint_id)
-    shutil.rmtree(os.path.join(os.environ.get("PDP_DATA_DIR", "/data"), "bundles", endpoint_id), ignore_errors=True)
+    remove_endpoint_files(str(ep["id"]), ep.get("kind"))
     return {"ok": True, "deleted": ep["name"]}
+
+
+def remove_endpoint_files(endpoint_id: str, kind: str | None) -> None:
+    """What a deleted endpoint left on the data volume: its model bundles and its activity store (registry.json holds
+    every process command line, file path and remote address of the baseline; the window files; early / evaluation
+    stores). The store used to stay behind for good. A benchmark endpoint's store is a replayed public dataset that
+    the evaluation tools read by path: it is kept."""
+    import shutil
+    data = os.environ.get("PDP_DATA_DIR", "/data")
+    shutil.rmtree(os.path.join(data, "bundles", endpoint_id), ignore_errors=True)
+    if (kind or "live") != "benchmark":
+        shutil.rmtree(os.path.join(data, "endpoints", endpoint_id), ignore_errors=True)
 
 
 INSTALL_STAGES = ("started", "checks_ok", "docker_install", "docker_ready", "downloading", "downloaded", "configured",

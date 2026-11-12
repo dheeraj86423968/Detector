@@ -63,14 +63,31 @@ def use_recovery(c, user: dict, code: str) -> bool:
     return False
 
 
+# The pending cookie is NOT a session: it is signed in its own domain ("mfa:" prefix) so that it can never verify as a
+# pdp_session cookie (it used to share the session format and key, and access.session() accepted it - a password alone
+# then passed two-factor sign-in), and auth.read_session() refuses any payload marked mfa as a second barrier.
+def _pending_sig(payload: str) -> str:
+    return hmac.new(auth._secret(), b"mfa:" + payload.encode(), hashlib.sha256).hexdigest()
+
+
 def pending_cookie(user_id: int) -> str:
     payload = base64.urlsafe_b64encode(json.dumps({"u": user_id, "exp": int(time.time()) + 300, "mfa": 1}).encode()).decode()
-    return payload + "." + hmac.new(auth._secret(), payload.encode(), hashlib.sha256).hexdigest()
+    return payload + "." + _pending_sig(payload)
 
 
 def read_pending(cookie: str | None) -> int | None:
-    d = auth.read_session(cookie)
-    return int(d["u"]) if d and d.get("mfa") == 1 else None
+    if not cookie or "." not in cookie:
+        return None
+    payload, sig = cookie.rsplit(".", 1)
+    if not hmac.compare_digest(_pending_sig(payload), sig):
+        return None
+    try:
+        d = json.loads(base64.urlsafe_b64decode(payload.encode()))
+        if not isinstance(d, dict) or d.get("mfa") != 1 or d.get("exp", 0) < time.time():
+            return None
+        return int(d["u"])
+    except (ValueError, KeyError, TypeError):
+        return None
 
 
 class Code(BaseModel):

@@ -37,6 +37,15 @@ s2 = mfa.new_secret()
 check(len(s2) == 32 and mfa.verify(s2, mfa.code_at(s2, now // 30), None, now) is not None, "new secrets work")
 p = mfa.pending_cookie(42)
 check(mfa.read_pending(p) == 42 and mfa.read_pending(p[:-2] + "00") is None, "second-step cookie signed")
+from pdp_server import auth  # noqa: E402
+check(auth.read_session(p) is None, "the second-step cookie is not a session (two-factor bypass)")
+_pl = p.rsplit(".", 1)[0]
+import hashlib as _h, hmac as _hm  # noqa: E402
+_old = _pl + "." + _hm.new(auth._secret(), _pl.encode(), _h.sha256).hexdigest()     # the pre-fix format (session-signed)
+check(auth.read_session(_old) is None and mfa.read_pending(_old) is None, "a session-signed pending token is refused both as a session and as a pending token")
+_sess = auth.make_session(42, "admin", 0)
+check(auth.read_session(_sess)["u"] == 42 and mfa.read_pending(_sess) is None, "a session works as a session and is not a pending token")
+check(auth.read_session("bm90anNvbg==.x") is None and mfa.read_pending("x.y") is None, "garbage cookies are refused without an error")
 
 # ---- per-organisation SSO
 check(sso.issuer_of({"provider": "google"}) == "https://accounts.google.com", "Google issuer")

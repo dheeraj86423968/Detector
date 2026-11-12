@@ -71,7 +71,12 @@ def read_session(cookie: str | None) -> dict | None:
     payload, sig = cookie.rsplit(".", 1)
     if not hmac.compare_digest(hmac.new(_secret(), payload.encode(), hashlib.sha256).hexdigest(), sig):
         return None
-    data = json.loads(base64.urlsafe_b64decode(payload.encode()))
-    if data.get("exp", 0) < time.time():
+    try:
+        data = json.loads(base64.urlsafe_b64decode(payload.encode()))
+    except ValueError:
+        return None
+    if not isinstance(data, dict) or data.get("exp", 0) < time.time():
+        return None
+    if data.get("mfa") or "u" not in data:      # a pending two-factor token is never a session (pdp_server.mfa)
         return None
     return data

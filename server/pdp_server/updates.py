@@ -79,8 +79,29 @@ def target_version(policy: str | None) -> str | None:
     return p if VERSION_RE.match(p) else None
 
 
+def clean_update(u) -> dict:
+    """An agent's reported update state in its documented shape (text fields bounded, `failed` a short list of
+    version strings); anything else in it is dropped."""
+    if not isinstance(u, dict):
+        return {}
+    out = {}
+    for k in ("state", "version", "error"):
+        if isinstance(u.get(k), str):
+            out[k] = u[k][:200]
+    if "updater" in u:
+        out["updater"] = bool(u["updater"])
+    f = u.get("failed")
+    if isinstance(f, list):
+        out["failed"] = [x[:64] for x in f if isinstance(x, str)][:50]
+    return out
+
+
 def failed_versions(ep: dict) -> list[str]:
-    return list(((ep.get("health") or {}).get("update") or {}).get("failed") or [])
+    """Versions this endpoint reported as failed. Reads stored health, which older servers saved unchecked."""
+    h = ep.get("health")
+    u = h.get("update") if isinstance(h, dict) else None
+    f = u.get("failed") if isinstance(u, dict) else None
+    return [x for x in f if isinstance(x, str)] if isinstance(f, list) else []
 
 
 def hold(eps: list[dict], target: str) -> dict | None:

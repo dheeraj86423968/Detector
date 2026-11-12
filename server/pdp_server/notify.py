@@ -493,6 +493,14 @@ def run_alert_feed(c, ch: dict, eps: list[dict]) -> int:
         return 0
     for r in rows:
         r["endpoint_id"] = str(r["endpoint_id"])
+        for k in ("fused", "r1", "r2"):         # rows stored before uploads were checked: a null or odd score must
+            try:                                # not stop the feed at that row for good
+                r[k] = float(r[k]); r[k] = r[k] if r[k] == r[k] and abs(r[k]) != float("inf") else 0.0
+            except (TypeError, ValueError):
+                r[k] = 0.0
+        for k in ("label", "ntype", "node_uuid"):
+            r[k] = r[k] if isinstance(r[k], str) else str(r[k] if r[k] is not None else "")
+        r["window_start_ns"] = int(r["window_start_ns"] or 0)
     try:
         deliver_alerts(ch, rows)
     except Exception as e:  # noqa
@@ -504,27 +512,43 @@ def run_alert_feed(c, ch: dict, eps: list[dict]) -> int:
 
 def run_once(org_ids: list[str] | None = None) -> dict:
     """One delivery round over all organisations' channels (org_ids: only these; tests)."""
-    total = {"sent": 0, "failed": 0, "suppressed": 0, "alerts": 0}
+    total = {"sent": 0, "failed": 0, "suppressed": 0, "alerts": 0, "errors": 0}
     with db.conn() as c:
         chans = db.q(c, "SELECT n.* FROM notify_channels n JOIN orgs o ON o.id=n.org_id WHERE (n.enabled OR EXISTS "
                         "(SELECT 1 FROM notify_log l WHERE l.channel_id=n.id AND l.state='queued')) AND NOT o.disabled "
                         "AND (%s::uuid[] IS NULL OR n.org_id = ANY(%s::uuid[])) ORDER BY n.org_id, n.id", (org_ids, org_ids))
-        by_org: dict = {}
-        for ch in chans:
-            by_org.setdefault(str(ch["org_id"]), []).append(ch)
-        for org, chs in by_org.items():
-            eps = org_endpoints(c, org)
-            inc_chs = [ch for ch in chs if ch["enabled"] and "incident" in (ch["events"] or [])]
-            incs = org_incidents(c, eps, min(ch["since_alert_id"] for ch in inc_chs)) if inc_chs else []
-            for ch in chs:
-                if not ch["enabled"]:
-                    _tests(c, ch)
-                    continue
-                st = run_channel(c, ch, eps, incs)
-                for k, v in st.items():
-                    total[k] += v
-                if ch["every_alert"] and ch["kind"] in ("webhook", "syslog"):
-                    total["alerts"] += run_alert_feed(c, ch, eps)
+    by_org: dict = {}
+    for ch in chans:
+        by_org.setdefault(str(ch["org_id"]), []).append(ch)
+    # One transaction per organisation's reading and per channel's deliveries. The whole round used to be one
+    # transaction: an error on any organisation's data rolled back every "sent" mark of the round, so the organisations
+    # before it were sent the same messages again every round (the hourly limit's count was rolled back too) and the
+    # ones after it got nothing.
+    for org, chs in by_org.items():
+        try:
+            with db.conn() as c:
+                eps = org_endpoints(c, org)
+                inc_chs = [ch for ch in chs if ch["enabled"] and "incident" in (ch["events"] or [])]
+                incs = org_incidents(c, eps, min(ch["since_alert_id"] for ch in inc_chs)) if inc_chs else []
+        except Exception as e:  # noqa
+            total["errors"] += 1
+            print(f"notifier: organisation {org} skipped this round: {type(e).__name__}: {e}", flush=True)
+            continue
+        for ch in chs:
+            try:
+                with db.conn() as c:
+                    if not ch["enabled"]:
+                        _tests(c, ch)
+                        continue
+                    st = run_channel(c, ch, eps, incs)
+                    for k, v in st.items():
+                        total[k] += v
+                with db.conn() as c:
+                    if ch["every_alert"] and ch["kind"] in ("webhook", "syslog"):
+                        total["alerts"] += run_alert_feed(c, ch, eps)
+            except Exception as e:  # noqa
+                total["errors"] += 1
+                print(f"notifier: channel {ch['id']} of organisation {org} failed this round: {type(e).__name__}: {e}", flush=True)
     return total
 
 

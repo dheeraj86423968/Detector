@@ -119,6 +119,17 @@ def job_ingest(job: dict):
     cfg = ep_config(eid)
     tz = cfg.get("tz", "UTC")
     stats = {}
+    with db.conn(db.TELEMETRY_DSN) as c:
+        have = db.q(c, f"SELECT count(*) AS n FROM {db.tschema(eid)}.events WHERE ts_ns >= %s AND ts_ns < %s", day_bounds(date, tz), one=True)["n"]
+    if have == 0 and date in store.days() and store.count(date) > 0:
+        # A second ingest of a day whose raw events the first one already windowed and deleted (the agent repeated
+        # day-complete after a lost answer, or the worker restarted between the two commits). It used to record the
+        # day with 0 events and 0 windows, so the day no longer counted towards the baseline; the stored day stands.
+        log(f"ingest {eid} {date}: already ingested ({store.count(date)} windows on disk, no raw events left); keeping it")
+        with db.conn() as c:
+            db.q(c, "UPDATE baseline_days SET windows=%s WHERE endpoint_id=%s AND date=%s AND windows = 0", (store.count(date), eid, date))
+        _after_ingest(eid, date, store, None)
+        return
     n = store.add_day(date, ingest_day(reg, telemetry_events(eid, date, tz), None, window_ns=window_ns(cfg), stats=stats))
     store.save_registry(reg)
     if stats.get("dropped"):
@@ -132,6 +143,12 @@ def job_ingest(job: dict):
     with db.conn() as c:
         db.q(c, "UPDATE baseline_days SET events=%s, windows=%s WHERE endpoint_id=%s AND date=%s", (n_events, n, eid, date))
         db.q(c, "UPDATE jobs SET progress=%s WHERE id=%s", (json.dumps({"windows": n, "events": n_events, "entities_added": added, "dropped": stats.get("dropped", 0)}), str(job["id"])))
+    _after_ingest(eid, date, store, n)
+
+
+def _after_ingest(eid: str, date: str, store, n) -> None:
+    """Count the endpoint's ingested baseline days and queue training once they are all in."""
+    with db.conn() as c:
         ep = db.q(c, "SELECT config, phase FROM endpoints WHERE id=%s", (eid,), one=True)
         done = db.q(c, "SELECT count(*) AS n FROM baseline_days WHERE endpoint_id=%s AND complete AND windows > 0", (eid,), one=True)["n"]
         db.q(c, "UPDATE endpoints SET baseline_days_done=%s WHERE id=%s", (done, eid))
@@ -147,7 +164,8 @@ def job_ingest(job: dict):
             db.q(c, "UPDATE endpoints SET config = config - 'refresh_days' || jsonb_build_object('refresh_queued', %s) WHERE id=%s",
                  (time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), eid))
             log(f"ingest {eid}: fresh days {refresh} in, retraining queued")
-    log(f"ingest {eid} {date}: {n} windows ({done}/{need} days)")
+    if n is not None:
+        log(f"ingest {eid} {date}: {n} windows ({done}/{need} days)")
 
 
 # ---------------------------------------------------------------------------------------------- early models
@@ -567,6 +585,9 @@ def job_sim(job: dict, device: str):
         n = extra.add_day(d, ingest_day(reg, events, lookup))
         extra.save_registry(reg)
         log(f"sim {cid}: ingested held-out day {d}: {n} windows")
+    with db.conn() as c:      # a re-queued campaign (GPU out of memory, worker restart) runs again from the start
+        db.q(c, "DELETE FROM sim_runs WHERE campaign_id=%s", (cid,))
+
     def on_result(row):
         with db.conn() as c:
             db.q(c, "INSERT INTO sim_runs (campaign_id, run_index, attack, result) VALUES (%s,%s,%s,%s)", (cid, row["run_index"], json.dumps(row["attack"], default=str), json.dumps(row["result"], default=str)))
@@ -794,23 +815,34 @@ def main():
     hb = Heartbeat()
     last_why = ""
     while True:
-        if time.time() - last_requeue > 60:
-            requeue_stale()
-            last_requeue = time.time()
+        # Claiming and scheduling touch the database outside any job: an error there (the database restarting, a lock
+        # timeout, one endpoint's odd row in a scheduler) used to end the worker process, leaving a running job
+        # marked 'running' until the stale re-queue. It is logged and the loop goes on.
         job = None
-        ok, why = admit(slot, a.device, kinds)
-        if ok:
-            with db.conn() as c:
-                job = db.q(c, NEXT_JOB, (list(kinds),), one=True)
-        elif why != last_why:
-            log(f"slot {slot}: not starting a job ({why})")
-        last_why = why
+        try:
+            if time.time() - last_requeue > 60:
+                requeue_stale()
+                last_requeue = time.time()
+            ok, why = admit(slot, a.device, kinds)
+            if ok:
+                with db.conn() as c:
+                    job = db.q(c, NEXT_JOB, (list(kinds),), one=True)
+            elif why != last_why:
+                log(f"slot {slot}: not starting a job ({why})")
+            last_why = why
+        except Exception as e:  # noqa
+            log(f"slot {slot}: could not look for work: {type(e).__name__}: {e}")
+            time.sleep(5)
+            continue
         if not job:
-            if slot == 0 and "train" in kinds:   # one scheduler per worker (the slots would race to queue the same job)
-                schedule_early_models()
-                schedule_refresh()
-            if slot == 0 and "ingest" in kinds:
-                apply_retention()
+            for name, fn, on in (("early models", schedule_early_models, slot == 0 and "train" in kinds),   # one scheduler per
+                                 ("refresh", schedule_refresh, slot == 0 and "train" in kinds),             # worker (the slots
+                                 ("retention", apply_retention, slot == 0 and "ingest" in kinds)):          # would race)
+                if on:
+                    try:
+                        fn()
+                    except Exception as e:  # noqa
+                        log(f"scheduler ({name}) failed: {type(e).__name__}: {e}")
             time.sleep(5)
             continue
         if slots > 1:
@@ -831,14 +863,17 @@ def main():
         except Exception as e:  # noqa
             _release_gpu()
             log(f"job {job['id']} failed: {e}\n{traceback.format_exc()}")
-            if gpu_oom_retry(job, e):
-                continue
-            with db.conn() as c:
-                db.q(c, "UPDATE jobs SET state='failed', finished_at=now(), error=%s WHERE id=%s", (str(e)[:2000], job["id"]))
-                if job["kind"] == "train":
-                    db.q(c, "UPDATE endpoints SET phase='degraded' WHERE id=%s AND phase='training'", (job["endpoint_id"],))
-                if job["kind"] == "sim":
-                    db.q(c, "UPDATE sim_campaigns SET state='failed', finished_at=now() WHERE id=%s", (job["params"].get("campaign_id"),))
+            try:
+                if gpu_oom_retry(job, e):
+                    continue
+                with db.conn() as c:
+                    db.q(c, "UPDATE jobs SET state='failed', finished_at=now(), error=%s WHERE id=%s", (str(e)[:2000], job["id"]))
+                    if job["kind"] == "train":
+                        db.q(c, "UPDATE endpoints SET phase='degraded' WHERE id=%s AND phase='training'", (job["endpoint_id"],))
+                    if job["kind"] == "sim":
+                        db.q(c, "UPDATE sim_campaigns SET state='failed', finished_at=now() WHERE id=%s", (job["params"].get("campaign_id"),))
+            except Exception as e2:  # noqa  (the database is away: the stale re-queue picks the job up again)
+                log(f"job {job['id']}: could not record the failure: {type(e2).__name__}: {e2}")
         finally:
             hb.stop()
 

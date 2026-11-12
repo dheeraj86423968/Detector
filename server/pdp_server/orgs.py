@@ -431,7 +431,8 @@ def operator_delete(org_id: str, s=Depends(operator)):
             raise HTTPException(400, "The operator's own organisation cannot be deleted")
         if not o["disabled"]:
             raise HTTPException(400, "Disable the organisation first")
-        eps = [str(r["id"]) for r in db.q(c, "SELECT id FROM endpoints WHERE org_id=%s", (o["id"],))]
+        kinds = {str(r["id"]): r["kind"] for r in db.q(c, "SELECT id, kind FROM endpoints WHERE org_id=%s", (o["id"],))}
+        eps = list(kinds)
         if eps:
             db.q(c, "DELETE FROM sim_campaigns WHERE endpoint_id = ANY(%s::uuid[])", (eps,))
             db.q(c, "DELETE FROM endpoints WHERE id = ANY(%s::uuid[])", (eps,))     # cascades: jobs, bundles, windows, alerts, days
@@ -440,8 +441,8 @@ def operator_delete(org_id: str, s=Depends(operator)):
         db.q(c, "DELETE FROM invites WHERE org_id=%s", (o["id"],))
         db.q(c, "DELETE FROM users WHERE org_id=%s", (o["id"],))
         db.q(c, "DELETE FROM orgs WHERE id=%s", (o["id"],))
-    data = os.environ.get("PDP_DATA_DIR", "/data")
+    from .api import remove_endpoint_files
     for e in eps:
         db.drop_telemetry(e)
-        shutil.rmtree(os.path.join(data, "bundles", e), ignore_errors=True)
+        remove_endpoint_files(e, kinds[e])
     return {"ok": True, "endpoints_deleted": len(eps)}
