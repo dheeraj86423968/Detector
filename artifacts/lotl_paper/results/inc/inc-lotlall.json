@@ -627,5 +627,41 @@
    "max_alerts": 17,
    "alerts": 33
   }
+ },
+ "TRACE_E3-trace": {
+  "days": 4,
+  "P2/G2": {
+   "incidents": 0,
+   "fp_incidents": 0,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 0.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 0,
+   "alerts": 0
+  },
+  "F3/G2": {
+   "incidents": 0,
+   "fp_incidents": 0,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 0.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 0,
+   "alerts": 0
+  },
+  "L12/G2": {
+   "incidents": 0,
+   "fp_incidents": 0,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 0.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 0,
+   "alerts": 0
+  }
  }
 }

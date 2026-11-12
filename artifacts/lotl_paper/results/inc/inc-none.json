@@ -698,5 +698,53 @@
    "max_alerts": 17,
    "alerts": 87
   }
+ },
+ "TRACE_E3-trace": {
+  "days": 4,
+  "P2/G2": {
+   "incidents": 30,
+   "fp_incidents": 25,
+   "tp_incidents": 5,
+   "fp_inc_per_day": 6.25,
+   "attacks": 3,
+   "attacks_found": [
+    "node_trace_e3_firefox_0410",
+    "node_trace_e3_phishing_executable_0413",
+    "node_trace_e3_pine_0413"
+   ],
+   "buried": [],
+   "max_alerts": 12,
+   "alerts": 79
+  },
+  "F3/G2": {
+   "incidents": 30,
+   "fp_incidents": 25,
+   "tp_incidents": 5,
+   "fp_inc_per_day": 6.25,
+   "attacks": 3,
+   "attacks_found": [
+    "node_trace_e3_firefox_0410",
+    "node_trace_e3_phishing_executable_0413",
+    "node_trace_e3_pine_0413"
+   ],
+   "buried": [],
+   "max_alerts": 12,
+   "alerts": 79
+  },
+  "L12/G2": {
+   "incidents": 31,
+   "fp_incidents": 26,
+   "tp_incidents": 5,
+   "fp_inc_per_day": 6.5,
+   "attacks": 3,
+   "attacks_found": [
+    "node_trace_e3_firefox_0410",
+    "node_trace_e3_phishing_executable_0413",
+    "node_trace_e3_pine_0413"
+   ],
+   "buried": [],
+   "max_alerts": 10,
+   "alerts": 78
+  }
  }
 }

@@ -1,0 +1,2863 @@
+{
+ "reference_ok": true,
+ "pooled": {
+  "none/P2": {
+   "sets": 16,
+   "attacks": 26,
+   "TP": 333,
+   "FP": 1051,
+   "days": 71,
+   "fp_day": 14.80281690140845,
+   "prec": 0.24060693641618497,
+   "fp_inc": 178
+  },
+  "none/F3": {
+   "sets": 16,
+   "attacks": 27,
+   "TP": 334,
+   "FP": 1079,
+   "days": 71,
+   "fp_day": 15.19718309859155,
+   "prec": 0.23637650389242745,
+   "fp_inc": 180
+  },
+  "none/L12": {
+   "sets": 16,
+   "attacks": 21,
+   "TP": 290,
+   "FP": 791,
+   "days": 71,
+   "fp_day": 11.140845070422536,
+   "prec": 0.2682701202590194,
+   "fp_inc": 187
+  },
+  "lotl/P2": {
+   "sets": 16,
+   "attacks": 18,
+   "TP": 273,
+   "FP": 1010,
+   "days": 71,
+   "fp_day": 14.225352112676056,
+   "prec": 0.2127825409197194,
+   "fp_inc": 190
+  },
+  "lotl/F3": {
+   "sets": 16,
+   "attacks": 19,
+   "TP": 274,
+   "FP": 1038,
+   "days": 71,
+   "fp_day": 14.619718309859154,
+   "prec": 0.20884146341463414,
+   "fp_inc": 192
+  },
+  "lotl/L12": {
+   "sets": 16,
+   "attacks": 9,
+   "TP": 232,
+   "FP": 773,
+   "days": 71,
+   "fp_day": 10.887323943661972,
+   "prec": 0.2308457711442786,
+   "fp_inc": 203
+  },
+  "launder/P2": {
+   "sets": 16,
+   "attacks": 17,
+   "TP": 212,
+   "FP": 986,
+   "days": 71,
+   "fp_day": 13.887323943661972,
+   "prec": 0.17696160267111852,
+   "fp_inc": 189
+  },
+  "launder/F3": {
+   "sets": 16,
+   "attacks": 19,
+   "TP": 217,
+   "FP": 1014,
+   "days": 71,
+   "fp_day": 14.28169014084507,
+   "prec": 0.17627944760357434,
+   "fp_inc": 191
+  },
+  "launder/L12": {
+   "sets": 16,
+   "attacks": 7,
+   "TP": 171,
+   "FP": 751,
+   "days": 71,
+   "fp_day": 10.577464788732394,
+   "prec": 0.18546637744034708,
+   "fp_inc": 203
+  },
+  "lotlall/P2": {
+   "sets": 16,
+   "attacks": 10,
+   "TP": 254,
+   "FP": 286,
+   "days": 71,
+   "fp_day": 4.028169014084507,
+   "prec": 0.4703703703703704,
+   "fp_inc": 24
+  },
+  "lotlall/F3": {
+   "sets": 16,
+   "attacks": 11,
+   "TP": 255,
+   "FP": 316,
+   "days": 71,
+   "fp_day": 4.450704225352113,
+   "prec": 0.44658493870402804,
+   "fp_inc": 28
+  },
+  "lotlall/L12": {
+   "sets": 16,
+   "attacks": 9,
+   "TP": 232,
+   "FP": 236,
+   "days": 71,
+   "fp_day": 3.323943661971831,
+   "prec": 0.49572649572649574,
+   "fp_inc": 24
+  }
+ },
+ "per_attack": [
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m1",
+   "evidence13": "missed",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "none/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "none/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m2",
+   "evidence13": "rule_anchor",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "none/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m3",
+   "evidence13": "rule_anchor",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "none/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m4",
+   "evidence13": "rule_anchor",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "none/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m5",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_m6",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 2
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 2
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 2
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_s1",
+   "evidence13": "missed",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "none/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "none/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_s2",
+   "evidence13": "rule_anchor",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "none/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_s3",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 2,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 2,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 2
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "ATLASV2_EDR-h1",
+   "attack": "atlasv2_edr_s4",
+   "evidence13": "rule_anchor",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1,
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1,
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "CADETS_E3",
+   "attack": "Nginx_Backdoor_06",
+   "evidence13": "rule_gt",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 1,
+      "novelty/novel_executable": 1,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 1,
+      "novelty/novel_executable": 1,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 1,
+      "novelty/novel_executable": 1,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 2,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 2,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 2,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "learned_only",
+     "gt_rules": {
+      "learned/learned_score": 2
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 2,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 2,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "lotlall/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 2,
+      "rules/untrusted_code_network": 1
+     }
+    }
+   }
+  },
+  {
+   "set": "CADETS_E3",
+   "attack": "Nginx_Backdoor_12",
+   "evidence13": "rule_gt",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1,
+      "rules/untrusted_exec": 15,
+      "novelty/novel_executable": 5,
+      "rules/untrusted_code_network": 3
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1,
+      "rules/untrusted_exec": 15,
+      "novelty/novel_executable": 5,
+      "rules/untrusted_code_network": 3
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 15,
+      "novelty/novel_executable": 5,
+      "rules/untrusted_code_network": 3
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1,
+      "rules/untrusted_exec": 20,
+      "rules/untrusted_code_network": 3,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1,
+      "rules/untrusted_exec": 20,
+      "rules/untrusted_code_network": 3,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 20,
+      "rules/untrusted_code_network": 3
+     }
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1,
+      "rules/untrusted_exec": 1
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1,
+      "rules/untrusted_exec": 1
+     }
+    },
+    "launder/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 1
+     }
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1,
+      "rules/untrusted_exec": 20,
+      "rules/untrusted_code_network": 3,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1,
+      "rules/untrusted_exec": 20,
+      "rules/untrusted_code_network": 3,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotlall/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 20,
+      "rules/untrusted_code_network": 3
+     }
+    }
+   }
+  },
+  {
+   "set": "CADETS_E3",
+   "attack": "Nginx_Backdoor_13",
+   "evidence13": "rule_gt",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 2,
+      "rules/untrusted_code_network": 2,
+      "corroborated/tainted_modify": 1,
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 2,
+      "rules/untrusted_code_network": 2,
+      "corroborated/tainted_modify": 1,
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 2,
+      "rules/untrusted_code_network": 2,
+      "novelty/novel_executable": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 3,
+      "rules/untrusted_code_network": 2,
+      "corroborated/tainted_modify": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 3,
+      "rules/untrusted_code_network": 2,
+      "corroborated/tainted_modify": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 3,
+      "rules/untrusted_code_network": 2
+     }
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "corroborated_unanchored",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "corroborated_unanchored",
+     "gt_rules": {
+      "corroborated/tainted_modify": 1,
+      "learned/learned_score": 2
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 3,
+      "rules/untrusted_code_network": 2,
+      "corroborated/tainted_modify": 1
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 3,
+      "rules/untrusted_code_network": 2,
+      "corroborated/tainted_modify": 1
+     }
+    },
+    "lotlall/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/untrusted_exec": 3,
+      "rules/untrusted_code_network": 2
+     }
+    }
+   }
+  },
+  {
+   "set": "CARBANAKV2_EDR-h1",
+   "attack": "carbanakv2_edr",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 5
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 5
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 5
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "CARBANAKV2_EDR-h2",
+   "attack": "carbanakv2_edr",
+   "evidence13": "rule_gt",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 12,
+      "rules/exfiltration": 27
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 12,
+      "rules/exfiltration": 27
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 12,
+      "rules/exfiltration": 27
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 27
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 27
+     }
+    },
+    "lotl/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 27
+     }
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 27
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 27
+     }
+    },
+    "launder/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 27
+     }
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 27
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 27
+     }
+    },
+    "lotlall/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 27
+     }
+    }
+   }
+  },
+  {
+   "set": "CARBANAKV2_EDR-h3",
+   "attack": "carbanakv2_edr",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "CARBANAKV2_EDR-h4",
+   "attack": "carbanakv2_edr",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 3
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 3
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 3
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "CARBANAKV2_EDR-h5",
+   "attack": "carbanakv2_edr",
+   "evidence13": "rule_anchor",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/novel_executable_repeat": 3,
+      "novelty/novel_executable": 9,
+      "corroborated/learned_near_alert": 2
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_anchor",
+     "gt_rules": {
+      "corroborated/novel_executable_repeat": 3,
+      "novelty/novel_executable": 9,
+      "corroborated/learned_near_alert": 2
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 9
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 2
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 2
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 2
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 2
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "CLEARSCOPE_E3",
+   "attack": "clearscope_e3_firefox_0411",
+   "evidence13": "missed",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "learned_only",
+     "gt_rules": {
+      "learned/learned_score": 1
+     }
+    },
+    "none/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "learned_only",
+     "gt_rules": {
+      "learned/learned_score": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "learned_only",
+     "gt_rules": {
+      "learned/learned_score": 1
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "learned_only",
+     "gt_rules": {
+      "learned/learned_score": 1
+     }
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "FIVEDIRECTIONS_E3",
+   "attack": "fivedirections_e3_excel_0409",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 6,
+      "corroborated/novel_executable_repeat": 2,
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 6,
+      "corroborated/novel_executable_repeat": 2,
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "FIVEDIRECTIONS_E3",
+   "attack": "fivedirections_e3_firefox_0411",
+   "evidence13": "novelty_anchor",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 3
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 3
+     }
+    },
+    "none/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 3
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 3
+     }
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 3
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "novelty_anchor",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 3
+     }
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "OPTC_H051",
+   "attack": "h051_0925",
+   "evidence13": "rule_gt",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 45,
+      "corroborated/learned_near_alert": 3,
+      "novelty/novel_executable": 27
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 45,
+      "corroborated/learned_near_alert": 3,
+      "novelty/novel_executable": 27
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 45,
+      "novelty/novel_executable": 27
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 69,
+      "corroborated/learned_near_alert": 6
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 69,
+      "corroborated/learned_near_alert": 6
+     }
+    },
+    "lotl/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 69
+     }
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 69,
+      "corroborated/learned_near_alert": 6
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 69,
+      "corroborated/learned_near_alert": 6
+     }
+    },
+    "launder/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 69
+     }
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 69,
+      "corroborated/learned_near_alert": 6
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 69,
+      "corroborated/learned_near_alert": 6
+     }
+    },
+    "lotlall/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 69
+     }
+    }
+   }
+  },
+  {
+   "set": "OPTC_H201",
+   "attack": "h201_0923",
+   "evidence13": "rule_gt",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "lotl/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "launder/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    },
+    "lotlall/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 6
+     }
+    }
+   }
+  },
+  {
+   "set": "OPTC_H501",
+   "attack": "h501_0924",
+   "evidence13": "rule_gt",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 6,
+      "rules/exfiltration": 8,
+      "novelty/novel_executable": 2,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 6,
+      "rules/exfiltration": 8,
+      "novelty/novel_executable": 2,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 8,
+      "novelty/novel_executable": 2
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5,
+      "rules/exfiltration": 5
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5,
+      "rules/exfiltration": 5
+     }
+    },
+    "lotl/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 5
+     }
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5,
+      "rules/exfiltration": 5
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5,
+      "rules/exfiltration": 5
+     }
+    },
+    "launder/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 5
+     }
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 5
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 5
+     }
+    },
+    "lotlall/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 5
+     }
+    }
+   }
+  },
+  {
+   "set": "THEIA_E3",
+   "attack": "Browser_Extension_Drakon_Dropper",
+   "evidence13": "rule_gt",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_spawn": 7,
+      "corroborated/learned_near_alert": 2,
+      "rules/exfiltration": 5,
+      "rules/untrusted_exec": 38,
+      "novelty/novel_executable": 3,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/tainted_spawn": 7,
+      "corroborated/learned_near_alert": 2,
+      "rules/exfiltration": 5,
+      "rules/untrusted_exec": 38,
+      "novelty/novel_executable": 3,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 5,
+      "rules/untrusted_exec": 38,
+      "novelty/novel_executable": 3,
+      "rules/untrusted_code_network": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5,
+      "corroborated/tainted_spawn": 7,
+      "rules/exfiltration": 38,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 2
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5,
+      "corroborated/tainted_spawn": 7,
+      "rules/exfiltration": 38,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 2
+     }
+    },
+    "lotl/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 38,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 2
+     }
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 6,
+      "corroborated/tainted_spawn": 7,
+      "rules/exfiltration": 39
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 6,
+      "corroborated/tainted_spawn": 7,
+      "rules/exfiltration": 39
+     }
+    },
+    "launder/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 39
+     }
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5,
+      "corroborated/tainted_spawn": 7,
+      "rules/exfiltration": 38,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 2
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "corroborated/learned_near_alert": 5,
+      "corroborated/tainted_spawn": 7,
+      "rules/exfiltration": 38,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 2
+     }
+    },
+    "lotlall/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 38,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 2
+     }
+    }
+   }
+  },
+  {
+   "set": "THEIA_E3",
+   "attack": "Firefox_Backdoor_Drakon_In_Memory",
+   "evidence13": "rule_gt",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "rules/untrusted_exec": 25,
+      "novelty/novel_executable": 2,
+      "rules/untrusted_code_network": 2
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "rules/untrusted_exec": 25,
+      "novelty/novel_executable": 2,
+      "rules/untrusted_code_network": 2
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "rules/untrusted_exec": 25,
+      "novelty/novel_executable": 2,
+      "rules/untrusted_code_network": 2
+     }
+    },
+    "lotl/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 24,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 24,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotl/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 24
+     }
+    },
+    "launder/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "launder/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24
+     }
+    },
+    "lotlall/P2": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 24,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotlall/F3": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 24,
+      "corroborated/learned_near_alert": 1
+     }
+    },
+    "lotlall/L12": {
+     "detected": true,
+     "class": "rule_gt",
+     "gt_rules": {
+      "rules/exfiltration": 24,
+      "rules/untrusted_exec": 4,
+      "rules/untrusted_code_network": 24
+     }
+    }
+   }
+  },
+  {
+   "set": "THEIA_E5-theia",
+   "attack": "node_THEIA_1_Firefox_Drakon_APT_BinFmt_Elevate_Inject",
+   "evidence13": "missed",
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "none/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "none/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "TRACE_E3-trace",
+   "attack": "node_trace_e3_firefox_0410",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "TRACE_E3-trace",
+   "attack": "node_trace_e3_phishing_executable_0413",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 4
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 4
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 4
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "TRACE_E3-trace",
+   "attack": "node_trace_e3_pine_0413",
+   "evidence13": "novelty_gt",
+   "novelty_only": true,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 4
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 4
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 4
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "CLEARSCOPE_E5-clearscope",
+   "attack": "node_clearscope_e5_appstarter_0515",
+   "evidence13": null,
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  },
+  {
+   "set": "CLEARSCOPE_E5-clearscope",
+   "attack": "node_clearscope_e5_tester_0517",
+   "evidence13": null,
+   "novelty_only": false,
+   "cells": {
+    "none/P2": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/F3": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1,
+      "corroborated/novel_executable_repeat": 1
+     }
+    },
+    "none/L12": {
+     "detected": true,
+     "class": "novelty_gt",
+     "gt_rules": {
+      "novelty/novel_executable": 1
+     }
+    },
+    "lotl/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotl/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "launder/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/P2": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/F3": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    },
+    "lotlall/L12": {
+     "detected": false,
+     "class": "missed",
+     "gt_rules": {}
+    }
+   }
+  }
+ ]
+}
