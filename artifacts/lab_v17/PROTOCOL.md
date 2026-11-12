@@ -54,3 +54,34 @@ If none is accepted, nothing changes.
 - Development result on seen sets; the alarm's design followed an exploration on them.
 - An attacker who uses a program that already contacts unknown addresses (a browser, an updater) is not seen by
   this alarm; an attacker present during the baseline can make a program "normally" contact unknown addresses.
+
+## Decision record (2026-11-12; results/, lab_v14 scripts/summ17.py with tags res20-none / res20-lotl)
+
+Sanity: Z0 on LotL data detects 18 attacks, as lotl_paper's P2.
+
+| variant | recorded data: attacks / deterministic alone / TP / FP | LotL data: attacks / deterministic alone / TP / FP | rule |
+|---|---|---|---|
+| Z0 (released 0.10) | 26 / 21 / 333 / 1,051 | 18 / 9 / 273 / 1,010 | - |
+| D0 (default: + `exec_once`) | 26 / 21 / 331 / 1,035 | 18 / 9 / 273 / 994 | ref |
+| U1 `unusual_network` as evidence | 26 / 21 / 334 / 1,057 (+2.1 %) | 19 / 9 / 286 / 1,016 | **rejected**: +1 attack on LotL data, 2 required |
+| U2 `unusual_network` alerting | 26 / 21 / 344 / 1,249 (+20.7 %) | **22 / 17** / 295 / 1,202 | **rejected**: FP above +10 % |
+| F0 (identity options, not a default) | 27 / 26 / 334 / 1,199 | 20 / 16 / 276 / 1,158 | ref for U3 |
+| U3 F0 + `unusual_network` as evidence | 27 / 26 / 338 / 1,236 | 20 / 16 / 290 / 1,195 | rejected: no attack gained on LotL data |
+
+No attack and no attack-day is lost by any variant on either data.
+
+**No variant accepted: the default does not change.** What the lab shows:
+
+- Alerting by itself (U2), the alarm recovers four of the eight attacks that relabelling hides (ATLASv2 m5, m6, s3;
+  CARBANAKv2 h1) and the deterministic layers then find 17 instead of 9 attacks without any new program - at 214
+  more false-positive nodes on the recorded data (+20.7 %; CARBANAKv2 +145: Store apps, Git's perl, Python).
+- As evidence (U1) it costs almost nothing (+22 FP) and gains almost nothing (+1 attack): the learned score does not
+  rise on a relabelled process's first unknown contact, so it rarely corroborates. The alarm is only as useful as
+  it is allowed to alert.
+- Correct program parsing in layer 2 (F0) by itself raises LotL detection from 18 to 20 and deterministic-only
+  detection there from 9 to 16: the second lab in which the rejected-by-limit identity options are the more robust
+  detector.
+
+`net_profile` stays in the engine, off. Like the identity options it is a trade the numbers describe and the limit
+set in advance refuses: more detection that does not depend on program novelty, for 15 - 20 % more false-positive
+nodes on these (incompletely labelled, lab_v14 "What was looked at", item 2) sets.

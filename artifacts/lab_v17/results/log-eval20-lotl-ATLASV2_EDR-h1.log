@@ -1,0 +1,8 @@
+20:31:11 lotl: {'transform': 'lotl', 'renamed_nodes': 19, 'renamed_gt': 19, 'still_unknown': 0}
+20:32:47 scored 97s
+20:32:47 Z0: attacks 5 det-only 0 TP 5 FP 47 by_layer {'novelty': 7, 'corroborated': 6, 'rules': 39}
+20:32:47 D0: attacks 5 det-only 0 TP 5 FP 47 by_layer {'novelty': 7, 'corroborated': 6, 'rules': 39}
+20:32:47 U1: attacks 6 det-only 0 TP 8 FP 48 by_layer {'novelty': 7, 'corroborated': 10, 'rules': 39}
+20:32:47 U2: attacks 8 det-only 4 TP 14 FP 65 by_layer {'novelty': 7, 'corroborated': 8, 'rules': 64}
+20:32:47 F0: attacks 7 det-only 7 TP 9 FP 61 by_layer {'novelty': 7, 'rules': 62, 'corroborated': 1}
+20:32:47 U3: attacks 7 det-only 7 TP 13 FP 63 by_layer {'novelty': 7, 'rules': 62, 'corroborated': 7}

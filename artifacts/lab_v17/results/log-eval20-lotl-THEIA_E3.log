@@ -1,0 +1,8 @@
+20:32:58 lotl: {'transform': 'lotl', 'renamed_nodes': 85, 'renamed_gt': 63, 'still_unknown': 0}
+20:37:14 scored 258s
+20:37:15 Z0: attacks 2 det-only 2 TP 108 FP 97 by_layer {'corroborated': 28, 'novelty': 6, 'rules': 171}
+20:37:15 D0: attacks 2 det-only 2 TP 108 FP 97 by_layer {'corroborated': 28, 'novelty': 6, 'rules': 171}
+20:37:15 U1: attacks 2 det-only 2 TP 108 FP 97 by_layer {'corroborated': 28, 'novelty': 6, 'rules': 171}
+20:37:15 U2: attacks 2 det-only 2 TP 108 FP 97 by_layer {'corroborated': 28, 'novelty': 6, 'rules': 171}
+20:37:15 F0: attacks 2 det-only 2 TP 108 FP 97 by_layer {'corroborated': 28, 'novelty': 6, 'rules': 171}
+20:37:15 U3: attacks 2 det-only 2 TP 108 FP 97 by_layer {'corroborated': 28, 'novelty': 6, 'rules': 171}

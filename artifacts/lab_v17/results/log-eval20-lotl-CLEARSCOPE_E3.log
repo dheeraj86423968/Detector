@@ -1,0 +1,8 @@
+20:38:17 lotl: {'transform': 'lotl', 'renamed_nodes': 0, 'renamed_gt': 0, 'still_unknown': 0}
+20:38:50 scored 33s
+20:38:50 Z0: attacks 0 det-only 0 TP 0 FP 0 by_layer {}
+20:38:50 D0: attacks 0 det-only 0 TP 0 FP 0 by_layer {}
+20:38:50 U1: attacks 0 det-only 0 TP 0 FP 0 by_layer {}
+20:38:50 U2: attacks 0 det-only 0 TP 0 FP 0 by_layer {}
+20:38:50 F0: attacks 0 det-only 0 TP 0 FP 0 by_layer {}
+20:38:50 U3: attacks 0 det-only 0 TP 0 FP 0 by_layer {}

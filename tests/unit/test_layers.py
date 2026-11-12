@@ -601,5 +601,26 @@ from pdp_engine.layers import LayerConfig as _LC
 check(not any((_LC().rule_key_norm, _LC().rule_backslash_paths, _LC().version_names, _LC().net_profile)) and _LC().exec_once,
       "new fits: exec_once on (lab_v16), the identity options and net_profile off")
 
+# unusual_network (net_profile): a program without unknown contacts in the baseline makes one
+nreg = Registry()
+nn = {n: nreg.add(e) for n, e in [("sh", Entity.process("n:sh", "/bin/bash", "bash -c x")), ("ff", Entity.process("n:ff", "/usr/bin/firefox", "firefox")),
+                                   ("c2", Entity.socket("n:c2", "198.51.100.77", 443)), ("lan", Entity.socket("n:lan", "10.0.0.5", 22)),
+                                   ("web", Entity.socket("n:web", "203.0.113.9", 443))]}
+nstream = [(nn["ff"], "CONNECT", nn["web"]), (nn["sh"], "CONNECT", nn["lan"]), (nn["sh"], "CONNECT", nn["c2"])]
+
+
+def nrules(on, thr=None):
+    eng = TagEngine(TagParams(), {"10.0.0.5"}, thr, 0)
+    eng.net_profile = on
+    return [(h.rule, h.key, h.nodes) for h in eng.process(win(nstream), nreg)]
+
+
+check(nrules(False) == [], "net_profile off: connecting to an unknown address is no alarm by itself")
+check(nrules(True, {"unusual_network": {"/usr/bin/firefox": -0.05}}) == [("unusual_network", "/bin/bash", (nn["sh"], nn["c2"]))],
+      "unusual_network: the shell's first unknown contact alarms; the browser that does it in the baseline and a trusted address do not")
+fe = TagEngine(TagParams(), set(), None, 0, fit=True); fe.net_profile = True; fe.first_day = {}
+fe.process(win(nstream), nreg)
+check(set(fe.thresholds().get("unusual_network", {})) == {"/usr/bin/firefox", "/bin/bash"}, "the baseline replay records which programs contact unknown addresses")
+
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)
