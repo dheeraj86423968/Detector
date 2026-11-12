@@ -1,0 +1,198 @@
+{
+ "B": 10000,
+ "seed": 20261112,
+ "point": {
+  "detection_rate": 0.8666666666666667,
+  "fp_per_host_day": 14.80281690140845,
+  "false_incidents_per_host_day": 2.507042253521127,
+  "precision": 0.24060693641618497
+ },
+ "units": {
+  "ATLASV2_EDR-h1": {
+   "attacks": 10,
+   "found": 8,
+   "TP": 12,
+   "FP": 49,
+   "days": 1,
+   "fp_inc": 3,
+   "family": "ATLASv2"
+  },
+  "ATLASV2_EDR-h2": {
+   "attacks": 0,
+   "found": 0,
+   "TP": 0,
+   "FP": 26,
+   "days": 1,
+   "fp_inc": 2,
+   "family": "ATLASv2"
+  },
+  "CADETS_E3": {
+   "attacks": 3,
+   "found": 3,
+   "TP": 31,
+   "FP": 16,
+   "days": 4,
+   "fp_inc": 10,
+   "family": "DARPA E3"
+  },
+  "CARBANAKV2_EDR-h1": {
+   "attacks": 1,
+   "found": 1,
+   "TP": 5,
+   "FP": 83,
+   "days": 8,
+   "fp_inc": 24,
+   "family": "CARBANAKv2"
+  },
+  "CARBANAKV2_EDR-h2": {
+   "attacks": 1,
+   "found": 1,
+   "TP": 39,
+   "FP": 131,
+   "days": 9,
+   "fp_inc": 19,
+   "family": "CARBANAKv2"
+  },
+  "CARBANAKV2_EDR-h3": {
+   "attacks": 1,
+   "found": 1,
+   "TP": 2,
+   "FP": 72,
+   "days": 7,
+   "fp_inc": 8,
+   "family": "CARBANAKv2"
+  },
+  "CARBANAKV2_EDR-h4": {
+   "attacks": 1,
+   "found": 1,
+   "TP": 3,
+   "FP": 24,
+   "days": 7,
+   "fp_inc": 10,
+   "family": "CARBANAKv2"
+  },
+  "CARBANAKV2_EDR-h5": {
+   "attacks": 1,
+   "found": 1,
+   "TP": 14,
+   "FP": 89,
+   "days": 11,
+   "fp_inc": 14,
+   "family": "CARBANAKv2"
+  },
+  "CLEARSCOPE_E3": {
+   "attacks": 1,
+   "found": 0,
+   "TP": 0,
+   "FP": 0,
+   "days": 2,
+   "fp_inc": 0,
+   "family": "DARPA E3"
+  },
+  "FIVEDIRECTIONS_E3": {
+   "attacks": 2,
+   "found": 2,
+   "TP": 11,
+   "FP": 166,
+   "days": 3,
+   "fp_inc": 6,
+   "family": "DARPA E3"
+  },
+  "OPTC_H051": {
+   "attacks": 1,
+   "found": 1,
+   "TP": 75,
+   "FP": 53,
+   "days": 3,
+   "fp_inc": 3,
+   "family": "OpTC"
+  },
+  "OPTC_H201": {
+   "attacks": 1,
+   "found": 1,
+   "TP": 6,
+   "FP": 19,
+   "days": 3,
+   "fp_inc": 10,
+   "family": "OpTC"
+  },
+  "OPTC_H501": {
+   "attacks": 1,
+   "found": 1,
+   "TP": 17,
+   "FP": 70,
+   "days": 3,
+   "fp_inc": 10,
+   "family": "OpTC"
+  },
+  "THEIA_E3": {
+   "attacks": 2,
+   "found": 2,
+   "TP": 109,
+   "FP": 86,
+   "days": 3,
+   "fp_inc": 6,
+   "family": "DARPA E3"
+  },
+  "THEIA_E5-theia": {
+   "attacks": 1,
+   "found": 0,
+   "TP": 0,
+   "FP": 97,
+   "days": 2,
+   "fp_inc": 28,
+   "family": "DARPA E5"
+  },
+  "TRACE_E3-trace": {
+   "attacks": 3,
+   "found": 3,
+   "TP": 9,
+   "FP": 70,
+   "days": 4,
+   "fp_inc": 25,
+   "family": "DARPA E3"
+  }
+ },
+ "schemes": {
+  "host": {
+   "clusters": 16,
+   "draws_without_attacks": 0,
+   "detection_rate": {
+    "lo": 0.75,
+    "hi": 1.0
+   },
+   "fp_per_host_day": {
+    "lo": 10.242785714285713,
+    "hi": 22.167045454545452
+   },
+   "false_incidents_per_host_day": {
+    "lo": 1.7236842105263157,
+    "hi": 3.7414054336468126
+   },
+   "precision": {
+    "lo": 0.11181661702955843,
+    "hi": 0.37044606047922984
+   }
+  },
+  "family": {
+   "clusters": 5,
+   "draws_without_attacks": 0,
+   "detection_rate": {
+    "lo": 0.7272727272727273,
+    "hi": 0.9629629629629629
+   },
+   "fp_per_host_day": {
+    "lo": 10.51086956521739,
+    "hi": 28.58823529411765
+   },
+   "false_incidents_per_host_day": {
+    "lo": 1.8865979381443299,
+    "hi": 5.235294117647059
+   },
+   "precision": {
+    "lo": 0.10481927710843374,
+    "hi": 0.342451874366768
+   }
+  }
+ }
+}

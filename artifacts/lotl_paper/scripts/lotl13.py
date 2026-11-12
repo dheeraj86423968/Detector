@@ -172,6 +172,8 @@ for d in S.test_days:
             seen = np.concatenate([seen, np.zeros(len(reg) - len(seen), bool)])
         seen[w.src] = True; seen[w.dst] = True
 log(f"scored {time.time()-t0:.0f}s")
+if LA is not None:
+    tinfo["launder"]["edges_added"] = LA.added
 ix = np.where(seen)[0]
 uu = [reg.entities[int(i)].uuid for i in ix]
 labels = np.array([u in S.allgt for u in uu]); na = [{k for k, v in S.gt.items() if u in v} for u in uu]
