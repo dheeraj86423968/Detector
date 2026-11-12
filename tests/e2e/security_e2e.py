@@ -62,6 +62,9 @@ st, r = B.call("POST", "/api/login", {"username": email, "password": pw})
 check(st == 200 and r.get("mfa_required") and "pdp_session" not in B.cookies and "pdp_mfa" in B.cookies, "password alone gives no session, only the code step")
 check(B.call("GET", "/api/me")[0] == 401, "no access before the code")
 check(B.call("POST", "/api/login/mfa", {"code": "123456"})[0] == 401, "a wrong code is refused")
+X = Console(); X.cookies = {"pdp_session": B.cookies["pdp_mfa"]}       # review 2026-11-12: the code-step cookie is not a session
+check(X.call("GET", "/api/me")[0] == 401 and X.call("POST", "/api/me/sessions/end")[0] == 401 and "pdp_session" not in
+      {k for k in X.cookies if X.cookies[k] != B.cookies["pdp_mfa"]}, "the code-step cookie presented as a session is refused (no two-factor bypass)")
 # a code not used yet: the next time step (accepted with one step of clock skew)
 code = mfa.code_at(s["secret"], int(time.time() // 30) + 1)
 st, _ = B.call("POST", "/api/login/mfa", {"code": code})
