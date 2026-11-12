@@ -535,5 +535,68 @@ else:
     check(requirements("batch_scale", "max") == ["detector-1:batch_scale", "fusion:max"] and requirements("window_degrees", "weighted") == [],
           "0.5 bundles declare what they need; 0.4-style bundles declare nothing")
 
+
+# ---------------------------------------------------------------- 0.13: program identity in layer 2, versions in names, one alarm per program and day
+from pdp_engine.layers import program_key as _pk
+check(_pk(r"c:\program files\windowsapps\microsoft.outlookforwindows_1.2024.501.300_x64__8wekyb3d8bbwe\olk.exe", True, True)
+      == _pk(r"C:\Program Files\WindowsApps\Microsoft.OutlookForWindows_1.2024.424.300_x64__8wekyb3d8bbwe\olk.exe", True, True)
+      and _pk("/usr/local/lib/firefox-54.0.1/firefox", True, True) == "/usr/local/lib/firefox-{v}/firefox"
+      and _pk(r"c:\windows\softwaredistribution\download\install\am_delta_patch_1.409.123.0.exe", True, True).endswith("am_delta_patch_{v}.exe"),
+      "version_names: a version inside a directory or file name is the same program")
+check(_pk("/usr/bin/python3.11", True, True) == "/usr/bin/python3.11" and _pk("/tmp/1.2.3.4", True, True) == "/tmp/1.2.3.4"
+      and _pk("/tmp/1.2.3.4.exe", True, True) == "/tmp/1.2.3.4.exe" and _pk("/opt/app-2.1/bin/run", True, True) == "/opt/app-2.1/bin/run"
+      and _pk("/usr/local/lib/firefox-54.0.1/firefox", True) == "/usr/local/lib/firefox-54.0.1/firefox",
+      "version_names: two-part versions and a file named only like a version are kept; off by default")
+wreg = Registry(); W = {}
+APP = r"c:\program files\some app\app.exe"
+for name, e in [("upd", Entity.process("w:upd", r"c:\windows\system32\svchost.exe", "svchost -k netsvcs")), ("cdn", Entity.socket("w:cdn", "93.184.216.34", 443)),
+                ("appfile", Entity.file("w:appfile", APP)), ("explorer", Entity.process("w:exp", r"c:\windows\explorer.exe", "explorer")),
+                ("a1", Entity.process("w:a1", APP, "--one")), ("a2", Entity.process("w:a2", APP, "--two")), ("a3", Entity.process("w:a3", APP, "--three")),
+                ("c2a", Entity.socket("w:c2a", "198.51.100.9", 443)), ("c2b", Entity.socket("w:c2b", "198.51.100.10", 443)),
+                ("sam", Entity.file("w:sam", r"c:\windows\system32\config\sam"))]:
+    W[name] = wreg.add(e)
+stream = [(W["cdn"], "RECVFROM", W["upd"]), (W["upd"], "WRITE", W["appfile"]), (W["explorer"], "CLONE", W["a1"]), (W["explorer"], "CLONE", W["a2"]),
+          (W["explorer"], "CLONE", W["a3"]), (W["sam"], "READ", W["a1"]), (W["a1"], "SENDTO", W["c2a"]), (W["sam"], "READ", W["a2"]),
+          (W["a2"], "SENDTO", W["c2a"]), (W["sam"], "READ", W["a3"]), (W["a3"], "SENDTO", W["c2b"])]
+
+
+def wrules(**kw):
+    inst = kw.pop("rule_instances", 0)
+    eng = TagEngine(TagParams(), set(), kw.pop("thr", None), 0, full_paths=True, image_exec=True, **kw)
+    eng.rule_instances = inst
+    return [(h.rule, h.key, h.nodes[0]) for h in eng.process(win(stream), wreg)]
+
+
+h_old = wrules()
+check(not any(r == "untrusted_exec" for r, _, _ in h_old) and all(k == r"c:\program" for r, k, _ in h_old if r == "exfiltration"),
+      "layer 2 without rule_backslash_paths: a program under 'c:\\program files' is cut to 'c:\\program' and its untrusted file is never matched")
+h_new = wrules(backslash_paths=True)
+check(sorted(n for r, _, n in h_new if r == "untrusted_exec") == sorted([W["a1"], W["a2"], W["a3"]]) and all(k == APP for r, k, _ in h_new),
+      "rule_backslash_paths: every start of the program written from an untrusted address is an untrusted exec, keyed by its full path")
+h_cap = wrules(backslash_paths=True, rule_instances=1)
+check([r for r, _, n in h_cap if r.startswith("untrusted_exec")] == ["untrusted_exec", "untrusted_exec_repeat", "untrusted_exec_repeat"],
+      "rule_instances: the first start alerts, later starts the same day are repeat evidence")
+ex = [(r, n) for r, _, n in h_cap if r.startswith("exfiltration")]
+check(ex == [("exfiltration", W["a1"]), ("exfiltration_repeat", W["a2"]), ("exfiltration", W["a3"])],
+      "rule_instances: the same program sending to the same address again is a repeat; another address alerts")
+from pdp_engine.layers import ALWAYS_EVIDENCE as _AE, REPEAT_RULES as _RR
+check(set(_RR) <= set(_AE), "repeat alarms are evidence (they alert only when the learned score corroborates)")
+V1, V2 = r"c:\users\a\appdata\local\app\2.0.1\x.exe", r"c:\users\a\appdata\local\app\2.0.2\x.exe"
+vreg = Registry()
+vv = {n: vreg.add(e) for n, e in [("dl", Entity.process("v:dl", r"c:\users\a\appdata\local\app\updater.exe", "updater")), ("cdn", Entity.socket("v:cdn", "93.184.216.34", 443)),
+                                   ("f2", Entity.file("v:f2", V2)), ("p2", Entity.process("v:p2", V2, "x"))]}
+vstream = [(vv["cdn"], "RECVFROM", vv["dl"]), (vv["dl"], "WRITE", vv["f2"]), (vv["dl"], "CLONE", vv["p2"])]
+
+
+def vrules(**kw):
+    eng = TagEngine(TagParams(), set(), {"untrusted_exec": {kw.pop("thr_key"): -0.05}}, 0, full_paths=True, image_exec=True, **kw)
+    return [h.rule for h in eng.process(win(vstream), vreg)]
+
+
+check("untrusted_exec" in vrules(thr_key=V1) and "untrusted_exec" not in vrules(thr_key=_pk(V1, True), key_norm=True),
+      "rule_key_norm: the baseline's benign alarm of version 2.0.1 covers version 2.0.2 (by raw path it does not)")
+from pdp_engine.layers import LayerConfig as _LC
+check(not any((_LC().rule_key_norm, _LC().rule_backslash_paths, _LC().version_names, _LC().rule_instances)), "the 0.13 options are off by default")
+
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

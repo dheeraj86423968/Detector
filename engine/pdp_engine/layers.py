@@ -59,7 +59,19 @@ RULES = {
     "exfiltration": "a process that read sensitive data sends to an untrusted address",
     "untrusted_code_network": "a program loaded from an untrusted file communicates with an untrusted address",
     "untrusted_persistence": "a process with untrusted code or data writes to an autostart location",
+    "untrusted_exec_repeat": "another start of a program that already raised 'untrusted_exec' today (evidence)",
+    "exfiltration_repeat": "the same program sending to the same untrusted address again today (evidence)",
+    "untrusted_code_network_repeat": "the same untrusted program talking to the same address again today (evidence)",
+    "untrusted_persistence_repeat": "the same program writing to the same autostart location again today (evidence)",
 }
+# 0.13 (`rule_instances`): the layer-2 alarms that alert on their own are raised once per (alarm, program, counterpart)
+# and UTC day - the counterpart is the remote address of a network alarm; an executed file and an autostart location
+# are already in the alarm's key. Further process instances the same day are '<alarm>_repeat' evidence (they alert
+# only when the learned score corroborates, at most once per program and day), as layer 1 has treated repeat runs of a
+# new program since 0.4: one updated browser started a thousand times is one finding. A different program, a different
+# address or the next day alerts again.
+INSTANCE_RULES = ("untrusted_exec", "exfiltration", "untrusted_code_network", "untrusted_persistence")
+REPEAT_RULES = tuple(r + "_repeat" for r in INSTANCE_RULES)
 
 # credential / secret stores (initial confidentiality 1). Deliberately short: a broad list taints every process.
 SENSITIVE = re.compile(r"(^/etc/(shadow|gshadow|sudoers|master\.passwd|spwd\.db)$|^/etc/sudoers\.d/|/\.ssh/|"
@@ -443,6 +455,7 @@ class TagEngine:
         # backslash_paths - programs are parsed like layer 1's option of that name ('c:\program files\x\y.exe').
         self.key_norm, self.backslash_paths, self.version_names = bool(key_norm), bool(backslash_paths), bool(version_names)
         self._nk: dict[str, str] = {}
+        self.rule_instances = 0             # > 0: alerts per (alarm, program, counterpart) and day (INSTANCE_RULES)
         self.p = params
         self.strict_addresses = bool(strict_addresses)
         self.script_exec = bool(script_exec)
@@ -486,6 +499,8 @@ class TagEngine:
         self._lbl: dict[int, str] = {}
         self._script: dict[int, str | None] = {}         # script_exec: process -> its script argument (None: not a script run)
         self._peer: dict[int, int] = {}                  # late_exfil: process -> its latest untrusted peer (netflow node)
+        self._inst: dict[tuple, int] = {}                # rule_instances: (alarm, program key, counterpart) -> alerts today
+        self._inst_day = None
 
     # ---- helpers
     def _label(self, reg: Registry, n: int) -> str:
@@ -576,7 +591,7 @@ class TagEngine:
             self._nk[key] = k
         return k
 
-    def _check(self, out: list, rule: str, key: str, value: float, nodes: tuple, ts: int, detail: str):
+    def _check(self, out: list, rule: str, key: str, value: float, nodes: tuple, ts: int, detail: str, obj: str = ""):
         if self.fit_mode:
             if value < self.p.untrusted:
                 k = (rule, self.norm_key(key))
@@ -588,6 +603,14 @@ class TagEngine:
         thr = self.thr.get(rule, {}).get(self.norm_key(key), self.p.untrusted)
         if value < thr and (rule, nodes[0]) not in self._fired:
             self._fired.add((rule, nodes[0]))
+            if self.rule_instances and rule in INSTANCE_RULES:
+                day = ts // 86_400_000_000_000
+                if day != self._inst_day:
+                    self._inst_day, self._inst = day, {}
+                ik = (rule, program_key(key, True, self.version_names) if " @ " not in key else key, obj)
+                c = self._inst[ik] = self._inst.get(ik, 0) + 1
+                if c > self.rule_instances:
+                    rule, detail = rule + "_repeat", f"{detail} (instance #{c} today)"
             out.append(Hit("rules", rule, key, round(float(value), 3), nodes, ts, detail))
 
     def _why(self, reg: Registry, t: _Tag) -> str:
@@ -686,7 +709,8 @@ class TagEngine:
                 self._lower(q, n.data, s, now)
                 if q.code < U and n.data < U:
                     self._check(out, "untrusted_code_network", self._label(reg, d), max(q.code, n.data), (d, s), now,
-                                f"{self._label(reg, d)} (loaded from untrusted {self._why(reg, q)}) receives from {self._label(reg, s)}")
+                                f"{self._label(reg, d)} (loaded from untrusted {self._why(reg, q)}) receives from {self._label(reg, s)}",
+                                obj=self._label(reg, s))
             elif e == READ:                                 # file -> process
                 f, q = self._tag(reg, s), self._tag(reg, d)
                 if self.script_exec and not q.exec_script:
@@ -709,7 +733,8 @@ class TagEngine:
                         peer = self._peer[d]
                         prog = self._label(reg, d)
                         self._check(out, "exfiltration", prog, max(1.0 - q.conf, self._tag(reg, peer).data), (d, peer), now,
-                                    f"{prog}, connected to untrusted {self._label(reg, peer)}, reads sensitive {self._label(reg, s)}")
+                                    f"{prog}, connected to untrusted {self._label(reg, peer)}, reads sensitive {self._label(reg, s)}",
+                                    obj=self._label(reg, peer))
             elif e == EXECUTE:                              # file -> process
                 f, q = self._tag(reg, s), self._tag(reg, d)
                 prog = self._label(reg, s)
@@ -788,10 +813,11 @@ class TagEngine:
                     prog = self._label(reg, s)
                     if q.conf >= p.sensitive:
                         self._check(out, "exfiltration", prog, max(1.0 - q.conf, n.data), (s, d), now,
-                                    f"{prog}, which read sensitive data, sends to untrusted {self._label(reg, d)}")
+                                    f"{prog}, which read sensitive data, sends to untrusted {self._label(reg, d)}", obj=self._label(reg, d))
                     if q.code < U:
                         self._check(out, "untrusted_code_network", prog, max(q.code, n.data), (s, d), now,
-                                    f"{prog} (loaded from untrusted {self._why(reg, q)}) sends to untrusted {self._label(reg, d)}")
+                                    f"{prog} (loaded from untrusted {self._why(reg, q)}) sends to untrusted {self._label(reg, d)}",
+                                    obj=self._label(reg, d))
         return out
 
     # ---- calibration
@@ -816,6 +842,7 @@ FLEET_KNOWN_RULE = "fleet_known_executable"
 ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + (FLEET_KNOWN_RULE,)
 # 0.12: a Sigma match whose (rule, program) also matched during the baseline is evidence (pdp_engine.sigma)
 ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + ("sigma_known",)
+ALWAYS_EVIDENCE = ALWAYS_EVIDENCE + REPEAT_RULES     # 0.13: repeat instances of a layer-2 alarm (rule_instances)
 
 
 @dataclass
@@ -855,6 +882,7 @@ class LayerConfig:
     rule_key_norm: bool = False        # layer 2 thresholds by program identity (program_key), not by raw path
     rule_backslash_paths: bool = False # layer 2 parses backslash paths with spaces like layer 1's backslash_paths
     version_names: bool = False        # program identity collapses versions inside directory and file names
+    rule_instances: int = 0            # > 0: layer-2 alarms alert N times per (alarm, program, counterpart) and day
 
 
 class DeterministicLayers:
@@ -883,6 +911,8 @@ class DeterministicLayers:
                                late_exfil=cfg.get("late_exfil", False), key_norm=cfg.get("rule_key_norm", False),
                                backslash_paths=cfg.get("rule_backslash_paths", False), version_names=cfg.get("version_names", False))
                      if cfg.get("rules", True) else None)
+        if self.tags is not None:
+            self.tags.rule_instances = int(cfg.get("rule_instances", 0) or 0)
         self.sigma = None
         sg = cfg.get("sigma")          # 0.12: {"levels": [...], "known": [...]} in a fitted layers.json
         if sg:
@@ -947,7 +977,8 @@ class DeterministicLayers:
             hits += self.sigma.process(w, reg, ids)
         sup = getattr(self, "suppressed", None)
         if sup:   # a suppressed new program covers its repeat runs and its fleet-known runs too
-            hits = [h for h in hits if (("novel_executable" if h.rule in ("novel_executable_repeat", FLEET_KNOWN_RULE) else h.rule), h.key) not in sup]
+            hits = [h for h in hits if (("novel_executable" if h.rule in ("novel_executable_repeat", FLEET_KNOWN_RULE)
+                                         else h.rule[:-7] if h.rule in REPEAT_RULES else h.rule), h.key) not in sup]
         return hits
 
 
@@ -1087,6 +1118,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
                                      "recurring_trust": cfg.recurring_trust, "relax_min_days": cfg.relax_min_days,
                                      "backslash_paths": cfg.backslash_paths, "rule_key_norm": cfg.rule_key_norm,
                                      "rule_backslash_paths": cfg.rule_backslash_paths, "version_names": cfg.version_names,
+                                     "rule_instances": cfg.rule_instances,
                                      **({"sigma": {"levels": list(cfg.sigma_levels)}} if cfg.sigma_levels else {})},
             **({"sigma_known": sigma_known} if cfg.sigma_fit_levels else {}),
             "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(runtime_ips), "thresholds": thr,

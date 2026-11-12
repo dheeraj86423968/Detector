@@ -25,7 +25,7 @@ import torch
 from .behaviour import BehaviourModel, Breadth, breadth_node_scores, propagate
 from .bundle import check_requires, detector1_file, load_state_dict, verify_digests
 from .featurizer import Word2VecFeaturizer
-from .layers import ALWAYS_EVIDENCE, EVIDENCE_RULES, DeterministicLayers, Hit
+from .layers import ALWAYS_EVIDENCE, EVIDENCE_RULES, REPEAT_RULES, DeterministicLayers, Hit
 from .models import OrthrusModel, TGNState, VeloxModel, load_tgn_state, make_tgn_batch, velox_input_dim, velox_window_inputs
 from .schema import EDGE_TYPES, Registry
 from .scoring import ALERT_MARGIN, Calibration, FusionCalibration, above, aggregate_weights, fill_missing, node_scores
@@ -557,7 +557,7 @@ POLICY_VERSION = "0.9"
 CRITICAL_RULES = ("exfiltration", "untrusted_code_network")
 # corroborated at most repeat_corroborations times per program and UTC day: repeat runs of a new program (0.9) and
 # programs known from other endpoints' baselines (0.10) - more instances of the same program are the same finding
-CAPPED_EVIDENCE = ("novel_executable_repeat", "fleet_known_executable")
+CAPPED_EVIDENCE = ("novel_executable_repeat", "fleet_known_executable") + REPEAT_RULES   # 0.13: layer-2 repeats too
 
 
 def alert_tier(reasons: list[dict]) -> int:
@@ -639,6 +639,8 @@ class AlertPolicy:
             if f > self.corroboration and self.repeat_corroborations > 0 and ev[0]["rule"] in CAPPED_EVIDENCE:
                 nov = getattr(self.layers, "novelty", None)
                 k = nov.key(ev[0]["key"]) if nov is not None else ev[0]["key"]   # any spelling of the same program
+                if ev[0]["rule"] in REPEAT_RULES:      # a layer-2 repeat has its own allowance, per alarm
+                    k = (ev[0]["rule"], k)
                 if self._repeats.get(k, 0) >= self.repeat_corroborations:
                     continue        # more runs of the same new program are the same finding
                 self._repeats[k] = self._repeats.get(k, 0) + 1
