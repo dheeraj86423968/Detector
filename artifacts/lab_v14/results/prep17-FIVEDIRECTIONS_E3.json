@@ -1,0 +1,51 @@
+{
+ "set": "FIVEDIRECTIONS_E3",
+ "fit_days": [
+  "2018-04-04",
+  "2018-04-05",
+  "2018-04-06",
+  "2018-04-07",
+  "2018-04-08"
+ ],
+ "R0": {
+  "known": 110,
+  "trusted_ips": 52,
+  "thresholds": {},
+  "private_services": 6,
+  "seconds": 5
+ },
+ "R0_equals_released": {
+  "known_executables": true,
+  "trusted_ips": true,
+  "thresholds": true,
+  "private_services": true
+ },
+ "N1": {
+  "known": 110,
+  "trusted_ips": 52,
+  "thresholds": {},
+  "private_services": 6,
+  "seconds": 5
+ },
+ "N2": {
+  "known": 110,
+  "trusted_ips": 52,
+  "thresholds": {},
+  "private_services": 6,
+  "seconds": 5
+ },
+ "N3": {
+  "known": 110,
+  "trusted_ips": 52,
+  "thresholds": {},
+  "private_services": 6,
+  "seconds": 4
+ },
+ "N4": {
+  "known": 110,
+  "trusted_ips": 52,
+  "thresholds": {},
+  "private_services": 6,
+  "seconds": 4
+ }
+}

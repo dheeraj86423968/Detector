@@ -1,0 +1,75 @@
+{
+ "set": "ATLASV2_EDR-h2",
+ "fit_days": [
+  "2022-07-15",
+  "2022-07-16",
+  "2022-07-17",
+  "2022-07-18"
+ ],
+ "R0": {
+  "known": 67,
+  "trusted_ips": 1589,
+  "thresholds": {
+   "exfiltration": 5,
+   "untrusted_exec": 3,
+   "tainted_spawn": 3,
+   "untrusted_code_network": 1
+  },
+  "private_services": 1,
+  "seconds": 3
+ },
+ "R0_equals_released": {
+  "known_executables": true,
+  "trusted_ips": true,
+  "thresholds": true,
+  "private_services": true
+ },
+ "N1": {
+  "known": 67,
+  "trusted_ips": 1589,
+  "thresholds": {
+   "exfiltration": 5,
+   "untrusted_exec": 3,
+   "tainted_spawn": 3,
+   "untrusted_code_network": 1
+  },
+  "private_services": 1,
+  "seconds": 3
+ },
+ "N2": {
+  "known": 67,
+  "trusted_ips": 1589,
+  "thresholds": {
+   "exfiltration": 6,
+   "untrusted_exec": 3,
+   "tainted_spawn": 3,
+   "untrusted_code_network": 1
+  },
+  "private_services": 1,
+  "seconds": 3
+ },
+ "N3": {
+  "known": 67,
+  "trusted_ips": 1589,
+  "thresholds": {
+   "exfiltration": 6,
+   "untrusted_exec": 3,
+   "tainted_spawn": 3,
+   "untrusted_code_network": 1
+  },
+  "private_services": 1,
+  "seconds": 3
+ },
+ "N4": {
+  "known": 94,
+  "trusted_ips": 1589,
+  "thresholds": {
+   "exfiltration": 6,
+   "untrusted_exec": 3,
+   "tainted_spawn": 3,
+   "untrusted_code_network": 1
+  },
+  "private_services": 1,
+  "seconds": 3
+ }
+}

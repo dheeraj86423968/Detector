@@ -1,0 +1,7 @@
+19:26:51 scored 142s
+19:26:51 Z0: attacks 1 det-only 1 TP 2 FP 72 by_layer {'novelty': 45, 'corroborated': 15, 'rules': 14}
+19:26:51 R0: attacks 1 det-only 1 TP 2 FP 72 by_layer {'novelty': 45, 'corroborated': 15, 'rules': 14}
+19:26:51 N1: attacks 1 det-only 1 TP 2 FP 70 by_layer {'novelty': 45, 'corroborated': 15, 'rules': 12}
+19:26:51 N2: attacks 1 det-only 1 TP 2 FP 108 by_layer {'novelty': 45, 'corroborated': 19, 'rules': 46}
+19:26:51 N3: attacks 1 det-only 1 TP 2 FP 108 by_layer {'novelty': 45, 'corroborated': 19, 'rules': 46}
+19:26:51 N4: attacks 1 det-only 1 TP 2 FP 151 by_layer {'corroborated': 33, 'novelty': 75, 'rules': 45}

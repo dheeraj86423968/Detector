@@ -1,0 +1,60 @@
+{
+ "set": "THEIA_E3",
+ "fit_days": [
+  "2018-04-03",
+  "2018-04-04",
+  "2018-04-05",
+  "2018-04-09"
+ ],
+ "R0": {
+  "known": 130,
+  "trusted_ips": 158,
+  "thresholds": {
+   "exfiltration": 1
+  },
+  "private_services": 1,
+  "seconds": 8
+ },
+ "R0_equals_released": {
+  "known_executables": true,
+  "trusted_ips": true,
+  "thresholds": true,
+  "private_services": true
+ },
+ "N1": {
+  "known": 130,
+  "trusted_ips": 158,
+  "thresholds": {
+   "exfiltration": 1
+  },
+  "private_services": 1,
+  "seconds": 7
+ },
+ "N2": {
+  "known": 130,
+  "trusted_ips": 158,
+  "thresholds": {
+   "exfiltration": 1
+  },
+  "private_services": 1,
+  "seconds": 8
+ },
+ "N3": {
+  "known": 130,
+  "trusted_ips": 158,
+  "thresholds": {
+   "exfiltration": 1
+  },
+  "private_services": 1,
+  "seconds": 7
+ },
+ "N4": {
+  "known": 130,
+  "trusted_ips": 158,
+  "thresholds": {
+   "exfiltration": 1
+  },
+  "private_services": 1,
+  "seconds": 8
+ }
+}

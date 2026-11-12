@@ -1,0 +1,60 @@
+{
+ "set": "OPTC_H201",
+ "fit_days": [
+  "2019-09-19",
+  "2019-09-20",
+  "2019-09-21",
+  "2019-09-22"
+ ],
+ "R0": {
+  "known": 141,
+  "trusted_ips": 123,
+  "thresholds": {
+   "exfiltration": 3
+  },
+  "private_services": 14,
+  "seconds": 32
+ },
+ "R0_equals_released": {
+  "known_executables": true,
+  "trusted_ips": true,
+  "thresholds": true,
+  "private_services": true
+ },
+ "N1": {
+  "known": 141,
+  "trusted_ips": 123,
+  "thresholds": {
+   "exfiltration": 3
+  },
+  "private_services": 14,
+  "seconds": 31
+ },
+ "N2": {
+  "known": 141,
+  "trusted_ips": 123,
+  "thresholds": {
+   "exfiltration": 3
+  },
+  "private_services": 14,
+  "seconds": 31
+ },
+ "N3": {
+  "known": 141,
+  "trusted_ips": 123,
+  "thresholds": {
+   "exfiltration": 3
+  },
+  "private_services": 14,
+  "seconds": 31
+ },
+ "N4": {
+  "known": 141,
+  "trusted_ips": 123,
+  "thresholds": {
+   "exfiltration": 3
+  },
+  "private_services": 14,
+  "seconds": 31
+ }
+}

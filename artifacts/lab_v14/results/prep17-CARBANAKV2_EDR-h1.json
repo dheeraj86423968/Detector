@@ -1,0 +1,79 @@
+{
+ "set": "CARBANAKV2_EDR-h1",
+ "fit_days": [
+  "2024-04-21",
+  "2024-04-22",
+  "2024-04-23",
+  "2024-04-24",
+  "2024-04-25",
+  "2024-04-26",
+  "2024-04-28",
+  "2024-04-29"
+ ],
+ "R0": {
+  "known": 181,
+  "trusted_ips": 2511,
+  "thresholds": {
+   "exfiltration": 5,
+   "untrusted_exec": 12,
+   "tainted_spawn": 14,
+   "untrusted_code_network": 3
+  },
+  "private_services": 3,
+  "seconds": 12
+ },
+ "R0_equals_released": {
+  "known_executables": true,
+  "trusted_ips": true,
+  "thresholds": true,
+  "private_services": true
+ },
+ "N1": {
+  "known": 181,
+  "trusted_ips": 2511,
+  "thresholds": {
+   "exfiltration": 5,
+   "untrusted_exec": 9,
+   "tainted_spawn": 12,
+   "untrusted_code_network": 3
+  },
+  "private_services": 3,
+  "seconds": 12
+ },
+ "N2": {
+  "known": 181,
+  "trusted_ips": 2511,
+  "thresholds": {
+   "exfiltration": 10,
+   "untrusted_exec": 14,
+   "tainted_spawn": 15,
+   "untrusted_code_network": 3
+  },
+  "private_services": 3,
+  "seconds": 12
+ },
+ "N3": {
+  "known": 181,
+  "trusted_ips": 2511,
+  "thresholds": {
+   "exfiltration": 10,
+   "untrusted_exec": 14,
+   "tainted_spawn": 15,
+   "untrusted_code_network": 3
+  },
+  "private_services": 3,
+  "seconds": 11
+ },
+ "N4": {
+  "known": 243,
+  "trusted_ips": 2511,
+  "thresholds": {
+   "exfiltration": 10,
+   "untrusted_exec": 14,
+   "tainted_spawn": 15,
+   "untrusted_code_network": 3
+  },
+  "private_services": 3,
+  "seconds": 12
+ }
+}

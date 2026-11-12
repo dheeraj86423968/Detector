@@ -62,3 +62,46 @@ alerts can be read for attack activity.
 - Looking up thresholds by identity can only relax more alarms than the raw key does, never fewer; version
   collapsing lets a program named like another version of a known program in the same directory count as that
   program in layer 1. Both are recorded as costs of the options in docs/DETECTION_LAYERS.md if they are released.
+
+## Decision record (2026-11-12; results/, scripts/summ17.py)
+
+Control: the re-fit with no option reproduces the released `known_executables`, `trusted_ips`, `thresholds` and
+`private_services` of all 16 bundles, and R0 = Z0 on every set. Reference = Z0 = R0.
+
+| variant | attacks | found by deterministic layers alone | TP | FP | rule |
+|---|---|---|---|---|---|
+| Z0 = R0 (released) | 26 | 21 | 333 | 1,051 | ref |
+| N1 `rule_key_norm` | 26 | 21 | 331 | 1,030 (-2.0 %) | **rejected**: FP not <= 97 % (1,019) |
+| N2 + `rule_backslash_paths` | **27** (+ATLASv2 m1) | **26** | 340 | 2,838 | **rejected** (FP) |
+| N3 + `version_names` | 27 | 26 | 340 | 2,821 | rejected (FP) |
+| N4 + `backslash_paths` (layer 1) | 27 | 26 | 340 | 2,990 | rejected (FP) |
+
+**No variant accepted: nothing changes.** What the runs show:
+
+- N1 does what it was built for (CARBANAKv2 h1 `untrusted_exec` 23 -> 4 false positives: OneDrive and Defender
+  updates in new version / GUID directories now match their baseline) but the total effect, -21 FP and -2 TP, is
+  below the bar set in advance.
+- N2 is the finding of this lab. With `c:\program files\...` cut to `c:\program`, layer 2 on backslash telemetry
+  could never match a started program with a file written from an untrusted source (`image_exec`), nor key any
+  alarm of such a program correctly. Parsed correctly, layer 2 finds an attack nothing found before (ATLASv2 m1: the
+  exploited `plugin-container.exe` reads sensitive data and sends to an untrusted address), and the five attacks
+  that only a learned score next to an alert had found are now found by the deterministic layers themselves
+  (21 -> 26 of the detected attacks). It also alerts on TightVNC's `tvnserver.exe` on CARBANAKv2 (5 ground-truth
+  nodes).
+- The cost is one mechanism: layer 2 alerts on every process instance. One Edge self-update on CARBANAKv2 h1
+  (browser files written from an address not seen in the baseline) makes each of the 1,477 `msedge.exe` processes
+  started afterwards an `untrusted_exec`; N2 adds 1,812 false-positive nodes from only 33 distinct (set, rule,
+  program) combinations. Layer 1 has alerted once per program and day since 0.4 for exactly this reason; layer 2
+  never got the same treatment because the bug hid the cases where it matters.
+- `version_names` (N3) changes little on top (-17 FP); layer-1 backslash parsing (N4) still adds false positives
+  (+169 over N3), as in lab_v13.
+
+Follow-up (its own protocol, lab_v15, written before it runs): layer 2 alerting once per (rule, program,
+counterpart) and day, with these options on top.
+
+## Exploration recorded here (scripts/explore_drop.py, explore2.py; results/ex2-*.json; no decision rests on it)
+
+Context of the released layer-1 new-program alerts (first runs, no fleet filter; 88 ground-truth / 556 other nodes):
+the new process talks to an untrusted address: 46 / 33; its file was written in the stream by a program without a
+drop-and-run history in the baseline: 11 / 57 (mostly Windows updater chains); its parent is also new: 5 / 72.
+"New program + unknown address" is by far the most precise context (58 % against 14 % for a new program alone).

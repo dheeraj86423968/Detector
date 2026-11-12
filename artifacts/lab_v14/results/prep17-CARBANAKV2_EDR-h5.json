@@ -1,0 +1,54 @@
+{
+ "set": "CARBANAKV2_EDR-h5",
+ "fit_days": [
+  "2024-04-22",
+  "2024-04-23",
+  "2024-04-24",
+  "2024-04-25",
+  "2024-04-26",
+  "2024-04-27",
+  "2024-04-28",
+  "2024-04-29"
+ ],
+ "R0": {
+  "known": 75,
+  "trusted_ips": 387,
+  "thresholds": {},
+  "private_services": 0,
+  "seconds": 0
+ },
+ "R0_equals_released": {
+  "known_executables": true,
+  "trusted_ips": true,
+  "thresholds": true,
+  "private_services": true
+ },
+ "N1": {
+  "known": 75,
+  "trusted_ips": 387,
+  "thresholds": {},
+  "private_services": 0,
+  "seconds": 0
+ },
+ "N2": {
+  "known": 75,
+  "trusted_ips": 387,
+  "thresholds": {},
+  "private_services": 0,
+  "seconds": 0
+ },
+ "N3": {
+  "known": 75,
+  "trusted_ips": 387,
+  "thresholds": {},
+  "private_services": 0,
+  "seconds": 0
+ },
+ "N4": {
+  "known": 85,
+  "trusted_ips": 387,
+  "thresholds": {},
+  "private_services": 0,
+  "seconds": 0
+ }
+}
