@@ -1,0 +1,78 @@
+{
+ "transform": "launder",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/users/efficientgoldfinch/appdata/roaming/transbaseodbcdriver/plink.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1911,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/users/efficientgoldfinch/appdata/roaming/transbaseodbcdriver/pscp.exe",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1911,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/windows/microsoft.net/framework64/{v}/csc.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1911,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/wscript.exe",
+    "kind": "shell",
+    "gt_nodes": 5,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "c:\\windows\\system32\\cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 59,
+    "renamed_nodes": 5
+   }
+  ],
+  "renamed_nodes": 11,
+  "renamed_gt": 11,
+  "still_unknown": 0,
+  "baseline_programs": 222,
+  "baseline_processes": 10228,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/program files (x86)/microsoft/edge/application/msedge.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\wscript.exe None",
+    "after": "subject c:\\windows\\system32\\cmd.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\wscript.exe \"C:\\Windows\\System32\\WScript.exe\" \"C:\\Users\\efficientgoldfinch\\AppData\\Roaming\\TransbaseOdbcDriver\\starter.vbs\" ",
+    "after": "subject c:\\windows\\system32\\cmd.exe \"c:\\windows\\system32\\cmd.exe\" \"C:\\Users\\efficientgoldfinch\\AppData\\Roaming\\TransbaseOdbcDriver\\starter.vbs\" ",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\wscript.exe None",
+    "after": "subject c:\\windows\\system32\\cmd.exe None",
+    "gt": true
+   }
+  ]
+ },
+ "launder": {
+  "payloads": 0,
+  "copier_label": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+  "items": [],
+  "candidates_not_written": 0,
+  "edges_added": 0
+ }
+}

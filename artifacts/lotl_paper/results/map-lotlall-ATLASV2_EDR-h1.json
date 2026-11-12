@@ -1,0 +1,101 @@
+{
+ "transform": "lotlall",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/users/aalsahee/payload.exe",
+    "kind": "process",
+    "gt_nodes": 20,
+    "replacement_key": "/program files/confer/repwmiutils.exe",
+    "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 24913,
+    "renamed_nodes": 20
+   },
+   {
+    "key": "/windows/system32/logonui.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/program files/confer/repwmiutils.exe",
+    "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 24913,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/mshta.exe",
+    "kind": "shell",
+    "gt_nodes": 6,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "c:\\windows\\system32\\cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 20,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/windows/system32/msiexec.exe",
+    "kind": "process",
+    "gt_nodes": 10,
+    "replacement_key": "/program files/confer/repwmiutils.exe",
+    "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 24913,
+    "renamed_nodes": 10
+   },
+   {
+    "key": "/windows/system32/regsvr32.exe",
+    "kind": "process",
+    "gt_nodes": 5,
+    "replacement_key": "/program files/confer/repwmiutils.exe",
+    "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 24913,
+    "renamed_nodes": 5
+   },
+   {
+    "key": "/windows/system32/werfault.exe",
+    "kind": "process",
+    "gt_nodes": 8,
+    "replacement_key": "/program files/confer/repwmiutils.exe",
+    "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 24913,
+    "renamed_nodes": 8
+   },
+   {
+    "key": "/windows/system32/windowspowershell/{v}/powershell.exe",
+    "kind": "shell",
+    "gt_nodes": 8,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "c:\\windows\\system32\\cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 20,
+    "renamed_nodes": 8
+   }
+  ],
+  "renamed_nodes": 59,
+  "renamed_gt": 19,
+  "still_unknown": 0,
+  "baseline_programs": 92,
+  "baseline_processes": 26643,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/program files/confer/repwmiutils.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\msiexec.exe None",
+    "after": "subject c:\\program files\\confer\\repwmiutils.exe None",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\users\\aalsahee\\payload.exe None",
+    "after": "subject c:\\program files\\confer\\repwmiutils.exe None",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\users\\aalsahee\\payload.exe None",
+    "after": "subject c:\\program files\\confer\\repwmiutils.exe None",
+    "gt": false
+   }
+  ]
+ }
+}

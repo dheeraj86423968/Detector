@@ -1,0 +1,141 @@
+{
+ "set": "CARBANAKV2_EDR-h3",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h3/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 26,
+ "days": 7,
+ "transform": {
+  "transform": "none"
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "carbanakv2_edr"
+ ],
+ "P2": {
+  "TP": 2,
+  "FP": 72,
+  "recall": 0.077,
+  "attacks": 1,
+  "FP/day": 10.29,
+  "TP/day": 0.29,
+  "by_layer": {
+   "novelty": 45,
+   "corroborated": 15,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "by_rule": {
+   "novelty/novel_executable": 45,
+   "corroborated/learned_near_alert": 9,
+   "rules/exfiltration": 5,
+   "corroborated/novel_executable_repeat": 6,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 1
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 1,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "novelty/novel_executable": 1,
+    "corroborated/novel_executable_repeat": 1
+   }
+  },
+  "rows": 74,
+  "precision": 0.027
+ },
+ "F3": {
+  "TP": 2,
+  "FP": 95,
+  "recall": 0.077,
+  "attacks": 1,
+  "FP/day": 13.57,
+  "TP/day": 0.29,
+  "by_layer": {
+   "novelty": 45,
+   "corroborated": 15,
+   "rules": 14,
+   "learned": 23
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "by_rule": {
+   "novelty/novel_executable": 45,
+   "corroborated/learned_near_alert": 9,
+   "rules/exfiltration": 5,
+   "corroborated/novel_executable_repeat": 6,
+   "rules/untrusted_exec": 8,
+   "learned/learned_score": 23,
+   "rules/untrusted_code_network": 1
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 1,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "novelty/novel_executable": 1,
+    "corroborated/novel_executable_repeat": 1
+   }
+  },
+  "rows": 120,
+  "precision": 0.021
+ },
+ "L12": {
+  "TP": 1,
+  "FP": 58,
+  "recall": 0.038,
+  "attacks": 1,
+  "FP/day": 8.29,
+  "TP/day": 0.14,
+  "by_layer": {
+   "novelty": 45,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1
+  },
+  "by_rule": {
+   "novelty/novel_executable": 45,
+   "rules/exfiltration": 5,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 1
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "novelty/novel_executable": 1
+   }
+  },
+  "rows": 59,
+  "precision": 0.017
+ }
+}

@@ -1,0 +1,201 @@
+{
+ "transform": "lotlall",
+ "lotl": {
+  "targets": [
+   {
+    "key": "XIM",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "getty",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "ipop3d",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "links",
+    "kind": "process",
+    "gt_nodes": 18,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 18
+   },
+   {
+    "key": "login",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "mail.local",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "main",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "minions",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "pEja72mA",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "procstat",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "pwait",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "ssh",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "test",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "tmux-1002",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "tr",
+    "kind": "process",
+    "gt_nodes": 10,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 10
+   },
+   {
+    "key": "vUgefal",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "whoami",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 54,
+  "renamed_gt": 13,
+  "still_unknown": 0,
+  "baseline_programs": 112,
+  "baseline_processes": 137761,
+  "top_shell": "sh",
+  "top_process": "sleep",
+  "examples": [
+   {
+    "before": "subject None links",
+    "after": "subject None sleep",
+    "gt": false
+   },
+   {
+    "before": "subject None links",
+    "after": "subject None sleep",
+    "gt": false
+   },
+   {
+    "before": "subject None links",
+    "after": "subject None sleep",
+    "gt": false
+   }
+  ]
+ }
+}

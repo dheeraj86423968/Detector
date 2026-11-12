@@ -1,0 +1,189 @@
+{
+ "transform": "launder",
+ "lotl": {
+  "targets": [
+   {
+    "key": "XIM",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "main",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "minions",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "pEja72mA",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "test",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "tmux-1002",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "vUgefal",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 13,
+  "renamed_gt": 13,
+  "still_unknown": 0,
+  "baseline_programs": 112,
+  "baseline_processes": 137761,
+  "top_shell": "sh",
+  "top_process": "sleep",
+  "examples": [
+   {
+    "before": "subject None vUgefal",
+    "after": "subject None sleep",
+    "gt": true
+   },
+   {
+    "before": "subject None tmux-1002",
+    "after": "subject None sleep",
+    "gt": true
+   },
+   {
+    "before": "subject None tmux-1002",
+    "after": "subject None sleep",
+    "gt": true
+   }
+  ]
+ },
+ "launder": {
+  "payloads": 8,
+  "copier_label": "subject None sleep",
+  "items": [
+   {
+    "file": "file /tmp/vUgefal",
+    "gt": true,
+    "run_by": [
+     [
+      "execute",
+      "subject None sleep"
+     ]
+    ]
+   },
+   {
+    "file": "file /tmp/tmux-1002",
+    "gt": true,
+    "run_by": [
+     [
+      "execute",
+      "subject None sleep"
+     ]
+    ]
+   },
+   {
+    "file": "file /tmp/minions",
+    "gt": true,
+    "run_by": [
+     [
+      "execute",
+      "subject None sleep"
+     ]
+    ]
+   },
+   {
+    "file": "file /tmp/XIM",
+    "gt": true,
+    "run_by": [
+     [
+      "execute",
+      "subject None sleep"
+     ]
+    ]
+   },
+   {
+    "file": "file /var/log/sendmail",
+    "gt": true,
+    "run_by": [
+     [
+      "execute",
+      "subject None sendmail"
+     ]
+    ]
+   },
+   {
+    "file": "file /tmp/main",
+    "gt": true,
+    "run_by": [
+     [
+      "execute",
+      "subject None sleep"
+     ]
+    ]
+   },
+   {
+    "file": "file /tmp/test",
+    "gt": true,
+    "run_by": [
+     [
+      "execute",
+      "subject None sleep"
+     ]
+    ]
+   },
+   {
+    "file": "file /tmp/pEja72mA",
+    "gt": true,
+    "run_by": [
+     [
+      "execute",
+      "subject None sleep"
+     ]
+    ]
+   }
+  ],
+  "candidates_not_written": 4,
+  "edges_added": 48
+ }
+}

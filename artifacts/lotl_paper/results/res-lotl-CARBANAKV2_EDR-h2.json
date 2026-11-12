@@ -1,0 +1,235 @@
+{
+ "set": "CARBANAKV2_EDR-h2",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h2/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 81,
+ "days": 9,
+ "transform": {
+  "transform": "lotl",
+  "lotl": {
+   "targets": [
+    {
+     "key": "/users/public/vnc-settings.reg",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+     "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 494,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/hostname.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+     "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 494,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/ipconfig.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+     "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 494,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/mstsc.exe",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+     "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 494,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/system32/netsh.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+     "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 494,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/rdpclip.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+     "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 494,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/reg.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+     "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 494,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/system32/wscript.exe",
+     "kind": "shell",
+     "gt_nodes": 17,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "c:\\windows\\system32\\cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 15,
+     "renamed_nodes": 17
+    }
+   ],
+   "renamed_nodes": 28,
+   "renamed_gt": 27,
+   "still_unknown": 0,
+   "baseline_programs": 198,
+   "baseline_processes": 3184,
+   "top_shell": "/windows/system32/cmd.exe",
+   "top_process": "/program files (x86)/microsoft/edge/application/msedge.exe",
+   "examples": [
+    {
+     "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+     "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+     "gt": true
+    },
+    {
+     "before": "subject c:\\windows\\system32\\hostname.exe hostname",
+     "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe msedge",
+     "gt": true
+    },
+    {
+     "before": "subject c:\\windows\\system32\\reg.exe None",
+     "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+     "gt": true
+    }
+   ]
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "carbanakv2_edr"
+ ],
+ "P2": {
+  "TP": 27,
+  "FP": 129,
+  "recall": 0.333,
+  "attacks": 1,
+  "FP/day": 14.33,
+  "TP/day": 3.0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 102
+  },
+  "by_layer_tp": {
+   "rules": 27
+  },
+  "by_rule": {
+   "novelty/novel_executable": 54,
+   "rules/exfiltration": 73,
+   "rules/untrusted_exec": 22,
+   "rules/untrusted_code_network": 7
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 27
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "rules/exfiltration": 27
+   }
+  },
+  "rows": 159,
+  "precision": 0.173
+ },
+ "F3": {
+  "TP": 27,
+  "FP": 129,
+  "recall": 0.333,
+  "attacks": 1,
+  "FP/day": 14.33,
+  "TP/day": 3.0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 102
+  },
+  "by_layer_tp": {
+   "rules": 27
+  },
+  "by_rule": {
+   "novelty/novel_executable": 54,
+   "rules/exfiltration": 73,
+   "rules/untrusted_exec": 22,
+   "rules/untrusted_code_network": 7
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 27
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "rules/exfiltration": 27
+   }
+  },
+  "rows": 159,
+  "precision": 0.173
+ },
+ "L12": {
+  "TP": 27,
+  "FP": 129,
+  "recall": 0.333,
+  "attacks": 1,
+  "FP/day": 14.33,
+  "TP/day": 3.0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 102
+  },
+  "by_layer_tp": {
+   "rules": 27
+  },
+  "by_rule": {
+   "novelty/novel_executable": 54,
+   "rules/exfiltration": 73,
+   "rules/untrusted_exec": 22,
+   "rules/untrusted_code_network": 7
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 27
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "rules/exfiltration": 27
+   }
+  },
+  "rows": 159,
+  "precision": 0.173
+ }
+}

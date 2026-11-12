@@ -1,0 +1,251 @@
+{
+ "transform": "lotlall",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/users/inspiringrobin.pangolin/appdata/local/temp/defenderupgradeexec.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/users/inspiringrobin.pangolin/appdata/local/temp/infosmin48.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/users/inspiringrobin.pangolin/appdata/roaming/zoom/bin/aomhost64.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/users/public/java-update.exe",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/windows/system32/atbroker.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/credentialuibroker.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/grpconv.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/msiexec.exe",
+    "kind": "process",
+    "gt_nodes": 7,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 7
+   },
+   {
+    "key": "/windows/system32/openssh/scp.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/openssh/ssh.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/reg.exe",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/system32/runonce.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/securityhealthhost.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/whoami.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/wscript.exe",
+    "kind": "shell",
+    "gt_nodes": 4,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "c:\\windows\\system32\\cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 63,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/windows/systemapps/microsoft.windows.sechealthui_cw5n1h2txyewy/sechealthui.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/syswow64/msiexec.exe",
+    "kind": "process",
+    "gt_nodes": 5,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 5
+   },
+   {
+    "key": "/windows/syswow64/netsh.exe",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/windows/syswow64/runonce.exe",
+    "kind": "process",
+    "gt_nodes": 8,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 8
+   },
+   {
+    "key": "/windows/syswow64/werfault.exe",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/temp/mubstemp/bcilauncher.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/mubstemp/bingchatinstaller.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 52,
+  "renamed_gt": 7,
+  "still_unknown": 0,
+  "baseline_programs": 214,
+  "baseline_processes": 10402,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/program files (x86)/microsoft/edge/application/msedge.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\temp\\mubstemp\\bingchatinstaller.exe \"C:\\Windows\\Temp\\MUBSTemp\\BingChatInstaller.exe\" BGAUPMI=C77A36FFF3FB4C9CA342F65DE4E52F35",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe \"c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe\" BGAUPMI=C77A36FFF3FB4C9CA342",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\windows\\temp\\mubstemp\\bcilauncher.exe \"C:\\Windows\\Temp\\MUBSTemp\\BCILauncher.EXE\" bgaupmi=C77A36FFF3FB4C9CA342F65DE4E52F35",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe \"c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe\" bgaupmi=C77A36FFF3FB4C9CA342",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\windows\\system32\\credentialuibroker.exe None",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+    "gt": false
+   }
+  ]
+ }
+}

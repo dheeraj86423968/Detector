@@ -1,0 +1,61 @@
+{
+ "transform": "lotl",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/windows/system32/openssh/ssh.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/reg.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/system32/wscript.exe",
+    "kind": "shell",
+    "gt_nodes": 4,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "c:\\windows\\system32\\cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 63,
+    "renamed_nodes": 4
+   }
+  ],
+  "renamed_nodes": 8,
+  "renamed_gt": 7,
+  "still_unknown": 0,
+  "baseline_programs": 214,
+  "baseline_processes": 10402,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/program files (x86)/microsoft/edge/application/msedge.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\openssh\\ssh.exe None",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\reg.exe None",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\wscript.exe None",
+    "after": "subject c:\\windows\\system32\\cmd.exe None",
+    "gt": true
+   }
+  ]
+ }
+}

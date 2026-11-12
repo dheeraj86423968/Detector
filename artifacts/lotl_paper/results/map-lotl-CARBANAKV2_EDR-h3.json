@@ -1,0 +1,61 @@
+{
+ "transform": "lotl",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/windows/system32/openssh/ssh.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 3771,
+    "renamed_nodes": 5
+   },
+   {
+    "key": "/windows/system32/openssh/sshd.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 3771,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "/windows/system32/rdpclip.exe",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 3771,
+    "renamed_nodes": 4
+   }
+  ],
+  "renamed_nodes": 20,
+  "renamed_gt": 7,
+  "still_unknown": 0,
+  "baseline_programs": 225,
+  "baseline_processes": 26182,
+  "top_shell": "/program files/windowsapps/pythonsoftwarefoundation.python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0/python3.11.exe",
+  "top_process": "/windows/system32/conhost.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+    "after": "subject c:\\windows\\system32\\conhost.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+    "after": "subject c:\\windows\\system32\\conhost.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+    "after": "subject c:\\windows\\system32\\conhost.exe None",
+    "gt": true
+   }
+  ]
+ }
+}

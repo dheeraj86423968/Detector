@@ -1,0 +1,217 @@
+{
+ "set": "ATLASV2_EDR-h1",
+ "bundle": "/data/lab08/heldout/ATLASV2_EDR/h1/v07rel",
+ "fleet": [
+  "ATLASV2_EDR-h1",
+  "ATLASV2_EDR-h2"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "days": 1,
+ "transform": {
+  "transform": "none"
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "atlasv2_edr_m1",
+  "atlasv2_edr_m2",
+  "atlasv2_edr_m3",
+  "atlasv2_edr_m4",
+  "atlasv2_edr_m5",
+  "atlasv2_edr_m6",
+  "atlasv2_edr_s1",
+  "atlasv2_edr_s2",
+  "atlasv2_edr_s3",
+  "atlasv2_edr_s4"
+ ],
+ "P2": {
+  "TP": 12,
+  "FP": 49,
+  "recall": 0.25,
+  "attacks": 8,
+  "FP/day": 49.0,
+  "TP/day": 12.0,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "by_rule": {
+   "novelty/novel_executable": 13,
+   "corroborated/learned_near_alert": 8,
+   "rules/untrusted_exec": 27,
+   "rules/untrusted_code_network": 6,
+   "rules/exfiltration": 6,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 5,
+   "novelty/novel_executable": 6,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "per_attack_gt_rules": {
+   "atlasv2_edr_s2": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_s3": {
+    "novelty/novel_executable": 2,
+    "corroborated/novel_executable_repeat": 1
+   },
+   "atlasv2_edr_m2": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m3": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m4": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m5": {
+    "novelty/novel_executable": 1
+   },
+   "atlasv2_edr_m6": {
+    "novelty/novel_executable": 2
+   },
+   "atlasv2_edr_s4": {
+    "corroborated/learned_near_alert": 1,
+    "novelty/novel_executable": 1
+   }
+  },
+  "rows": 61,
+  "precision": 0.197
+ },
+ "F3": {
+  "TP": 12,
+  "FP": 49,
+  "recall": 0.25,
+  "attacks": 8,
+  "FP/day": 49.0,
+  "TP/day": 12.0,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "by_rule": {
+   "novelty/novel_executable": 13,
+   "corroborated/learned_near_alert": 8,
+   "rules/untrusted_exec": 27,
+   "rules/untrusted_code_network": 6,
+   "rules/exfiltration": 6,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 5,
+   "novelty/novel_executable": 6,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "per_attack_gt_rules": {
+   "atlasv2_edr_s2": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_s3": {
+    "novelty/novel_executable": 2,
+    "corroborated/novel_executable_repeat": 1
+   },
+   "atlasv2_edr_m2": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m3": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m4": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m5": {
+    "novelty/novel_executable": 1
+   },
+   "atlasv2_edr_m6": {
+    "novelty/novel_executable": 2
+   },
+   "atlasv2_edr_s4": {
+    "corroborated/learned_near_alert": 1,
+    "novelty/novel_executable": 1
+   }
+  },
+  "rows": 61,
+  "precision": 0.197
+ },
+ "L12": {
+  "TP": 6,
+  "FP": 46,
+  "recall": 0.125,
+  "attacks": 4,
+  "FP/day": 46.0,
+  "TP/day": 6.0,
+  "by_layer": {
+   "novelty": 13,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "novelty": 6
+  },
+  "by_rule": {
+   "novelty/novel_executable": 13,
+   "rules/untrusted_exec": 27,
+   "rules/untrusted_code_network": 6,
+   "rules/exfiltration": 6
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "per_attack_gt_rules": {
+   "atlasv2_edr_s3": {
+    "novelty/novel_executable": 2
+   },
+   "atlasv2_edr_m5": {
+    "novelty/novel_executable": 1
+   },
+   "atlasv2_edr_m6": {
+    "novelty/novel_executable": 2
+   },
+   "atlasv2_edr_s4": {
+    "novelty/novel_executable": 1
+   }
+  },
+  "rows": 52,
+  "precision": 0.115
+ }
+}

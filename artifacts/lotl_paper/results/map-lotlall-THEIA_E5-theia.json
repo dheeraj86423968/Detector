@@ -1,0 +1,441 @@
+{
+ "transform": "lotlall",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/bin/fusermount",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/bin/less",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/bin/su",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/sbin/udevd",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/sbin/upstart-udev-bridge",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/bin/Xorg",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/bin/Xvnc4",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/usr/bin/bluetooth-applet",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/usr/bin/dbus-launch",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/usr/bin/gedit",
+    "kind": "process",
+    "gt_nodes": 6,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/usr/bin/nm-applet",
+    "kind": "process",
+    "gt_nodes": 6,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/usr/bin/pactl",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/bin/perl",
+    "kind": "shell",
+    "gt_nodes": 12,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 12
+   },
+   {
+    "key": "/usr/bin/pulseaudio",
+    "kind": "process",
+    "gt_nodes": 9,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 9
+   },
+   {
+    "key": "/usr/bin/ssh-agent",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/bin/xfce4-power-manager",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/usr/bin/xfce4-volumed",
+    "kind": "process",
+    "gt_nodes": 9,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 9
+   },
+   {
+    "key": "/usr/bin/xfsettingsd",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/usr/bin/xfwm4",
+    "kind": "process",
+    "gt_nodes": 10,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 10
+   },
+   {
+    "key": "/usr/bin/xinit",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/bin/zeitgeist-daemon",
+    "kind": "process",
+    "gt_nodes": 9,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 9
+   },
+   {
+    "key": "/usr/bin/zeitgeist-datahub",
+    "kind": "process",
+    "gt_nodes": 9,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 9
+   },
+   {
+    "key": "/usr/games/gnomine",
+    "kind": "process",
+    "gt_nodes": 8,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 8
+   },
+   {
+    "key": "/usr/lib/at-spi2-core/at-spi2-registryd",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/usr/lib/dconf/dconf-service",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/lib/gnome-settings-daemon/gnome-settings-daemon",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/usr/lib/gvfs/gvfs-afc-volume-monitor",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/lib/gvfs/gvfsd",
+    "kind": "process",
+    "gt_nodes": 13,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 13
+   },
+   {
+    "key": "/usr/lib/indicator-application/indicator-application-service",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/lib/indicator-sound/indicator-sound-service",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/usr/lib/pulseaudio/pulse/gconf-helper",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/usr/lib/udisks/udisks-daemon",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/usr/lib/x86_64-linux-gnu/gconf/gconfd-2",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/lib/x86_64-linux-gnu/tumbler-1/tumblerd",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/usr/lib/x86_64-linux-gnu/xfce4/xfwm4/helper-dialog",
+    "kind": "process",
+    "gt_nodes": 5,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 5
+   },
+   {
+    "key": "/usr/lib/xfce4/notifyd/xfce4-notifyd",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/usr/lib/zeitgeist/zeitgeist-fts",
+    "kind": "process",
+    "gt_nodes": 6,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/usr/sbin/NetworkManager",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/sbin/bluetoothd",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/usr/sbin/lightdm",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/bin/dash",
+    "replacement": "/bin/dash",
+    "fallback_to_process": false,
+    "baseline_runs": 249477,
+    "renamed_nodes": 2
+   }
+  ],
+  "renamed_nodes": 152,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 52,
+  "baseline_processes": 458674,
+  "top_shell": "/bin/dash",
+  "top_process": "/bin/dash",
+  "examples": [
+   {
+    "before": "subject /usr/bin/Xvnc4 Xvnc4 :1 -desktop my-vnc-server -auth /home/admin/.Xauthority -geometry 1024x768 -depth 16 -rfbwait 30000 -rfbauth /home/admin/.vnc/passw",
+    "after": "subject /bin/dash dash :1 -desktop my-vnc-server -auth /home/admin/.Xauthority -geometry 1024x768 -depth 16 -rfbwait 30000 -rfbauth /home/admin/.vnc/passwd -rfb",
+    "gt": false
+   },
+   {
+    "before": "subject /usr/bin/pulseaudio /usr/bin/pulseaudio --start --log-target=syslog",
+    "after": "subject /bin/dash /bin/dash --start --log-target=syslog",
+    "gt": false
+   },
+   {
+    "before": "subject /usr/lib/x86_64-linux-gnu/gconf/gconfd-2 /usr/lib/x86_64-linux-gnu/gconf/gconfd-2",
+    "after": "subject /bin/dash /bin/dash",
+    "gt": false
+   }
+  ]
+ }
+}

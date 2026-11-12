@@ -1,0 +1,125 @@
+{
+ "set": "CARBANAKV2_EDR-h4",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h4/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 21,
+ "days": 7,
+ "transform": {
+  "transform": "none"
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "carbanakv2_edr"
+ ],
+ "P2": {
+  "TP": 3,
+  "FP": 24,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.43,
+  "TP/day": 0.43,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "by_rule": {
+   "novelty/novel_executable": 22,
+   "rules/untrusted_exec": 4,
+   "corroborated/learned_near_alert": 1
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "novelty/novel_executable": 3
+   }
+  },
+  "rows": 27,
+  "precision": 0.111
+ },
+ "F3": {
+  "TP": 3,
+  "FP": 24,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.43,
+  "TP/day": 0.43,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "by_rule": {
+   "novelty/novel_executable": 22,
+   "rules/untrusted_exec": 4,
+   "corroborated/learned_near_alert": 1
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "novelty/novel_executable": 3
+   }
+  },
+  "rows": 27,
+  "precision": 0.111
+ },
+ "L12": {
+  "TP": 3,
+  "FP": 23,
+  "recall": 0.143,
+  "attacks": 1,
+  "FP/day": 3.29,
+  "TP/day": 0.43,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "by_rule": {
+   "novelty/novel_executable": 22,
+   "rules/untrusted_exec": 4
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "novelty/novel_executable": 3
+   }
+  },
+  "rows": 26,
+  "precision": 0.115
+ }
+}

@@ -1,0 +1,592 @@
+{
+ "set": "CARBANAKV2_EDR-h3",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h3/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 26,
+ "days": 7,
+ "transform": {
+  "transform": "lotlall",
+  "lotl": {
+   "targets": [
+    {
+     "key": "/users/administrator/appdata/local/temp/{id}/dismhost.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/users/buzzingporpoise.pangolin/appdata/local/apps/{v}/n8cxhkwa.e4q/phd6rkxt.pb1/moss..tion_{id}_0002.0000_{id}/mossapp.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/users/buzzingporpoise.pangolin/appdata/local/temp/is-ab20a.tmp/codesetup-stable-b58957e67ee1e712cebf466b995adf4c5307b2bd.tmp",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/users/buzzingporpoise.pangolin/appdata/local/temp/vscode-stable-user-x64/codesetup-stable-b58957e67ee1e712cebf466b995adf4c5307b2bd.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/users/buzzingporpoise.pangolin/appdata/roaming/zoom/bin/cpthost.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/users/buzzingporpoise.pangolin/appdata/roaming/zoom/bin/installer.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/users/buzzingporpoise.pangolin/appdata/roaming/zoom/bin/zoom.exe",
+     "kind": "process",
+     "gt_nodes": 5,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 5
+    },
+    {
+     "key": "/users/buzzingporpoise.pangolin/appdata/roaming/zoom/bin/zwebview2agent.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/users/buzzingporpoise.pangolin/downloads/mossapp-master/mossapp-master/mossapp/publish/setup.exe",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "/users/buzzingporpoise.pangolin/downloads/mossapp-master/mossapp-master/mossapp/publish/setup/setup.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/users/public/java-update.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/installer/msi6685.tmp",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/microsoft.net/framework64/{v}/dfsvc.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/softwaredistribution/download/install/am_base_patch1.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/softwaredistribution/download/install/am_delta.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/softwaredistribution/download/install/am_delta_patch_1.411.32.0.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/softwaredistribution/download/install/am_engine_patch_1.1.24030.4.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/cliprenew.exe",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/system32/cloudnotifications.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/credentialenrollmentmanager.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/drvinst.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/dsmusertask.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/dxgiadaptercache.exe",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/system32/find.exe",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/system32/fsquirt.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/ie4uinit.exe",
+     "kind": "process",
+     "gt_nodes": 6,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 6
+    },
+    {
+     "key": "/windows/system32/inputswitchtoasthandler.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/ipconfig.exe",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/system32/mpsigstub.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/openssh/scp.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/openssh/ssh-keygen.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/openssh/ssh.exe",
+     "kind": "process",
+     "gt_nodes": 5,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 5
+    },
+    {
+     "key": "/windows/system32/openssh/sshd.exe",
+     "kind": "process",
+     "gt_nodes": 11,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 11
+    },
+    {
+     "key": "/windows/system32/perfmon.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/rdpclip.exe",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "/windows/system32/securityhealthhost.exe",
+     "kind": "process",
+     "gt_nodes": 19,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 19
+    },
+    {
+     "key": "/windows/system32/sessionmsg.exe",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "/windows/system32/settingsynchost.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/systemsettingsadminflows.exe",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "/windows/system32/taskmgr.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/tstheme.exe",
+     "kind": "process",
+     "gt_nodes": 8,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 8
+    },
+    {
+     "key": "/windows/system32/unregmp2.exe",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "/windows/system32/winsat.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/wuauclt.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/systemapps/microsoft.windows.apprep.chxapp_cw5n1h2txyewy/chxsmartscreen.exe",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "/windows/systemapps/microsoft.windows.sechealthui_cw5n1h2txyewy/sechealthui.exe",
+     "kind": "process",
+     "gt_nodes": 10,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 10
+    },
+    {
+     "key": "/windows/syswow64/onedrivesetup.exe",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 4
+    }
+   ],
+   "renamed_nodes": 148,
+   "renamed_gt": 7,
+   "still_unknown": 0,
+   "baseline_programs": 225,
+   "baseline_processes": 26182,
+   "top_shell": "/program files/windowsapps/pythonsoftwarefoundation.python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0/python3.11.exe",
+   "top_process": "/windows/system32/conhost.exe",
+   "examples": [
+    {
+     "before": "subject c:\\windows\\system32\\dxgiadaptercache.exe None",
+     "after": "subject c:\\windows\\system32\\conhost.exe None",
+     "gt": false
+    },
+    {
+     "before": "subject c:\\windows\\system32\\cliprenew.exe None",
+     "after": "subject c:\\windows\\system32\\conhost.exe None",
+     "gt": false
+    },
+    {
+     "before": "subject c:\\windows\\system32\\find.exe None",
+     "after": "subject c:\\windows\\system32\\conhost.exe None",
+     "gt": false
+    }
+   ]
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "carbanakv2_edr"
+ ],
+ "P2": {
+  "TP": 0,
+  "FP": 13,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 1.86,
+  "TP/day": 0.0,
+  "by_layer": {
+   "rules": 8,
+   "corroborated": 5
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "rules/exfiltration": 6,
+   "corroborated/learned_near_alert": 5,
+   "rules/untrusted_exec": 2
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 13,
+  "precision": 0.0
+ },
+ "F3": {
+  "TP": 0,
+  "FP": 36,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 5.14,
+  "TP/day": 0.0,
+  "by_layer": {
+   "rules": 8,
+   "corroborated": 5,
+   "learned": 23
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "rules/exfiltration": 6,
+   "corroborated/learned_near_alert": 5,
+   "rules/untrusted_exec": 2,
+   "learned/learned_score": 23
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 59,
+  "precision": 0.0
+ },
+ "L12": {
+  "TP": 0,
+  "FP": 8,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 1.14,
+  "TP/day": 0.0,
+  "by_layer": {
+   "rules": 8
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "rules/exfiltration": 6,
+   "rules/untrusted_exec": 2
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 8,
+  "precision": 0.0
+ }
+}

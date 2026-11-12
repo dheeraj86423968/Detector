@@ -1,0 +1,98 @@
+{
+ "set": "CLEARSCOPE_E3",
+ "bundle": "/data/lab08/5ef60025-b74e-417a-8e48-7ab1c7dbcd67/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 41,
+ "days": 2,
+ "transform": {
+  "transform": "lotl",
+  "lotl": {
+   "targets": [],
+   "renamed_nodes": 0,
+   "renamed_gt": 0,
+   "still_unknown": 0,
+   "baseline_programs": 33,
+   "baseline_processes": 827,
+   "top_shell": null,
+   "top_process": "com.android.quicksearchbox",
+   "examples": []
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "clearscope_e3_firefox_0411"
+ ],
+ "P2": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "TP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "by_rule": {},
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 0,
+  "precision": 0.0
+ },
+ "F3": {
+  "TP": 1,
+  "FP": 5,
+  "recall": 0.024,
+  "attacks": 1,
+  "FP/day": 2.5,
+  "TP/day": 0.5,
+  "by_layer": {
+   "learned": 6
+  },
+  "by_layer_tp": {
+   "learned": 1
+  },
+  "by_rule": {
+   "learned/learned_score": 6
+  },
+  "by_rule_tp": {
+   "learned/learned_score": 1
+  },
+  "attacks_found": [
+   "clearscope_e3_firefox_0411"
+  ],
+  "per_attack_gt_rules": {
+   "clearscope_e3_firefox_0411": {
+    "learned/learned_score": 1
+   }
+  },
+  "rows": 55,
+  "precision": 0.167
+ },
+ "L12": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "TP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "by_rule": {},
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 0,
+  "precision": 0.0
+ }
+}

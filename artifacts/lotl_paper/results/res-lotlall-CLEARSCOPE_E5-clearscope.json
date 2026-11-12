@@ -1,0 +1,198 @@
+{
+ "set": "CLEARSCOPE_E5-clearscope",
+ "bundle": "/data/lab08/heldout/CLEARSCOPE_E5/clearscope/b07rel",
+ "fleet": [
+  "CLEARSCOPE_E5-clearscope"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 34,
+ "days": 3,
+ "transform": {
+  "transform": "lotlall",
+  "lotl": {
+   "targets": [
+    {
+     "key": "/data/data/de.belu.appstarter/busybox",
+     "kind": "process",
+     "gt_nodes": 10,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 10
+    },
+    {
+     "key": "/data/local/tmp/busybox",
+     "kind": "process",
+     "gt_nodes": 5,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 5
+    },
+    {
+     "key": "/data/local/tmp/sl",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/data/local/tmp/tester",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "/system/bin/screencap",
+     "kind": "process",
+     "gt_nodes": 140,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 140
+    },
+    {
+     "key": "com.android.documentsui",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "com.android.externalstorage",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "com.android.mtp",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "com.example.ScreenCapApp",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "org.mozilla.fennec_vagrant:search",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/system/bin/app_process64",
+     "replacement": "/system/bin/app_process64",
+     "fallback_to_process": false,
+     "baseline_runs": 20495,
+     "renamed_nodes": 1
+    }
+   ],
+   "renamed_nodes": 172,
+   "renamed_gt": 8,
+   "still_unknown": 0,
+   "baseline_programs": 93,
+   "baseline_processes": 30352,
+   "top_shell": "/system/bin/sh",
+   "top_process": "/system/bin/app_process64",
+   "examples": [
+    {
+     "before": "subject None /system/bin/screencap",
+     "after": "subject None /system/bin/app_process64",
+     "gt": false
+    },
+    {
+     "before": "subject None /system/bin/screencap",
+     "after": "subject None /system/bin/app_process64",
+     "gt": false
+    },
+    {
+     "before": "subject None /system/bin/screencap",
+     "after": "subject None /system/bin/app_process64",
+     "gt": false
+    }
+   ]
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "node_clearscope_e5_appstarter_0515",
+  "node_clearscope_e5_tester_0517"
+ ],
+ "P2": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "TP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "by_rule": {},
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 0,
+  "precision": 0.0
+ },
+ "F3": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "TP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "by_rule": {},
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 0,
+  "precision": 0.0
+ },
+ "L12": {
+  "TP": 0,
+  "FP": 0,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 0.0,
+  "TP/day": 0.0,
+  "by_layer": {},
+  "by_layer_tp": {},
+  "by_rule": {},
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 0,
+  "precision": 0.0
+ }
+}

@@ -1,0 +1,151 @@
+{
+ "transform": "lotlall",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/program files (x86)/mozilla firefox/uninstall/helper.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/microsoft.net/framework64/{v}/csc.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/regedit.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/more.com",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/msdtc.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/ping.exe",
+    "kind": "process",
+    "gt_nodes": 251,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 251
+   },
+   {
+    "key": "/windows/system32/schtasks.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/whoami.exe",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/systemapps/microsoft.windows.apprep.chxapp_cw5n1h2txyewy/chxsmartscreen.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/{id}/dismhost.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "Idle",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "MemCompression",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 10565,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 266,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 128,
+  "baseline_processes": 42202,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/windows/system32/cmd.exe",
+  "examples": [
+   {
+    "before": "subject /Device/HarddiskVolume1/Program Files (x86)/Mozilla Firefox/uninstall/helper.exe None",
+    "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe None",
+    "gt": false
+   },
+   {
+    "before": "subject /Device/HarddiskVolume1/Windows/SystemApps/Microsoft.Windows.AppRep.ChxApp_cw5n1h2txyewy/CHXSmartScreen.exe None",
+    "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe None",
+    "gt": false
+   },
+   {
+    "before": "subject /Device/HarddiskVolume1/Windows/system32/whoami.exe \"C:/Windows/system32/whoami.exe\" /groups",
+    "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\" /groups",
+    "gt": false
+   }
+  ]
+ }
+}

@@ -1,0 +1,336 @@
+{
+ "set": "CADETS_E3",
+ "bundle": "/data/lab08/5eafc637-14c7-4074-b4d3-4e611dea925e/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "transform": {
+  "transform": "launder",
+  "lotl": {
+   "targets": [
+    {
+     "key": "XIM",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "main",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "minions",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "pEja72mA",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "test",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "tmux-1002",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "vUgefal",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    }
+   ],
+   "renamed_nodes": 13,
+   "renamed_gt": 13,
+   "still_unknown": 0,
+   "baseline_programs": 112,
+   "baseline_processes": 137761,
+   "top_shell": "sh",
+   "top_process": "sleep",
+   "examples": [
+    {
+     "before": "subject None vUgefal",
+     "after": "subject None sleep",
+     "gt": true
+    },
+    {
+     "before": "subject None tmux-1002",
+     "after": "subject None sleep",
+     "gt": true
+    },
+    {
+     "before": "subject None tmux-1002",
+     "after": "subject None sleep",
+     "gt": true
+    }
+   ]
+  },
+  "launder": {
+   "payloads": 8,
+   "copier_label": "subject None sleep",
+   "items": [
+    {
+     "file": "file /tmp/vUgefal",
+     "gt": true,
+     "run_by": [
+      [
+       "execute",
+       "subject None sleep"
+      ]
+     ]
+    },
+    {
+     "file": "file /tmp/tmux-1002",
+     "gt": true,
+     "run_by": [
+      [
+       "execute",
+       "subject None sleep"
+      ]
+     ]
+    },
+    {
+     "file": "file /tmp/minions",
+     "gt": true,
+     "run_by": [
+      [
+       "execute",
+       "subject None sleep"
+      ]
+     ]
+    },
+    {
+     "file": "file /tmp/XIM",
+     "gt": true,
+     "run_by": [
+      [
+       "execute",
+       "subject None sleep"
+      ]
+     ]
+    },
+    {
+     "file": "file /var/log/sendmail",
+     "gt": true,
+     "run_by": [
+      [
+       "execute",
+       "subject None sendmail"
+      ]
+     ]
+    },
+    {
+     "file": "file /tmp/main",
+     "gt": true,
+     "run_by": [
+      [
+       "execute",
+       "subject None sleep"
+      ]
+     ]
+    },
+    {
+     "file": "file /tmp/test",
+     "gt": true,
+     "run_by": [
+      [
+       "execute",
+       "subject None sleep"
+      ]
+     ]
+    },
+    {
+     "file": "file /tmp/pEja72mA",
+     "gt": true,
+     "run_by": [
+      [
+       "execute",
+       "subject None sleep"
+      ]
+     ]
+    }
+   ],
+   "candidates_not_written": 4,
+   "edges_added": 48
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "Nginx_Backdoor_06",
+  "Nginx_Backdoor_12",
+  "Nginx_Backdoor_13"
+ ],
+ "P2": {
+  "TP": 3,
+  "FP": 16,
+  "recall": 0.044,
+  "attacks": 2,
+  "FP/day": 4.0,
+  "TP/day": 0.75,
+  "by_layer": {
+   "novelty": 14,
+   "corroborated": 3,
+   "rules": 2
+  },
+  "by_layer_tp": {
+   "corroborated": 2,
+   "rules": 1
+  },
+  "by_rule": {
+   "novelty/novel_executable": 14,
+   "corroborated/tainted_modify": 3,
+   "rules/untrusted_exec": 2
+  },
+  "by_rule_tp": {
+   "corroborated/tainted_modify": 2,
+   "rules/untrusted_exec": 1
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "per_attack_gt_rules": {
+   "Nginx_Backdoor_12": {
+    "corroborated/tainted_modify": 1,
+    "rules/untrusted_exec": 1
+   },
+   "Nginx_Backdoor_13": {
+    "corroborated/tainted_modify": 1
+   }
+  },
+  "rows": 19,
+  "precision": 0.158
+ },
+ "F3": {
+  "TP": 7,
+  "FP": 16,
+  "recall": 0.103,
+  "attacks": 3,
+  "FP/day": 4.0,
+  "TP/day": 1.75,
+  "by_layer": {
+   "novelty": 14,
+   "learned": 4,
+   "corroborated": 3,
+   "rules": 2
+  },
+  "by_layer_tp": {
+   "learned": 4,
+   "corroborated": 2,
+   "rules": 1
+  },
+  "by_rule": {
+   "novelty/novel_executable": 14,
+   "learned/learned_score": 4,
+   "corroborated/tainted_modify": 3,
+   "rules/untrusted_exec": 2
+  },
+  "by_rule_tp": {
+   "learned/learned_score": 4,
+   "corroborated/tainted_modify": 2,
+   "rules/untrusted_exec": 1
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "per_attack_gt_rules": {
+   "Nginx_Backdoor_06": {
+    "learned/learned_score": 2
+   },
+   "Nginx_Backdoor_12": {
+    "corroborated/tainted_modify": 1,
+    "rules/untrusted_exec": 1
+   },
+   "Nginx_Backdoor_13": {
+    "corroborated/tainted_modify": 1,
+    "learned/learned_score": 2
+   }
+  },
+  "rows": 25,
+  "precision": 0.304
+ },
+ "L12": {
+  "TP": 1,
+  "FP": 15,
+  "recall": 0.015,
+  "attacks": 1,
+  "FP/day": 3.75,
+  "TP/day": 0.25,
+  "by_layer": {
+   "novelty": 14,
+   "rules": 2
+  },
+  "by_layer_tp": {
+   "rules": 1
+  },
+  "by_rule": {
+   "novelty/novel_executable": 14,
+   "rules/untrusted_exec": 2
+  },
+  "by_rule_tp": {
+   "rules/untrusted_exec": 1
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_12"
+  ],
+  "per_attack_gt_rules": {
+   "Nginx_Backdoor_12": {
+    "rules/untrusted_exec": 1
+   }
+  },
+  "rows": 16,
+  "precision": 0.062
+ }
+}

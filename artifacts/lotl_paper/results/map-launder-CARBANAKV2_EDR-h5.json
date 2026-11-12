@@ -1,0 +1,148 @@
+{
+ "transform": "launder",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/windows/system32/control.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/mstsc.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/openssh/ssh.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/qwinsta.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/rdpclip.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/servermanager.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/smss.exe",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/windows/system32/systempropertiesremote.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/syswow64/cmd.exe",
+    "kind": "shell",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/windowspowershell/{v}/powershell.exe",
+    "replacement": "c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 42,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/temp/plink.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/tiny.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   }
+  ],
+  "renamed_nodes": 23,
+  "renamed_gt": 17,
+  "still_unknown": 0,
+  "baseline_programs": 73,
+  "baseline_processes": 2814,
+  "top_shell": "/windows/system32/windowspowershell/{v}/powershell.exe",
+  "top_process": "/windows/system32/conhost.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\smss.exe \\SystemRoot\\System32\\smss.exe 000000c4 00000084 ",
+    "after": "subject c:\\windows\\system32\\conhost.exe c:\\windows\\system32\\conhost.exe 000000c4 00000084 ",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\windows\\system32\\servermanager.exe \"C:\\Windows\\system32\\ServerManager.exe\" ",
+    "after": "subject c:\\windows\\system32\\conhost.exe \"c:\\windows\\system32\\conhost.exe\" ",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\windows\\syswow64\\cmd.exe None",
+    "after": "subject c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe None",
+    "gt": false
+   }
+  ]
+ },
+ "launder": {
+  "payloads": 0,
+  "copier_label": "subject c:\\program files\\confer\\repcli.exe \"c:\\Program Files\\Confer\\repcli.exe\" watchdog",
+  "items": [],
+  "candidates_not_written": 0,
+  "edges_added": 0
+ }
+}

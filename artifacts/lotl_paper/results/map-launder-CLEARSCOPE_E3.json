@@ -1,0 +1,21 @@
+{
+ "transform": "launder",
+ "lotl": {
+  "targets": [],
+  "renamed_nodes": 0,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 33,
+  "baseline_processes": 827,
+  "top_shell": null,
+  "top_process": "com.android.quicksearchbox",
+  "examples": []
+ },
+ "launder": {
+  "payloads": 0,
+  "copier_label": "subject None com.android.quicksearchbox",
+  "items": [],
+  "candidates_not_written": 0,
+  "edges_added": 0
+ }
+}

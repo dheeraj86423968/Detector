@@ -1,0 +1,372 @@
+{
+ "set": "CADETS_E3",
+ "bundle": "/data/lab08/5eafc637-14c7-4074-b4d3-4e611dea925e/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "transform": {
+  "transform": "lotlall",
+  "lotl": {
+   "targets": [
+    {
+     "key": "XIM",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "getty",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "ipop3d",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "links",
+     "kind": "process",
+     "gt_nodes": 18,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 18
+    },
+    {
+     "key": "login",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "mail.local",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "main",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "minions",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "pEja72mA",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "procstat",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "pwait",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "ssh",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "test",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "tmux-1002",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "tr",
+     "kind": "process",
+     "gt_nodes": 10,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 10
+    },
+    {
+     "key": "vUgefal",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "whoami",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "sleep",
+     "replacement": "sleep",
+     "fallback_to_process": false,
+     "baseline_runs": 41232,
+     "renamed_nodes": 1
+    }
+   ],
+   "renamed_nodes": 54,
+   "renamed_gt": 13,
+   "still_unknown": 0,
+   "baseline_programs": 112,
+   "baseline_processes": 137761,
+   "top_shell": "sh",
+   "top_process": "sleep",
+   "examples": [
+    {
+     "before": "subject None links",
+     "after": "subject None sleep",
+     "gt": false
+    },
+    {
+     "before": "subject None links",
+     "after": "subject None sleep",
+     "gt": false
+    },
+    {
+     "before": "subject None links",
+     "after": "subject None sleep",
+     "gt": false
+    }
+   ]
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "Nginx_Backdoor_06",
+  "Nginx_Backdoor_12",
+  "Nginx_Backdoor_13"
+ ],
+ "P2": {
+  "TP": 32,
+  "FP": 3,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 0.75,
+  "TP/day": 8.0,
+  "by_layer": {
+   "rules": 30,
+   "corroborated": 5
+  },
+  "by_layer_tp": {
+   "rules": 29,
+   "corroborated": 3
+  },
+  "by_rule": {
+   "rules/untrusted_exec": 25,
+   "rules/untrusted_code_network": 5,
+   "corroborated/tainted_modify": 4,
+   "corroborated/learned_near_alert": 1
+  },
+  "by_rule_tp": {
+   "rules/untrusted_exec": 24,
+   "rules/untrusted_code_network": 5,
+   "corroborated/tainted_modify": 2,
+   "corroborated/learned_near_alert": 1
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "per_attack_gt_rules": {
+   "Nginx_Backdoor_06": {
+    "rules/untrusted_exec": 2,
+    "rules/untrusted_code_network": 1
+   },
+   "Nginx_Backdoor_12": {
+    "corroborated/tainted_modify": 1,
+    "rules/untrusted_exec": 20,
+    "rules/untrusted_code_network": 3,
+    "corroborated/learned_near_alert": 1
+   },
+   "Nginx_Backdoor_13": {
+    "rules/untrusted_exec": 3,
+    "rules/untrusted_code_network": 2,
+    "corroborated/tainted_modify": 1
+   }
+  },
+  "rows": 36,
+  "precision": 0.914
+ },
+ "F3": {
+  "TP": 32,
+  "FP": 3,
+  "recall": 0.471,
+  "attacks": 3,
+  "FP/day": 0.75,
+  "TP/day": 8.0,
+  "by_layer": {
+   "rules": 30,
+   "corroborated": 5
+  },
+  "by_layer_tp": {
+   "rules": 29,
+   "corroborated": 3
+  },
+  "by_rule": {
+   "rules/untrusted_exec": 25,
+   "rules/untrusted_code_network": 5,
+   "corroborated/tainted_modify": 4,
+   "corroborated/learned_near_alert": 1
+  },
+  "by_rule_tp": {
+   "rules/untrusted_exec": 24,
+   "rules/untrusted_code_network": 5,
+   "corroborated/tainted_modify": 2,
+   "corroborated/learned_near_alert": 1
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "per_attack_gt_rules": {
+   "Nginx_Backdoor_06": {
+    "rules/untrusted_exec": 2,
+    "rules/untrusted_code_network": 1
+   },
+   "Nginx_Backdoor_12": {
+    "corroborated/tainted_modify": 1,
+    "rules/untrusted_exec": 20,
+    "rules/untrusted_code_network": 3,
+    "corroborated/learned_near_alert": 1
+   },
+   "Nginx_Backdoor_13": {
+    "rules/untrusted_exec": 3,
+    "rules/untrusted_code_network": 2,
+    "corroborated/tainted_modify": 1
+   }
+  },
+  "rows": 36,
+  "precision": 0.914
+ },
+ "L12": {
+  "TP": 29,
+  "FP": 1,
+  "recall": 0.426,
+  "attacks": 3,
+  "FP/day": 0.25,
+  "TP/day": 7.25,
+  "by_layer": {
+   "rules": 30
+  },
+  "by_layer_tp": {
+   "rules": 29
+  },
+  "by_rule": {
+   "rules/untrusted_exec": 25,
+   "rules/untrusted_code_network": 5
+  },
+  "by_rule_tp": {
+   "rules/untrusted_exec": 24,
+   "rules/untrusted_code_network": 5
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "per_attack_gt_rules": {
+   "Nginx_Backdoor_06": {
+    "rules/untrusted_exec": 2,
+    "rules/untrusted_code_network": 1
+   },
+   "Nginx_Backdoor_12": {
+    "rules/untrusted_exec": 20,
+    "rules/untrusted_code_network": 3
+   },
+   "Nginx_Backdoor_13": {
+    "rules/untrusted_exec": 3,
+    "rules/untrusted_code_network": 2
+   }
+  },
+  "rows": 30,
+  "precision": 0.967
+ }
+}

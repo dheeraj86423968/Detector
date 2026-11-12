@@ -1,0 +1,81 @@
+{
+ "transform": "lotl",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/\"cmd.exe/\"",
+    "kind": "shell",
+    "gt_nodes": 1,
+    "replacement_key": "cmd.exe",
+    "replacement": "cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "//windows//system32//net1",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "net",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "powershell",
+    "kind": "shell",
+    "gt_nodes": 1,
+    "replacement_key": "cmd.exe",
+    "replacement": "cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "taskkill",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 2
+   }
+  ],
+  "renamed_nodes": 29,
+  "renamed_gt": 8,
+  "still_unknown": 0,
+  "baseline_programs": 105,
+  "baseline_processes": 6877,
+  "top_shell": "/\"c://salt//bin//python.exe/\"",
+  "top_process": "/\"c://program",
+  "examples": [
+   {
+    "before": "subject None powershell",
+    "after": "subject None cmd.exe",
+    "gt": false
+   },
+   {
+    "before": "subject None powershell  -nop -ep bypass -encodedCommand KABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAGYAaQBsAGU",
+    "after": "subject None cmd.exe  -nop -ep bypass -encodedCommand KABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAGYAaQBsAGUAKA",
+    "gt": true
+   },
+   {
+    "before": "subject None \\\"cmd.exe\\\"",
+    "after": "subject None cmd.exe",
+    "gt": false
+   }
+  ]
+ }
+}

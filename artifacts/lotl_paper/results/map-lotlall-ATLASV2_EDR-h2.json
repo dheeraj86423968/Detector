@@ -1,0 +1,61 @@
+{
+ "transform": "lotlall",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/users/aalsahee/downloads/payload.exe",
+    "kind": "process",
+    "gt_nodes": 12,
+    "replacement_key": "/program files/confer/repwmiutils.exe",
+    "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 24667,
+    "renamed_nodes": 12
+   },
+   {
+    "key": "/windows/system32/control.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/program files/confer/repwmiutils.exe",
+    "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 24667,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/unregmp2.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/program files/confer/repwmiutils.exe",
+    "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 24667,
+    "renamed_nodes": 2
+   }
+  ],
+  "renamed_nodes": 16,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 94,
+  "baseline_processes": 27396,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/program files/confer/repwmiutils.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\control.exe None",
+    "after": "subject c:\\program files\\confer\\repwmiutils.exe None",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\windows\\system32\\control.exe \"C:\\Windows\\System32\\control.exe\" \"C:\\Windows\\system32\\timedate.cpl\",",
+    "after": "subject c:\\program files\\confer\\repwmiutils.exe \"c:\\program files\\confer\\repwmiutils.exe\" \"C:\\Windows\\system32\\timedate.cpl\",",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\users\\aalsahee\\downloads\\payload.exe None",
+    "after": "subject c:\\program files\\confer\\repwmiutils.exe None",
+    "gt": false
+   }
+  ]
+ }
+}

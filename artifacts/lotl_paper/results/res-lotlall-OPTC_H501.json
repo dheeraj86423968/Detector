@@ -1,0 +1,535 @@
+{
+ "set": "OPTC_H501",
+ "bundle": "/data/lab08/18978a51-ac8f-4afd-8f7a-c3003fa744c2/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 749,
+ "days": 3,
+ "transform": {
+  "transform": "lotlall",
+  "lotl": {
+   "targets": [
+    {
+     "key": "\"C:/Windows/SystemApps/ShellExperienceHost_cw5n1h2txyewy/ShellExperienceHost.exe\"",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "\"C:/Windows/system32/SearchProtocolHost.exe\"",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "\"fontdrvhost.exe\"",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/program files (x86)/google/chrome/application/chrome.exe",
+     "kind": "process",
+     "gt_nodes": 20,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 20
+    },
+    {
+     "key": "/program files (x86)/google/chrome/application/{v}/delegate_execute.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/program files (x86)/google/chrome/application/{v}/installer/chrmstp.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/program files (x86)/google/update/{v}/googlecrashhandler.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/program files (x86)/microsoft office/office15/outlook.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/program files/vmware/vmware tools/vmware vgauth/vgauthservice.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/program files/windows nt/accessories/wordpad.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/users/sysadmin/downloads/filetransfer1000.exe",
+     "kind": "process",
+     "gt_nodes": 6,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 6
+    },
+    {
+     "key": "/windows/immersivecontrolpanel/systemsettings.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/audiodg.exe",
+     "kind": "process",
+     "gt_nodes": 5,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 5
+    },
+    {
+     "key": "/windows/system32/cliprenew.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/credentialuibroker.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/eventvwr.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/ie4uinit.exe",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/system32/locationnotificationwindows.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/lpremove.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/mmc.exe",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/system32/mstsc.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/netstat.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/openwith.exe",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/system32/plink.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/schtasks.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/sdiagnhost.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/sessionmsg.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/settingsynchost.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/tstheme.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/unregmp2.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/system32/verclsid.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/windows/system32/whoami.exe",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "/windows/syswow64/eventvwr.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/syswow64/windowspowershell/{v}/powershell.exe",
+     "kind": "shell",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/windows/temp/{id}/dismhost.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "Idle",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "atbroker.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "mmc.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "rdpclip.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 11964,
+     "renamed_nodes": 1
+    }
+   ],
+   "renamed_nodes": 87,
+   "renamed_gt": 7,
+   "still_unknown": 0,
+   "baseline_programs": 127,
+   "baseline_processes": 46131,
+   "top_shell": "/windows/system32/cmd.exe",
+   "top_process": "/windows/system32/cmd.exe",
+   "examples": [
+    {
+     "before": "subject /Device/HarddiskVolume1/Program Files/Windows NT/Accessories/WORDPAD.EXE None",
+     "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe None",
+     "gt": false
+    },
+    {
+     "before": "subject /Device/HarddiskVolume1/Windows/system32/mmc.exe None",
+     "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe None",
+     "gt": false
+    },
+    {
+     "before": "subject /Device/HarddiskVolume1/Windows/system32/OpenWith.exe None",
+     "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe None",
+     "gt": false
+    }
+   ]
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "h501_0924"
+ ],
+ "P2": {
+  "TP": 5,
+  "FP": 9,
+  "recall": 0.007,
+  "attacks": 1,
+  "FP/day": 3.0,
+  "TP/day": 1.67,
+  "by_layer": {
+   "rules": 12,
+   "corroborated": 2
+  },
+  "by_layer_tp": {
+   "rules": 5
+  },
+  "by_rule": {
+   "rules/exfiltration": 12,
+   "corroborated/learned_near_alert": 2
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 5
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "per_attack_gt_rules": {
+   "h501_0924": {
+    "rules/exfiltration": 5
+   }
+  },
+  "rows": 14,
+  "precision": 0.357
+ },
+ "F3": {
+  "TP": 5,
+  "FP": 9,
+  "recall": 0.007,
+  "attacks": 1,
+  "FP/day": 3.0,
+  "TP/day": 1.67,
+  "by_layer": {
+   "rules": 12,
+   "corroborated": 2
+  },
+  "by_layer_tp": {
+   "rules": 5
+  },
+  "by_rule": {
+   "rules/exfiltration": 12,
+   "corroborated/learned_near_alert": 2
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 5
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "per_attack_gt_rules": {
+   "h501_0924": {
+    "rules/exfiltration": 5
+   }
+  },
+  "rows": 14,
+  "precision": 0.357
+ },
+ "L12": {
+  "TP": 5,
+  "FP": 7,
+  "recall": 0.007,
+  "attacks": 1,
+  "FP/day": 2.33,
+  "TP/day": 1.67,
+  "by_layer": {
+   "rules": 12
+  },
+  "by_layer_tp": {
+   "rules": 5
+  },
+  "by_rule": {
+   "rules/exfiltration": 12
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 5
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "per_attack_gt_rules": {
+   "h501_0924": {
+    "rules/exfiltration": 5
+   }
+  },
+  "rows": 12,
+  "precision": 0.417
+ }
+}

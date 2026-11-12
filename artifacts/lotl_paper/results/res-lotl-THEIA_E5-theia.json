@@ -1,0 +1,107 @@
+{
+ "set": "THEIA_E5-theia",
+ "bundle": "/data/lab08/heldout/THEIA_E5/theia/b07rel",
+ "fleet": [
+  "THEIA_E5-theia"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 66,
+ "days": 2,
+ "transform": {
+  "transform": "lotl",
+  "lotl": {
+   "targets": [],
+   "renamed_nodes": 0,
+   "renamed_gt": 0,
+   "still_unknown": 0,
+   "baseline_programs": 52,
+   "baseline_processes": 458674,
+   "top_shell": "/bin/dash",
+   "top_process": "/bin/dash",
+   "examples": []
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "node_THEIA_1_Firefox_Drakon_APT_BinFmt_Elevate_Inject"
+ ],
+ "P2": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 48.5,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 54,
+   "rules/exfiltration": 32,
+   "corroborated/learned_near_alert": 8,
+   "corroborated/tainted_modify": 2,
+   "rules/untrusted_exec": 1
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 97,
+  "precision": 0.0
+ },
+ "F3": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 48.5,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 54,
+   "rules/exfiltration": 32,
+   "corroborated/learned_near_alert": 8,
+   "corroborated/tainted_modify": 2,
+   "rules/untrusted_exec": 1
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 97,
+  "precision": 0.0
+ },
+ "L12": {
+  "TP": 0,
+  "FP": 87,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 43.5,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 54,
+   "rules/exfiltration": 32,
+   "rules/untrusted_exec": 1
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 87,
+  "precision": 0.0
+ }
+}

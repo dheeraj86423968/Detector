@@ -1,0 +1,188 @@
+{
+ "set": "THEIA_E3",
+ "bundle": "/data/lab08/b4021490-6dd4-4dfb-8628-b3e55af27b90/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 118,
+ "days": 3,
+ "transform": {
+  "transform": "none"
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "Browser_Extension_Drakon_Dropper",
+  "Firefox_Backdoor_Drakon_In_Memory"
+ ],
+ "P2": {
+  "TP": 109,
+  "FP": 86,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 28.67,
+  "TP/day": 36.33,
+  "by_layer": {
+   "corroborated": 14,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "by_rule": {
+   "corroborated/learned_near_alert": 4,
+   "novelty/novel_executable": 12,
+   "corroborated/novel_executable_repeat": 2,
+   "rules/exfiltration": 82,
+   "rules/untrusted_exec": 84,
+   "rules/untrusted_code_network": 3,
+   "corroborated/tainted_spawn": 8
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 29,
+   "rules/untrusted_exec": 63,
+   "novelty/novel_executable": 5,
+   "rules/untrusted_code_network": 3,
+   "corroborated/tainted_spawn": 7,
+   "corroborated/learned_near_alert": 2
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "per_attack_gt_rules": {
+   "Firefox_Backdoor_Drakon_In_Memory": {
+    "rules/exfiltration": 24,
+    "rules/untrusted_exec": 25,
+    "novelty/novel_executable": 2,
+    "rules/untrusted_code_network": 2
+   },
+   "Browser_Extension_Drakon_Dropper": {
+    "corroborated/tainted_spawn": 7,
+    "corroborated/learned_near_alert": 2,
+    "rules/exfiltration": 5,
+    "rules/untrusted_exec": 38,
+    "novelty/novel_executable": 3,
+    "rules/untrusted_code_network": 1
+   }
+  },
+  "rows": 200,
+  "precision": 0.559
+ },
+ "F3": {
+  "TP": 109,
+  "FP": 86,
+  "recall": 0.924,
+  "attacks": 2,
+  "FP/day": 28.67,
+  "TP/day": 36.33,
+  "by_layer": {
+   "corroborated": 14,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "by_rule": {
+   "corroborated/learned_near_alert": 4,
+   "novelty/novel_executable": 12,
+   "corroborated/novel_executable_repeat": 2,
+   "rules/exfiltration": 82,
+   "rules/untrusted_exec": 84,
+   "rules/untrusted_code_network": 3,
+   "corroborated/tainted_spawn": 8
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 29,
+   "rules/untrusted_exec": 63,
+   "novelty/novel_executable": 5,
+   "rules/untrusted_code_network": 3,
+   "corroborated/tainted_spawn": 7,
+   "corroborated/learned_near_alert": 2
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "per_attack_gt_rules": {
+   "Firefox_Backdoor_Drakon_In_Memory": {
+    "rules/exfiltration": 24,
+    "rules/untrusted_exec": 25,
+    "novelty/novel_executable": 2,
+    "rules/untrusted_code_network": 2
+   },
+   "Browser_Extension_Drakon_Dropper": {
+    "corroborated/tainted_spawn": 7,
+    "corroborated/learned_near_alert": 2,
+    "rules/exfiltration": 5,
+    "rules/untrusted_exec": 38,
+    "novelty/novel_executable": 3,
+    "rules/untrusted_code_network": 1
+   }
+  },
+  "rows": 200,
+  "precision": 0.559
+ },
+ "L12": {
+  "TP": 100,
+  "FP": 81,
+  "recall": 0.847,
+  "attacks": 2,
+  "FP/day": 27.0,
+  "TP/day": 33.33,
+  "by_layer": {
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5
+  },
+  "by_rule": {
+   "novelty/novel_executable": 12,
+   "rules/exfiltration": 82,
+   "rules/untrusted_exec": 84,
+   "rules/untrusted_code_network": 3
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 29,
+   "rules/untrusted_exec": 63,
+   "novelty/novel_executable": 5,
+   "rules/untrusted_code_network": 3
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "per_attack_gt_rules": {
+   "Firefox_Backdoor_Drakon_In_Memory": {
+    "rules/exfiltration": 24,
+    "rules/untrusted_exec": 25,
+    "novelty/novel_executable": 2,
+    "rules/untrusted_code_network": 2
+   },
+   "Browser_Extension_Drakon_Dropper": {
+    "rules/exfiltration": 5,
+    "rules/untrusted_exec": 38,
+    "novelty/novel_executable": 3,
+    "rules/untrusted_code_network": 1
+   }
+  },
+  "rows": 185,
+  "precision": 0.552
+ }
+}

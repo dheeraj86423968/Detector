@@ -1,0 +1,531 @@
+{
+ "transform": "lotlall",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/program files (x86)/google/chrome/application/chrome.exe",
+    "kind": "process",
+    "gt_nodes": 20,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 20
+   },
+   {
+    "key": "/program files (x86)/google/chrome/application/{v}/delegate_execute.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/program files (x86)/google/chrome/application/{v}/installer/chrmstp.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/program files (x86)/microsoft office/office15/outlook.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/program files (x86)/notepad++/notepad++.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/users/dcoombes/downloads/update.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/fsquirt.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/ie4uinit.exe",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/system32/sessionmsg.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/settingsynchost.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/tstheme.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/unregmp2.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/verclsid.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/systemapps/microsoft.windows.apprep.chxapp_cw5n1h2txyewy/chxsmartscreen.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad076f2.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad0f93b.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad1ba52.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad1c3a2.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad1cc6c.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad20015.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad231b5.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad28dc8.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad38e8a.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad41041.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad4f110.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad5446e.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad54e46.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad640ca.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad71b66.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad720a0.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad77cfb.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad838e6.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad95ebc.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad99e71.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad9dd75.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad9fad6.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/radaf010.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/radb895d.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radc50e7.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radc5eb1.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radcbb57.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radcf231.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radd85fe.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rade1ba0.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radeb31a.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "Idle",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 13,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 13
+   },
+   {
+    "key": "net.exe",
+    "kind": "process",
+    "gt_nodes": 5,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 5
+   },
+   {
+    "key": "net1.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "rdpclip.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 101,
+  "renamed_gt": 31,
+  "still_unknown": 0,
+  "baseline_programs": 123,
+  "baseline_processes": 29845,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/windows/system32/cmd.exe",
+  "examples": [
+   {
+    "before": "subject Idle None",
+    "after": "subject /Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe None",
+    "gt": false
+   },
+   {
+    "before": "subject Idle None",
+    "after": "subject /Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe None",
+    "gt": false
+   },
+   {
+    "before": "subject /Device/HarddiskVolume1/Program Files (x86)/Notepad++/notepad++.exe \"C:/Program Files (x86)/Notepad++/notepad++.exe\" ",
+    "after": "subject /Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe \"C:/Program Files /Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe\" ",
+    "gt": false
+   }
+  ]
+ }
+}

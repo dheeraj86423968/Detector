@@ -1,0 +1,371 @@
+{
+ "transform": "lotlall",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/\"c://windows//system32//cmd.exe/\"",
+    "kind": "shell",
+    "gt_nodes": 28,
+    "replacement_key": "cmd.exe",
+    "replacement": "cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1,
+    "renamed_nodes": 28
+   },
+   {
+    "key": "/\"c://windows//system32//hostname.exe/\"",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/\"c://windows//system32//netstat.exe/\"",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/\"c://windows//system32//systempropertiesadvanced.exe/\"",
+    "kind": "process",
+    "gt_nodes": 8,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 8
+   },
+   {
+    "key": "/\"c://windows//system32//tasklist.exe/\"",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/\"c://windows//system32//whoami.exe/\"",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/\"c://windows//system32//windowspowershell//{v}//powershell_ise.exe/\"",
+    "kind": "shell",
+    "gt_nodes": 2,
+    "replacement_key": "cmd.exe",
+    "replacement": "cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/\"cmd.exe/\"",
+    "kind": "shell",
+    "gt_nodes": 2,
+    "replacement_key": "cmd.exe",
+    "replacement": "cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "//windows//system32//defrag.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "//windows//system32//net1",
+    "kind": "process",
+    "gt_nodes": 11,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "//windows//system32//ping.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "//windows//system32//tzsync.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "//windows//system32//werfault.exe",
+    "kind": "process",
+    "gt_nodes": 14,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 14
+   },
+   {
+    "key": "/QuitInfo:00000000000001B4;0000000000000330;",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/QuitInfo:000000000000032C;0000000000000334;",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/QuitInfo:0000000000000338;0000000000000324;",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/QuitInfo:0000000000000368;000000000000036C;",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "driverquery",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "getmac",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "hostname",
+    "kind": "process",
+    "gt_nodes": 25,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 25
+   },
+   {
+    "key": "ipconfig",
+    "kind": "process",
+    "gt_nodes": 24,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 24
+   },
+   {
+    "key": "nbtstat",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "net",
+    "kind": "process",
+    "gt_nodes": 11,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "netstat",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "nslookup",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "ping",
+    "kind": "process",
+    "gt_nodes": 25,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 25
+   },
+   {
+    "key": "powershell",
+    "kind": "shell",
+    "gt_nodes": 3,
+    "replacement_key": "cmd.exe",
+    "replacement": "cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "route",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "systeminfo",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "taskkill",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "tasklist",
+    "kind": "process",
+    "gt_nodes": 26,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 26
+   },
+   {
+    "key": "tvnserver.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "whoami",
+    "kind": "process",
+    "gt_nodes": 25,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 25
+   },
+   {
+    "key": "wmic",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 3
+   }
+  ],
+  "renamed_nodes": 232,
+  "renamed_gt": 8,
+  "still_unknown": 0,
+  "baseline_programs": 105,
+  "baseline_processes": 6877,
+  "top_shell": "/\"c://salt//bin//python.exe/\"",
+  "top_process": "/\"c://program",
+  "examples": [
+   {
+    "before": "subject None /QuitInfo:000000000000032C;0000000000000334;  ",
+    "after": "subject None C:\\\\WINDOWS\\\\system32\\\\svchost.exe  ",
+    "gt": false
+   },
+   {
+    "before": "subject None \\\"C:\\\\WINDOWS\\\\system32\\\\WindowsPowerShell\\\\v1.0\\\\PowerShell_ISE.exe\\\" ",
+    "after": "subject None cmd.exe",
+    "gt": false
+   },
+   {
+    "before": "subject None \\\"C:\\\\WINDOWS\\\\system32\\\\cmd.exe\\\" ",
+    "after": "subject None cmd.exe",
+    "gt": false
+   }
+  ]
+ }
+}

@@ -1,0 +1,134 @@
+{
+ "set": "OPTC_H201",
+ "bundle": "/data/lab08/f85bab6a-0fce-4b21-81d8-dd967b8d4395/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 2905,
+ "days": 3,
+ "transform": {
+  "transform": "lotl",
+  "lotl": {
+   "targets": [],
+   "renamed_nodes": 0,
+   "renamed_gt": 0,
+   "still_unknown": 0,
+   "baseline_programs": 128,
+   "baseline_processes": 42202,
+   "top_shell": "/windows/system32/cmd.exe",
+   "top_process": "/windows/system32/cmd.exe",
+   "examples": []
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "h201_0923"
+ ],
+ "P2": {
+  "TP": 6,
+  "FP": 19,
+  "recall": 0.002,
+  "attacks": 1,
+  "FP/day": 6.33,
+  "TP/day": 2.0,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 6
+  },
+  "by_rule": {
+   "rules/exfiltration": 10,
+   "novelty/novel_executable": 14,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 6
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "per_attack_gt_rules": {
+   "h201_0923": {
+    "rules/exfiltration": 6
+   }
+  },
+  "rows": 25,
+  "precision": 0.24
+ },
+ "F3": {
+  "TP": 6,
+  "FP": 19,
+  "recall": 0.002,
+  "attacks": 1,
+  "FP/day": 6.33,
+  "TP/day": 2.0,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 6
+  },
+  "by_rule": {
+   "rules/exfiltration": 10,
+   "novelty/novel_executable": 14,
+   "corroborated/novel_executable_repeat": 1
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 6
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "per_attack_gt_rules": {
+   "h201_0923": {
+    "rules/exfiltration": 6
+   }
+  },
+  "rows": 25,
+  "precision": 0.24
+ },
+ "L12": {
+  "TP": 6,
+  "FP": 18,
+  "recall": 0.002,
+  "attacks": 1,
+  "FP/day": 6.0,
+  "TP/day": 2.0,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14
+  },
+  "by_layer_tp": {
+   "rules": 6
+  },
+  "by_rule": {
+   "rules/exfiltration": 10,
+   "novelty/novel_executable": 14
+  },
+  "by_rule_tp": {
+   "rules/exfiltration": 6
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "per_attack_gt_rules": {
+   "h201_0923": {
+    "rules/exfiltration": 6
+   }
+  },
+  "rows": 24,
+  "precision": 0.25
+ }
+}

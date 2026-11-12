@@ -1,0 +1,81 @@
+{
+ "transform": "lotl",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/etc/firefox/native-messaging-hosts/gtcache",
+    "kind": "process",
+    "gt_nodes": 34,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 34
+   },
+   {
+    "key": "/etc/firefox/native-messaging-hosts/pass_mgr",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/clean",
+    "kind": "process",
+    "gt_nodes": 19,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 19
+   },
+   {
+    "key": "/home/admin/profile",
+    "kind": "process",
+    "gt_nodes": 6,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 28
+   },
+   {
+    "key": "/var/log/mail",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/Downloads/firefox/firefox",
+    "replacement": "/home/admin/Downloads/firefox/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 51806,
+    "renamed_nodes": 3
+   }
+  ],
+  "renamed_nodes": 85,
+  "renamed_gt": 63,
+  "still_unknown": 0,
+  "baseline_programs": 130,
+  "baseline_processes": 107137,
+  "top_shell": "/bin/dash",
+  "top_process": "/home/admin/Downloads/firefox/firefox",
+  "examples": [
+   {
+    "before": "subject /home/admin/clean /home/admin/clean",
+    "after": "subject /home/admin/Downloads/firefox/firefox /home/admin/Downloads/firefox/firefox",
+    "gt": true
+   },
+   {
+    "before": "subject /home/admin/clean /home/admin/clean",
+    "after": "subject /home/admin/Downloads/firefox/firefox /home/admin/Downloads/firefox/firefox",
+    "gt": true
+   },
+   {
+    "before": "subject /home/admin/clean (deleted) /home/admin/clean",
+    "after": "subject /home/admin/Downloads/firefox/firefox (deleted) /home/admin/Downloads/firefox/firefox",
+    "gt": true
+   }
+  ]
+ }
+}

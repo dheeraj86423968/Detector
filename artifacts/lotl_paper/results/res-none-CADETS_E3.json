@@ -1,0 +1,189 @@
+{
+ "set": "CADETS_E3",
+ "bundle": "/data/lab08/5eafc637-14c7-4074-b4d3-4e611dea925e/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "transform": {
+  "transform": "none"
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "Nginx_Backdoor_06",
+  "Nginx_Backdoor_12",
+  "Nginx_Backdoor_13"
+ ],
+ "P2": {
+  "TP": 31,
+  "FP": 16,
+  "recall": 0.456,
+  "attacks": 3,
+  "FP/day": 4.0,
+  "TP/day": 7.75,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "by_rule": {
+   "novelty/novel_executable": 21,
+   "rules/untrusted_exec": 18,
+   "rules/untrusted_code_network": 5,
+   "corroborated/tainted_modify": 3
+  },
+  "by_rule_tp": {
+   "rules/untrusted_exec": 17,
+   "novelty/novel_executable": 7,
+   "rules/untrusted_code_network": 5,
+   "corroborated/tainted_modify": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "per_attack_gt_rules": {
+   "Nginx_Backdoor_06": {
+    "rules/untrusted_exec": 1,
+    "novelty/novel_executable": 1,
+    "rules/untrusted_code_network": 1
+   },
+   "Nginx_Backdoor_12": {
+    "corroborated/tainted_modify": 1,
+    "rules/untrusted_exec": 15,
+    "novelty/novel_executable": 5,
+    "rules/untrusted_code_network": 3
+   },
+   "Nginx_Backdoor_13": {
+    "rules/untrusted_exec": 2,
+    "rules/untrusted_code_network": 2,
+    "corroborated/tainted_modify": 1,
+    "novelty/novel_executable": 1
+   }
+  },
+  "rows": 47,
+  "precision": 0.66
+ },
+ "F3": {
+  "TP": 31,
+  "FP": 16,
+  "recall": 0.456,
+  "attacks": 3,
+  "FP/day": 4.0,
+  "TP/day": 7.75,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "by_rule": {
+   "novelty/novel_executable": 21,
+   "rules/untrusted_exec": 18,
+   "rules/untrusted_code_network": 5,
+   "corroborated/tainted_modify": 3
+  },
+  "by_rule_tp": {
+   "rules/untrusted_exec": 17,
+   "novelty/novel_executable": 7,
+   "rules/untrusted_code_network": 5,
+   "corroborated/tainted_modify": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "per_attack_gt_rules": {
+   "Nginx_Backdoor_06": {
+    "rules/untrusted_exec": 1,
+    "novelty/novel_executable": 1,
+    "rules/untrusted_code_network": 1
+   },
+   "Nginx_Backdoor_12": {
+    "corroborated/tainted_modify": 1,
+    "rules/untrusted_exec": 15,
+    "novelty/novel_executable": 5,
+    "rules/untrusted_code_network": 3
+   },
+   "Nginx_Backdoor_13": {
+    "rules/untrusted_exec": 2,
+    "rules/untrusted_code_network": 2,
+    "corroborated/tainted_modify": 1,
+    "novelty/novel_executable": 1
+   }
+  },
+  "rows": 47,
+  "precision": 0.66
+ },
+ "L12": {
+  "TP": 29,
+  "FP": 15,
+  "recall": 0.426,
+  "attacks": 3,
+  "FP/day": 3.75,
+  "TP/day": 7.25,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7
+  },
+  "by_rule": {
+   "novelty/novel_executable": 21,
+   "rules/untrusted_exec": 18,
+   "rules/untrusted_code_network": 5
+  },
+  "by_rule_tp": {
+   "rules/untrusted_exec": 17,
+   "novelty/novel_executable": 7,
+   "rules/untrusted_code_network": 5
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "per_attack_gt_rules": {
+   "Nginx_Backdoor_06": {
+    "rules/untrusted_exec": 1,
+    "novelty/novel_executable": 1,
+    "rules/untrusted_code_network": 1
+   },
+   "Nginx_Backdoor_12": {
+    "rules/untrusted_exec": 15,
+    "novelty/novel_executable": 5,
+    "rules/untrusted_code_network": 3
+   },
+   "Nginx_Backdoor_13": {
+    "rules/untrusted_exec": 2,
+    "rules/untrusted_code_network": 2,
+    "novelty/novel_executable": 1
+   }
+  },
+  "rows": 44,
+  "precision": 0.659
+ }
+}

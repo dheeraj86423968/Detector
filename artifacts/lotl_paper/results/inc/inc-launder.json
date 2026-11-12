@@ -1,0 +1,614 @@
+{
+ "ATLASV2_EDR-h1": {
+  "days": 1,
+  "P2/G2": {
+   "incidents": 6,
+   "fp_incidents": 4,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 4.0,
+   "attacks": 5,
+   "attacks_found": [
+    "atlasv2_edr_m2",
+    "atlasv2_edr_m3",
+    "atlasv2_edr_m4",
+    "atlasv2_edr_s2",
+    "atlasv2_edr_s4"
+   ],
+   "buried": [
+    "atlasv2_edr_s4"
+   ],
+   "max_alerts": 36,
+   "alerts": 52
+  },
+  "F3/G2": {
+   "incidents": 6,
+   "fp_incidents": 4,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 4.0,
+   "attacks": 5,
+   "attacks_found": [
+    "atlasv2_edr_m2",
+    "atlasv2_edr_m3",
+    "atlasv2_edr_m4",
+    "atlasv2_edr_s2",
+    "atlasv2_edr_s4"
+   ],
+   "buried": [
+    "atlasv2_edr_s4"
+   ],
+   "max_alerts": 36,
+   "alerts": 52
+  },
+  "L12/G2": {
+   "incidents": 6,
+   "fp_incidents": 6,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 6.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 40,
+   "alerts": 46
+  }
+ },
+ "ATLASV2_EDR-h2": {
+  "days": 1,
+  "P2/G2": {
+   "incidents": 2,
+   "fp_incidents": 2,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 2.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 25,
+   "alerts": 26
+  },
+  "F3/G2": {
+   "incidents": 2,
+   "fp_incidents": 2,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 2.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 25,
+   "alerts": 26
+  },
+  "L12/G2": {
+   "incidents": 2,
+   "fp_incidents": 2,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 2.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 25,
+   "alerts": 26
+  }
+ },
+ "CADETS_E3": {
+  "days": 4,
+  "P2/G2": {
+   "incidents": 11,
+   "fp_incidents": 9,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 2.25,
+   "attacks": 2,
+   "attacks_found": [
+    "Nginx_Backdoor_12",
+    "Nginx_Backdoor_13"
+   ],
+   "buried": [],
+   "max_alerts": 3,
+   "alerts": 19
+  },
+  "F3/G2": {
+   "incidents": 12,
+   "fp_incidents": 9,
+   "tp_incidents": 3,
+   "fp_inc_per_day": 2.25,
+   "attacks": 3,
+   "attacks_found": [
+    "Nginx_Backdoor_06",
+    "Nginx_Backdoor_12",
+    "Nginx_Backdoor_13"
+   ],
+   "buried": [],
+   "max_alerts": 4,
+   "alerts": 25
+  },
+  "L12/G2": {
+   "incidents": 10,
+   "fp_incidents": 9,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 2.25,
+   "attacks": 1,
+   "attacks_found": [
+    "Nginx_Backdoor_12"
+   ],
+   "buried": [],
+   "max_alerts": 2,
+   "alerts": 16
+  }
+ },
+ "CARBANAKV2_EDR-h1": {
+  "days": 8,
+  "P2/G2": {
+   "incidents": 26,
+   "fp_incidents": 26,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 3.25,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 18,
+   "alerts": 93
+  },
+  "F3/G2": {
+   "incidents": 26,
+   "fp_incidents": 26,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 3.25,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 18,
+   "alerts": 93
+  },
+  "L12/G2": {
+   "incidents": 26,
+   "fp_incidents": 26,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 3.25,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 18,
+   "alerts": 75
+  }
+ },
+ "CARBANAKV2_EDR-h2": {
+  "days": 9,
+  "P2/G2": {
+   "incidents": 25,
+   "fp_incidents": 24,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 2.67,
+   "attacks": 1,
+   "attacks_found": [
+    "carbanakv2_edr"
+   ],
+   "buried": [],
+   "max_alerts": 55,
+   "alerts": 159
+  },
+  "F3/G2": {
+   "incidents": 25,
+   "fp_incidents": 24,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 2.67,
+   "attacks": 1,
+   "attacks_found": [
+    "carbanakv2_edr"
+   ],
+   "buried": [],
+   "max_alerts": 55,
+   "alerts": 159
+  },
+  "L12/G2": {
+   "incidents": 25,
+   "fp_incidents": 24,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 2.67,
+   "attacks": 1,
+   "attacks_found": [
+    "carbanakv2_edr"
+   ],
+   "buried": [],
+   "max_alerts": 55,
+   "alerts": 159
+  }
+ },
+ "CARBANAKV2_EDR-h4": {
+  "days": 7,
+  "P2/G2": {
+   "incidents": 9,
+   "fp_incidents": 9,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 1.29,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 7,
+   "alerts": 24
+  },
+  "F3/G2": {
+   "incidents": 9,
+   "fp_incidents": 9,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 1.29,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 7,
+   "alerts": 24
+  },
+  "L12/G2": {
+   "incidents": 9,
+   "fp_incidents": 9,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 1.29,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 7,
+   "alerts": 23
+  }
+ },
+ "CARBANAKV2_EDR-h5": {
+  "days": 11,
+  "P2/G2": {
+   "incidents": 18,
+   "fp_incidents": 16,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 1.45,
+   "attacks": 1,
+   "attacks_found": [
+    "carbanakv2_edr"
+   ],
+   "buried": [],
+   "max_alerts": 16,
+   "alerts": 54
+  },
+  "F3/G2": {
+   "incidents": 18,
+   "fp_incidents": 16,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 1.45,
+   "attacks": 1,
+   "attacks_found": [
+    "carbanakv2_edr"
+   ],
+   "buried": [],
+   "max_alerts": 16,
+   "alerts": 54
+  },
+  "L12/G2": {
+   "incidents": 19,
+   "fp_incidents": 19,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 1.73,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 3,
+   "alerts": 26
+  }
+ },
+ "CLEARSCOPE_E3": {
+  "days": 2,
+  "P2/G2": {
+   "incidents": 0,
+   "fp_incidents": 0,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 0.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 0,
+   "alerts": 0
+  },
+  "F3/G2": {
+   "incidents": 1,
+   "fp_incidents": 0,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 0.0,
+   "attacks": 1,
+   "attacks_found": [
+    "clearscope_e3_firefox_0411"
+   ],
+   "buried": [
+    "clearscope_e3_firefox_0411"
+   ],
+   "max_alerts": 55,
+   "alerts": 55
+  },
+  "L12/G2": {
+   "incidents": 0,
+   "fp_incidents": 0,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 0.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 0,
+   "alerts": 0
+  }
+ },
+ "CLEARSCOPE_E5-clearscope": {
+  "days": 3,
+  "P2/G2": {
+   "incidents": 6,
+   "fp_incidents": 6,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 2.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 6,
+   "alerts": 12
+  },
+  "F3/G2": {
+   "incidents": 6,
+   "fp_incidents": 6,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 2.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 6,
+   "alerts": 12
+  },
+  "L12/G2": {
+   "incidents": 6,
+   "fp_incidents": 6,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 2.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 6,
+   "alerts": 12
+  }
+ },
+ "FIVEDIRECTIONS_E3": {
+  "days": 3,
+  "P2/G2": {
+   "incidents": 10,
+   "fp_incidents": 6,
+   "tp_incidents": 4,
+   "fp_inc_per_day": 2.0,
+   "attacks": 2,
+   "attacks_found": [
+    "fivedirections_e3_excel_0409",
+    "fivedirections_e3_firefox_0411"
+   ],
+   "buried": [],
+   "max_alerts": 67,
+   "alerts": 193
+  },
+  "F3/G2": {
+   "incidents": 10,
+   "fp_incidents": 6,
+   "tp_incidents": 4,
+   "fp_inc_per_day": 2.0,
+   "attacks": 2,
+   "attacks_found": [
+    "fivedirections_e3_excel_0409",
+    "fivedirections_e3_firefox_0411"
+   ],
+   "buried": [],
+   "max_alerts": 67,
+   "alerts": 193
+  },
+  "L12/G2": {
+   "incidents": 9,
+   "fp_incidents": 9,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 3.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 16,
+   "alerts": 42
+  }
+ },
+ "OPTC_H051": {
+  "days": 3,
+  "P2/G2": {
+   "incidents": 6,
+   "fp_incidents": 3,
+   "tp_incidents": 3,
+   "fp_inc_per_day": 1.0,
+   "attacks": 1,
+   "attacks_found": [
+    "h051_0925"
+   ],
+   "buried": [],
+   "max_alerts": 111,
+   "alerts": 144
+  },
+  "F3/G2": {
+   "incidents": 6,
+   "fp_incidents": 3,
+   "tp_incidents": 3,
+   "fp_inc_per_day": 1.0,
+   "attacks": 1,
+   "attacks_found": [
+    "h051_0925"
+   ],
+   "buried": [],
+   "max_alerts": 111,
+   "alerts": 144
+  },
+  "L12/G2": {
+   "incidents": 15,
+   "fp_incidents": 4,
+   "tp_incidents": 11,
+   "fp_inc_per_day": 1.33,
+   "attacks": 1,
+   "attacks_found": [
+    "h051_0925"
+   ],
+   "buried": [],
+   "max_alerts": 41,
+   "alerts": 116
+  }
+ },
+ "OPTC_H201": {
+  "days": 3,
+  "P2/G2": {
+   "incidents": 11,
+   "fp_incidents": 10,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 3.33,
+   "attacks": 1,
+   "attacks_found": [
+    "h201_0923"
+   ],
+   "buried": [],
+   "max_alerts": 10,
+   "alerts": 25
+  },
+  "F3/G2": {
+   "incidents": 11,
+   "fp_incidents": 10,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 3.33,
+   "attacks": 1,
+   "attacks_found": [
+    "h201_0923"
+   ],
+   "buried": [],
+   "max_alerts": 10,
+   "alerts": 25
+  },
+  "L12/G2": {
+   "incidents": 11,
+   "fp_incidents": 10,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 3.33,
+   "attacks": 1,
+   "attacks_found": [
+    "h201_0923"
+   ],
+   "buried": [],
+   "max_alerts": 10,
+   "alerts": 24
+  }
+ },
+ "OPTC_H501": {
+  "days": 3,
+  "P2/G2": {
+   "incidents": 12,
+   "fp_incidents": 10,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 3.33,
+   "attacks": 1,
+   "attacks_found": [
+    "h501_0924"
+   ],
+   "buried": [],
+   "max_alerts": 44,
+   "alerts": 84
+  },
+  "F3/G2": {
+   "incidents": 12,
+   "fp_incidents": 10,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 3.33,
+   "attacks": 1,
+   "attacks_found": [
+    "h501_0924"
+   ],
+   "buried": [],
+   "max_alerts": 44,
+   "alerts": 84
+  },
+  "L12/G2": {
+   "incidents": 12,
+   "fp_incidents": 10,
+   "tp_incidents": 2,
+   "fp_inc_per_day": 3.33,
+   "attacks": 1,
+   "attacks_found": [
+    "h501_0924"
+   ],
+   "buried": [],
+   "max_alerts": 20,
+   "alerts": 48
+  }
+ },
+ "THEIA_E3": {
+  "days": 3,
+  "P2/G2": {
+   "incidents": 7,
+   "fp_incidents": 6,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 2.0,
+   "attacks": 2,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "buried": [],
+   "max_alerts": 142,
+   "alerts": 152
+  },
+  "F3/G2": {
+   "incidents": 7,
+   "fp_incidents": 6,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 2.0,
+   "attacks": 2,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "buried": [],
+   "max_alerts": 142,
+   "alerts": 152
+  },
+  "L12/G2": {
+   "incidents": 7,
+   "fp_incidents": 6,
+   "tp_incidents": 1,
+   "fp_inc_per_day": 2.0,
+   "attacks": 2,
+   "attacks_found": [
+    "Browser_Extension_Drakon_Dropper",
+    "Firefox_Backdoor_Drakon_In_Memory"
+   ],
+   "buried": [],
+   "max_alerts": 115,
+   "alerts": 122
+  }
+ },
+ "THEIA_E5-theia": {
+  "days": 2,
+  "P2/G2": {
+   "incidents": 28,
+   "fp_incidents": 28,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 14.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 33,
+   "alerts": 97
+  },
+  "F3/G2": {
+   "incidents": 28,
+   "fp_incidents": 28,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 14.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 33,
+   "alerts": 97
+  },
+  "L12/G2": {
+   "incidents": 28,
+   "fp_incidents": 28,
+   "tp_incidents": 0,
+   "fp_inc_per_day": 14.0,
+   "attacks": 0,
+   "attacks_found": [],
+   "buried": [],
+   "max_alerts": 17,
+   "alerts": 87
+  }
+ }
+}

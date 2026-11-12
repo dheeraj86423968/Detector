@@ -1,0 +1,103 @@
+{
+ "set": "ATLASV2_EDR-h2",
+ "bundle": "/data/lab08/heldout/ATLASV2_EDR/h2/v07rel",
+ "fleet": [
+  "ATLASV2_EDR-h1",
+  "ATLASV2_EDR-h2"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 0,
+ "days": 1,
+ "transform": {
+  "transform": "none"
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "atlasv2_edr_m1",
+  "atlasv2_edr_m2",
+  "atlasv2_edr_m3",
+  "atlasv2_edr_m4",
+  "atlasv2_edr_m5",
+  "atlasv2_edr_m6",
+  "atlasv2_edr_s1",
+  "atlasv2_edr_s2",
+  "atlasv2_edr_s3",
+  "atlasv2_edr_s4"
+ ],
+ "P2": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 4,
+   "rules/untrusted_exec": 16,
+   "rules/exfiltration": 3,
+   "rules/untrusted_code_network": 3
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 26,
+  "precision": 0.0
+ },
+ "F3": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 4,
+   "rules/untrusted_exec": 16,
+   "rules/exfiltration": 3,
+   "rules/untrusted_code_network": 3
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 26,
+  "precision": 0.0
+ },
+ "L12": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 26.0,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 4,
+   "rules/untrusted_exec": 16,
+   "rules/exfiltration": 3,
+   "rules/untrusted_code_network": 3
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 26,
+  "precision": 0.0
+ }
+}

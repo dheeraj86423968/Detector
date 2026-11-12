@@ -1,0 +1,21 @@
+{
+ "transform": "launder",
+ "lotl": {
+  "targets": [],
+  "renamed_nodes": 0,
+  "renamed_gt": 0,
+  "still_unknown": 0,
+  "baseline_programs": 128,
+  "baseline_processes": 42202,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/windows/system32/cmd.exe",
+  "examples": []
+ },
+ "launder": {
+  "payloads": 0,
+  "copier_label": "subject /Device/HarddiskVolume1/Windows/system32/cmd.exe None",
+  "items": [],
+  "candidates_not_written": 0,
+  "edges_added": 0
+ }
+}

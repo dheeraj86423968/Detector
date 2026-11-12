@@ -9,6 +9,6 @@ for s in "$@"; do
   EX=""; [ "$s" = "CLEARSCOPE_E5-clearscope" ] && EX=""   # PIDSMaker list (appstarter, tester), as heldout_v10
   M=18g; [ "$s" = "TRACE_E3-trace" ] && M=36g
   GPU=1 MEM=$M NAME=lotl-$T-$s $R /code/lotl13.py $s --transform $T --out /lab/out/res-$T-$s.json --rows /lab/out/rows-$T-$s.json.gz \
-    --map /lab/out/map-$T-$s.json $EX < /dev/null > $W/out/log-$T-$s.log 2>&1
-  echo "$(date -u +%T) $T $s rc=$? $(grep -E '^.{9}(P2|F3|L12):' $W/out/log-$T-$s.log | tr '\n' ' ')"
+    --map /lab/out/map-$T-$s.json $EX < /dev/null > $W/out/log-$T-$s.log 2>&1; rc=$?
+  echo "$(date -u +%T) $T $s rc=$rc $(grep -E '^.{9}(P2|F3|L12):' $W/out/log-$T-$s.log | tr '\n' ' ')"
 done; echo LANE-DONE

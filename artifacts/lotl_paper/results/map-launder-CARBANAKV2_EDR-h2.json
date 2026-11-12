@@ -1,0 +1,118 @@
+{
+ "transform": "launder",
+ "lotl": {
+  "targets": [
+   {
+    "key": "/users/public/vnc-settings.reg",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/hostname.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/ipconfig.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/mstsc.exe",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/system32/netsh.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/rdpclip.exe",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/windows/system32/reg.exe",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/program files (x86)/microsoft/edge/application/msedge.exe",
+    "replacement": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 494,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/windows/system32/wscript.exe",
+    "kind": "shell",
+    "gt_nodes": 17,
+    "replacement_key": "/windows/system32/cmd.exe",
+    "replacement": "c:\\windows\\system32\\cmd.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 15,
+    "renamed_nodes": 17
+   }
+  ],
+  "renamed_nodes": 28,
+  "renamed_gt": 27,
+  "still_unknown": 0,
+  "baseline_programs": 198,
+  "baseline_processes": 3184,
+  "top_shell": "/windows/system32/cmd.exe",
+  "top_process": "/program files (x86)/microsoft/edge/application/msedge.exe",
+  "examples": [
+   {
+    "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\hostname.exe hostname",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe msedge",
+    "gt": true
+   },
+   {
+    "before": "subject c:\\windows\\system32\\reg.exe None",
+    "after": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+    "gt": true
+   }
+  ]
+ },
+ "launder": {
+  "payloads": 0,
+  "copier_label": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+  "items": [],
+  "candidates_not_written": 0,
+  "edges_added": 0
+ }
+}

@@ -1,0 +1,84 @@
+{
+ "FIVEDIRECTIONS_E3": {
+  "targets": [
+   {
+    "key": "/\"cmd.exe/\"",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "//windows//system32//net1",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "net",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 11
+   },
+   {
+    "key": "powershell",
+    "kind": "shell",
+    "gt_nodes": 1,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": true,
+    "baseline_runs": 1371,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "taskkill",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "//windows//system32//svchost.exe",
+    "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "fallback_to_process": false,
+    "baseline_runs": 1371,
+    "renamed_nodes": 2
+   }
+  ],
+  "renamed_nodes": 29,
+  "renamed_gt": 8,
+  "still_unknown": 0,
+  "baseline_programs": 105,
+  "baseline_processes": 6877,
+  "top_shell": null,
+  "top_process": "/\"c://program",
+  "examples": [
+   {
+    "before": "subject None powershell",
+    "after": "subject None C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "gt": false
+   },
+   {
+    "before": "subject None powershell  -nop -ep bypass -encodedCommand KABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAGYAaQBsAGU",
+    "after": "subject None C:\\\\WINDOWS\\\\system32\\\\svchost.exe  -nop -ep bypass -encodedCommand KABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHc",
+    "gt": true
+   },
+   {
+    "before": "subject None \\\"cmd.exe\\\"",
+    "after": "subject None C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+    "gt": false
+   }
+  ],
+  "set": "FIVEDIRECTIONS_E3",
+  "N": 169935,
+  "registry": 389447,
+  "test_nodes": 282820
+ }
+}

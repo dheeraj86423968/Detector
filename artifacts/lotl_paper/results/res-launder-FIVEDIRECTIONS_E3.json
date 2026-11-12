@@ -1,0 +1,205 @@
+{
+ "set": "FIVEDIRECTIONS_E3",
+ "bundle": "/data/lab08/01ca45e0-721f-4181-a4cb-33682335812a/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 108,
+ "days": 3,
+ "transform": {
+  "transform": "launder",
+  "lotl": {
+   "targets": [
+    {
+     "key": "/\"cmd.exe/\"",
+     "kind": "shell",
+     "gt_nodes": 1,
+     "replacement_key": "cmd.exe",
+     "replacement": "cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 1,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "//windows//system32//net1",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "//windows//system32//svchost.exe",
+     "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 1371,
+     "renamed_nodes": 11
+    },
+    {
+     "key": "net",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "//windows//system32//svchost.exe",
+     "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 1371,
+     "renamed_nodes": 11
+    },
+    {
+     "key": "powershell",
+     "kind": "shell",
+     "gt_nodes": 1,
+     "replacement_key": "cmd.exe",
+     "replacement": "cmd.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 1,
+     "renamed_nodes": 3
+    },
+    {
+     "key": "taskkill",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "//windows//system32//svchost.exe",
+     "replacement": "C:\\\\WINDOWS\\\\system32\\\\svchost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 1371,
+     "renamed_nodes": 2
+    }
+   ],
+   "renamed_nodes": 29,
+   "renamed_gt": 8,
+   "still_unknown": 0,
+   "baseline_programs": 105,
+   "baseline_processes": 6877,
+   "top_shell": "/\"c://salt//bin//python.exe/\"",
+   "top_process": "/\"c://program",
+   "examples": [
+    {
+     "before": "subject None powershell",
+     "after": "subject None cmd.exe",
+     "gt": false
+    },
+    {
+     "before": "subject None powershell  -nop -ep bypass -encodedCommand KABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAGYAaQBsAGU",
+     "after": "subject None cmd.exe  -nop -ep bypass -encodedCommand KABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAGYAaQBsAGUAKA",
+     "gt": true
+    },
+    {
+     "before": "subject None \\\"cmd.exe\\\"",
+     "after": "subject None cmd.exe",
+     "gt": false
+    }
+   ]
+  },
+  "launder": {
+   "payloads": 0,
+   "copier_label": "subject None \\\"C:\\\\Program Files\\\\Microsoft Office 15\\\\ClientX64\\\\OfficeC2RClient.exe\\\" /WatchService",
+   "items": [],
+   "candidates_not_written": 9,
+   "edges_added": 0
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "fivedirections_e3_excel_0409",
+  "fivedirections_e3_firefox_0411"
+ ],
+ "P2": {
+  "TP": 7,
+  "FP": 154,
+  "recall": 0.065,
+  "attacks": 2,
+  "FP/day": 51.33,
+  "TP/day": 2.33,
+  "by_layer": {
+   "novelty": 42,
+   "corroborated": 119
+  },
+  "by_layer_tp": {
+   "corroborated": 7
+  },
+  "by_rule": {
+   "novelty/novel_executable": 42,
+   "corroborated/learned_near_alert": 111,
+   "corroborated/novel_executable_repeat": 8
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 7
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "per_attack_gt_rules": {
+   "fivedirections_e3_firefox_0411": {
+    "corroborated/learned_near_alert": 3
+   },
+   "fivedirections_e3_excel_0409": {
+    "corroborated/learned_near_alert": 5
+   }
+  },
+  "rows": 193,
+  "precision": 0.043
+ },
+ "F3": {
+  "TP": 7,
+  "FP": 154,
+  "recall": 0.065,
+  "attacks": 2,
+  "FP/day": 51.33,
+  "TP/day": 2.33,
+  "by_layer": {
+   "novelty": 42,
+   "corroborated": 119
+  },
+  "by_layer_tp": {
+   "corroborated": 7
+  },
+  "by_rule": {
+   "novelty/novel_executable": 42,
+   "corroborated/learned_near_alert": 111,
+   "corroborated/novel_executable_repeat": 8
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 7
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "per_attack_gt_rules": {
+   "fivedirections_e3_firefox_0411": {
+    "corroborated/learned_near_alert": 3
+   },
+   "fivedirections_e3_excel_0409": {
+    "corroborated/learned_near_alert": 5
+   }
+  },
+  "rows": 193,
+  "precision": 0.043
+ },
+ "L12": {
+  "TP": 0,
+  "FP": 42,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 14.0,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 42
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 42
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 42,
+  "precision": 0.0
+ }
+}

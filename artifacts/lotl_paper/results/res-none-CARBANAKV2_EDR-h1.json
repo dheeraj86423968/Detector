@@ -1,0 +1,130 @@
+{
+ "set": "CARBANAKV2_EDR-h1",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h1/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 63,
+ "days": 8,
+ "transform": {
+  "transform": "none"
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "carbanakv2_edr"
+ ],
+ "P2": {
+  "TP": 5,
+  "FP": 83,
+  "recall": 0.079,
+  "attacks": 1,
+  "FP/day": 10.38,
+  "TP/day": 0.62,
+  "by_layer": {
+   "novelty": 43,
+   "corroborated": 18,
+   "rules": 27
+  },
+  "by_layer_tp": {
+   "novelty": 5
+  },
+  "by_rule": {
+   "novelty/novel_executable": 43,
+   "corroborated/learned_near_alert": 14,
+   "corroborated/novel_executable_repeat": 4,
+   "rules/untrusted_exec": 23,
+   "rules/exfiltration": 4
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 5
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "novelty/novel_executable": 5
+   }
+  },
+  "rows": 98,
+  "precision": 0.057
+ },
+ "F3": {
+  "TP": 5,
+  "FP": 83,
+  "recall": 0.079,
+  "attacks": 1,
+  "FP/day": 10.38,
+  "TP/day": 0.62,
+  "by_layer": {
+   "novelty": 43,
+   "corroborated": 18,
+   "rules": 27
+  },
+  "by_layer_tp": {
+   "novelty": 5
+  },
+  "by_rule": {
+   "novelty/novel_executable": 43,
+   "corroborated/learned_near_alert": 14,
+   "corroborated/novel_executable_repeat": 4,
+   "rules/untrusted_exec": 23,
+   "rules/exfiltration": 4
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 5
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "novelty/novel_executable": 5
+   }
+  },
+  "rows": 98,
+  "precision": 0.057
+ },
+ "L12": {
+  "TP": 5,
+  "FP": 65,
+  "recall": 0.079,
+  "attacks": 1,
+  "FP/day": 8.12,
+  "TP/day": 0.62,
+  "by_layer": {
+   "novelty": 43,
+   "rules": 27
+  },
+  "by_layer_tp": {
+   "novelty": 5
+  },
+  "by_rule": {
+   "novelty/novel_executable": 43,
+   "rules/untrusted_exec": 23,
+   "rules/exfiltration": 4
+  },
+  "by_rule_tp": {
+   "novelty/novel_executable": 5
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "novelty/novel_executable": 5
+   }
+  },
+  "rows": 80,
+  "precision": 0.071
+ }
+}
