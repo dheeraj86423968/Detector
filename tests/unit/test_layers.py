@@ -622,5 +622,26 @@ fe = TagEngine(TagParams(), set(), None, 0, fit=True); fe.net_profile = True; fe
 fe.process(win(nstream), nreg)
 check(set(fe.thresholds().get("unusual_network", {})) == {"/usr/bin/firefox", "/bin/bash"}, "the baseline replay records which programs contact unknown addresses")
 
+# per-endpoint options (train.program_identity / train.unusual_network) -> layer configuration and bundle requirements
+try:
+    from pdp_engine.trainer import TrainConfig as _TC, layer_config as _lc, layer_requirements as _lr
+    from pdp_engine.bundle import SUPPORTED_FEATURES as _SF
+    d = _lc(_TC())
+    check(not (d.rule_key_norm or d.rule_backslash_paths or d.version_names or d.net_profile) and d.exec_once and _lr(d) == [],
+          "training defaults: identity options and unusual_network off, exec_once on, no extra bundle requirement")
+    i = _lc(_TC(program_identity=True, unusual_network="evidence"))
+    check(i.rule_key_norm and i.rule_backslash_paths and i.version_names and i.net_profile and "unusual_network" in i.evidence_rules
+          and _lr(i) == ["layers:identity"] and "layers:identity" in _SF,
+          "program_identity turns the three identity options on and makes the bundle require a runtime that knows them")
+    a_ = _lc(_TC(unusual_network="alert"))
+    check(a_.net_profile and "unusual_network" not in a_.evidence_rules and _lr(a_) == [], "unusual_network alert: the alarm alerts by itself")
+    try:
+        _lc(_TC(unusual_network="yes")); ok = False
+    except ValueError:
+        ok = True
+    check(ok, "an unknown unusual_network mode is refused")
+except ImportError as e:      # the slim agent image has no trainer
+    print("skip trainer options:", e)
+
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

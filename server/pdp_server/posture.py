@@ -136,6 +136,8 @@ TRAIN_SCHEMA = {
     "repeat_corroborations": ("int", 0, 1000),       # 0.9: corroborated repeat runs per new program and day (0 = no cap)
     "alert_layers": ("layers",),
     "layers_only": ("bool",),
+    "program_identity": ("bool",),                      # 0.13 (lab_v16): layer 2 parses and keys programs like layer 1
+    "unusual_network": ("enum", ("off", "evidence", "alert")),   # 0.13 (lab_v17): alarm on a program's first unknown contact
     "fusion_calibration": ("enum", ("fixed", "simulation")),                   # server-side (worker.job_train)
 }
 WORKER_TRAIN = {"device": "train.device is chosen by the server's training worker and cannot be set"}
@@ -244,7 +246,9 @@ def detection_settings(cfg: dict | None) -> dict:
     al = t.get("alert_layers")
     # defaults = TrainConfig's (layer 1 alerts - the safety net kept in 0.7 and after the 0.8 held-out run -, the
     # learned layer alerts too, detector-3 and propagation on, breadth evidence off, thresholds at a budget of 10)
-    return {"layer_novelty": t.get("layer_novelty", True) is not False, "layer_rules": t.get("layer_rules", True) is not False,
+    return {"program_identity": t.get("program_identity", False) is True,
+            "unusual_network": t.get("unusual_network") if t.get("unusual_network") in ("evidence", "alert") else "off",
+            "layer_novelty": t.get("layer_novelty", True) is not False, "layer_rules": t.get("layer_rules", True) is not False,
             "detector3": t.get("detector3", True) is not False, "propagation": t.get("propagation", True) is not False,
             "calibration_budget": t.get("calibration_budget", 10),
             "d3_breadth": t.get("d3_breadth", False) is True, "d3_breadth_cap": t.get("d3_breadth_cap", D3_BREADTH_CAP),
@@ -301,6 +305,11 @@ def weakenings(before: dict | None, after: dict | None, kind: str | None = None)
         out.append("alerting turned off for " + ", ".join(LAYER_TEXT[x] for x in dropped))
     if a["layers_only"] and not b["layers_only"]:
         out.append("learned detectors no longer trained (layers_only)")
+    if b["program_identity"] and not a["program_identity"]:      # 0.13 options: turning them down detects less
+        out.append("data-flow rules no longer identify programs by full path (program_identity turned off)")
+    order = ("off", "evidence", "alert")
+    if order.index(a["unusual_network"]) < order.index(b["unusual_network"]):
+        out.append(f"alarm on a program's first contact with an unknown address lowered ({b['unusual_network']} -> {a['unusual_network']})")
     if b["detector3"] and not a["detector3"]:
         out.append("behavioural-likelihood detector (detector-3) turned off")
     if b["propagation"] and not a["propagation"]:

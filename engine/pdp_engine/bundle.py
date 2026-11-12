@@ -22,7 +22,8 @@ import torch
 
 
 # features a bundle can require of the runtime (manifest "requires"); a runtime refuses bundles needing others
-SUPPORTED_FEATURES = {"detector-1:batch_scale", "fusion:max", "detector-3", "propagation", "detector-3-breadth"}
+SUPPORTED_FEATURES = {"detector-1:batch_scale", "fusion:max", "detector-3", "propagation", "detector-3-breadth",
+                      "layers:identity"}      # 0.13: layer-2 thresholds keyed by program identity (trainer.layer_requirements)
 
 
 def detector1_file(velox_input: str, k: int) -> str:

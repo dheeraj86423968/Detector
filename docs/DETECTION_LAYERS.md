@@ -1,5 +1,51 @@
 # Layered detection (0.3, revised in 0.4-0.10)
 
+## 0.13 (2026-11-12): program identity in layer 2, one alarm per file version, an alarm for known programs
+
+Four labs on the 16 development / seen sets (`artifacts/lab_v14` to `lab_v17`; each with its rule written before its
+runs, all development results - no unseen set fits on the host's disk). What they found, and what changed:
+
+**Where the detector stood.** Attack recall is at what the telemetry allows (the four misses are single exploited
+processes without distinctive recorded behaviour, collectors without program paths, or attacks no system finds).
+Much of the node-level "false positive" count is attack activity the ground-truth files do not list (ATLASv2
+`payload.exe`, OpTC Metasploit payloads, attacker `whoami` / `netstat` / `tasklist`): FP nodes are an upper bound
+on false alarms, and a change is not better merely because it lowers them.
+
+**A blind spot (lab_v14).** Layer 2 parsed `c:\program files\x\y.exe` as the program `c:\program` on telemetry that
+writes backslashes (ATLASv2, CARBANAKv2, the Windows agent). It could therefore never match a started program with a
+file written from an untrusted source, and every program under a directory with a space shared one alarm key.
+Parsed correctly, layer 2 finds an attack nothing found (ATLASv2 m1) and the deterministic layers find 26 instead of
+21 of the detected attacks by themselves - but one browser self-update then alerted on each of 1,477 later
+`msedge.exe` processes, because layer 2 alerts per process instance.
+
+**Released: `exec_once` (lab_v16, on for newly fitted models).** An executed file with untrusted content alerts once
+per version of its content; starting the unchanged file again is `untrusted_exec_repeat` evidence (alerts only with
+a corroborating learned score, at most once per program and day). A file written again alerts again, the same day
+too. A cap per program and day (lab_v15) was rejected: it merged ATLASv2's ten same-day attack runs and lost two to
+four attacks. On these sets `exec_once` alone: same 26 attacks and 39 attack-days, FP 1,051 -> 1,035.
+
+**Options, off by default** (endpoint configuration `train`; lowering either is recorded as a weakening):
+
+| setting | what it does | recorded data (attacks / deterministic alone / FP) | LotL counterfactual (attacks / deterministic alone) |
+|---|---|---|---|
+| default (0.13) | | 26 / 21 / 1,035 | 18 / 9 |
+| `program_identity: true` | layer 2 parses programs like layer 1 with `backslash_paths`, looks thresholds up by program identity, and both layers treat a version inside a name (`..._1.2024.501.300_x64__..`, `firefox-54.0.1`) as the same program | **27 / 26** / 1,199 (+14 %) | 20 / 16 |
+| `unusual_network: alert` | alarm when a process contacts an untrusted address although its program contacted none on any baseline day | 26 / 21 / 1,249 (+21 %) | **22 / 17** |
+| `unusual_network: evidence` | the same alarm, alerting only with a corroborating learned score | 26 / 21 / 1,057 | 19 / 9 |
+
+Neither option met the limit its lab had set in advance for a default (FP nodes at most +10 %), and the limits were
+not moved. They are the more robust detector on these sets - `program_identity` in particular is what lets layer 2
+see programs under `Program Files` at all - and their cost is concentrated on CARBANAKv2 (Edge WebView, Git's perl,
+Python and Store apps sending to new addresses; TightVNC's server, which is part of that attack). A bundle fitted
+with `program_identity` requires an agent from 0.14 (`requires: layers:identity`); older agents keep their model.
+Layer-1 backslash parsing (`backslash_paths`) stays off in every variant: it still adds false positives (lab_v13,
+lab_v16 E4).
+
+**Costs recorded.** `exec_once`: an untrusted file that alerted and is not rewritten stays quiet on later runs - the
+first alert must be handled. `program_identity`: thresholds by identity relax more alarms than raw paths do, and a
+program named like another version of a known one in the same directory is that program to layer 1.
+`unusual_network`: blind to programs that normally contact unknown addresses (browsers, updaters).
+
 ## 0.12 (2026-11-10): SigmaHQ rules as an endpoint option (artifacts/lab_v12)
 
 **Request:** rules that flag known attacker techniques even when the learned detectors score nothing unusual, without

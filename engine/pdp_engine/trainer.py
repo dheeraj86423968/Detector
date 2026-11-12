@@ -99,6 +99,12 @@ class TrainConfig:
                                              # made 3,478 files it wrote "corroborate" it; artifacts/lab_v09)
     repeat_corroborations: int = 1           # corroborated repeat runs of a new program per program and day (0 = no cap)
     alert_layers: tuple | None = None        # layers allowed to alert (None = all); early models restrict this
+    # 0.13 (artifacts/lab_v16, lab_v17): options that detect more and do not depend on a program being new, at more
+    # false positives than the labs' limits allowed as a default (+14 % and +21 % nodes on the development sets)
+    program_identity: bool = False           # layer 2 parses and keys programs like layer 1 does (rule_key_norm,
+                                             # rule_backslash_paths, version_names): needed for layer 2 to see programs
+                                             # under 'c:\program files' on Windows telemetry
+    unusual_network: str = "off"             # alarm unusual_network: "off" | "evidence" (needs the learned score) | "alert"
     layers_only: bool = False                # rules-only model: layers 1-2 fitted, no learned detectors (early models
                                              # below one day of baseline: seconds on a CPU instead of a GPU run)
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
@@ -108,7 +114,24 @@ def layer_config(cfg: "TrainConfig") -> LayerConfig:
     """Layers 1-2 for a learned bundle. 0.7: new-program hits are evidence (they alert when the learned score
     corroborates them) unless novelty_as_evidence is off."""
     ev = tuple(EVIDENCE_RULES) + (("novel_executable",) if cfg.layer_novelty and cfg.novelty_as_evidence else ())
-    return LayerConfig(novelty=cfg.layer_novelty, rules=cfg.layer_rules, tags=TagParams(), evidence_rules=ev)
+    return LayerConfig(**{"novelty": cfg.layer_novelty, "rules": cfg.layer_rules, "tags": TagParams(), "evidence_rules": ev, **layer_options(cfg, ev)})
+
+
+def layer_options(cfg: "TrainConfig", ev: tuple = tuple(EVIDENCE_RULES)) -> dict:
+    """The 0.13 per-endpoint layer options of a training configuration as LayerConfig fields."""
+    if cfg.unusual_network not in ("off", "evidence", "alert"):
+        raise ValueError(f"unusual_network must be off, evidence or alert, not {cfg.unusual_network!r}")
+    ident = bool(cfg.program_identity)
+    out = {"rule_key_norm": ident, "rule_backslash_paths": ident, "version_names": ident, "net_profile": cfg.unusual_network != "off"}
+    if cfg.unusual_network == "evidence":
+        out["evidence_rules"] = tuple(ev) + ("unusual_network",)
+    return out
+
+
+def layer_requirements(lcfg: LayerConfig) -> list[str]:
+    """Runtime features a bundle's layers need (manifest "requires"): an agent before 0.14 would look the thresholds
+    of an identity-keyed layers.json up by raw path - it refuses the bundle and keeps its model instead."""
+    return ["layers:identity"] if (lcfg.rule_key_norm or lcfg.rule_backslash_paths or lcfg.version_names) else []
 
 
 D3_MIN_THRESHOLD = 5.0     # nats (P < 1/150): detector-3 thresholds never go lower (0.7)
@@ -340,7 +363,7 @@ class Trainer:
             "calibration": calibration,
             "requires": requirements(self.velox_input, self.cfg.fusion_mode, detector3=d3 is not None,
                                      propagation=d3 is not None and self.cfg.propagation,
-                                     breadth=d3 is not None and "breadth" in d3),
+                                     breadth=d3 is not None and "breadth" in d3) + layer_requirements(lcfg),
             "layers": {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules,
                        "evidence_rules": list(lcfg.evidence_rules),
                        "known_executables": len(spec["known_executables"]),
@@ -429,13 +452,16 @@ class Trainer:
     def run_layers_only(self, meta: dict | None = None) -> str:
         """A bundle with layers 1-2 only (known programs, trusted addresses, per-key thresholds): what an early model
         alerts with anyway. The runtime scores nothing learned with it (fused = 0)."""
-        lcfg = LayerConfig(novelty=self.cfg.layer_novelty, rules=self.cfg.layer_rules, tags=TagParams())
+        lcfg = LayerConfig(**{"novelty": self.cfg.layer_novelty, "rules": self.cfg.layer_rules, "tags": TagParams(),
+                              **{k: v for k, v in layer_options(self.cfg).items() if k != "evidence_rules" and k != "net_profile"},
+                              # no learned score in a rules-only model: an evidence alarm could never alert
+                              "net_profile": self.cfg.unusual_network == "alert"})
         spec = fit_layers(self.store, self.train_days + [self.val_day], self.reg, self.N, lcfg, log=log, exclude=self.layer_exclude, prior=self.layer_prior)
         json.dump(spec, open(os.path.join(self.out_dir, "layers.json"), "w"))
         policy = {"daily_budget": 0, "corroboration_percentile": self.cfg.corroboration_percentile,
                   "alert_layers": sorted(self.cfg.alert_layers or ("novelty", "rules"))}
         write_manifest(self.out_dir, {
-            **(meta or {}), "layers_only": True,
+            **(meta or {}), "layers_only": True, **({"requires": layer_requirements(lcfg)} if layer_requirements(lcfg) else {}),
             "num_nodes": self.N, "train_days": self.train_days, "val_day": self.val_day, "detectors": None, "calibration": None,
             "layers": {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules, "known_executables": len(spec["known_executables"]),
                        "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()}},
@@ -501,9 +527,9 @@ def upgrade_bundle_07(src_dir: str, out_dir: str, store: WindowStore, cfg: Train
     meta["detectors"] = {"detector-3": {"kind": "behavioural-likelihood", "budget": cfg.calibration_budget},
                          **{k: v for k, v in man["detectors"].items() if k != "detector-3"}}   # a 0.7+ source's is replaced
     # what the source required for detectors 1-2 is kept; the detector-3 features follow this upgrade's calibration
-    req = [f for f in (man.get("requires") or []) if f not in ("detector-3", "propagation", "detector-3-breadth")]
+    req = [f for f in (man.get("requires") or []) if f not in ("detector-3", "propagation", "detector-3-breadth", "layers:identity")]
     meta["requires"] = req + ["detector-3"] + (["propagation"] if cfg.propagation else []) \
-        + (["detector-3-breadth"] if "breadth" in d3 else [])
+        + (["detector-3-breadth"] if "breadth" in d3 else []) + layer_requirements(lcfg)
     meta["layers"] = {"file": "layers.json", "novelty": lcfg.novelty, "rules": lcfg.rules, "evidence_rules": list(lcfg.evidence_rules),
                       "known_executables": len(spec["known_executables"]),
                       "benign_alarm_keys": {r: len(v) for r, v in spec["thresholds"].items()},

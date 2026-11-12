@@ -31,10 +31,10 @@ MAX_STORY = 80
 TYPE_RANK = {"rules": 0, "novelty": 1, "corroborated": 2, "evidence": 3, "learned": 4}
 RULE_RANK = {"exfiltration": 0, "untrusted_code_network": 1, "untrusted_exec": 2, "novel_executable": 3,
              "tainted_modify": 4, "tainted_spawn": 5, "novel_executable_repeat": 6, "fleet_known_executable": 7,
-             "untrusted_exec_repeat": 8}
+             "untrusted_exec_repeat": 8, "unusual_network": 9}
 TACTIC = {"novel_executable": "Execution", "novel_executable_repeat": "Execution", "fleet_known_executable": "Execution",
           "untrusted_exec": "Execution", "untrusted_exec_repeat": "Execution", "tainted_spawn": "Execution",
-          "untrusted_code_network": "Command and control", "exfiltration": "Exfiltration",
+          "untrusted_code_network": "Command and control", "unusual_network": "Command and control", "exfiltration": "Exfiltration",
           "tainted_modify": "Persistence"}
 TACTIC_ORDER = ["Initial access", "Execution", "Persistence", "Privilege escalation", "Defense evasion", "Credential access",
                 "Discovery", "Lateral movement", "Collection", "Command and control", "Exfiltration", "Impact", "Unusual behaviour"]
