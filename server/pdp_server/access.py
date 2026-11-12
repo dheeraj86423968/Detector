@@ -1,6 +1,9 @@
 """Console access control: who is signed in, what they may do, which endpoints they may see.
 
 Roles:   admin    everything (users and access, endpoints and their settings, triage, detection checks)
+         auditor  read-only administrator: sees what an admin sees (all of the organisation's endpoints, users, audit
+                  log, settings), changes nothing; secrets (invite links, enrolment tokens, webhook URLs) are withheld,
+                  and an auditor is never the platform operator
          analyst  view everything in scope, triage incidents and alerts, run detection checks
          viewer   view everything in scope, read-only
 Tenancy: every user belongs to one organisation (orgs) and only ever sees that organisation's endpoints; this holds
@@ -15,10 +18,17 @@ from fastapi import Depends, HTTPException, Request, Response
 
 from . import auth, db
 
-ROLES = ("admin", "analyst", "viewer")
+ROLES = ("admin", "analyst", "viewer", "auditor")
 ROLE_TEXT = {"admin": "Full access, including users, endpoints and settings",
              "analyst": "Investigates and triages incidents, runs detection checks",
-             "viewer": "Read-only access to incidents, alerts and endpoint status"}
+             "viewer": "Read-only access to incidents, alerts and endpoint status",
+             "auditor": "Read-only administrator: sees everything an admin sees, changes nothing"}
+ALL_ENDPOINT_ROLES = ("admin", "auditor")      # always see every endpoint of their organisation (users.endpoints ignored)
+
+
+def is_operator(role: str | None, flag) -> bool:
+    """The platform-operator flag counts only for a role that may change things: an auditor is never the operator."""
+    return bool(flag) and role != "auditor"
 
 
 MFA_SETUP_PATHS = {"/api/me", "/api/me/mfa/setup", "/api/me/mfa/enable", "/api/logout", "/api/auth/config"}
@@ -44,9 +54,9 @@ def session(request: Request) -> dict:
         if u["require_mfa"] and u["auth"] == "local" and not u["totp_enabled"] and request.url.path not in MFA_SETUP_PATHS:
             raise HTTPException(403, "your organisation requires two-factor sign-in: set it up under Account first")
         org_eps = {str(r["id"]) for r in db.q(c, "SELECT id FROM endpoints WHERE org_id=%s", (u["org_id"],))}
-    scope = org_eps if u["role"] == "admin" or u["endpoints"] is None else org_eps & {str(x) for x in u["endpoints"]}
+    scope = org_eps if u["role"] in ALL_ENDPOINT_ROLES or u["endpoints"] is None else org_eps & {str(x) for x in u["endpoints"]}
     return {**s, "r": u["role"], "a": u["auth"], "scope": scope, "org": str(u["org_id"]), "org_name": u["org_name"],
-            "op": bool(u["operator"])}
+            "op": is_operator(u["role"], u["operator"])}
 
 
 def set_session(response: Response, user_id: int, role: str) -> None:
@@ -90,9 +100,23 @@ def note_failed_sign_in(c, user_id: int) -> None:
 
 
 def admin(s=Depends(session)) -> dict:
+    """Every change an admin makes (and the few reads whose purpose is a secret, e.g. a manifest with a token)."""
     if s["r"] != "admin":
+        raise HTTPException(403, "admin role required" if s["r"] != "auditor" else "the auditor role is read-only")
+    return s
+
+
+def admin_view(s=Depends(session)) -> dict:
+    """Admin pages that only read (users, invites, audit log, jobs, notification channels ...): admins and auditors.
+    Routes using it withhold secrets from auditors (see redacting())."""
+    if s["r"] not in ("admin", "auditor"):
         raise HTTPException(403, "admin role required")
     return s
+
+
+def redacting(s: dict) -> bool:
+    """True when the response must leave out secrets (invite links, tokens, webhook URLs): the auditor role."""
+    return s.get("r") != "admin"
 
 
 def operator(s=Depends(session)) -> dict:
@@ -107,11 +131,19 @@ def triager(s=Depends(session)) -> dict:
     return s
 
 
+def exporter(s=Depends(session)) -> dict:
+    """Alert exports (a read, audited): the roles that triage, and auditors."""
+    if s["r"] not in ("admin", "analyst", "auditor"):
+        raise HTTPException(403, "your role cannot export alerts")
+    return s
+
+
 def can(s: dict) -> dict:
     r = s["r"]
     return {"manage_users": r == "admin", "manage_endpoints": r == "admin",
             "triage": r in ("admin", "analyst"), "run_checks": r in ("admin", "analyst"),
-            "manage_org": r == "admin", "operate": bool(s.get("op"))}
+            "manage_org": r == "admin", "view_admin": r in ("admin", "auditor"), "export": r in ("admin", "analyst", "auditor"),
+            "operate": is_operator(r, s.get("op"))}
 
 
 def visible(s: dict, endpoint_id) -> bool:

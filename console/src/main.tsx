@@ -46,7 +46,8 @@ function Shell() {
   };
   const name = me.display_name || me.username;
   const open = counts.data?.incidents.open;
-  const team = me.can?.manage_users || me.can?.manage_org;
+  const team = me.can?.manage_users || me.can?.manage_org || me.can?.view_admin;
+  const settings = me.can?.manage_org || me.can?.view_admin;     // auditors see them read-only
   return (
     <MeContext.Provider value={me}>
       <MeReloadContext.Provider value={reloadMe}>
@@ -61,8 +62,8 @@ function Shell() {
               <NavLink to="/hunt"><Search size={18} />Search activity</NavLink>
               <NavLink to="/allowlist"><ListChecks size={18} />Allow list</NavLink>
               {team && <NavLink to="/team"><Users size={18} />Team</NavLink>}
-              {me?.can?.manage_org && <NavLink to="/settings/notifications"><Bell size={18} />Notifications</NavLink>}
-              {me?.can?.manage_org && <NavLink to="/settings/security"><KeyRound size={18} />Security</NavLink>}
+              {settings && <NavLink to="/settings/notifications"><Bell size={18} />Notifications</NavLink>}
+              {settings && <NavLink to="/settings/security"><KeyRound size={18} />Security</NavLink>}
               {me.operator && <>
                 <div className="nav-section">Platform</div>
                 <NavLink to="/operator"><Building2 size={18} />Organisations</NavLink>

@@ -20,7 +20,8 @@ from pydantic import BaseModel, Field
 import psycopg2.extras
 
 from . import auth, db, oidc, pki
-from .access import admin, end_sessions, note_failed_sign_in, require_endpoint, scope_sql, session, set_session, sign_in_locked, triager, visible
+from .access import ALL_ENDPOINT_ROLES, ROLES, admin, admin_view, end_sessions, exporter, note_failed_sign_in, require_endpoint, scope_sql, session, \
+    set_session, sign_in_locked, triager, visible
 from .graphs import alert_graph, endpoint_timeline, incident_graph
 
 app = FastAPI(title="PDP", docs_url=None, redoc_url=None, openapi_url=None)
@@ -640,14 +641,14 @@ def end_other_sessions(response: Response, s=Depends(session)):
 
 
 def _user_out(r: dict, names: dict) -> dict:
-    eps = None if r["role"] == "admin" or r["endpoints"] is None else [{"id": str(e), "name": names.get(str(e), "(removed endpoint)")} for e in r["endpoints"]]
+    eps = None if r["role"] in ALL_ENDPOINT_ROLES or r["endpoints"] is None else [{"id": str(e), "name": names.get(str(e), "(removed endpoint)")} for e in r["endpoints"]]
     return {"id": r["id"], "username": r["username"], "display_name": r["display_name"] or r["username"], "email": r["email"],
             "role": r["role"], "auth": r["auth"], "endpoints": eps, "disabled": r["disabled"],
             "created_at": r["created_at"], "last_login": r["last_login"]}
 
 
 @app.get("/api/users")
-def list_users(s=Depends(admin)):
+def list_users(s=Depends(admin_view)):
     with db.conn() as c:
         rows = db.q(c, "SELECT id, username, display_name, role, auth, email, endpoints, disabled, created_at, last_login FROM users "
                        "WHERE org_id=%s ORDER BY lower(coalesce(display_name, username))", (s["org"],))
@@ -688,12 +689,12 @@ def create_user(req: NewUser, s=Depends(admin)):
     import re as _re
     if not _re.fullmatch(r"[A-Za-z0-9_.@-]{2,64}", req.username):
         raise HTTPException(400, "username: 2-64 characters of letters, digits and _ . @ -")
-    if req.role not in ("admin", "analyst", "viewer"):
-        raise HTTPException(400, "role must be admin, analyst or viewer")
+    if req.role not in ROLES:
+        raise HTTPException(400, f"role must be one of {', '.join(ROLES)}")
     if len(req.password) < 10:
         raise HTTPException(400, "password must have at least 10 characters")
     with db.conn() as c:
-        eps = _check_endpoint_ids(c, req.endpoints, s)
+        eps = None if req.role in ALL_ENDPOINT_ROLES else _check_endpoint_ids(c, req.endpoints, s)
         email = (req.email or "").strip().lower() or None
         if email and db.q(c, "SELECT 1 FROM users WHERE lower(email)=%s OR lower(username)=%s", (email, email), one=True):
             raise HTTPException(409, "a user with this email exists")
@@ -720,10 +721,12 @@ def update_user(user_id: int, body: dict, s=Depends(admin)):
             raise HTTPException(404, "user not found")
         sets, params = [], []
         if "role" in body:
-            if body["role"] not in ("admin", "analyst", "viewer"):
-                raise HTTPException(400, "role must be admin, analyst or viewer")
+            if body["role"] not in ROLES:
+                raise HTTPException(400, f"role must be one of {', '.join(ROLES)}")
             if u["auth"] == "oidc" and body["role"] != u["role"]:
                 raise HTTPException(400, "this account signs in with single sign-on: its role comes from the identity provider's groups")
+            if body["role"] == "auditor" and u.get("operator"):
+                raise HTTPException(400, "the platform operator cannot have the auditor role (an auditor changes nothing)")
             sets.append("role=%s"); params.append(body["role"])
         if "display_name" in body:
             sets.append("display_name=%s"); params.append((str(body["display_name"] or "")[:128]).strip() or None)
@@ -1041,7 +1044,7 @@ def install_progress(req: InstallProgress):
 
 
 @app.get("/api/install-progress/{key}")
-def get_install_progress(key: str, s=Depends(admin)):
+def get_install_progress(key: str, s=Depends(admin_view)):
     """Where an installation started from the Add endpoint dialog is: the installer's stages, then the endpoint's
     own (enrolled, reporting, collecting activity, first model)."""
     from .k8s import key_of
@@ -1158,9 +1161,9 @@ EXPORT_MAX_ROWS = int(os.environ.get("PDP_EXPORT_MAX_ROWS", "100000"))
 
 
 @app.get("/api/alerts/export")
-def export_alerts(request: Request, s=Depends(triager), format: str = "csv", endpoint_id: str | None = None, status: str | None = None,
+def export_alerts(request: Request, s=Depends(exporter), format: str = "csv", endpoint_id: str | None = None, status: str | None = None,
                   limit: int = EXPORT_MAX_ROWS, since_id: int | None = None):
-    """Download alerts (newest first) as CSV or NDJSON for a SIEM / spreadsheet. Analysts and admins only, at most
+    """Download alerts (newest first) as CSV or NDJSON for a SIEM / spreadsheet. Analysts, admins and auditors, at most
     EXPORT_MAX_ROWS rows per request: page with since_id (alerts with a larger id, oldest first; the response's
     X-PDP-Next-Since-Id header is the next page's since_id while more rows remain). Every export is audited with
     its row count; exports are rate-limited per user (pdp_server.posture)."""
@@ -1225,7 +1228,7 @@ def get_incident(endpoint_id: str, s=Depends(session), focus_ns: int | None = No
 
 
 @app.get("/api/jobs")
-def list_jobs(s=Depends(admin)):
+def list_jobs(s=Depends(admin_view)):
     with db.conn() as c:
         rows = db.q(c, "SELECT j.*, e.name AS endpoint FROM jobs j JOIN endpoints e ON e.id=j.endpoint_id WHERE e.org_id=%s "
                        "ORDER BY j.created_at DESC LIMIT 100", (s["org"],))

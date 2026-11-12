@@ -21,7 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from . import auth, db
-from .access import ROLE_TEXT, admin, operator, session
+from .access import ALL_ENDPOINT_ROLES, ROLE_TEXT, ROLES, admin, admin_view, is_operator, operator, redacting, session
 
 router = APIRouter()
 
@@ -78,11 +78,12 @@ def check_endpoint_limit(c, org_id: str) -> None:
 def me_body(c, uid: int) -> dict:
     from .access import can
     u = db.q(c, "SELECT u.*, o.name AS org_name, o.require_mfa FROM users u JOIN orgs o ON o.id=u.org_id WHERE u.id=%s", (uid,), one=True)
-    s = {"r": u["role"], "op": bool(u["operator"])}
+    op = is_operator(u["role"], u["operator"])
+    s = {"r": u["role"], "op": op}
     return {"ok": True, "role": u["role"], "username": u["username"], "display_name": u["display_name"] or u["username"],
             "user_id": u["id"], "auth": u["auth"], "email": u["email"],
-            "endpoints": None if u["role"] == "admin" else u["endpoints"], "can": can(s),
-            "org": {"id": str(u["org_id"]), "name": u["org_name"]}, "operator": bool(u["operator"]),
+            "endpoints": None if u["role"] in ALL_ENDPOINT_ROLES else u["endpoints"], "can": can(s),
+            "org": {"id": str(u["org_id"]), "name": u["org_name"]}, "operator": op,
             "mfa_enabled": bool(u.get("totp_enabled")),
             "mfa_setup_required": bool(u.get("require_mfa")) and u["auth"] == "local" and not u.get("totp_enabled")}
 
@@ -176,31 +177,32 @@ class NewInvite(BaseModel):
     endpoints: list[str] | None = None
 
 
-def _invite_out(r: dict, names: dict, base: str) -> dict:
-    eps = None if r["role"] == "admin" or r["endpoints"] is None else [{"id": e, "name": names.get(e, "(removed endpoint)")} for e in r["endpoints"]]
+def _invite_out(r: dict, names: dict, base: str, secret: bool = True) -> dict:
+    """secret=False (auditors): without the link, whose token lets anyone join the organisation with the invite's role."""
+    eps = None if r["role"] in ALL_ENDPOINT_ROLES or r["endpoints"] is None else [{"id": e, "name": names.get(e, "(removed endpoint)")} for e in r["endpoints"]]
     return {"id": r["id"], "email": r["email"], "role": r["role"], "endpoints": eps, "created_at": r["created_at"],
-            "expires_at": r["expires_at"], "created_by": r.get("created_by_name"), "link": f"{base}/#/join/{r['token']}"}
+            "expires_at": r["expires_at"], "created_by": r.get("created_by_name"), "link": f"{base}/#/join/{r['token']}" if secret else None}
 
 
 @router.get("/api/invites")
-def list_invites(request: Request, s=Depends(admin)):
+def list_invites(request: Request, s=Depends(admin_view)):
     with db.conn() as c:
         rows = db.q(c, "SELECT i.*, coalesce(u.display_name, u.username) AS created_by_name FROM invites i LEFT JOIN users u ON u.id=i.created_by "
                        "WHERE i.org_id=%s AND i.used_at IS NULL AND NOT i.revoked AND i.expires_at > now() ORDER BY i.created_at DESC", (s["org"],))
         names = {str(r["id"]): r["name"] for r in db.q(c, "SELECT id, name FROM endpoints WHERE org_id=%s", (s["org"],))}
-    return {"ok": True, "invites": [_invite_out(r, names, _base(request)) for r in rows]}
+    return {"ok": True, "invites": [_invite_out(r, names, _base(request), secret=not redacting(s)) for r in rows]}
 
 
 @router.post("/api/invites")
 def create_invite(req: NewInvite, request: Request, s=Depends(admin)):
     from .api import _check_endpoint_ids
-    if req.role not in ROLE_TEXT:
-        raise HTTPException(400, "role must be admin, analyst or viewer")
+    if req.role not in ROLES:
+        raise HTTPException(400, f"role must be one of {', '.join(ROLES)}")
     email = _email(req.email) if (req.email or "").strip() else None
     with db.conn() as c:
         if email and _taken(c, email):
             raise HTTPException(409, "An account with this email already exists")
-        eps = None if req.role == "admin" else _check_endpoint_ids(c, req.endpoints, s)
+        eps = None if req.role in ALL_ENDPOINT_ROLES else _check_endpoint_ids(c, req.endpoints, s)
         if db.q(c, "SELECT count(*) AS n FROM invites WHERE org_id=%s AND used_at IS NULL AND NOT revoked AND expires_at > now()", (s["org"],), one=True)["n"] >= 200:
             raise HTTPException(400, "Too many pending invites; revoke some first")
         r = db.q(c, "INSERT INTO invites (token, org_id, email, role, endpoints, created_by, expires_at) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING *",

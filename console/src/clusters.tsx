@@ -53,7 +53,8 @@ export function ClusterResult({ c, name }: { c: NewCluster; name: string }) {
   );
 }
 
-export function ClustersCard() {
+/** canManage false (auditors): the list only; no manifest (it holds the enrolment token), nothing to close. */
+export function ClustersCard({ canManage = true }: { canManage?: boolean }) {
   const { data, reload } = useApi<{ clusters: Cluster[] }>("/api/clusters");
   const toast = useToast(); const [busy, setBusy] = useState<string | null>(null);
   if (!data?.clusters.length) return null;
@@ -71,7 +72,7 @@ export function ClustersCard() {
         <tr key={c.key} className={c.active ? "" : "row-muted"}>
           <td><b>{c.cluster}</b><div className="muted sm">{plural(c.endpoints, "endpoint")} · {c.uses} of {c.max_nodes} enrolments used</div></td>
           <td className="muted sm">{c.active ? `new nodes can join until ${fmtDate(c.expires_at)}` : "closed to new nodes"}</td>
-          <td style={{ width: 280, textAlign: "right" }}>{c.active && <>
+          <td style={{ width: 280, textAlign: "right" }}>{c.active && canManage && <>
             <button className="btn sm" disabled={busy === c.key} onClick={() => download(c)}>{busy === c.key ? <Loader2 size={14} className="spin" /> : <Download size={14} />}Manifest</button>{" "}
             <button className="btn sm" onClick={async () => { await post(`/api/clusters/${c.key}/revoke`); toast("Closed: no new nodes can join with this manifest"); reload(); }}>Close to new nodes</button></>}
           </td></tr>))}</tbody></table>

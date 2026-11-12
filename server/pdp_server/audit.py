@@ -3,7 +3,7 @@
 A middleware records every mutating console request (POST / PATCH / PUT / DELETE under /api/) after it has been
 answered, as "METHOD /route/{template}" with the path's ids as target and the HTTP status (refused attempts are
 recorded too). Request bodies are not stored (they may hold passwords or secrets). Sign-in attempts are recorded by
-the login routes themselves (no session exists yet). Admins read their organisation's log: GET /api/audit.
+the login routes themselves (no session exists yet). Admins (and auditors) read their organisation's log: GET /api/audit.
 
 0.6 (pdp_server.posture.audit_change): changes to endpoint settings, the allow list, organisation and notification
 settings and users add a row of their own, written in the same transaction as the change, whose `detail` holds a
@@ -12,11 +12,13 @@ weakens detection, what it weakens. Alert exports (with the row count) and hunts
 too. The audit log is kept for at least 365 days, whatever the organisation's data retention (worker.apply_retention)."""
 from __future__ import annotations
 
+import re
+
 from fastapi import APIRouter, Depends, Request
 from starlette.concurrency import run_in_threadpool
 
 from . import auth, db
-from .access import admin
+from .access import admin_view, redacting
 
 router = APIRouter()
 SKIP = ("/api/registry/auth", "/api/login", "/api/logout", "/api/signup")   # recorded explicitly or not a change
@@ -66,10 +68,22 @@ def _record_request(uid, action, target, status, ip):
     record(org, uid, name, action, target, status, ip)
 
 
+_TOKEN_PARAM = re.compile(r"\b(token)=[^,\s]+")
+
+
+def redact_target(target: str | None) -> str | None:
+    """A request's path ids as the auditor sees them: tokens (e.g. an invite accepted while signed in) left out."""
+    return _TOKEN_PARAM.sub(lambda m: f"{m.group(1)}=[redacted]", target) if target else target
+
+
 @router.get("/api/audit")
-def audit_list(limit: int = 200, s=Depends(admin)):
+def audit_list(limit: int = 200, s=Depends(admin_view)):
+    """Admins and auditors. Details are redacted when written (pdp_server.posture.audit_change); for auditors, token
+    path parameters are left out of the target as well."""
     with db.conn() as c:
         rows = db.q(c, "SELECT a.id, a.at, coalesce(u.display_name, a.username) AS who, a.action, a.target, a.status, a.ip, a.detail FROM audit_log a "
                        "LEFT JOIN users u ON u.id=a.user_id WHERE a.org_id=%s ORDER BY a.at DESC, a.id DESC LIMIT %s",
                     (s["org"], max(1, min(int(limit), 2000))))
+    if redacting(s):
+        rows = [dict(r, target=redact_target(r["target"])) for r in rows]
     return {"ok": True, "entries": rows}

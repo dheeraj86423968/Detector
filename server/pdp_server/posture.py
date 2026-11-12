@@ -31,7 +31,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 
 from . import db
-from .access import admin, require_endpoint, session
+from .access import admin_view, require_endpoint, session
 
 router = APIRouter()
 
@@ -852,7 +852,7 @@ def endpoint_posture(endpoint_id: str, s=Depends(session)):
 
 
 @router.get("/api/security-events")
-def list_security_events(limit: int = 100, s=Depends(admin)):
+def list_security_events(limit: int = 100, s=Depends(admin_view)):
     """What the organisation's admins are told about: weakened detection (with who and why), posture worsening,
     silenced notification channels, response actions."""
     with db.conn() as c:

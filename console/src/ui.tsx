@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertCircle, BellOff, Check, CheckCircle2, Copy, Globe, Info, Layers, Loader2, MoreHorizontal, Search, SquareTerminal, FileText, X } from "lucide-react";
+import { AlertCircle, BellOff, Check, CheckCircle2, Copy, Eye, Globe, Info, Layers, Loader2, MoreHorizontal, Search, SquareTerminal, FileText, X } from "lucide-react";
 import type { Endpoint, EndpointState, IncidentStatus, Severity } from "./api";
 import { detection, fmtDateTime, fmtRel, INCIDENT_STATUS, ALERT_STATUS, midTrunc, plural, SEVERITY_LABEL, shortHex, tailLength } from "./format";
 
@@ -53,12 +53,17 @@ export function Tabs<T extends string>({ value, onChange, tabs }: { value: T; on
   );
 }
 
-export function Segmented<T extends string>({ value, onChange, options, size }: { value: T; onChange: (v: T) => void; options: { id: T; label: ReactNode; title?: string }[]; size?: "sm" }) {
+export function Segmented<T extends string>({ value, onChange, options, size, disabled }: { value: T; onChange: (v: T) => void; options: { id: T; label: ReactNode; title?: string }[]; size?: "sm"; disabled?: boolean }) {
   return (
     <div className={cx("segmented", size)}>
-      {options.map(o => <button key={o.id} title={o.title} className={cx(value === o.id && "on")} onClick={() => onChange(o.id)}>{o.label}</button>)}
+      {options.map(o => <button key={o.id} type="button" title={o.title} disabled={disabled} className={cx(value === o.id && "on")} onClick={() => onChange(o.id)}>{o.label}</button>)}
     </div>
   );
+}
+
+/** Shown on admin pages an auditor sees: nothing there can be changed with their role. */
+export function ReadOnlyHint({ text = "Read-only: your role can see these settings but not change them." }: { text?: string }) {
+  return <div className="readonly-hint" role="note"><Eye size={14} />{text}</div>;
 }
 
 // ---------------------------------------------------------------- states

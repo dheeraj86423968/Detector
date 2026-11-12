@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from . import db, pki
-from .access import admin, require_endpoint
+from .access import admin, admin_view, require_endpoint
 
 router = APIRouter()
 ACTIONS = ("kill_process", "isolate", "release")
@@ -69,7 +69,7 @@ def respond(endpoint_id: str, req: Respond, s=Depends(admin)):
 
 
 @router.get("/api/endpoints/{endpoint_id}/commands/{command_id}")
-def command_result(endpoint_id: str, command_id: str, s=Depends(admin)):
+def command_result(endpoint_id: str, command_id: str, s=Depends(admin_view)):
     require_endpoint(s, endpoint_id)
     with db.conn() as c:
         j = db.q(c, "SELECT state, result, params, created_at, finished_at FROM jobs WHERE id=%s AND endpoint_id=%s AND kind='command'",

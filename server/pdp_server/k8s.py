@@ -18,7 +18,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from . import db, pki
-from .access import admin
+from .access import admin, admin_view
 
 router = APIRouter()
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._-]{0,62}$")
@@ -138,7 +138,7 @@ def _cluster_tokens(c, org) -> list[dict]:
 
 
 @router.get("/api/clusters")
-def list_clusters(s=Depends(admin)):
+def list_clusters(s=Depends(admin_view)):
     now = datetime.now(timezone.utc)
     with db.conn() as c:
         rows = _cluster_tokens(c, s["org"])
@@ -157,6 +157,7 @@ def _find(c, org, key):
 
 @router.get("/api/clusters/{key}/manifest")
 def cluster_manifest(key: str, request: Request, s=Depends(admin)):
+    """Admins only (not auditors): the manifest embeds the cluster's enrolment token."""
     with db.conn() as c:
         r = _find(c, s["org"], key)
     if r["expires_at"] <= datetime.now(timezone.utc):

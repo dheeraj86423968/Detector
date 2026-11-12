@@ -4,6 +4,7 @@
 #                         hunt_e2e (threat hunting across organisations), k8s_e2e (Kubernetes cluster tokens),
 #                         security_e2e (two-factor, audit log, SSO domain proof, sessions ended on password change),
 #                         fleet_e2e (console fleet controls: summary, fleet name, prevalence mode, which changes need a reason)
+#                         auditor_e2e (auditor role: every admin read without secrets, every change refused)
 set -uo pipefail
 cd "$(dirname "$0")/.."
 [ -f deploy/staging.env ] || { echo "no staging stack: deploy/staging.sh up" >&2; exit 2; }
@@ -36,4 +37,5 @@ rm -rf deploy/btf/.e2e
 sleep 61
 suite security_e2e pdp/server:dev tests/e2e/security_e2e.py
 suite fleet_e2e pdp/agent:dev tests/e2e/fleet_e2e.py
+suite auditor_e2e pdp/server:dev tests/e2e/auditor_e2e.py
 exit $fail

@@ -9,7 +9,7 @@ import { RemoveEndpointDialog } from "../endpointRemove";
 import { DailyBars } from "../chart";
 import { DETECTION, fmtBytes, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtRel, plural } from "../format";
 import { IncidentTable } from "../incidents";
-import { AllowKindIcon, Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, Mid, PageHeader, Segmented, ShowMore, Tabs, Toggle, useReasoned, useShowMore, useToast } from "../ui";
+import { AllowKindIcon, Card, Confirm, cx, DetectionTag, Empty, EndpointStateBadge, ErrorState, Loading, Mid, PageHeader, ReadOnlyHint, Segmented, ShowMore, Tabs, Toggle, useReasoned, useShowMore, useToast } from "../ui";
 
 type Tab = "overview" | "incidents" | "settings";
 
@@ -40,11 +40,11 @@ export default function EndpointDetail() {
         </div>} />
       <Tabs value={tab} onChange={v => setSp(v === "overview" ? {} : { tab: v }, { replace: true })} tabs={[
         { id: "overview", label: "Overview" }, { id: "incidents", label: "Incidents", count: d.detection.incidents_total },
-        ...(can.manage_endpoints && !retired ? [{ id: "settings" as Tab, label: "Settings" }] : []),
+        ...((can.manage_endpoints || can.view_admin) && !retired ? [{ id: "settings" as Tab, label: "Settings" }] : []),
       ]} />
       {tab === "overview" && <OverviewTab d={d} reload={ov.reload} />}
       {tab === "incidents" && <IncidentsTab id={id!} learning={ep.state === "learning" || ep.state === "training"} />}
-      {tab === "settings" && can.manage_endpoints && <SettingsTab id={id!} name={ep.name} />}
+      {tab === "settings" && (can.manage_endpoints || can.view_admin) && <SettingsTab id={id!} name={ep.name} readOnly={!can.manage_endpoints} />}
       {removing && <RemoveEndpointDialog ep={{ id: id!, name: ep.name, state: ep.state }} onClose={() => setRemoving(false)}
         onDone={how => how === "deleted" ? nav("/endpoints") : ov.reload()} />}
     </div>
@@ -294,9 +294,9 @@ function IncidentsTab({ id, learning }: { id: string; learning: boolean }) {
   );
 }
 
-// ---------------------------------------------------------------- settings (admin)
+// ---------------------------------------------------------------- settings (admin; read-only for auditors)
 
-function SettingsTab({ id, name }: { id: string; name: string }) {
+function SettingsTab({ id, name, readOnly }: { id: string; name: string; readOnly?: boolean }) {
   const [withReason, reasonDialog] = useReasoned();
   const { data, error, loading, reload } = useApi<EndpointConfigResp>(`/api/endpoints/${id}`);
   const [budget, setBudget] = useState<string>(""); const [retire, setRetire] = useState(false);
@@ -309,7 +309,9 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
   const setCfg = (config: Record<string, unknown>, ok: string) => withReason(reason => post(`/api/endpoints/${id}/config`, { config, reason }), ok, reload);
   return (
     <div className="settings">
-      <AllowCard id={id} name={name} />
+      {readOnly && <ReadOnlyHint text="Read-only: you can see this endpoint's settings, but not change them." />}
+      <AllowCard id={id} name={name} readOnly={readOnly} />
+      <fieldset className="plain-fieldset" disabled={readOnly}>
       <Card title="Unusual-behaviour alerts" subtitle="Besides new programs and suspicious data flows, the learned model can raise alerts on its own for behaviour unlike the baseline.">
         <div className="setting-row">
           <div><div className="setting-name">Raise unusual-behaviour alerts</div><div className="muted sm">When off, the model only adds context to the other detections.</div></div>
@@ -319,11 +321,11 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
           <div><div className="setting-name">Daily limit</div><div className="muted sm">Alerts on unusual behaviour alone, per day (most unusual first). 0, the default: the model confirms and ranks the other detections.</div></div>
           <form className="inline-form" onSubmit={e => { e.preventDefault(); const v = parseInt(budget, 10); if (!isNaN(v) && v >= 0) setCfg({ learned_daily_budget: v }, `Daily limit set to ${v}`); }}>
             <input type="number" min={0} max={1000} value={budget} disabled={!learnedOn} onChange={e => setBudget(e.target.value)} style={{ width: 96 }} aria-label="Daily limit" />
-            <button className="btn" disabled={!learnedOn || budget === String(cfg.learned_daily_budget ?? 0)}>Save</button>
+            {!readOnly && <button className="btn" disabled={!learnedOn || budget === String(cfg.learned_daily_budget ?? 0)}>Save</button>}
           </form>
         </div>
       </Card>
-      {data?.fleet && <FleetCard fleet={data.fleet} setCfg={setCfg} />}
+      {data?.fleet && <FleetCard fleet={data.fleet} setCfg={setCfg} readOnly={readOnly} />}
       <Card title="Industry detection rules" subtitle="SigmaHQ's community rules for known attacker techniques (Office starting a script host, credential-dumping tools, suspicious downloads...). They flag a technique even when the learned model sees nothing unusual. Changes reach the agent at its next check-in.">
         <div className="setting-row">
           <div><div className="setting-name">Sigma rules</div>
@@ -332,12 +334,13 @@ function SettingsTab({ id, name }: { id: string; name: string }) {
             onChange={v => setCfg({ sigma: v }, `Sigma rules: ${SIGMA_MODES.find(m => m.id === v)!.label.toLowerCase()}`)} />
         </div>
       </Card>
-      <Card title="Remove endpoint" className="danger-card">
+      {!readOnly && <Card title="Remove endpoint" className="danger-card">
         <div className="setting-row">
           <div><div className="setting-name">Remove {name}</div><div className="muted sm">Retire it (its alerts and incidents stay for the record) or delete it with all its data.</div></div>
           <button className="btn danger" onClick={() => setRetire(true)}>Remove endpoint</button>
         </div>
-      </Card>
+      </Card>}
+      </fieldset>
       {reasonDialog}
       {retire && <RemoveEndpointDialog ep={{ id, name }} onClose={() => setRetire(false)}
         onDone={how => { window.location.hash = how === "deleted" ? "#/endpoints" : `#/endpoints/${id}`; window.location.reload(); }} />}
@@ -361,7 +364,7 @@ const FLEET_MODES: { id: FleetMode; label: string; title: string }[] = [
 /** Fleet prevalence (0.10): a program new on this endpoint but run during other endpoints' baselines is common in the
  *  organisation. Which endpoints count, how many must have run it, and what happens then. Weakening changes ask for a
  *  reason (the server decides). Takes effect at the agent's next check-in, without retraining. */
-function FleetCard({ fleet, setCfg }: { fleet: FleetSummary; setCfg: (config: Record<string, unknown>, ok: string) => Promise<void> }) {
+function FleetCard({ fleet, setCfg, readOnly }: { fleet: FleetSummary; setCfg: (config: Record<string, unknown>, ok: string) => Promise<void>; readOnly?: boolean }) {
   const [label, setLabel] = useState(fleet.named ?? "");
   const [minEp, setMinEp] = useState(String(fleet.min_endpoints));
   useEffect(() => { setLabel(fleet.named ?? ""); setMinEp(String(fleet.min_endpoints)); }, [fleet.named, fleet.min_endpoints]);
@@ -381,7 +384,7 @@ function FleetCard({ fleet, setCfg }: { fleet: FleetSummary; setCfg: (config: Re
         </div>
         <form className="inline-form" onSubmit={e => { e.preventDefault(); if (labelOk && label !== (fleet.named ?? "")) setCfg({ fleet: label === "" ? null : label }, label === "" ? "Fleet name removed" : `Fleet set to ${label}`); }}>
           <input value={label} maxLength={64} placeholder="Default" onChange={e => setLabel(e.target.value)} style={{ width: 150 }} aria-label="Fleet name" aria-invalid={!labelOk} title={labelOk ? undefined : "Letters, digits, spaces, '_', '.' or '-'"} />
-          <button className="btn" disabled={!labelOk || label === (fleet.named ?? "")}>Save</button>
+          {!readOnly && <button className="btn" disabled={!labelOk || label === (fleet.named ?? "")}>Save</button>}
         </form>
       </div>
       <div className="setting-row">
@@ -395,7 +398,7 @@ function FleetCard({ fleet, setCfg }: { fleet: FleetSummary; setCfg: (config: Re
           <div className="muted sm">How many other endpoints must have run a program during their baselines. One endpoint alone cannot make a program known when this is 2 or more (default {fleet.defaults.min_endpoints}).</div></div>
         <form className="inline-form" onSubmit={e => { e.preventDefault(); if (n !== fleet.min_endpoints) setCfg({ fleet_min_endpoints: n }, `Known after ${plural(n, "other endpoint")}`); }}>
           <input type="number" min={1} max={1000} value={minEp} disabled={off} onChange={e => setMinEp(e.target.value)} style={{ width: 96 }} aria-label="Other endpoints needed" />
-          <button className="btn" disabled={off || n === fleet.min_endpoints}>Save</button>
+          {!readOnly && <button className="btn" disabled={off || n === fleet.min_endpoints}>Save</button>}
         </form>
       </div>
       <div className="muted sm" style={{ marginTop: 8 }}>
@@ -408,7 +411,7 @@ function FleetCard({ fleet, setCfg }: { fleet: FleetSummary; setCfg: (config: Re
 }
 
 /** The allow-list entries that apply to this endpoint (its own and fleet-wide ones). */
-function AllowCard({ id, name }: { id: string; name: string }) {
+function AllowCard({ id, name, readOnly }: { id: string; name: string; readOnly?: boolean }) {
   const toast = useToast();
   const { data, error, loading, reload } = useApi<AllowListResp>(`/api/allowlist?endpoint_id=${encodeURIComponent(id)}`);
   const [adding, setAdding] = useState(false); const [removing, setRemoving] = useState<AllowEntry | null>(null);
@@ -417,7 +420,7 @@ function AllowCard({ id, name }: { id: string; name: string }) {
   return (
     <Card title="Allow list" subtitle={`Activity accepted as normal on ${name}: its own entries and those for all endpoints. Changes reach the agent at its next check-in, without retraining.`}
       actions={<><Link to={`/allowlist?endpoint_id=${id}`} className="card-link">Open allow list <ChevronRight size={14} /></Link>
-        <button className="btn" onClick={() => setAdding(true)}><Plus size={15} />Add</button></>}>
+        {!readOnly && <button className="btn" onClick={() => setAdding(true)}><Plus size={15} />Add</button>}</>}>
       {loading && !data ? <Loading /> : error && !data ? <ErrorState error={error} onRetry={reload} /> : rows.length === 0 ? (
         <div className="inline-empty"><ListChecks size={18} /><div><div className="setting-name">Nothing is allowed on this endpoint yet</div>
           <div className="muted sm">Add programs, trusted addresses or specific detections that are normal here, or use <b>Allow…</b> on an alert in one of its incidents.</div></div></div>
@@ -432,7 +435,7 @@ function AllowCard({ id, name }: { id: string; name: string }) {
             </div>
             <span className="allow-scope"><AppliesTo e={e} here={id} /></span>
             <span className="allow-n muted sm nowrap">{e.alerts_allowed ? `${e.alerts_allowed.toLocaleString()} allowed` : ""}</span>
-            <button className="btn sm ghost" onClick={() => setRemoving(e)} title={e.endpoints ? undefined : "This entry applies to all endpoints"}><Trash2 size={14} />Remove</button>
+            {!readOnly && <button className="btn sm ghost" onClick={() => setRemoving(e)} title={e.endpoints ? undefined : "This entry applies to all endpoints"}><Trash2 size={14} />Remove</button>}
           </li>
         ))}</ul>
         <ShowMore s={page} noun={["entry", "entries"]} />

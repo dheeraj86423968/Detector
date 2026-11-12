@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 import { KeyRound, Loader2, Lock, Mail, Pencil, Search, ShieldCheck, UserPlus } from "lucide-react";
 import { del, Endpoint, Invite, InvitesResp, looksLikeEmail, NewInvite, Org, OrgResp, patch, post, Role, UserRow, UsersResp, useApi, useCan, useMe, useReloadMe } from "../api";
 import { fmtDate, fmtDateTime, fmtIn, fmtRel, initials, plural, ROLE_INFO } from "../format";
-import { Card, Confirm, CopyButton, CopyField, cx, Dialog, Empty, EndpointPicker, ErrorState, Field, Loading, Menu, PageHeader, useToast } from "../ui";
+import { Card, Confirm, CopyButton, CopyField, cx, Dialog, Empty, EndpointPicker, ErrorState, Field, Loading, Menu, PageHeader, ReadOnlyHint, useToast } from "../ui";
 
 type UsersWithRoles = UsersResp & { roles?: { id: Role; text: string }[] };
-const ROLES: Role[] = ["admin", "analyst", "viewer"];
+const ROLES: Role[] = ["admin", "analyst", "viewer", "auditor"];
+/** Roles that always see every endpoint of the organisation (no endpoint scope). */
+const ALL_EPS = (r: Role) => r === "admin" || r === "auditor";
 const POLICY: Record<string, string> = {
   enabled: "Everyone can sign in with a password",
   "admin-only": "Only administrators can sign in with a password (break-glass)",
@@ -14,10 +16,11 @@ const POLICY: Record<string, string> = {
 
 export default function Team() {
   const can = useCan(); const me = useMe(); const toast = useToast();
-  const { data, error, loading, reload: reloadUsers } = useApi<UsersWithRoles>(can.manage_users ? "/api/users" : null);
+  const see = can.manage_users || can.view_admin;     // auditors: the same lists, read-only
+  const { data, error, loading, reload: reloadUsers } = useApi<UsersWithRoles>(see ? "/api/users" : null);
   const eps = useApi<{ endpoints: Endpoint[] }>(can.manage_users ? "/api/endpoints" : null);
-  const org = useApi<OrgResp>(can.manage_users || can.manage_org ? "/api/org" : null);
-  const invites = useApi<InvitesResp>(can.manage_users ? "/api/invites" : null);
+  const org = useApi<OrgResp>(see || can.manage_org ? "/api/org" : null);
+  const invites = useApi<InvitesResp>(see ? "/api/invites" : null);
   const [adding, setAdding] = useState(false); const [editing, setEditing] = useState<UserRow | null>(null);
   const [resetting, setResetting] = useState<UserRow | null>(null); const [removing, setRemoving] = useState<UserRow | null>(null);
   const [inviting, setInviting] = useState(false); const [revoking, setRevoking] = useState<Invite | null>(null);
@@ -27,7 +30,7 @@ export default function Team() {
     const t = q.trim().toLowerCase();
     return (data?.users || []).filter(u => !t || [u.username, u.display_name, u.email].some(x => (x || "").toLowerCase().includes(t)));
   }, [data, q]);
-  if (!can.manage_users && !can.manage_org) return <div className="page"><PageHeader title="Team" /><ErrorState error={{ message: "Only administrators can manage the team.", status: 403 }} /></div>;
+  if (!see && !can.manage_org) return <div className="page"><PageHeader title="Team" /><ErrorState error={{ message: "Only administrators can manage the team.", status: 403 }} /></div>;
   const sso = data?.sso;
   // the organisation card counts users and invites, so it follows every change
   const reload = () => { reloadUsers(); org.reload(); };
@@ -44,6 +47,7 @@ export default function Team() {
           <button className="btn" onClick={() => setAdding(true)}><UserPlus size={16} />Add user</button>
           <button className="btn primary" onClick={() => setInviting(true)}><Mail size={16} />Invite people</button>
         </>} />
+      {!can.manage_users && see && <ReadOnlyHint text="Read-only: you can see the team, its roles and pending invites, but not change them." />}
       <OrgCard org={org.data?.org || null} loading={org.loading} error={org.error} reload={org.reload} canEdit={can.manage_org} />
       {sso && <div className="grid grid-2 auth-cards">
         <div className="auth-card">
@@ -56,7 +60,7 @@ export default function Team() {
           <div><div className="auth-title">Password sign-in</div><div className="muted sm">{POLICY[sso.password_policy] || sso.password_policy}. Passwords need at least 10 characters.</div></div>
         </div>
       </div>}
-      {can.manage_users && <Card pad={false}>
+      {see && <Card pad={false}>
         <div className="filters">
           <div className="search"><Search size={15} /><input placeholder="Search users" value={q} onChange={e => setQ(e.target.value)} /></div>
           <div className="filters-end muted">{data ? plural(rows.length, "user") : ""}</div>
@@ -65,7 +69,7 @@ export default function Team() {
           rows.length === 0 ? <Empty title="No users match" /> : (
             <div className="table-wrap">
               <table className="table middle">
-                <thead><tr><th>User</th><th style={{ width: 120 }}>Role</th><th style={{ width: "22%" }}>Endpoint access</th><th className="hide-narrow" style={{ width: 110 }}>Sign-in</th><th style={{ width: 140 }}>Last sign-in</th><th style={{ width: 100 }}>Status</th><th style={{ width: 52 }}></th></tr></thead>
+                <thead><tr><th>User</th><th style={{ width: 120 }}>Role</th><th style={{ width: "22%" }}>Endpoint access</th><th className="hide-narrow" style={{ width: 110 }}>Sign-in</th><th style={{ width: 140 }}>Last sign-in</th><th style={{ width: 100 }}>Status</th>{can.manage_users && <th style={{ width: 52 }}></th>}</tr></thead>
                 <tbody>{rows.map(u => {
                   const self = me?.user_id === u.id;
                   return (
@@ -80,14 +84,14 @@ export default function Team() {
                       <td className="hide-narrow">{u.auth === "oidc" ? <span className="pill info">SSO</span> : <span className="pill">Password</span>}</td>
                       <td title={u.last_login ? fmtDateTime(u.last_login, true) : ""}>{u.last_login ? fmtRel(u.last_login) : <span className="muted">Never</span>}</td>
                       <td>{u.disabled ? <span className="pill bad"><Lock size={12} />Disabled</span> : <span className="pill ok">Active</span>}</td>
-                      <td className="row-actions">
+                      {can.manage_users && <td className="row-actions">
                         <Menu items={[
                           { label: "Edit", onClick: () => setEditing(u) },
                           u.auth === "local" && { label: "Reset password", onClick: () => setResetting(u) },
                           u.disabled ? { label: "Enable", onClick: () => setDisabled(u, false) } : { label: "Disable", onClick: () => setDisabled(u, true), disabled: self, title: self ? "You cannot disable yourself" : undefined },
                           { label: "Remove", danger: true, onClick: () => setRemoving(u), disabled: self, title: self ? "You cannot remove yourself" : undefined },
                         ]} />
-                      </td>
+                      </td>}
                     </tr>
                   );
                 })}</tbody>
@@ -95,16 +99,17 @@ export default function Team() {
             </div>
           )}
       </Card>}
-      {can.manage_users && <Card title="Pending invites" pad={false}
-        subtitle="Invite links work once and are valid for 7 days. M.D Lab Detector does not send e-mail: you pass the link on yourself."
-        actions={pending.length > 0 && <button className="btn sm" onClick={() => setInviting(true)}><Mail size={14} />Invite people</button>}>
+      {see && <Card title="Pending invites" pad={false}
+        subtitle={can.manage_users ? "Invite links work once and are valid for 7 days. M.D Lab Detector does not send e-mail: you pass the link on yourself."
+          : "Invites not used yet. Their links are only shown to administrators."}
+        actions={pending.length > 0 && can.manage_users && <button className="btn sm" onClick={() => setInviting(true)}><Mail size={14} />Invite people</button>}>
         {invites.loading && !invites.data ? <Loading block /> : invites.error && !invites.data ? <div className="pad"><ErrorState error={invites.error} onRetry={invites.reload} /></div> :
           pending.length === 0 ? <Empty icon={<Mail size={22} />} title="No pending invites"
             text="Create an invite link for each person who should use the console. They choose their own name and password."
-            action={<button className="btn primary" onClick={() => setInviting(true)}><Mail size={16} />Invite people</button>} /> : (
+            action={can.manage_users ? <button className="btn primary" onClick={() => setInviting(true)}><Mail size={16} />Invite people</button> : undefined} /> : (
             <div className="table-wrap">
               <table className="table middle min-wide">
-                <thead><tr><th>Invite for</th><th style={{ width: 120 }}>Role</th><th style={{ width: "18%" }}>Endpoint access</th><th className="hide-narrow" style={{ width: 150 }}>Created</th><th style={{ width: 110 }}>Expires</th><th style={{ width: 210 }}></th></tr></thead>
+                <thead><tr><th>Invite for</th><th style={{ width: 120 }}>Role</th><th style={{ width: "18%" }}>Endpoint access</th><th className="hide-narrow" style={{ width: 150 }}>Created</th><th style={{ width: 110 }}>Expires</th>{can.manage_users && <th style={{ width: 210 }}></th>}</tr></thead>
                 <tbody>{pending.map(i => (
                   <tr key={i.id}>
                     <td className="cell-main">{i.email ? <span className="row-title plain ellipsis" title={i.email}>{i.email}</span> : <span className="muted">Anyone with the link</span>}</td>
@@ -112,10 +117,10 @@ export default function Team() {
                     <td><EndpointScope role={i.role} endpoints={i.endpoints} /></td>
                     <td className="hide-narrow" title={fmtDateTime(i.created_at, true)}><div>{fmtRel(i.created_at)}</div>{i.created_by && <div className="muted sm ellipsis">by {i.created_by}</div>}</td>
                     <td title={fmtDateTime(i.expires_at, true)}>{fmtIn(i.expires_at)}</td>
-                    <td className="row-actions">
-                      <CopyButton value={i.link} label="Copy link" title={i.link} />
+                    {can.manage_users && <td className="row-actions">
+                      {i.link && <CopyButton value={i.link} label="Copy link" title={i.link} />}
                       <button className="btn sm ghost danger-text" onClick={() => setRevoking(i)}>Revoke</button>
-                    </td>
+                    </td>}
                   </tr>
                 ))}</tbody>
               </table>
@@ -141,7 +146,7 @@ const name = (u: UserRow) => u.display_name || u.username;
 const meta = (u: UserRow) => [...new Set([u.display_name && u.display_name !== u.username ? u.username : null, u.email].filter(Boolean))].join(" · ");
 
 function EndpointScope({ role, endpoints }: { role: Role; endpoints: { id: string; name: string }[] | null }) {
-  if (role === "admin" || !endpoints) return <span>All endpoints</span>;
+  if (ALL_EPS(role) || !endpoints) return <span>All endpoints</span>;
   return <span className="ellipsis" title={endpoints.map(e => e.name).join(", ")}>{endpoints.length === 0 ? <span className="muted">None</span> : endpoints.map(e => e.name).join(", ")}</span>;
 }
 
@@ -214,11 +219,11 @@ function InviteDialog({ roleText, eps, onClose, onDone }: { roleText: (r: Role) 
   const [made, setMade] = useState<Invite | null>(null);
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
   const emailBad = !!email.trim() && !looksLikeEmail(email);
-  const valid = !emailBad && (role === "admin" || scope === "all" || picked.size > 0);
+  const valid = !emailBad && (ALL_EPS(role) || scope === "all" || picked.size > 0);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); if (!valid) return;
     setErr(""); setBusy(true);
-    const body: NewInvite = { role, endpoints: role === "admin" || scope === "all" ? null : [...picked] };
+    const body: NewInvite = { role, endpoints: ALL_EPS(role) || scope === "all" ? null : [...picked] };
     if (email.trim()) body.email = email.trim();
     try { const r = await post<{ ok: true; invite: Invite }>("/api/invites", body); setMade(r.invite); onDone(); }
     catch (ex: any) { setErr(ex.message); }
@@ -229,7 +234,7 @@ function InviteDialog({ roleText, eps, onClose, onDone }: { roleText: (r: Role) 
     <Dialog title="Invite link created" width={600} onClose={onClose}
       subtitle={made.email ? `Send this link to ${made.email}.` : "Send this link to the person you are inviting."}
       footer={<><button className="btn" onClick={again}>Invite someone else</button><button className="btn primary" onClick={onClose}>Done</button></>}>
-      <CopyField label="Invite link" value={made.link} multiline />
+      <CopyField label="Invite link" value={made.link || ""} multiline />
       <div className="install-note">
         The link is valid for 7 days (until {fmtDateTime(made.expires_at)}) and works once. Whoever opens it joins as {ROLE_INFO[made.role]?.label.toLowerCase() || made.role}
         {made.email ? <> with the address {made.email}</> : null}. M.D Lab Detector does not send e-mail; share the link the way you normally would.
@@ -247,14 +252,14 @@ function InviteDialog({ roleText, eps, onClose, onDone }: { roleText: (r: Role) 
         </Field>
         <div className="field">
           <span className="field-label">Role</span>
-          <div className="role-pick">{ROLES.map(r => (
+          <div className="role-pick four">{ROLES.map(r => (
             <label key={r} className={cx("role-opt", role === r && "on")}>
               <input type="radio" name="invite-role" checked={role === r} onChange={() => setRole(r)} />
               <span><b>{ROLE_INFO[r].label}</b><span className="muted sm">{roleText(r)}</span></span>
             </label>
           ))}</div>
         </div>
-        {role !== "admin" ? <ScopeField scope={scope} setScope={setScope} picked={picked} setPicked={setPicked} eps={eps} /> : <div className="note">Admins always see all endpoints.</div>}
+        {!ALL_EPS(role) ? <ScopeField scope={scope} setScope={setScope} picked={picked} setPicked={setPicked} eps={eps} /> : <div className="note">{role === "admin" ? "Admins" : "Auditors"} always see all endpoints.</div>}
         {err && <div className="err">{err}</div>}
       </form>
     </Dialog>
@@ -268,10 +273,10 @@ function UserDialog({ user, self, roleText, eps, sso, onClose, onDone }: { user?
   const [scope, setScope] = useState<"all" | "some">(user?.endpoints ? "some" : "all");
   const [picked, setPicked] = useState<Set<string>>(new Set((user?.endpoints || []).map(e => e.id)));
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
-  const valid = (edit || (/^[A-Za-z0-9_.@-]{2,64}$/.test(f.username) && f.password.length >= 10)) && (f.role === "admin" || scope === "all" || picked.size > 0);
+  const valid = (edit || (/^[A-Za-z0-9_.@-]{2,64}$/.test(f.username) && f.password.length >= 10)) && (ALL_EPS(f.role) || scope === "all" || picked.size > 0);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(""); setBusy(true);
-    const endpoints = f.role === "admin" || scope === "all" ? null : [...picked];
+    const endpoints = ALL_EPS(f.role) || scope === "all" ? null : [...picked];
     try {
       if (edit) {
         const body: Record<string, unknown> = { display_name: f.display_name || null, email: f.email || null, endpoints };
@@ -301,7 +306,7 @@ function UserDialog({ user, self, roleText, eps, sso, onClose, onDone }: { user?
         </Field>}
         <div className="field">
           <span className="field-label">Role{isSso && <span className="muted"> — from the identity provider</span>}</span>
-          <div className="role-pick">{ROLES.map(r => (
+          <div className="role-pick four">{ROLES.map(r => (
             <label key={r} className={cx("role-opt", f.role === r && "on", (isSso || (self && r !== "admin")) && "disabled")}>
               <input type="radio" name="role" checked={f.role === r} disabled={isSso || (self && r !== "admin")} onChange={() => setF({ ...f, role: r })} />
               <span><b>{ROLE_INFO[r].label}</b><span className="muted sm">{roleText(r)}</span></span>
@@ -310,8 +315,8 @@ function UserDialog({ user, self, roleText, eps, sso, onClose, onDone }: { user?
           {isSso && <span className="field-hint">SSO users get their role from their identity-provider groups at every sign-in.</span>}
           {self && !isSso && <span className="field-hint">You cannot change your own role.</span>}
         </div>
-        {f.role !== "admin" && <ScopeField scope={scope} setScope={setScope} picked={picked} setPicked={setPicked} eps={eps} />}
-        {f.role === "admin" && <div className="note">Admins always see all endpoints.</div>}
+        {!ALL_EPS(f.role) && <ScopeField scope={scope} setScope={setScope} picked={picked} setPicked={setPicked} eps={eps} />}
+        {ALL_EPS(f.role) && <div className="note">{f.role === "admin" ? "Admins" : "Auditors"} always see all endpoints.</div>}
         {err && <div className="err">{err}</div>}
       </form>
     </Dialog>

@@ -62,7 +62,7 @@ export default function Endpoints() {
             </div>
           )}
       </Card>
-      {can.manage_endpoints && <ClustersCard key={String(adding)} />}
+      {(can.manage_endpoints || can.view_admin) && <ClustersCard key={String(adding)} canManage={can.manage_endpoints} />}
       {adding && <AddEndpointDialog onClose={() => setAdding(false)} onCreated={reload} />}
     </div>
   );

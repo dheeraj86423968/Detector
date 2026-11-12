@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AlertTriangle, Bell, Hash, Mail, MessageSquare, Plus, Send, Server, Trash2, Webhook } from "lucide-react";
 import { del, patch, post, useApi, useCan } from "../api";
 import { fmtDateTime, fmtRel } from "../format";
-import { Card, Confirm, Dialog, Empty, ErrorState, Field, Loading, Mid, PageHeader, Segmented, Toggle, useToast } from "../ui";
+import { Card, Confirm, Dialog, Empty, ErrorState, Field, Loading, Mid, PageHeader, ReadOnlyHint, Segmented, Toggle, useToast } from "../ui";
 
 type Kind = "email" | "slack" | "teams" | "webhook" | "syslog";
 type Channel = {
@@ -40,7 +40,8 @@ export default function Notifications() {
   const [editing, setEditing] = useState<Channel | null>(null);
   const [removing, setRemoving] = useState<Channel | null>(null);
   const [logOf, setLogOf] = useState<Channel | null>(null);
-  if (!can.manage_org) return <div className="page"><PageHeader title="Notifications" /><Card><p className="muted">Only administrators manage notifications.</p></Card></div>;
+  const edit = can.manage_org;      // auditors (view_admin) see the channels read-only, URLs reduced to their host by the server
+  if (!edit && !can.view_admin) return <div className="page"><PageHeader title="Notifications" /><Card><p className="muted">Only administrators manage notifications.</p></Card></div>;
   const chans = data?.channels || [];
   const test = async (c: Channel) => {
     try { await post(`/api/notifications/channels/${c.id}/test`); toast(`Test message on its way to ${c.name}`); setTimeout(reload, 4000); }
@@ -52,14 +53,15 @@ export default function Notifications() {
   return (
     <div className="page">
       <PageHeader title="Notifications" subtitle="Where M.D Lab Detector tells your team about incidents and agent problems, and feeds your SIEM."
-        actions={<button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add channel</button>} />
+        actions={edit && <button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add channel</button>} />
+      {!edit && <ReadOnlyHint text="Read-only: you can see where notifications go and what was sent, but not change channels. Webhook addresses show only their host." />}
       {data && !data.notifier_running && <div className="banner warn"><AlertTriangle size={16} />The notification service is not running on this server; messages are queued until it is back.</div>}
       <Card pad={false}>
         {loading && !data ? <Loading block /> : error && !data ? <div className="pad"><ErrorState error={error} onRetry={reload} /></div> :
           chans.length === 0 ? (
             <Empty icon={<Bell size={22} />} title="No notification channels yet"
               text="Add an e-mail list, a Slack or Teams channel, or a webhook, and M.D Lab Detector sends new incidents (high severity and above by default), agents that stop reporting, and collector problems there within seconds. Send a test message to check it."
-              action={<button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add channel</button>} />
+              action={edit ? <button className="btn primary" onClick={() => setAdding(true)}><Plus size={16} />Add channel</button> : undefined} />
           ) : (
             <div className="table-wrap">
               <table className="table middle">
@@ -86,12 +88,12 @@ export default function Notifications() {
                         ? <div className="err-text" title={c.last_error}><AlertTriangle size={13} /> Failed {fmtRel(c.last_error_at)}: <span className="clamp2">{c.last_error}</span></div>
                         : c.last_ok_at ? <span title={fmtDateTime(c.last_ok_at, true)}>Delivered {fmtRel(c.last_ok_at)}</span> : <span className="muted">Nothing sent yet</span>}
                     </td>
-                    <td><Toggle checked={c.enabled} onChange={v => toggle(c, v)} label={`${c.enabled ? "Disable" : "Enable"} ${c.name}`} /></td>
+                    <td><Toggle checked={c.enabled} disabled={!edit} onChange={v => toggle(c, v)} label={`${c.enabled ? "Disable" : "Enable"} ${c.name}`} /></td>
                     <td className="row-actions">
-                      <button className="btn sm" onClick={() => test(c)} title="Send a test message now"><Send size={14} />Test</button>
+                      {edit && <button className="btn sm" onClick={() => test(c)} title="Send a test message now"><Send size={14} />Test</button>}
                       <button className="btn sm ghost" onClick={() => setLogOf(c)}>History</button>
-                      <button className="btn sm ghost" onClick={() => setEditing(c)}>Edit</button>
-                      <button className="btn sm ghost" onClick={() => setRemoving(c)} title="Delete channel"><Trash2 size={14} /></button>
+                      {edit && <button className="btn sm ghost" onClick={() => setEditing(c)}>Edit</button>}
+                      {edit && <button className="btn sm ghost" onClick={() => setRemoving(c)} title="Delete channel"><Trash2 size={14} /></button>}
                     </td>
                   </tr>
                 ))}</tbody>

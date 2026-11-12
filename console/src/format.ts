@@ -102,6 +102,7 @@ export const ROLE_INFO: Record<string, { label: string; describe: string }> = {
   admin: { label: "Admin", describe: "Everything, including users, endpoints and their settings." },
   analyst: { label: "Analyst", describe: "Views incidents, triages them and runs detection checks." },
   viewer: { label: "Viewer", describe: "Read-only access to incidents and endpoints." },
+  auditor: { label: "Auditor", describe: "Read-only administrator: sees everything an admin sees, changes nothing." },
 };
 
 /** "subject /usr/bin/python python -m x" -> parts for display of a raw alert entity */

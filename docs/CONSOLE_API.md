@@ -9,15 +9,31 @@ Timestamps: `*_ns` are Unix nanoseconds (int), `*_at` are ISO-8601 strings.
 
 ## Access control
 
-Three roles, plus an optional endpoint scope per user:
+Four roles, plus an optional endpoint scope per user:
 
 | role | can |
 |---|---|
 | `admin` | everything: users and access, add/retire endpoints, endpoint settings, approve programs, triage, run checks |
 | `analyst` | view everything in scope, triage incidents/alerts, run detection checks |
 | `viewer` | view everything in scope (read-only) |
+| `auditor` | read-only administrator (0.13): sees what an admin sees, changes nothing |
 
-`endpoints`: `null` = all endpoints (default), or a list of endpoint ids the user may see. Admins always see all.
+`endpoints`: `null` = all endpoints (default), or a list of endpoint ids the user may see. Admins and auditors always
+see all.
+
+**Auditor (0.13).** Every admin read (`GET /api/users`, `/api/invites`, `/api/audit`, `/api/security-events`,
+`/api/jobs`, `/api/notifications/channels`, `/api/notifications/log`, `/api/clusters`, `/api/install-progress/{key}`,
+`/api/endpoints/{id}/commands/{cid}`, and `/api/alerts/export`) answers an auditor too, with secrets withheld: invites
+without their `link` (`null`), notification channel `target`s, `last_error`s and log details with every URL reduced to
+`scheme://host/...` (e-mail recipients are kept), audit-log targets without `token=` values. Reads whose purpose is
+a secret stay admin-only: `GET /api/clusters/{key}/manifest` (it embeds the enrolment token) answers an auditor 403.
+Every change (POST / PUT / PATCH / DELETE on users, invites, endpoints and their settings, allow list, responses,
+commands, retraining, organisation, SSO, notifications, clusters, agent updates, triage, checks, hunts, simulations)
+answers 403, as for a viewer; an auditor may still change their own password and second factor. An auditor is never
+the platform operator (`operator` is ignored for the role, the database refuses the combination, and an operator's
+role cannot be changed to auditor). Single sign-on never assigns the role; admins create auditors (`POST /api/users`,
+`PATCH /api/users/{id}`) or invite them. `can.view_admin` (admin or auditor) shows the admin pages; `can.manage_*`
+stay false for an auditor, so the console shows those pages read-only. `can.export`: may download alert exports.
 
 `GET /api/me` →
 ```json
@@ -348,7 +364,7 @@ and as `posture: {level: ok|warning|error, problems: [{key, level, text}]}` on `
 `/posture`. The notifier recomputes it every 5 minutes (`PDP_POSTURE_REFRESH_S`); a new or worse problem is a
 `detection_weakened` event.
 
-**Export, hunts, simulation.** `GET /api/alerts/export` needs `can.triage` (viewers 403), returns at most 100000 rows
+**Export, hunts, simulation.** `GET /api/alerts/export` needs `can.export` (admins, analysts, auditors; viewers 403), returns at most 100000 rows
 per request (`PDP_EXPORT_MAX_ROWS`; a larger `limit` is a 400): page with `since_id` (rows with a larger id, oldest
 first; `X-PDP-Next-Since-Id` gives the next page while `X-PDP-More: 1`). Every export is audited with its filters and
 row count. Hunts ask only the endpoints in the starter's scope, and every user sees hunts and answers only for the
@@ -377,7 +393,7 @@ the platform operator's tools (`tools/token.py`, direct database access) bypass 
 
 PDP is hosted for many client organisations on one server. Every user and endpoint belongs to exactly one
 organisation; a user sees only their organisation's endpoints, incidents, alerts, allow list, users and invites
-(anything else answers 404). Roles (admin / analyst / viewer) and per-user endpoint scope apply *within* the
+(anything else answers 404). Roles (admin / analyst / viewer / auditor) and per-user endpoint scope apply *within* the
 organisation. The platform operator (`me.operator`) additionally sees the list of organisations and their usage -
 never their incidents, alerts or graphs.
 

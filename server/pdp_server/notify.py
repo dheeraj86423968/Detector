@@ -48,7 +48,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from . import db
-from .access import admin
+from .access import admin, admin_view, redacting
 
 router = APIRouter()
 
@@ -599,6 +599,26 @@ def _out(r: dict) -> dict:
             "last_error": r.get("last_error"), "last_error_at": r.get("last_error_at")}
 
 
+_URL_IN_TEXT = re.compile(r"\b([a-z][a-z0-9+.-]*)://([^\s/?#'\"<>]+)[^\s'\"<>]*", re.I)
+
+
+def _host_only(text: str | None) -> str | None:
+    """Every URL in a text reduced to scheme and host (without user:password@): a Slack / Teams / webhook URL is itself
+    the credential that lets anyone post to the channel."""
+    if not text:
+        return text
+    def one(m):
+        host = m.group(2).rsplit("@", 1)[-1]
+        rest = m.group(0)[len(m.group(1)) + 3 + len(m.group(2)):]
+        return f"{m.group(1)}://{host}" + ("/..." if rest else "")
+    return _URL_IN_TEXT.sub(one, text)
+
+
+def _redacted(ch: dict) -> dict:
+    """A channel as an auditor sees it: where it sends (the host), never the URL path / query (the webhook's token)."""
+    return dict(ch, target=ch["target"] if ch["kind"] == "email" else _host_only(ch["target"]), last_error=_host_only(ch.get("last_error")))
+
+
 def _check(kind: str, target: str, min_severity: str, events: list[str], every_alert: bool) -> str:
     if kind not in KINDS:
         raise HTTPException(400, f"kind must be one of {', '.join(KINDS)}")
@@ -632,12 +652,16 @@ def _check(kind: str, target: str, min_severity: str, events: list[str], every_a
 
 
 @router.get("/api/notifications/channels")
-def list_channels(s=Depends(admin)):
+def list_channels(s=Depends(admin_view)):
+    """Admins and auditors; for auditors each channel's URL is reduced to its host (the URL is the channel's secret)."""
     with db.conn() as c:
         rows = db.q(c, "SELECT * FROM notify_channels WHERE org_id=%s ORDER BY id", (s["org"],))
         st = db.q(c, "SELECT v FROM kv WHERE k='notifier'", one=True)
     st = st["v"] if st else {}
-    return {"ok": True, "channels": [_out(r) for r in rows], "email_available": bool(st.get("email")),
+    out = [_out(r) for r in rows]
+    if redacting(s):
+        out = [_redacted(ch) for ch in out]
+    return {"ok": True, "channels": out, "email_available": bool(st.get("email")),
             "notifier_running": bool(st.get("at")) and time.time() - float(st["at"]) < 120,
             "kinds": list(KINDS), "events": list(EVENTS), "severities": list(SEVERITIES)}
 
@@ -708,12 +732,14 @@ def test_channel(cid: int, s=Depends(admin)):
 
 
 @router.get("/api/notifications/log")
-def channel_log(channel_id: int, limit: int = 50, s=Depends(admin)):
+def channel_log(channel_id: int, limit: int = 50, s=Depends(admin_view)):
     with db.conn() as c:
         if not db.q(c, "SELECT 1 FROM notify_channels WHERE id=%s AND org_id=%s", (channel_id, s["org"]), one=True):
             raise HTTPException(404, "not found")
         rows = db.q(c, "SELECT key, subject, state, detail, at FROM notify_log WHERE channel_id=%s ORDER BY at DESC LIMIT %s",
                     (channel_id, max(1, min(int(limit), 500))))
+    if redacting(s):
+        rows = [dict(r, detail=_host_only(r["detail"])) for r in rows]
     return {"ok": True, "log": rows}
 
 

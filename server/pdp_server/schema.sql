@@ -17,7 +17,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT fal
 ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS endpoints JSONB;
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','analyst','viewer'));
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','analyst','viewer','auditor'));   -- auditor: 0.13 (below)
 CREATE UNIQUE INDEX IF NOT EXISTS users_oidc ON users (oidc_issuer, oidc_sub) WHERE oidc_sub IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS enroll_tokens (
@@ -116,6 +116,12 @@ CREATE TABLE IF NOT EXISTS invites (
   email TEXT, role TEXT NOT NULL CHECK (role IN ('admin','analyst','viewer')), endpoints JSONB,
   created_by INT REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL,
   used_at TIMESTAMPTZ, used_by INT REFERENCES users(id) ON DELETE SET NULL, revoked BOOLEAN NOT NULL DEFAULT false);
+-- 0.13: auditor role (read-only administrator: sees what an admin sees, changes nothing; pdp_server.access). Invites
+-- may carry it; an auditor is never the platform operator.
+ALTER TABLE invites DROP CONSTRAINT IF EXISTS invites_role_check;
+ALTER TABLE invites ADD CONSTRAINT invites_role_check CHECK (role IN ('admin','analyst','viewer','auditor'));
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_auditor_not_operator;
+ALTER TABLE users ADD CONSTRAINT users_auditor_not_operator CHECK (NOT (role = 'auditor' AND operator));
 
 -- notifications (org-scoped channels: e-mail, Slack, Teams, webhook, syslog CEF) and what was sent
 CREATE TABLE IF NOT EXISTS notify_channels (

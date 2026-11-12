@@ -62,9 +62,12 @@ export function useApi<T>(path: string | null, intervalMs = 0) {
 
 // ---------------------------------------------------------------- session / access control
 
-export type Role = "admin" | "analyst" | "viewer";
-/** `manage_org`: organisation admin (rename it); `operate`: platform operator (every organisation's usage). */
-export type Can = { manage_users: boolean; manage_endpoints: boolean; triage: boolean; run_checks: boolean; manage_org: boolean; operate: boolean };
+export type Role = "admin" | "analyst" | "viewer" | "auditor";
+/** `manage_org`: organisation admin (rename it); `operate`: platform operator (every organisation's usage).
+ *  `view_admin`: sees the admin pages (admins and auditors: an auditor sees them read-only, every manage_* is false);
+ *  `export`: may download alert exports. */
+export type Can = { manage_users: boolean; manage_endpoints: boolean; triage: boolean; run_checks: boolean; manage_org: boolean; operate: boolean;
+  view_admin: boolean; export: boolean };
 export type Me = { ok: true; user_id: number; username: string; display_name?: string | null; email?: string | null; role: Role;
   auth?: "local" | "oidc"; endpoints?: string[] | null; can?: Partial<Can>;
   org?: { id: number | string; name: string } | null; operator?: boolean };
@@ -80,7 +83,7 @@ export const useReloadMe = () => useContext(MeReloadContext);
 export const useCan = (): Can => {
   const c = useMe()?.can || {};
   return { manage_users: !!c.manage_users, manage_endpoints: !!c.manage_endpoints, triage: !!c.triage, run_checks: !!c.run_checks,
-    manage_org: !!c.manage_org, operate: !!c.operate };
+    manage_org: !!c.manage_org, operate: !!c.operate, view_admin: !!c.view_admin, export: !!c.export };
 };
 
 export type UserRow = { id: number; username: string; display_name?: string | null; email?: string | null; role: Role; auth: "local" | "oidc";
@@ -94,7 +97,7 @@ export type Org = { id: number | string; name: string; created_at: string; max_e
 export type OrgResp = { ok: true; org: Org };
 /** A pending invite (admin view). `email` null = anyone with the link; `endpoints` null = all endpoints. */
 export type Invite = { id: number | string; email: string | null; role: Role; endpoints: { id: string; name: string }[] | null;
-  created_at: string; expires_at: string; created_by: string | null; link: string };
+  created_at: string; expires_at: string; created_by: string | null; link: string | null };   // link: null for auditors
 export type InvitesResp = { ok: true; invites: Invite[] };
 export type NewInvite = { email?: string; role: Role; endpoints: string[] | null };
 /** What the person opening an invite link sees (public). */

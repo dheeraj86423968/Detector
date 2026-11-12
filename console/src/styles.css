@@ -742,3 +742,10 @@ td.reason { margin: 0; }
 .dl-bar { margin-top: 6px; max-width: 420px; }
 .dl-track { height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; margin-bottom: 4px; }
 .dl-fill { height: 100%; background: var(--info); transition: width .8s ease; }
+
+/* 0.13: auditor (read-only administrator) */
+.role-auditor { color: #475467; background: #f2f4f7; border-color: #d0d5dd; }
+.role-pick.four { grid-template-columns: repeat(2, 1fr); }
+.readonly-hint { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 8px 12px; border: 1px dashed var(--border-strong); border-radius: 8px; color: var(--text-2); font-size: 12.5px; background: var(--surface-2); }
+.plain-fieldset { display: contents; border: 0; padding: 0; margin: 0; min-width: 0; }   /* only groups the controls it disables */
+.plain-fieldset[disabled] input, .plain-fieldset[disabled] select { cursor: not-allowed; }
