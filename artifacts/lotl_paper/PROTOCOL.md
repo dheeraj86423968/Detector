@@ -112,3 +112,27 @@ Output: `results/bootstrap.md`, `results/bootstrap.json` (`scripts/bootstrap.py`
 One scoring container at a time (GPU, `-m 18g`, oom-score-adj 800); TRACE alone with `-m 36g` when the host has the
 memory (another job trains concurrently: `p5-*`, not touched). No heavy job 17:15-18:00 UTC (production backup). Keep
 >= 25 GB free on /. Outputs in the scratch dir, copied to `results/`. Commit only `artifacts/lotl_paper/`, never push.
+
+## Amendment 1 (2026-11-12 05:25 UTC; after reference + LotL scoring of 8 sets had started, before any laundering run)
+Corrections: (a) the header's "~05:30" is wrong: this protocol was committed at ~05:05 UTC (commit ff59aa4), before
+the first scoring run (05:06). (b) Resources: scoring containers run with oom-score-adj 1000 (not 800): the
+concurrent p5-* containers use 800, so with 800 the kernel could have picked a p5 container under memory pressure.
+Neither changes a definition.
+
+**Variant (iv) taint laundering is implemented** (`scripts/launder.py`, `--transform launder` = LotL + laundering;
+dry run `scripts/survey_launder.py`, no scoring). Definition:
+- Payload = a file node F with a recorded path that, in the test windows, is written (a WRITE edge into F, any writer)
+  and run by an attacker process P (a ground-truth process or a LotL-renamed one): an EXECUTE edge F -> P, or P an
+  interpreter that reads F as its script argument (layer 2's own `_script_of` / `_same_file` test).
+- Every WRITE edge into F is redirected to a new file T1 (`<F>.~1`, same directory) and followed (timestamps +1..+6 ns,
+  same window, edges appended to the window) by three copies T1 -READ-> c1 -WRITE-> T2 -READ-> c2 -WRITE-> T3
+  -READ-> c3 -WRITE-> F. c1..c3: new process nodes labelled with the most frequent baseline label of the host's most
+  frequent baseline program (known to layer 1); T1..T3 new file nodes; one set of six nodes per payload. With layer 2's
+  read attenuation 0.2 per file hop, a payload written at integrity 0 reaches 0.6 (alarm level 0.5).
+- The new nodes are not ground truth (alerts on them count as false positives). Nothing else changes.
+- The 2-hour delay alternative is not implemented: moving events changes window membership and order (not a clean
+  transform), and layer 2's file integrity does not decay with time (only a process's data integrity does), so a
+  delay would not launder a dropped file.
+Dry run: payloads exist only where the collector records EXECUTE (CADETS 8, THEIA E3 4, ClearScope E5 1; TRACE not
+surveyed yet); Windows sets have none (no EXECUTE events; layer 2's image_exec path link is already broken by the
+LotL relabelling), so there laundering = LotL. All sets are scored with the same variants P2 / F3 / L12.

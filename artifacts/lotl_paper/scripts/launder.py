@@ -44,7 +44,8 @@ class Launder:
                         scr = tags._script_of(reg, p)
                         if scr and tags._same_file(file_path(ents[s].label), scr):
                             run_by[s].add(("script", p))
-        payloads = sorted(f for f in run_by if f in written)
+        # a file with no recorded path ('None') is not a payload (it matches a script argument 'None' by accident)
+        payloads = sorted(f for f in run_by if f in written and file_path(ents[f].label) not in UNKNOWN_PROGRAM)
         # copier label: the most frequent baseline label of the most frequent baseline program
         cnt, labs = Counter(), defaultdict(Counter)
         for i in range(min(N, len(ents))):
