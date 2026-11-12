@@ -61,3 +61,20 @@ Reported whatever happens: per set and family, attacks, deterministic-alone, att
   first alarm is in the analyst's list). Recorded as a cost.
 - `rule_backslash_paths` changes layer 2's keys on backslash telemetry: thresholds and allow-list entries keyed
   `c:\program` no longer match until the model is re-fitted. It applies to newly fitted models only.
+
+## Decision record (2026-11-12; results/, lab_v14 scripts/summ17.py with tag res18)
+
+| variant | attacks | deterministic alone | attack-days (lost) | TP | FP | alert rows | rule |
+|---|---|---|---|---|---|---|---|
+| Z0 (released) | 26 | 21 | 39 | 333 | 1,051 | 1,483 | ref |
+| C0 cap only | 22 | 21 | 35 (4) | 228 | 906 | 1,214 | **rejected**: 4 attacks lost |
+| C1 + `rule_key_norm` | 22 | 21 | 35 (4) | 226 | 892 | 1,192 | rejected: 4 attacks lost |
+| C2 + `rule_backslash_paths` | 24 | 22 | 37 (2) | 233 | 1,038 | 1,353 | rejected: 2 attacks lost |
+| C3 + `version_names` | 24 | 22 | 37 (2) | 233 | 1,021 | 1,336 | rejected: 2 attacks lost |
+| C4 + `backslash_paths` | 24 | 22 | 37 (2) | 233 | 1,191 | 1,511 | rejected: 2 attacks lost |
+
+**No variant accepted; the option is withdrawn** (removed from the engine in the commit that carries lab_v16's
+protocol). All lost attacks are on ATLASv2 h1 (m2, m3, m4, s2): the dataset runs the same payload ten times on one
+day; with one alarm per program and day, nine runs are evidence, and the four attacks that are found through a
+learned score next to a deterministic alert lose the alert they stood next to. A per-day cap merges separate attack
+runs. It does stop the instance storm (C2: 1,038 FP against lab_v14's 2,838 for the same parsing).

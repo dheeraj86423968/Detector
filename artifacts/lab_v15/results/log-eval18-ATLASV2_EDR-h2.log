@@ -1,0 +1,7 @@
+19:53:50 scored 19s
+19:53:50 Z0: attacks 0 det-only 0 TP 0 FP 26 by_layer {'novelty': 4, 'rules': 22}
+19:53:50 C0: attacks 0 det-only 0 TP 0 FP 10 by_layer {'novelty': 4, 'rules': 6}
+19:53:50 C1: attacks 0 det-only 0 TP 0 FP 10 by_layer {'novelty': 4, 'rules': 6}
+19:53:50 C2: attacks 0 det-only 0 TP 0 FP 10 by_layer {'novelty': 4, 'rules': 6}
+19:53:50 C3: attacks 0 det-only 0 TP 0 FP 10 by_layer {'novelty': 4, 'rules': 6}
+19:53:50 C4: attacks 0 det-only 0 TP 0 FP 12 by_layer {'novelty': 6, 'rules': 6}
