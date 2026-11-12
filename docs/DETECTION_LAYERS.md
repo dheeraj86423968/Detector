@@ -37,11 +37,14 @@ learned corroboration and the four found by nothing need fields this telemetry d
 plugin-container with no command line; FiveDirections and ClearScope record no program paths). No unseen held-out set
 was available; CADETS E5 remains the held-out check.
 
-**Open (found while building it):** `layers.executable` cuts a Windows path with spaces written with backslashes
-(`c:\program files\...`, ATLASv2 and CARBANAKv2 EDR telemetry) at the first space, so layer 1 sees every program
-under Program Files as one. The fix exists (`backslash_paths`, off); its lab test (ZK, +49 % FP) was confounded -
-fleet members kept old-parser program lists and the re-fit used fewer days than the released bundles - so it needs a
-clean re-test with every fleet member re-fitted before it can be turned on.
+**Known weakness (found while building it; clean test 2026-11-12, `artifacts/lab_v13`):** `layers.executable` cuts a
+Windows path with spaces written with backslashes (`c:\program files\...`, ATLASv2 and CARBANAKv2 EDR telemetry) at
+the first space, so layer 1 sees every program under Program Files as one. The fix exists (`backslash_paths`, off).
+Its first lab test (ZK, +49 % FP) was confounded; the clean re-test (every fleet member re-fitted the same way, a
+control that reproduces the released numbers exactly) keeps all 26 attacks and finds none more, at FP 1,051 -> 1,340
+(+27.5 %, limit +10 %): **rejected, the default stays off.** The added alerts are mostly application updates in
+per-version package directories. A development result on seen sets; the open idea (the fix plus collapsing version
+parts of package directory names) needs its own protocol.
 
 ## 0.10 (2026-11-09): fleet prevalence and incident grouping
 

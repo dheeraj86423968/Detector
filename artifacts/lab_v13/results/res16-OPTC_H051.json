@@ -1,0 +1,698 @@
+{
+ "set": "OPTC_H051",
+ "bundle": "/data/lab08/6ca8a927-9474-45be-870a-52bd56133b0e/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 114,
+ "days": 3,
+ "known": {
+  "Z0": 134,
+  "R0": 134,
+  "K": 134
+ },
+ "Z0": {
+  "TP": 75,
+  "FP": 53,
+  "recall": 0.658,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 51,
+   "rules": 70,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "corroborated": 3,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "attacks_det": [
+   "h051_0925"
+  ],
+  "novelty_fp_keys": [
+   [
+    "Idle",
+    2
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Notepad++/notepad++.exe",
+    1
+   ],
+   [
+    "net1.exe",
+    1
+   ],
+   [
+    "biguwcmnsucig.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radAF010.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad38E8A.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad71B66.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radCF231.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "net.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad720A0.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/sessionmsg.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/TSTheme.exe",
+    1
+   ],
+   [
+    "rdpclip.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/unregmp2.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/Installer/chrmstp.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/delegate_execute.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/ie4uinit.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/SettingSyncHost.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/fsquirt.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/verclsid.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Microsoft Office/Office15/OUTLOOK.EXE",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SystemApps/Microsoft.Windows.AppRep.ChxApp_cw5n1h2txyewy/CHXSmartScreen.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad0F93B.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad838E6.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radEB31A.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad076F2.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radB895D.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad9DD75.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad95EBC.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad231B5.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad640CA.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radCBB57.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad41041.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radE1BA0.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad5446E.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad28DC8.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radC5EB1.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad4F110.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad1BA52.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radC50E7.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad99E71.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad54E46.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad1C3A2.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad1CC6C.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radD85FE.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad9FAD6.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad77CFB.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad20015.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Users/dcoombes/Downloads/update.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "R0": {
+  "TP": 75,
+  "FP": 53,
+  "recall": 0.658,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 51,
+   "rules": 70,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "corroborated": 3,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "attacks_det": [
+   "h051_0925"
+  ],
+  "novelty_fp_keys": [
+   [
+    "Idle",
+    2
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Notepad++/notepad++.exe",
+    1
+   ],
+   [
+    "net1.exe",
+    1
+   ],
+   [
+    "biguwcmnsucig.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radAF010.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad38E8A.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad71B66.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radCF231.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "net.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad720A0.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/sessionmsg.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/TSTheme.exe",
+    1
+   ],
+   [
+    "rdpclip.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/unregmp2.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/Installer/chrmstp.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/delegate_execute.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/ie4uinit.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/SettingSyncHost.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/fsquirt.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/verclsid.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Microsoft Office/Office15/OUTLOOK.EXE",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SystemApps/Microsoft.Windows.AppRep.ChxApp_cw5n1h2txyewy/CHXSmartScreen.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad0F93B.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad838E6.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radEB31A.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad076F2.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radB895D.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad9DD75.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad95EBC.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad231B5.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad640CA.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radCBB57.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad41041.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radE1BA0.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad5446E.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad28DC8.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radC5EB1.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad4F110.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad1BA52.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radC50E7.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad99E71.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad54E46.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad1C3A2.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad1CC6C.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radD85FE.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad9FAD6.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad77CFB.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad20015.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Users/dcoombes/Downloads/update.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "K": {
+  "TP": 75,
+  "FP": 53,
+  "recall": 0.658,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 51,
+   "rules": 70,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "rules": 45,
+   "corroborated": 3,
+   "novelty": 27
+  },
+  "attacks_found": [
+   "h051_0925"
+  ],
+  "attacks_det": [
+   "h051_0925"
+  ],
+  "novelty_fp_keys": [
+   [
+    "Idle",
+    2
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Notepad++/notepad++.exe",
+    1
+   ],
+   [
+    "net1.exe",
+    1
+   ],
+   [
+    "biguwcmnsucig.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radAF010.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad38E8A.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad71B66.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radCF231.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "net.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad720A0.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/sessionmsg.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/TSTheme.exe",
+    1
+   ],
+   [
+    "rdpclip.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/unregmp2.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/Installer/chrmstp.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/delegate_execute.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/ie4uinit.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/SettingSyncHost.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/fsquirt.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/verclsid.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Microsoft Office/Office15/OUTLOOK.EXE",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SystemApps/Microsoft.Windows.AppRep.ChxApp_cw5n1h2txyewy/CHXSmartScreen.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad0F93B.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad838E6.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radEB31A.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad076F2.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radB895D.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad9DD75.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad95EBC.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad231B5.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad640CA.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radCBB57.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad41041.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radE1BA0.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad5446E.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad28DC8.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radC5EB1.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad4F110.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad1BA52.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radC50E7.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad99E71.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad54E46.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad1C3A2.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad1CC6C.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/radD85FE.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad9FAD6.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad77CFB.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Temp/rad20015.tmp/biGuWCmNsuCIG.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Users/dcoombes/Downloads/update.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ }
+}

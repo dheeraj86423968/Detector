@@ -1,0 +1,557 @@
+{
+ "set": "CARBANAKV2_EDR-h5",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h5/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 21,
+ "days": 11,
+ "known": {
+  "Z0": 75,
+  "R0": 75,
+  "K": 85
+ },
+ "Z0": {
+  "TP": 14,
+  "FP": 89,
+  "recall": 0.667,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 38,
+   "corroborated": 63,
+   "rules": 2
+  },
+  "by_layer_tp": {
+   "corroborated": 5,
+   "novelty": 9
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\system32\\configure-smremoting.exe",
+    2
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta.exe",
+    2
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.597.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.616.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\dfssvc.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\servermanager.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\servermanagerlauncher.exe",
+    1
+   ],
+   [
+    "c:\\windows\\nbupaxjy.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\cmd.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\findstr.exe",
+    1
+   ],
+   [
+    "c:\\windows\\tiny.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.632.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.642.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.660.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.683.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.704.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\findstr.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\scp.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh-agent.exe",
+    1
+   ],
+   [
+    "c:\\windows\\adws\\microsoft.activedirectory.webservices.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\tstheme.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\credentialuibroker.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_engine_patch_1.1.24030.4.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_base_patch1.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\wevtutil.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.411.18.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.411.32.0.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\tiny.exe",
+    1
+   ],
+   [
+    "c:\\windows\\temp\\plink.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\control.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\systempropertiesremote.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\servermanager.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\rdpclip.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\qwinsta.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\mstsc.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 45
+ },
+ "R0": {
+  "TP": 14,
+  "FP": 89,
+  "recall": 0.667,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 38,
+   "corroborated": 63,
+   "rules": 2
+  },
+  "by_layer_tp": {
+   "corroborated": 5,
+   "novelty": 9
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\system32\\configure-smremoting.exe",
+    2
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta.exe",
+    2
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.597.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.616.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\dfssvc.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\servermanager.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\servermanagerlauncher.exe",
+    1
+   ],
+   [
+    "c:\\windows\\nbupaxjy.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\cmd.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\findstr.exe",
+    1
+   ],
+   [
+    "c:\\windows\\tiny.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.632.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.642.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.660.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.683.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.704.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\findstr.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\scp.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh-agent.exe",
+    1
+   ],
+   [
+    "c:\\windows\\adws\\microsoft.activedirectory.webservices.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\tstheme.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\credentialuibroker.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_engine_patch_1.1.24030.4.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_base_patch1.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\wevtutil.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.411.18.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.411.32.0.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\tiny.exe",
+    1
+   ],
+   [
+    "c:\\windows\\temp\\plink.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\control.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\systempropertiesremote.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\servermanager.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\rdpclip.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\qwinsta.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\mstsc.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 45
+ },
+ "K": {
+  "TP": 14,
+  "FP": 102,
+  "recall": 0.667,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 45,
+   "corroborated": 69,
+   "rules": 2
+  },
+  "by_layer_tp": {
+   "corroborated": 5,
+   "novelty": 9
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\system32\\configure-smremoting.exe",
+    2
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta.exe",
+    2
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.597.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.616.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\dfssvc.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\servermanager.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\servermanagerlauncher.exe",
+    1
+   ],
+   [
+    "c:\\windows\\nbupaxjy.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\cmd.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\findstr.exe",
+    1
+   ],
+   [
+    "c:\\windows\\tiny.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\download\\{56eb18f8-b008-4cbd-b6d2-8c97fe7e9062}\\124.0.2478.80\\microsoftedge_x64_124.0.2478.80_124.0.2478.67.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{b77fbf71-72ca-476a-80e6-a43c61982c31}\\edgemitmp_86c36.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.632.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.642.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.660.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.683.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.409.704.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\findstr.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\scp.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh-agent.exe",
+    1
+   ],
+   [
+    "c:\\windows\\adws\\microsoft.activedirectory.webservices.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\tstheme.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\credentialuibroker.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_engine_patch_1.1.24030.4.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_base_patch1.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\wevtutil.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\download\\{f3c4fe00-efd5-403b-9569-398a20f1ba4a}\\1.3.187.37\\microsoftedgeupdatesetup_x86_1.3.187.37.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\temp\\eu221a.tmp\\microsoftedgeupdate.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\1.3.187.37\\microsoftedgeupdatecomregistershell64.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.411.18.0.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.411.32.0.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\download\\{56eb18f8-b008-4cbd-b6d2-8c97fe7e9062}\\124.0.2478.97\\microsoftedge_x64_124.0.2478.97_124.0.2478.80.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{a71c4a00-c0ad-4087-bcd3-a1e72e3979ab}\\edgemitmp_c2c0d.tmp\\setup.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\tiny.exe",
+    1
+   ],
+   [
+    "c:\\windows\\temp\\plink.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\control.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\systempropertiesremote.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\servermanager.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\rdpclip.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\qwinsta.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\mstsc.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 66
+ }
+}

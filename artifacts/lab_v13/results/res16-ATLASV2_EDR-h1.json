@@ -1,0 +1,224 @@
+{
+ "set": "ATLASV2_EDR-h1",
+ "bundle": "/data/lab08/heldout/ATLASV2_EDR/h1/v07rel",
+ "fleet": [
+  "ATLASV2_EDR-h1",
+  "ATLASV2_EDR-h2"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 48,
+ "days": 1,
+ "known": {
+  "Z0": 67,
+  "R0": 67,
+  "K": 92
+ },
+ "Z0": {
+  "TP": 12,
+  "FP": 49,
+  "recall": 0.25,
+  "attacks": 8,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "attacks_det": [
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\system32\\msiexec.exe",
+    2
+   ],
+   [
+    "c:\\users\\aalsahee\\payload.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\werfault.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\logonui.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\regsvr32.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\mshta.exe",
+    2
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "R0": {
+  "TP": 12,
+  "FP": 49,
+  "recall": 0.25,
+  "attacks": 8,
+  "by_layer": {
+   "novelty": 13,
+   "corroborated": 9,
+   "rules": 39
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "attacks_det": [
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\system32\\msiexec.exe",
+    2
+   ],
+   [
+    "c:\\users\\aalsahee\\payload.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\werfault.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\logonui.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\regsvr32.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\mshta.exe",
+    2
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "K": {
+  "TP": 12,
+  "FP": 52,
+  "recall": 0.25,
+  "attacks": 8,
+  "by_layer": {
+   "novelty": 18,
+   "rules": 39,
+   "corroborated": 7
+  },
+  "by_layer_tp": {
+   "corroborated": 6,
+   "novelty": 6
+  },
+  "attacks_found": [
+   "atlasv2_edr_m2",
+   "atlasv2_edr_m3",
+   "atlasv2_edr_m4",
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s2",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "attacks_det": [
+   "atlasv2_edr_m5",
+   "atlasv2_edr_m6",
+   "atlasv2_edr_s3",
+   "atlasv2_edr_s4"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\system32\\msiexec.exe",
+    2
+   ],
+   [
+    "c:\\users\\aalsahee\\payload.exe",
+    2
+   ],
+   [
+    "c:\\program files\\common files\\microsoft shared\\equation\\eqnedt32.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\werfault.exe",
+    2
+   ],
+   [
+    "c:\\program files\\mozilla firefox\\plugin-container.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\logonui.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windows media player\\wmpnetwk.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windows media player\\wmpnscfg.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\regsvr32.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\windowspowershell\\v1.0\\powershell.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\mshta.exe",
+    2
+   ]
+  ],
+  "fleet_dropped": 0
+ }
+}

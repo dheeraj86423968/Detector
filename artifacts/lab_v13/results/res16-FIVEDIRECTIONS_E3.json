@@ -1,0 +1,505 @@
+{
+ "set": "FIVEDIRECTIONS_E3",
+ "bundle": "/data/lab08/01ca45e0-721f-4181-a4cb-33682335812a/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 108,
+ "days": 3,
+ "known": {
+  "Z0": 110,
+  "R0": 110,
+  "K": 110
+ },
+ "Z0": {
+  "TP": 11,
+  "FP": 166,
+  "recall": 0.102,
+  "attacks": 2,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 129
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "attacks_det": [
+   "fivedirections_e3_excel_0409"
+  ],
+  "novelty_fp_keys": [
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\cmd.exe\\\"",
+    3
+   ],
+   [
+    "whoami",
+    3
+   ],
+   [
+    "hostname",
+    3
+   ],
+   [
+    "tasklist",
+    3
+   ],
+   [
+    "ping",
+    3
+   ],
+   [
+    "powershell",
+    2
+   ],
+   [
+    "netstat",
+    2
+   ],
+   [
+    "ipconfig",
+    2
+   ],
+   [
+    "nslookup",
+    2
+   ],
+   [
+    "/QuitInfo:000000000000032C;0000000000000334;",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\WindowsPowerShell\\\\v1.0\\\\PowerShell_ISE.exe\\\"",
+    1
+   ],
+   [
+    "\\\\Windows\\\\System32\\\\PING.EXE",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\SystemPropertiesAdvanced.exe\\\"",
+    1
+   ],
+   [
+    "/QuitInfo:0000000000000338;0000000000000324;",
+    1
+   ],
+   [
+    "/QuitInfo:00000000000001B4;0000000000000330;",
+    1
+   ],
+   [
+    "\\\"cmd.exe\\\"",
+    1
+   ],
+   [
+    "net",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\net1",
+    1
+   ],
+   [
+    "getmac",
+    1
+   ],
+   [
+    "nbtstat",
+    1
+   ],
+   [
+    "route",
+    1
+   ],
+   [
+    "systeminfo",
+    1
+   ],
+   [
+    "driverquery",
+    1
+   ],
+   [
+    "wmic",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\whoami.exe\\\"",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\HOSTNAME.EXE\\\"",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\NETSTAT.EXE\\\"",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\tasklist.exe\\\"",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\tzsync.exe",
+    1
+   ],
+   [
+    "/QuitInfo:0000000000000368;000000000000036C;",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\WerFault.exe",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\defrag.exe",
+    1
+   ],
+   [
+    "tvnserver.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "taskkill",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "R0": {
+  "TP": 11,
+  "FP": 166,
+  "recall": 0.102,
+  "attacks": 2,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 129
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "attacks_det": [
+   "fivedirections_e3_excel_0409"
+  ],
+  "novelty_fp_keys": [
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\cmd.exe\\\"",
+    3
+   ],
+   [
+    "whoami",
+    3
+   ],
+   [
+    "hostname",
+    3
+   ],
+   [
+    "tasklist",
+    3
+   ],
+   [
+    "ping",
+    3
+   ],
+   [
+    "powershell",
+    2
+   ],
+   [
+    "netstat",
+    2
+   ],
+   [
+    "ipconfig",
+    2
+   ],
+   [
+    "nslookup",
+    2
+   ],
+   [
+    "/QuitInfo:000000000000032C;0000000000000334;",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\WindowsPowerShell\\\\v1.0\\\\PowerShell_ISE.exe\\\"",
+    1
+   ],
+   [
+    "\\\\Windows\\\\System32\\\\PING.EXE",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\SystemPropertiesAdvanced.exe\\\"",
+    1
+   ],
+   [
+    "/QuitInfo:0000000000000338;0000000000000324;",
+    1
+   ],
+   [
+    "/QuitInfo:00000000000001B4;0000000000000330;",
+    1
+   ],
+   [
+    "\\\"cmd.exe\\\"",
+    1
+   ],
+   [
+    "net",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\net1",
+    1
+   ],
+   [
+    "getmac",
+    1
+   ],
+   [
+    "nbtstat",
+    1
+   ],
+   [
+    "route",
+    1
+   ],
+   [
+    "systeminfo",
+    1
+   ],
+   [
+    "driverquery",
+    1
+   ],
+   [
+    "wmic",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\whoami.exe\\\"",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\HOSTNAME.EXE\\\"",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\NETSTAT.EXE\\\"",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\tasklist.exe\\\"",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\tzsync.exe",
+    1
+   ],
+   [
+    "/QuitInfo:0000000000000368;000000000000036C;",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\WerFault.exe",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\defrag.exe",
+    1
+   ],
+   [
+    "tvnserver.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "taskkill",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "K": {
+  "TP": 11,
+  "FP": 166,
+  "recall": 0.102,
+  "attacks": 2,
+  "by_layer": {
+   "novelty": 48,
+   "corroborated": 129
+  },
+  "by_layer_tp": {
+   "corroborated": 10,
+   "novelty": 1
+  },
+  "attacks_found": [
+   "fivedirections_e3_excel_0409",
+   "fivedirections_e3_firefox_0411"
+  ],
+  "attacks_det": [
+   "fivedirections_e3_excel_0409"
+  ],
+  "novelty_fp_keys": [
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\cmd.exe\\\"",
+    3
+   ],
+   [
+    "whoami",
+    3
+   ],
+   [
+    "hostname",
+    3
+   ],
+   [
+    "tasklist",
+    3
+   ],
+   [
+    "ping",
+    3
+   ],
+   [
+    "powershell",
+    2
+   ],
+   [
+    "netstat",
+    2
+   ],
+   [
+    "ipconfig",
+    2
+   ],
+   [
+    "nslookup",
+    2
+   ],
+   [
+    "/QuitInfo:000000000000032C;0000000000000334;",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\WindowsPowerShell\\\\v1.0\\\\PowerShell_ISE.exe\\\"",
+    1
+   ],
+   [
+    "\\\\Windows\\\\System32\\\\PING.EXE",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\SystemPropertiesAdvanced.exe\\\"",
+    1
+   ],
+   [
+    "/QuitInfo:0000000000000338;0000000000000324;",
+    1
+   ],
+   [
+    "/QuitInfo:00000000000001B4;0000000000000330;",
+    1
+   ],
+   [
+    "\\\"cmd.exe\\\"",
+    1
+   ],
+   [
+    "net",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\net1",
+    1
+   ],
+   [
+    "getmac",
+    1
+   ],
+   [
+    "nbtstat",
+    1
+   ],
+   [
+    "route",
+    1
+   ],
+   [
+    "systeminfo",
+    1
+   ],
+   [
+    "driverquery",
+    1
+   ],
+   [
+    "wmic",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\whoami.exe\\\"",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\HOSTNAME.EXE\\\"",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\NETSTAT.EXE\\\"",
+    1
+   ],
+   [
+    "\\\"C:\\\\WINDOWS\\\\system32\\\\tasklist.exe\\\"",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\tzsync.exe",
+    1
+   ],
+   [
+    "/QuitInfo:0000000000000368;000000000000036C;",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\WerFault.exe",
+    1
+   ],
+   [
+    "C:\\\\WINDOWS\\\\system32\\\\defrag.exe",
+    1
+   ],
+   [
+    "tvnserver.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "taskkill",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ }
+}

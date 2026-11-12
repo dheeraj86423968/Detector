@@ -1,0 +1,5 @@
+18:28:04 fleet ['CARBANAKV2_EDR-h1', 'CARBANAKV2_EDR-h2', 'CARBANAKV2_EDR-h3', 'CARBANAKV2_EDR-h4', 'CARBANAKV2_EDR-h5']; known programs Z0=75, R0=75, K=85
+18:28:07 scored 7s
+18:28:07 Z0: attacks 1 det-only 1 TP 14 FP 89 by_layer {'novelty': 38, 'corroborated': 63, 'rules': 2}
+18:28:07 R0: attacks 1 det-only 1 TP 14 FP 89 by_layer {'novelty': 38, 'corroborated': 63, 'rules': 2}
+18:28:07 K: attacks 1 det-only 1 TP 14 FP 102 by_layer {'novelty': 45, 'corroborated': 69, 'rules': 2}

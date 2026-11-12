@@ -1,0 +1,5 @@
+18:29:08 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']; known programs Z0=110, R0=110, K=110
+18:30:51 scored 139s
+18:30:52 Z0: attacks 2 det-only 1 TP 11 FP 166 by_layer {'novelty': 48, 'corroborated': 129}
+18:30:52 R0: attacks 2 det-only 1 TP 11 FP 166 by_layer {'novelty': 48, 'corroborated': 129}
+18:30:52 K: attacks 2 det-only 1 TP 11 FP 166 by_layer {'novelty': 48, 'corroborated': 129}

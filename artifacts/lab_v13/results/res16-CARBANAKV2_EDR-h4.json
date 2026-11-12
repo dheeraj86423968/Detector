@@ -1,0 +1,422 @@
+{
+ "set": "CARBANAKV2_EDR-h4",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h4/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 21,
+ "days": 7,
+ "known": {
+  "Z0": 191,
+  "R0": 191,
+  "K": 240
+ },
+ "Z0": {
+  "TP": 3,
+  "FP": 24,
+  "recall": 0.143,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\syswow64\\msiexec.exe",
+    2
+   ],
+   [
+    "c:\\windows\\syswow64\\runonce.exe",
+    2
+   ],
+   [
+    "c:\\windows\\temp\\mubstemp\\bingchatinstaller.exe",
+    1
+   ],
+   [
+    "c:\\windows\\temp\\mubstemp\\bcilauncher.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\credentialuibroker.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\werfault.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\runonce.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\grpconv.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\netsh.exe",
+    1
+   ],
+   [
+    "c:\\users\\inspiringrobin.pangolin\\appdata\\roaming\\zoom\\bin\\aomhost64.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.sechealthui_cw5n1h2txyewy\\sechealthui.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\securityhealthhost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\whoami.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\scp.exe",
+    1
+   ],
+   [
+    "c:\\users\\public\\java-update.exe",
+    1
+   ],
+   [
+    "c:\\users\\inspiringrobin.pangolin\\appdata\\local\\temp\\defenderupgradeexec.exe",
+    1
+   ],
+   [
+    "c:\\users\\inspiringrobin.pangolin\\appdata\\local\\temp\\infosmin48.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\reg.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\wscript.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 8
+ },
+ "R0": {
+  "TP": 3,
+  "FP": 24,
+  "recall": 0.143,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 22,
+   "rules": 4,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\syswow64\\msiexec.exe",
+    2
+   ],
+   [
+    "c:\\windows\\syswow64\\runonce.exe",
+    2
+   ],
+   [
+    "c:\\windows\\temp\\mubstemp\\bingchatinstaller.exe",
+    1
+   ],
+   [
+    "c:\\windows\\temp\\mubstemp\\bcilauncher.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\credentialuibroker.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\werfault.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\runonce.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\grpconv.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\netsh.exe",
+    1
+   ],
+   [
+    "c:\\users\\inspiringrobin.pangolin\\appdata\\roaming\\zoom\\bin\\aomhost64.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.sechealthui_cw5n1h2txyewy\\sechealthui.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\securityhealthhost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\whoami.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\scp.exe",
+    1
+   ],
+   [
+    "c:\\users\\public\\java-update.exe",
+    1
+   ],
+   [
+    "c:\\users\\inspiringrobin.pangolin\\appdata\\local\\temp\\defenderupgradeexec.exe",
+    1
+   ],
+   [
+    "c:\\users\\inspiringrobin.pangolin\\appdata\\local\\temp\\infosmin48.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\reg.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\wscript.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 8
+ },
+ "K": {
+  "TP": 3,
+  "FP": 76,
+  "recall": 0.143,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 52,
+   "corroborated": 23,
+   "rules": 4
+  },
+  "by_layer_tp": {
+   "novelty": 3
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\program files\\windowsapps\\microsoft.yourphone_1.24041.108.0_x64__8wekyb3d8bbwe\\phoneexperiencehost.exe",
+    3
+   ],
+   [
+    "c:\\program files (x86)\\cisco\\cisco secure client\\vpnagent.exe",
+    3
+   ],
+   [
+    "c:\\windows\\syswow64\\msiexec.exe",
+    2
+   ],
+   [
+    "c:\\program files (x86)\\cisco\\cisco secure client\\vacon64.exe",
+    2
+   ],
+   [
+    "c:\\program files (x86)\\cisco\\cisco secure client\\acwebhelper.exe",
+    2
+   ],
+   [
+    "c:\\program files (x86)\\cisco\\cisco secure client\\vpndownloader.exe",
+    2
+   ],
+   [
+    "c:\\program files (x86)\\cisco\\cisco secure client\\ui\\csc_ui.exe",
+    2
+   ],
+   [
+    "c:\\windows\\syswow64\\runonce.exe",
+    2
+   ],
+   [
+    "c:\\windows\\temp\\mubstemp\\bingchatinstaller.exe",
+    1
+   ],
+   [
+    "c:\\windows\\temp\\mubstemp\\bcilauncher.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\download\\{f3c4fe00-efd5-403b-9569-398a20f1ba4a}\\1.3.187.37\\microsoftedgeupdatesetup_x86_1.3.187.37.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\temp\\eu9558.tmp\\microsoftedgeupdate.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\1.3.187.37\\microsoftedgeupdatecomregistershell64.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\download\\{56eb18f8-b008-4cbd-b6d2-8c97fe7e9062}\\124.0.2478.80\\microsoftedge_x64_124.0.2478.80_124.0.2478.67.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{b6a7e545-297d-4c68-8ac9-5ce408935e71}\\edgemitmp_77e63.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{b760dec3-d2c2-4568-a28d-abf930442ccc}\\edgemitmp_c6686.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\credentialuibroker.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\werfault.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\cisco\\cisco secure client\\installhelper.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\runonce.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\grpconv.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\cisco\\cisco secure client\\ui\\setup\\5.0.00704\\csc_ui.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\netsh.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\cisco\\cisco secure client\\proxycon.exe",
+    1
+   ],
+   [
+    "c:\\users\\inspiringrobin.pangolin\\appdata\\roaming\\zoom\\bin\\aomhost64.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.windowsstore_22403.1401.5.0_x64__8wekyb3d8bbwe\\winstore.app.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.sechealthui_cw5n1h2txyewy\\sechealthui.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\securityhealthhost.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.desktopappinstaller_1.22.11261.0_x64__8wekyb3d8bbwe\\windowspackagemanagerserver.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\whoami.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\scp.exe",
+    1
+   ],
+   [
+    "c:\\users\\public\\java-update.exe",
+    1
+   ],
+   [
+    "c:\\users\\inspiringrobin.pangolin\\appdata\\local\\temp\\defenderupgradeexec.exe",
+    1
+   ],
+   [
+    "c:\\users\\inspiringrobin.pangolin\\appdata\\local\\temp\\infosmin48.exe",
+    1
+   ],
+   [
+    "c:\\program files\\sublime text\\sublime_text.exe",
+    1
+   ],
+   [
+    "c:\\program files\\sublime text\\crash_handler.exe",
+    1
+   ],
+   [
+    "c:\\program files\\sublime text\\plugin_host-3.3.exe",
+    1
+   ],
+   [
+    "c:\\program files\\sublime text\\plugin_host-3.8.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.microsoftstickynotes_6.0.2.0_x64__8wekyb3d8bbwe\\microsoft.notes.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\reg.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\wscript.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 8
+ }
+}

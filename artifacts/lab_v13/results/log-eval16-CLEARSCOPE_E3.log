@@ -1,0 +1,5 @@
+18:33:00 fleet ['CADETS_E3', 'THEIA_E3', 'CLEARSCOPE_E3', 'FIVEDIRECTIONS_E3', 'TRACE_E3-trace']; known programs Z0=33, R0=33, K=33
+18:33:15 scored 21s
+18:33:15 Z0: attacks 0 det-only 0 TP 0 FP 0 by_layer {}
+18:33:15 R0: attacks 0 det-only 0 TP 0 FP 0 by_layer {}
+18:33:15 K: attacks 0 det-only 0 TP 0 FP 0 by_layer {}

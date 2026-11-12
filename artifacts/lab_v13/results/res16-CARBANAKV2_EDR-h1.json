@@ -1,0 +1,582 @@
+{
+ "set": "CARBANAKV2_EDR-h1",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h1/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 63,
+ "days": 8,
+ "known": {
+  "Z0": 181,
+  "R0": 181,
+  "K": 243
+ },
+ "Z0": {
+  "TP": 5,
+  "FP": 83,
+  "recall": 0.079,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 43,
+   "corroborated": 18,
+   "rules": 27
+  },
+  "by_layer_tp": {
+   "novelty": 5
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\roaming\\transbaseodbcdriver\\smrs.exe",
+    3
+   ],
+   [
+    "c:\\windows\\system32\\printfilterpipelinesvc.exe",
+    2
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.apprep.chxapp_cw5n1h2txyewy\\chxsmartscreen.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\google12872_1743179499\\bin\\updater.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14652_1968053921\\124.0.6367.92_chrome_installer.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14652_1968053921\\cr_9eb21.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\reg.exe",
+    1
+   ],
+   [
+    "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\cvtres.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\fodhelper.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14592_748976620\\124.0.6367.118_chrome_installer.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14592_748976620\\cr_0ad23.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\pickerhost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\mspaint.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping10636_1922319796\\124.0.6367.119_124.0.6367.118_chrome_updater.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping10636_1922319796\\cr_7821b.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\regsvr32.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\ie4uinit.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.sechealthui_cw5n1h2txyewy\\sechealthui.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\dashost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.aad.brokerplugin_cw5n1h2txyewy\\microsoft.aad.brokerplugin.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping5472_886844629\\updatersetup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\google3856_948421880\\bin\\updater.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping7948_1250731917\\qualification_app.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\cmd.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\findstr.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\ping.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\downloads\\7z2404-x64.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\local\\programs\\microsoft",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\wsl.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\local\\temp\\vscode-stable-user-x64\\codesetup-stable-dc96b837cf6bb4af9cd736aa3af08cf8279f7685.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\local\\temp\\is-dli6a.tmp\\codesetup-stable-dc96b837cf6bb4af9cd736aa3af08cf8279f7685.tmp",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\icacls.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping15696_1898668380\\124.0.6367.201_124.0.6367.119_chrome_updater.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping15696_1898668380\\cr_03226.tmp\\setup.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\wscript.exe",
+    2
+   ],
+   [
+    "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\csc.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\roaming\\transbaseodbcdriver\\pscp.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\roaming\\transbaseodbcdriver\\plink.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 40
+ },
+ "R0": {
+  "TP": 5,
+  "FP": 83,
+  "recall": 0.079,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 43,
+   "corroborated": 18,
+   "rules": 27
+  },
+  "by_layer_tp": {
+   "novelty": 5
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\roaming\\transbaseodbcdriver\\smrs.exe",
+    3
+   ],
+   [
+    "c:\\windows\\system32\\printfilterpipelinesvc.exe",
+    2
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.apprep.chxapp_cw5n1h2txyewy\\chxsmartscreen.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\google12872_1743179499\\bin\\updater.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14652_1968053921\\124.0.6367.92_chrome_installer.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14652_1968053921\\cr_9eb21.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\reg.exe",
+    1
+   ],
+   [
+    "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\cvtres.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\fodhelper.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14592_748976620\\124.0.6367.118_chrome_installer.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14592_748976620\\cr_0ad23.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\pickerhost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\mspaint.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping10636_1922319796\\124.0.6367.119_124.0.6367.118_chrome_updater.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping10636_1922319796\\cr_7821b.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\regsvr32.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\ie4uinit.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.sechealthui_cw5n1h2txyewy\\sechealthui.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\dashost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.aad.brokerplugin_cw5n1h2txyewy\\microsoft.aad.brokerplugin.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping5472_886844629\\updatersetup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\google3856_948421880\\bin\\updater.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping7948_1250731917\\qualification_app.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\cmd.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\findstr.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\ping.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\downloads\\7z2404-x64.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\local\\programs\\microsoft",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\wsl.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\local\\temp\\vscode-stable-user-x64\\codesetup-stable-dc96b837cf6bb4af9cd736aa3af08cf8279f7685.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\local\\temp\\is-dli6a.tmp\\codesetup-stable-dc96b837cf6bb4af9cd736aa3af08cf8279f7685.tmp",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\icacls.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping15696_1898668380\\124.0.6367.201_124.0.6367.119_chrome_updater.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping15696_1898668380\\cr_03226.tmp\\setup.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\wscript.exe",
+    2
+   ],
+   [
+    "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\csc.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\roaming\\transbaseodbcdriver\\pscp.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\roaming\\transbaseodbcdriver\\plink.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 40
+ },
+ "K": {
+  "TP": 5,
+  "FP": 183,
+  "recall": 0.079,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 99,
+   "corroborated": 62,
+   "rules": 27
+  },
+  "by_layer_tp": {
+   "novelty": 5
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\program files (x86)\\google\\googleupdater\\126.0.6441.0\\updater.exe",
+    7
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.outlookforwindows_1.2024.424.300_x64__8wekyb3d8bbwe\\olk.exe",
+    5
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.outlookforwindows_1.2024.424.300_x64__8wekyb3d8bbwe\\xpdagent.exe",
+    5
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.outlookforwindows_1.2024.501.300_x64__8wekyb3d8bbwe\\olk.exe",
+    4
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.outlookforwindows_1.2024.501.300_x64__8wekyb3d8bbwe\\xpdagent.exe",
+    4
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.outlookforwindows_1.2024.424.300_x64__8wekyb3d8bbwe\\olkpushnotificationbackgroundtask.exe",
+    3
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\roaming\\transbaseodbcdriver\\smrs.exe",
+    3
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.outlookforwindows_1.2024.501.300_x64__8wekyb3d8bbwe\\olkpushnotificationbackgroundtask.exe",
+    3
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.windowsstore_22403.1401.3.0_x64__8wekyb3d8bbwe\\winstore.app.exe",
+    2
+   ],
+   [
+    "c:\\program files\\git\\cmd\\git-lfs.exe",
+    2
+   ],
+   [
+    "c:\\program files\\git\\swankysnail\\bin\\git-receive-pack.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\printfilterpipelinesvc.exe",
+    2
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.apprep.chxapp_cw5n1h2txyewy\\chxsmartscreen.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\google\\update\\install\\{708f272d-32ac-455e-a4ea-ace614a433e1}\\updatersetup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\google12872_1743179499\\bin\\updater.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14652_1968053921\\124.0.6367.92_chrome_installer.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14652_1968053921\\cr_9eb21.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\reg.exe",
+    1
+   ],
+   [
+    "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\cvtres.exe",
+    1
+   ],
+   [
+    "c:\\program files\\git\\swankysnail\\libexec\\git-core\\git.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\fodhelper.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14592_748976620\\124.0.6367.118_chrome_installer.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping14592_748976620\\cr_0ad23.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.windows.photos_2024.11030.15001.0_x64__8wekyb3d8bbwe\\photosapp.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.windows.photos_2024.11030.15001.0_x64__8wekyb3d8bbwe\\photosservice\\photosservice.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\pickerhost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\mspaint.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping10636_1922319796\\124.0.6367.119_124.0.6367.118_chrome_updater.exe",
+    1
+   ],
+   [
+    "c:\\program files\\google\\chrome\\application\\124.0.6367.118\\installer\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemtemp\\chrome_unpacker_beginunzipping10636_1922319796\\cr_7821b.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\regsvr32.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\ie4uinit.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.sechealthui_cw5n1h2txyewy\\sechealthui.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\dashost.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\download\\{56eb18f8-b008-4cbd-b6d2-8c97fe7e9062}\\124.0.2478.80\\microsoftedge_x64_124.0.2478.80_124.0.2478.67.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{d5c40fc4-a227-40fe-894e-7d15c504d50b}\\edgemitmp_2b34a.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\download\\{f3017226-fe2a-4295-8bdf-00c3a9a7e4c5}\\124.0.2478.80\\microsoftedge_x64_124.0.2478.80_124.0.2478.67.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{7c9aebd6-4d48-4332-a186-5e6d2e80ec68}\\edgemitmp_c42f6.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.aad.brokerplugin_cw5n1h2txyewy\\microsoft.aad.brokerplugin.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\wscript.exe",
+    2
+   ],
+   [
+    "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\csc.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\roaming\\transbaseodbcdriver\\pscp.exe",
+    1
+   ],
+   [
+    "c:\\users\\efficientgoldfinch\\appdata\\roaming\\transbaseodbcdriver\\plink.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 42
+ }
+}

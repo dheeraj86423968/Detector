@@ -1,0 +1,5 @@
+18:30:53 fleet ['OPTC_H201', 'OPTC_H501', 'OPTC_H051']; known programs Z0=141, R0=141, K=141
+18:32:43 scored 153s
+18:32:45 Z0: attacks 1 det-only 1 TP 6 FP 19 by_layer {'rules': 10, 'novelty': 14, 'corroborated': 1}
+18:32:45 R0: attacks 1 det-only 1 TP 6 FP 19 by_layer {'rules': 10, 'novelty': 14, 'corroborated': 1}
+18:32:45 K: attacks 1 det-only 1 TP 6 FP 19 by_layer {'rules': 10, 'novelty': 14, 'corroborated': 1}

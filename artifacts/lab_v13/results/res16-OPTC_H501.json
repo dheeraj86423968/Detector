@@ -1,0 +1,506 @@
+{
+ "set": "OPTC_H501",
+ "bundle": "/data/lab08/18978a51-ac8f-4afd-8f7a-c3003fa744c2/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 749,
+ "days": 3,
+ "known": {
+  "Z0": 144,
+  "R0": 144,
+  "K": 144
+ },
+ "Z0": {
+  "TP": 17,
+  "FP": 70,
+  "recall": 0.023,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 35,
+   "corroborated": 33,
+   "rules": 19
+  },
+  "by_layer_tp": {
+   "corroborated": 7,
+   "rules": 8,
+   "novelty": 2
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "attacks_det": [
+   "h501_0924"
+  ],
+  "novelty_fp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/system32/OpenWith.exe",
+    2
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files/Windows NT/Accessories/WORDPAD.EXE",
+    1
+   ],
+   [
+    "\"C:/Windows/system32/SearchProtocolHost.exe\"",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files/VMware/VMware Tools/VMware VGAuth/VGAuthService.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/ImmersiveControlPanel/SystemSettings.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Microsoft Office/Office15/OUTLOOK.EXE",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/whoami.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/eventvwr.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SysWOW64/eventvwr.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/schtasks.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SysWOW64/WindowsPowerShell/v1.0/powershell.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/NETSTAT.EXE",
+    1
+   ],
+   [
+    "\"fontdrvhost.exe\"",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/sessionmsg.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/TSTheme.exe",
+    1
+   ],
+   [
+    "rdpclip.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/unregmp2.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/Installer/chrmstp.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/ie4uinit.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/delegate_execute.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+    1
+   ],
+   [
+    "\"C:/Windows/SystemApps/ShellExperienceHost_cw5n1h2txyewy/ShellExperienceHost.exe\"",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/SettingSyncHost.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/verclsid.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/mstsc.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/AUDIODG.EXE",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/LocationNotificationWindows.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/CredentialUIBroker.exe",
+    1
+   ],
+   [
+    "atbroker.exe",
+    1
+   ],
+   [
+    "Idle",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/ClipRenew.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/TEMP/8E011A7E-3B97-4A95-8804-41188D74A19E/dismhost.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/system32/plink.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Users/sysadmin/Downloads/fileTransfer1000.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 10
+ },
+ "R0": {
+  "TP": 17,
+  "FP": 70,
+  "recall": 0.023,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 35,
+   "corroborated": 33,
+   "rules": 19
+  },
+  "by_layer_tp": {
+   "corroborated": 7,
+   "rules": 8,
+   "novelty": 2
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "attacks_det": [
+   "h501_0924"
+  ],
+  "novelty_fp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/system32/OpenWith.exe",
+    2
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files/Windows NT/Accessories/WORDPAD.EXE",
+    1
+   ],
+   [
+    "\"C:/Windows/system32/SearchProtocolHost.exe\"",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files/VMware/VMware Tools/VMware VGAuth/VGAuthService.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/ImmersiveControlPanel/SystemSettings.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Microsoft Office/Office15/OUTLOOK.EXE",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/whoami.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/eventvwr.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SysWOW64/eventvwr.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/schtasks.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SysWOW64/WindowsPowerShell/v1.0/powershell.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/NETSTAT.EXE",
+    1
+   ],
+   [
+    "\"fontdrvhost.exe\"",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/sessionmsg.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/TSTheme.exe",
+    1
+   ],
+   [
+    "rdpclip.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/unregmp2.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/Installer/chrmstp.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/ie4uinit.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/delegate_execute.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+    1
+   ],
+   [
+    "\"C:/Windows/SystemApps/ShellExperienceHost_cw5n1h2txyewy/ShellExperienceHost.exe\"",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/SettingSyncHost.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/verclsid.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/mstsc.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/AUDIODG.EXE",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/LocationNotificationWindows.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/CredentialUIBroker.exe",
+    1
+   ],
+   [
+    "atbroker.exe",
+    1
+   ],
+   [
+    "Idle",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/ClipRenew.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/TEMP/8E011A7E-3B97-4A95-8804-41188D74A19E/dismhost.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/system32/plink.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Users/sysadmin/Downloads/fileTransfer1000.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 10
+ },
+ "K": {
+  "TP": 17,
+  "FP": 70,
+  "recall": 0.023,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 35,
+   "corroborated": 33,
+   "rules": 19
+  },
+  "by_layer_tp": {
+   "corroborated": 7,
+   "rules": 8,
+   "novelty": 2
+  },
+  "attacks_found": [
+   "h501_0924"
+  ],
+  "attacks_det": [
+   "h501_0924"
+  ],
+  "novelty_fp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/system32/OpenWith.exe",
+    2
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files/Windows NT/Accessories/WORDPAD.EXE",
+    1
+   ],
+   [
+    "\"C:/Windows/system32/SearchProtocolHost.exe\"",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files/VMware/VMware Tools/VMware VGAuth/VGAuthService.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/ImmersiveControlPanel/SystemSettings.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Microsoft Office/Office15/OUTLOOK.EXE",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/whoami.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/eventvwr.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SysWOW64/eventvwr.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/schtasks.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SysWOW64/WindowsPowerShell/v1.0/powershell.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/NETSTAT.EXE",
+    1
+   ],
+   [
+    "\"fontdrvhost.exe\"",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/sessionmsg.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/TSTheme.exe",
+    1
+   ],
+   [
+    "rdpclip.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/unregmp2.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/Installer/chrmstp.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/ie4uinit.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/43.0.2357.65/delegate_execute.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+    1
+   ],
+   [
+    "\"C:/Windows/SystemApps/ShellExperienceHost_cw5n1h2txyewy/ShellExperienceHost.exe\"",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/SettingSyncHost.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/verclsid.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/mstsc.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/AUDIODG.EXE",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/LocationNotificationWindows.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/CredentialUIBroker.exe",
+    1
+   ],
+   [
+    "atbroker.exe",
+    1
+   ],
+   [
+    "Idle",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/ClipRenew.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/TEMP/8E011A7E-3B97-4A95-8804-41188D74A19E/dismhost.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/system32/plink.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Users/sysadmin/Downloads/fileTransfer1000.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 10
+ }
+}

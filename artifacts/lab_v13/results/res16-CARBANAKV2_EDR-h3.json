@@ -1,0 +1,565 @@
+{
+ "set": "CARBANAKV2_EDR-h3",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h3/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 26,
+ "days": 7,
+ "known": {
+  "Z0": 156,
+  "R0": 156,
+  "K": 238
+ },
+ "Z0": {
+  "TP": 2,
+  "FP": 72,
+  "recall": 0.077,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 45,
+   "corroborated": 15,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\system32\\cliprenew.exe",
+    3
+   ],
+   [
+    "c:\\windows\\system32\\find.exe",
+    3
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.sechealthui_cw5n1h2txyewy\\sechealthui.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\securityhealthhost.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\mpsigstub.exe",
+    2
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\zoom.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\installer.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\zwebview2agent.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\cpthost.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\temp\\vscode-stable-user-x64\\codesetup-stable-b58957e67ee1e712cebf466b995adf4c5307b2bd.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\temp\\is-ab20a.tmp\\codesetup-stable-b58957e67ee1e712cebf466b995adf4c5307b2bd.tmp",
+    1
+   ],
+   [
+    "c:\\windows\\installer\\msi6685.tmp",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.apprep.chxapp_cw5n1h2txyewy\\chxsmartscreen.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\downloads\\mossapp-master\\mossapp-master\\mossapp\\publish\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\dfsvc.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\credentialenrollmentmanager.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\downloads\\mossapp-master\\mossapp-master\\mossapp\\publish\\setup\\setup.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\apps\\2.0\\n8cxhkwa.e4q\\phd6rkxt.pb1\\moss..tion_0000000000000000_0002.0000_ed9c9c03dd24422b\\mossapp.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\cloudnotifications.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_engine_patch_1.1.24030.4.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_base_patch1.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\sessionmsg.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\tstheme.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\unregmp2.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\ie4uinit.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\settingsynchost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\fsquirt.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\onedrivesetup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.411.32.0.exe",
+    1
+   ],
+   [
+    "c:\\users\\administrator\\appdata\\local\\temp\\82942a0f-a64e-452b-8fcc-9b85ee8851ee\\dismhost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\inputswitchtoasthandler.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh-keygen.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\scp.exe",
+    1
+   ],
+   [
+    "c:\\users\\public\\java-update.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\perfmon.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\rdpclip.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 31
+ },
+ "R0": {
+  "TP": 2,
+  "FP": 72,
+  "recall": 0.077,
+  "attacks": 1,
+  "by_layer": {
+   "novelty": 45,
+   "corroborated": 15,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\system32\\cliprenew.exe",
+    3
+   ],
+   [
+    "c:\\windows\\system32\\find.exe",
+    3
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.sechealthui_cw5n1h2txyewy\\sechealthui.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\securityhealthhost.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\mpsigstub.exe",
+    2
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\zoom.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\installer.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\zwebview2agent.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\cpthost.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\temp\\vscode-stable-user-x64\\codesetup-stable-b58957e67ee1e712cebf466b995adf4c5307b2bd.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\temp\\is-ab20a.tmp\\codesetup-stable-b58957e67ee1e712cebf466b995adf4c5307b2bd.tmp",
+    1
+   ],
+   [
+    "c:\\windows\\installer\\msi6685.tmp",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.apprep.chxapp_cw5n1h2txyewy\\chxsmartscreen.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\downloads\\mossapp-master\\mossapp-master\\mossapp\\publish\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\dfsvc.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\credentialenrollmentmanager.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\downloads\\mossapp-master\\mossapp-master\\mossapp\\publish\\setup\\setup.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\apps\\2.0\\n8cxhkwa.e4q\\phd6rkxt.pb1\\moss..tion_0000000000000000_0002.0000_ed9c9c03dd24422b\\mossapp.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\cloudnotifications.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_engine_patch_1.1.24030.4.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_base_patch1.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\sessionmsg.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\tstheme.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\unregmp2.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\ie4uinit.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\settingsynchost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\fsquirt.exe",
+    1
+   ],
+   [
+    "c:\\windows\\syswow64\\onedrivesetup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\softwaredistribution\\download\\install\\am_delta_patch_1.411.32.0.exe",
+    1
+   ],
+   [
+    "c:\\users\\administrator\\appdata\\local\\temp\\82942a0f-a64e-452b-8fcc-9b85ee8851ee\\dismhost.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\inputswitchtoasthandler.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\ssh-keygen.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\openssh\\scp.exe",
+    1
+   ],
+   [
+    "c:\\users\\public\\java-update.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\perfmon.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\rdpclip.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 31
+ },
+ "K": {
+  "TP": 2,
+  "FP": 120,
+  "recall": 0.077,
+  "attacks": 1,
+  "by_layer": {
+   "corroborated": 32,
+   "novelty": 76,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "novelty": 1,
+   "corroborated": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "attacks_det": [
+   "carbanakv2_edr"
+  ],
+  "novelty_fp_keys": [
+   [
+    "c:\\windows\\system32\\cliprenew.exe",
+    3
+   ],
+   [
+    "c:\\windows\\system32\\find.exe",
+    3
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.sechealthui_cw5n1h2txyewy\\sechealthui.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\securityhealthhost.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\mpsigstub.exe",
+    2
+   ],
+   [
+    "c:\\programdata\\microsoft\\windows defender\\platform\\4.18.24030.9-0\\mpdefendercoreservice.exe",
+    2
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.windowsfeedbackhub_1.2401.20253.0_x64__8wekyb3d8bbwe\\pilotshubapp.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{51fbc480-e913-484a-8259-10ea45657de0}\\edgemitmp_f7550.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{1b5c444e-b1d0-418e-9ac6-3058304bac1d}\\edgemitmp_c200e.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edge\\application\\124.0.2478.67\\installer\\setup.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\zoom.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\installer.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\zwebview2agent.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\roaming\\zoom\\bin\\cpthost.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\programs\\microsoft vs code\\resources\\app\\node_modules.asar.unpacked\\@vscode\\ripgrep\\bin\\rg.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\temp\\vscode-stable-user-x64\\codesetup-stable-b58957e67ee1e712cebf466b995adf4c5307b2bd.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\temp\\is-ab20a.tmp\\codesetup-stable-b58957e67ee1e712cebf466b995adf4c5307b2bd.tmp",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\programs\\microsoft vs code\\tools\\inno_updater.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\download\\{56eb18f8-b008-4cbd-b6d2-8c97fe7e9062}\\124.0.2478.80\\microsoftedge_x64_124.0.2478.80_124.0.2478.67.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{5f23bcbe-4da0-4792-a22f-b128befce733}\\edgemitmp_0cc65.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\install\\{9cb297e2-997d-4a0f-b578-513efe8bb9a0}\\edgemitmp_a19fd.tmp\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\installer\\msi6685.tmp",
+    1
+   ],
+   [
+    "c:\\program files\\adobe\\acrobat dc\\acrobat\\adelrcp.exe",
+    1
+   ],
+   [
+    "c:\\program files\\adobe\\acrobat dc\\acrobat\\acrocef\\singleclientservicesupdater.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.windows.photos_2024.11030.15001.0_x64__8wekyb3d8bbwe\\photosapp.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windowsapps\\microsoft.windows.photos_2024.11030.15001.0_x64__8wekyb3d8bbwe\\photosservice\\photosservice.exe",
+    1
+   ],
+   [
+    "c:\\program files\\git\\usr\\bin\\sh.exe",
+    1
+   ],
+   [
+    "c:\\program files\\git\\swankysnail\\bin\\git-credential-manager.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\download\\{f3c4fe00-efd5-403b-9569-398a20f1ba4a}\\1.3.187.37\\microsoftedgeupdatesetup_x86_1.3.187.37.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\temp\\euf12e.tmp\\microsoftedgeupdate.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\microsoft\\edgeupdate\\1.3.187.37\\microsoftedgeupdatecomregistershell64.exe",
+    1
+   ],
+   [
+    "c:\\windows\\systemapps\\microsoft.windows.apprep.chxapp_cw5n1h2txyewy\\chxsmartscreen.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\downloads\\mossapp-master\\mossapp-master\\mossapp\\publish\\setup.exe",
+    1
+   ],
+   [
+    "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\dfsvc.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\credentialenrollmentmanager.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\downloads\\mossapp-master\\mossapp-master\\mossapp\\publish\\setup\\setup.exe",
+    1
+   ],
+   [
+    "c:\\users\\buzzingporpoise.pangolin\\appdata\\local\\apps\\2.0\\n8cxhkwa.e4q\\phd6rkxt.pb1\\moss..tion_0000000000000000_0002.0000_ed9c9c03dd24422b\\mossapp.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\cloudnotifications.exe",
+    1
+   ],
+   [
+    "c:\\program files (x86)\\common files\\adobe\\arm\\execute\\13319\\acroservicesupdater2_x64.exe",
+    1
+   ],
+   [
+    "c:\\program files\\git\\git-bash.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "c:\\windows\\system32\\rdpclip.exe",
+    1
+   ]
+  ],
+  "fleet_dropped": 33
+ }
+}

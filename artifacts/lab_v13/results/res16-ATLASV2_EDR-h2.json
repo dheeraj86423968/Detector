@@ -1,0 +1,111 @@
+{
+ "set": "ATLASV2_EDR-h2",
+ "bundle": "/data/lab08/heldout/ATLASV2_EDR/h2/v07rel",
+ "fleet": [
+  "ATLASV2_EDR-h1",
+  "ATLASV2_EDR-h2"
+ ],
+ "n_attacks": 10,
+ "gt_nodes": 0,
+ "days": 1,
+ "known": {
+  "Z0": 67,
+  "R0": 67,
+  "K": 94
+ },
+ "Z0": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "novelty_fp_keys": [
+   [
+    "c:\\users\\aalsahee\\downloads\\payload.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\control.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\unregmp2.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [],
+  "fleet_dropped": 0
+ },
+ "R0": {
+  "TP": 0,
+  "FP": 26,
+  "recall": 0.0,
+  "attacks": 0,
+  "by_layer": {
+   "novelty": 4,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "novelty_fp_keys": [
+   [
+    "c:\\users\\aalsahee\\downloads\\payload.exe",
+    2
+   ],
+   [
+    "c:\\windows\\system32\\control.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\unregmp2.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [],
+  "fleet_dropped": 0
+ },
+ "K": {
+  "TP": 0,
+  "FP": 28,
+  "recall": 0.0,
+  "attacks": 0,
+  "by_layer": {
+   "novelty": 6,
+   "rules": 22
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "novelty_fp_keys": [
+   [
+    "c:\\users\\aalsahee\\downloads\\payload.exe",
+    2
+   ],
+   [
+    "c:\\program files\\windows defender\\mpcmdrun.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\control.exe",
+    1
+   ],
+   [
+    "c:\\program files\\windows media player\\setup_wm.exe",
+    1
+   ],
+   [
+    "c:\\windows\\system32\\unregmp2.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [],
+  "fleet_dropped": 0
+ }
+}

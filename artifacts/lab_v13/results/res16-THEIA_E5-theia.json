@@ -1,0 +1,549 @@
+{
+ "set": "THEIA_E5-theia",
+ "bundle": "/data/lab08/heldout/THEIA_E5/theia/b07rel",
+ "fleet": [
+  "THEIA_E5-theia"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 66,
+ "days": 2,
+ "known": {
+  "Z0": 52,
+  "R0": 52,
+  "K": 52
+ },
+ "Z0": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "novelty_fp_keys": [
+   [
+    "/usr/bin/Xvnc4",
+    2
+   ],
+   [
+    "/usr/bin/pulseaudio",
+    2
+   ],
+   [
+    "/usr/lib/at-spi2-core/at-spi2-registryd",
+    2
+   ],
+   [
+    "/usr/games/gnomine",
+    2
+   ],
+   [
+    "/usr/lib/gvfs/gvfsd",
+    2
+   ],
+   [
+    "/usr/bin/zeitgeist-datahub",
+    2
+   ],
+   [
+    "/usr/bin/zeitgeist-daemon",
+    2
+   ],
+   [
+    "/usr/bin/xfwm4",
+    2
+   ],
+   [
+    "/usr/lib/x86_64-linux-gnu/xfce4/xfwm4/helper-dialog",
+    2
+   ],
+   [
+    "/usr/bin/nm-applet",
+    2
+   ],
+   [
+    "/bin/fusermount",
+    2
+   ],
+   [
+    "/usr/lib/zeitgeist/zeitgeist-fts",
+    2
+   ],
+   [
+    "/usr/bin/xfce4-volumed",
+    2
+   ],
+   [
+    "/usr/lib/x86_64-linux-gnu/gconf/gconfd-2",
+    1
+   ],
+   [
+    "/usr/bin/gedit",
+    1
+   ],
+   [
+    "/usr/sbin/NetworkManager",
+    1
+   ],
+   [
+    "/usr/lib/indicator-application/indicator-application-service",
+    1
+   ],
+   [
+    "/usr/sbin/lightdm",
+    1
+   ],
+   [
+    "/usr/bin/Xorg",
+    1
+   ],
+   [
+    "/usr/lib/dconf/dconf-service",
+    1
+   ],
+   [
+    "/usr/lib/gnome-settings-daemon/gnome-settings-daemon",
+    1
+   ],
+   [
+    "/usr/lib/indicator-sound/indicator-sound-service",
+    1
+   ],
+   [
+    "/usr/lib/pulseaudio/pulse/gconf-helper",
+    1
+   ],
+   [
+    "/sbin/udevd",
+    1
+   ],
+   [
+    "/sbin/upstart-udev-bridge",
+    1
+   ],
+   [
+    "/usr/bin/xinit",
+    1
+   ],
+   [
+    "/usr/sbin/bluetoothd",
+    1
+   ],
+   [
+    "/bin/su",
+    1
+   ],
+   [
+    "/usr/bin/perl",
+    1
+   ],
+   [
+    "/usr/bin/dbus-launch",
+    1
+   ],
+   [
+    "/usr/bin/ssh-agent",
+    1
+   ],
+   [
+    "/usr/bin/xfsettingsd",
+    1
+   ],
+   [
+    "/usr/bin/xfce4-power-manager",
+    1
+   ],
+   [
+    "/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1",
+    1
+   ],
+   [
+    "/usr/lib/x86_64-linux-gnu/tumbler-1/tumblerd",
+    1
+   ],
+   [
+    "/usr/bin/bluetooth-applet",
+    1
+   ],
+   [
+    "/usr/lib/udisks/udisks-daemon",
+    1
+   ],
+   [
+    "/usr/lib/gvfs/gvfs-afc-volume-monitor",
+    1
+   ],
+   [
+    "/usr/lib/xfce4/notifyd/xfce4-notifyd",
+    1
+   ],
+   [
+    "/usr/bin/pactl",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [],
+  "fleet_dropped": 0
+ },
+ "R0": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "novelty_fp_keys": [
+   [
+    "/usr/bin/Xvnc4",
+    2
+   ],
+   [
+    "/usr/bin/pulseaudio",
+    2
+   ],
+   [
+    "/usr/lib/at-spi2-core/at-spi2-registryd",
+    2
+   ],
+   [
+    "/usr/games/gnomine",
+    2
+   ],
+   [
+    "/usr/lib/gvfs/gvfsd",
+    2
+   ],
+   [
+    "/usr/bin/zeitgeist-datahub",
+    2
+   ],
+   [
+    "/usr/bin/zeitgeist-daemon",
+    2
+   ],
+   [
+    "/usr/bin/xfwm4",
+    2
+   ],
+   [
+    "/usr/lib/x86_64-linux-gnu/xfce4/xfwm4/helper-dialog",
+    2
+   ],
+   [
+    "/usr/bin/nm-applet",
+    2
+   ],
+   [
+    "/bin/fusermount",
+    2
+   ],
+   [
+    "/usr/lib/zeitgeist/zeitgeist-fts",
+    2
+   ],
+   [
+    "/usr/bin/xfce4-volumed",
+    2
+   ],
+   [
+    "/usr/lib/x86_64-linux-gnu/gconf/gconfd-2",
+    1
+   ],
+   [
+    "/usr/bin/gedit",
+    1
+   ],
+   [
+    "/usr/sbin/NetworkManager",
+    1
+   ],
+   [
+    "/usr/lib/indicator-application/indicator-application-service",
+    1
+   ],
+   [
+    "/usr/sbin/lightdm",
+    1
+   ],
+   [
+    "/usr/bin/Xorg",
+    1
+   ],
+   [
+    "/usr/lib/dconf/dconf-service",
+    1
+   ],
+   [
+    "/usr/lib/gnome-settings-daemon/gnome-settings-daemon",
+    1
+   ],
+   [
+    "/usr/lib/indicator-sound/indicator-sound-service",
+    1
+   ],
+   [
+    "/usr/lib/pulseaudio/pulse/gconf-helper",
+    1
+   ],
+   [
+    "/sbin/udevd",
+    1
+   ],
+   [
+    "/sbin/upstart-udev-bridge",
+    1
+   ],
+   [
+    "/usr/bin/xinit",
+    1
+   ],
+   [
+    "/usr/sbin/bluetoothd",
+    1
+   ],
+   [
+    "/bin/su",
+    1
+   ],
+   [
+    "/usr/bin/perl",
+    1
+   ],
+   [
+    "/usr/bin/dbus-launch",
+    1
+   ],
+   [
+    "/usr/bin/ssh-agent",
+    1
+   ],
+   [
+    "/usr/bin/xfsettingsd",
+    1
+   ],
+   [
+    "/usr/bin/xfce4-power-manager",
+    1
+   ],
+   [
+    "/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1",
+    1
+   ],
+   [
+    "/usr/lib/x86_64-linux-gnu/tumbler-1/tumblerd",
+    1
+   ],
+   [
+    "/usr/bin/bluetooth-applet",
+    1
+   ],
+   [
+    "/usr/lib/udisks/udisks-daemon",
+    1
+   ],
+   [
+    "/usr/lib/gvfs/gvfs-afc-volume-monitor",
+    1
+   ],
+   [
+    "/usr/lib/xfce4/notifyd/xfce4-notifyd",
+    1
+   ],
+   [
+    "/usr/bin/pactl",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [],
+  "fleet_dropped": 0
+ },
+ "K": {
+  "TP": 0,
+  "FP": 97,
+  "recall": 0.0,
+  "attacks": 0,
+  "by_layer": {
+   "novelty": 54,
+   "rules": 33,
+   "corroborated": 10
+  },
+  "by_layer_tp": {},
+  "attacks_found": [],
+  "attacks_det": [],
+  "novelty_fp_keys": [
+   [
+    "/usr/bin/Xvnc4",
+    2
+   ],
+   [
+    "/usr/bin/pulseaudio",
+    2
+   ],
+   [
+    "/usr/lib/at-spi2-core/at-spi2-registryd",
+    2
+   ],
+   [
+    "/usr/games/gnomine",
+    2
+   ],
+   [
+    "/usr/lib/gvfs/gvfsd",
+    2
+   ],
+   [
+    "/usr/bin/zeitgeist-datahub",
+    2
+   ],
+   [
+    "/usr/bin/zeitgeist-daemon",
+    2
+   ],
+   [
+    "/usr/bin/xfwm4",
+    2
+   ],
+   [
+    "/usr/lib/x86_64-linux-gnu/xfce4/xfwm4/helper-dialog",
+    2
+   ],
+   [
+    "/usr/bin/nm-applet",
+    2
+   ],
+   [
+    "/bin/fusermount",
+    2
+   ],
+   [
+    "/usr/lib/zeitgeist/zeitgeist-fts",
+    2
+   ],
+   [
+    "/usr/bin/xfce4-volumed",
+    2
+   ],
+   [
+    "/usr/lib/x86_64-linux-gnu/gconf/gconfd-2",
+    1
+   ],
+   [
+    "/usr/bin/gedit",
+    1
+   ],
+   [
+    "/usr/sbin/NetworkManager",
+    1
+   ],
+   [
+    "/usr/lib/indicator-application/indicator-application-service",
+    1
+   ],
+   [
+    "/usr/sbin/lightdm",
+    1
+   ],
+   [
+    "/usr/bin/Xorg",
+    1
+   ],
+   [
+    "/usr/lib/dconf/dconf-service",
+    1
+   ],
+   [
+    "/usr/lib/gnome-settings-daemon/gnome-settings-daemon",
+    1
+   ],
+   [
+    "/usr/lib/indicator-sound/indicator-sound-service",
+    1
+   ],
+   [
+    "/usr/lib/pulseaudio/pulse/gconf-helper",
+    1
+   ],
+   [
+    "/sbin/udevd",
+    1
+   ],
+   [
+    "/sbin/upstart-udev-bridge",
+    1
+   ],
+   [
+    "/usr/bin/xinit",
+    1
+   ],
+   [
+    "/usr/sbin/bluetoothd",
+    1
+   ],
+   [
+    "/bin/su",
+    1
+   ],
+   [
+    "/usr/bin/perl",
+    1
+   ],
+   [
+    "/usr/bin/dbus-launch",
+    1
+   ],
+   [
+    "/usr/bin/ssh-agent",
+    1
+   ],
+   [
+    "/usr/bin/xfsettingsd",
+    1
+   ],
+   [
+    "/usr/bin/xfce4-power-manager",
+    1
+   ],
+   [
+    "/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1",
+    1
+   ],
+   [
+    "/usr/lib/x86_64-linux-gnu/tumbler-1/tumblerd",
+    1
+   ],
+   [
+    "/usr/bin/bluetooth-applet",
+    1
+   ],
+   [
+    "/usr/lib/udisks/udisks-daemon",
+    1
+   ],
+   [
+    "/usr/lib/gvfs/gvfs-afc-volume-monitor",
+    1
+   ],
+   [
+    "/usr/lib/xfce4/notifyd/xfce4-notifyd",
+    1
+   ],
+   [
+    "/usr/bin/pactl",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [],
+  "fleet_dropped": 0
+ }
+}

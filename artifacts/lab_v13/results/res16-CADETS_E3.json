@@ -1,0 +1,316 @@
+{
+ "set": "CADETS_E3",
+ "bundle": "/data/lab08/5eafc637-14c7-4074-b4d3-4e611dea925e/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 68,
+ "days": 4,
+ "known": {
+  "Z0": 112,
+  "R0": 112,
+  "K": 112
+ },
+ "Z0": {
+  "TP": 31,
+  "FP": 16,
+  "recall": 0.456,
+  "attacks": 3,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "attacks_det": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "novelty_fp_keys": [
+   [
+    "procstat",
+    2
+   ],
+   [
+    "mail.local",
+    2
+   ],
+   [
+    "ipop3d",
+    2
+   ],
+   [
+    "tr",
+    2
+   ],
+   [
+    "links",
+    1
+   ],
+   [
+    "ssh",
+    1
+   ],
+   [
+    "pwait",
+    1
+   ],
+   [
+    "whoami",
+    1
+   ],
+   [
+    "login",
+    1
+   ],
+   [
+    "getty",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "vUgefal",
+    1
+   ],
+   [
+    "tmux-1002",
+    1
+   ],
+   [
+    "minions",
+    1
+   ],
+   [
+    "XIM",
+    1
+   ],
+   [
+    "main",
+    1
+   ],
+   [
+    "test",
+    1
+   ],
+   [
+    "pEja72mA",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "R0": {
+  "TP": 31,
+  "FP": 16,
+  "recall": 0.456,
+  "attacks": 3,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "attacks_det": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "novelty_fp_keys": [
+   [
+    "procstat",
+    2
+   ],
+   [
+    "mail.local",
+    2
+   ],
+   [
+    "ipop3d",
+    2
+   ],
+   [
+    "tr",
+    2
+   ],
+   [
+    "links",
+    1
+   ],
+   [
+    "ssh",
+    1
+   ],
+   [
+    "pwait",
+    1
+   ],
+   [
+    "whoami",
+    1
+   ],
+   [
+    "login",
+    1
+   ],
+   [
+    "getty",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "vUgefal",
+    1
+   ],
+   [
+    "tmux-1002",
+    1
+   ],
+   [
+    "minions",
+    1
+   ],
+   [
+    "XIM",
+    1
+   ],
+   [
+    "main",
+    1
+   ],
+   [
+    "test",
+    1
+   ],
+   [
+    "pEja72mA",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "K": {
+  "TP": 31,
+  "FP": 16,
+  "recall": 0.456,
+  "attacks": 3,
+  "by_layer": {
+   "novelty": 21,
+   "rules": 23,
+   "corroborated": 3
+  },
+  "by_layer_tp": {
+   "rules": 22,
+   "novelty": 7,
+   "corroborated": 2
+  },
+  "attacks_found": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "attacks_det": [
+   "Nginx_Backdoor_06",
+   "Nginx_Backdoor_12",
+   "Nginx_Backdoor_13"
+  ],
+  "novelty_fp_keys": [
+   [
+    "procstat",
+    2
+   ],
+   [
+    "mail.local",
+    2
+   ],
+   [
+    "ipop3d",
+    2
+   ],
+   [
+    "tr",
+    2
+   ],
+   [
+    "links",
+    1
+   ],
+   [
+    "ssh",
+    1
+   ],
+   [
+    "pwait",
+    1
+   ],
+   [
+    "whoami",
+    1
+   ],
+   [
+    "login",
+    1
+   ],
+   [
+    "getty",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "vUgefal",
+    1
+   ],
+   [
+    "tmux-1002",
+    1
+   ],
+   [
+    "minions",
+    1
+   ],
+   [
+    "XIM",
+    1
+   ],
+   [
+    "main",
+    1
+   ],
+   [
+    "test",
+    1
+   ],
+   [
+    "pEja72mA",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ }
+}

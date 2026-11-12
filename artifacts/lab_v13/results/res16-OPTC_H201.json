@@ -1,0 +1,245 @@
+{
+ "set": "OPTC_H201",
+ "bundle": "/data/lab08/f85bab6a-0fce-4b21-81d8-dd967b8d4395/v07rel",
+ "fleet": [
+  "OPTC_H201",
+  "OPTC_H501",
+  "OPTC_H051"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 2905,
+ "days": 3,
+ "known": {
+  "Z0": 141,
+  "R0": 141,
+  "K": 141
+ },
+ "Z0": {
+  "TP": 6,
+  "FP": 19,
+  "recall": 0.002,
+  "attacks": 1,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 6
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "attacks_det": [
+   "h201_0923"
+  ],
+  "novelty_fp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/system32/PING.EXE",
+    2
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Mozilla Firefox/uninstall/helper.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SystemApps/Microsoft.Windows.AppRep.ChxApp_cw5n1h2txyewy/CHXSmartScreen.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/whoami.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/schtasks.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Microsoft.NET/Framework64/v4.0.30319/csc.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/more.com",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/regedit.exe",
+    1
+   ],
+   [
+    "MemCompression",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/msdtc.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/TEMP/4B6DC4D2-FC04-4FC2-B07D-0E9C719B7024/dismhost.exe",
+    1
+   ],
+   [
+    "Idle",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/TEMP/AFF50783-6B63-4309-8613-21C87FD93118/dismhost.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [],
+  "fleet_dropped": 0
+ },
+ "R0": {
+  "TP": 6,
+  "FP": 19,
+  "recall": 0.002,
+  "attacks": 1,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 6
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "attacks_det": [
+   "h201_0923"
+  ],
+  "novelty_fp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/system32/PING.EXE",
+    2
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Mozilla Firefox/uninstall/helper.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SystemApps/Microsoft.Windows.AppRep.ChxApp_cw5n1h2txyewy/CHXSmartScreen.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/whoami.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/schtasks.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Microsoft.NET/Framework64/v4.0.30319/csc.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/more.com",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/regedit.exe",
+    1
+   ],
+   [
+    "MemCompression",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/msdtc.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/TEMP/4B6DC4D2-FC04-4FC2-B07D-0E9C719B7024/dismhost.exe",
+    1
+   ],
+   [
+    "Idle",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/TEMP/AFF50783-6B63-4309-8613-21C87FD93118/dismhost.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [],
+  "fleet_dropped": 0
+ },
+ "K": {
+  "TP": 6,
+  "FP": 19,
+  "recall": 0.002,
+  "attacks": 1,
+  "by_layer": {
+   "rules": 10,
+   "novelty": 14,
+   "corroborated": 1
+  },
+  "by_layer_tp": {
+   "rules": 6
+  },
+  "attacks_found": [
+   "h201_0923"
+  ],
+  "attacks_det": [
+   "h201_0923"
+  ],
+  "novelty_fp_keys": [
+   [
+    "/Device/HarddiskVolume1/Windows/system32/PING.EXE",
+    2
+   ],
+   [
+    "/Device/HarddiskVolume1/Program Files (x86)/Mozilla Firefox/uninstall/helper.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/SystemApps/Microsoft.Windows.AppRep.ChxApp_cw5n1h2txyewy/CHXSmartScreen.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/whoami.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/schtasks.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/Microsoft.NET/Framework64/v4.0.30319/csc.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/system32/more.com",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/regedit.exe",
+    1
+   ],
+   [
+    "MemCompression",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/System32/msdtc.exe",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/TEMP/4B6DC4D2-FC04-4FC2-B07D-0E9C719B7024/dismhost.exe",
+    1
+   ],
+   [
+    "Idle",
+    1
+   ],
+   [
+    "/Device/HarddiskVolume1/Windows/TEMP/AFF50783-6B63-4309-8613-21C87FD93118/dismhost.exe",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [],
+  "fleet_dropped": 0
+ }
+}

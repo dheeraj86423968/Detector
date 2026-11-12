@@ -1,0 +1,250 @@
+{
+ "set": "THEIA_E3",
+ "bundle": "/data/lab08/b4021490-6dd4-4dfb-8628-b3e55af27b90/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 2,
+ "gt_nodes": 118,
+ "days": 3,
+ "known": {
+  "Z0": 130,
+  "R0": 130,
+  "K": 130
+ },
+ "Z0": {
+  "TP": 109,
+  "FP": 86,
+  "recall": 0.924,
+  "attacks": 2,
+  "by_layer": {
+   "corroborated": 14,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "attacks_det": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "novelty_fp_keys": [
+   [
+    "/home/admin/Downloads/firefox/crashreporter",
+    1
+   ],
+   [
+    "/home/admin/profile",
+    1
+   ],
+   [
+    "/sbin/rpcbind",
+    1
+   ],
+   [
+    "/usr/bin/rsync",
+    1
+   ],
+   [
+    "/home/admin/qt-opensource-linux-x64-5.10.1.run",
+    1
+   ],
+   [
+    "/bin/tar",
+    1
+   ],
+   [
+    "/usr/bin/scp",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "/home/admin/clean",
+    1
+   ],
+   [
+    "/home/admin/profile",
+    1
+   ],
+   [
+    "/etc/firefox/native-messaging-hosts/pass_mgr",
+    1
+   ],
+   [
+    "/etc/firefox/native-messaging-hosts/gtcache",
+    1
+   ],
+   [
+    "/var/log/mail",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "R0": {
+  "TP": 109,
+  "FP": 86,
+  "recall": 0.924,
+  "attacks": 2,
+  "by_layer": {
+   "corroborated": 14,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "attacks_det": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "novelty_fp_keys": [
+   [
+    "/home/admin/Downloads/firefox/crashreporter",
+    1
+   ],
+   [
+    "/home/admin/profile",
+    1
+   ],
+   [
+    "/sbin/rpcbind",
+    1
+   ],
+   [
+    "/usr/bin/rsync",
+    1
+   ],
+   [
+    "/home/admin/qt-opensource-linux-x64-5.10.1.run",
+    1
+   ],
+   [
+    "/bin/tar",
+    1
+   ],
+   [
+    "/usr/bin/scp",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "/home/admin/clean",
+    1
+   ],
+   [
+    "/home/admin/profile",
+    1
+   ],
+   [
+    "/etc/firefox/native-messaging-hosts/pass_mgr",
+    1
+   ],
+   [
+    "/etc/firefox/native-messaging-hosts/gtcache",
+    1
+   ],
+   [
+    "/var/log/mail",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ },
+ "K": {
+  "TP": 109,
+  "FP": 86,
+  "recall": 0.924,
+  "attacks": 2,
+  "by_layer": {
+   "corroborated": 14,
+   "novelty": 12,
+   "rules": 169
+  },
+  "by_layer_tp": {
+   "rules": 95,
+   "novelty": 5,
+   "corroborated": 9
+  },
+  "attacks_found": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "attacks_det": [
+   "Browser_Extension_Drakon_Dropper",
+   "Firefox_Backdoor_Drakon_In_Memory"
+  ],
+  "novelty_fp_keys": [
+   [
+    "/home/admin/Downloads/firefox/crashreporter",
+    1
+   ],
+   [
+    "/home/admin/profile",
+    1
+   ],
+   [
+    "/sbin/rpcbind",
+    1
+   ],
+   [
+    "/usr/bin/rsync",
+    1
+   ],
+   [
+    "/home/admin/qt-opensource-linux-x64-5.10.1.run",
+    1
+   ],
+   [
+    "/bin/tar",
+    1
+   ],
+   [
+    "/usr/bin/scp",
+    1
+   ]
+  ],
+  "novelty_tp_keys": [
+   [
+    "/home/admin/clean",
+    1
+   ],
+   [
+    "/home/admin/profile",
+    1
+   ],
+   [
+    "/etc/firefox/native-messaging-hosts/pass_mgr",
+    1
+   ],
+   [
+    "/etc/firefox/native-messaging-hosts/gtcache",
+    1
+   ],
+   [
+    "/var/log/mail",
+    1
+   ]
+  ],
+  "fleet_dropped": 0
+ }
+}

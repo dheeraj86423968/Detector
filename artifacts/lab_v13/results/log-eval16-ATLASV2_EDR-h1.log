@@ -1,0 +1,5 @@
+18:29:24 fleet ['ATLASV2_EDR-h1', 'ATLASV2_EDR-h2']; known programs Z0=67, R0=67, K=92
+18:29:37 scored 84s
+18:29:37 Z0: attacks 8 det-only 4 TP 12 FP 49 by_layer {'novelty': 13, 'corroborated': 9, 'rules': 39}
+18:29:37 R0: attacks 8 det-only 4 TP 12 FP 49 by_layer {'novelty': 13, 'corroborated': 9, 'rules': 39}
+18:29:37 K: attacks 8 det-only 4 TP 12 FP 52 by_layer {'novelty': 18, 'rules': 39, 'corroborated': 7}
