@@ -51,7 +51,7 @@ export function IsolationCard({ endpointId, isolated, reload }: { endpointId: st
       </div>
       {ask && <Confirm danger={ask === "isolate"} title={ask === "isolate" ? "Isolate this endpoint?" : "Release this endpoint?"} confirmLabel={ask === "isolate" ? "Isolate" : "Release"}
         onClose={() => setAsk(null)} reasonLabel="Reason"
-        text={ask === "isolate" ? <p>All network traffic of the endpoint is blocked except to the M.D Lab Detector server (and DNS), until you release it. Its services stop being reachable. It stays isolated across agent restarts.</p>
+        text={ask === "isolate" ? <p>All network traffic of the endpoint is blocked except to the M.D Lab Detector server, until you release it. Connections that are open now are cut as well, including remote shells and your own SSH or remote-desktop session, and its services stop being reachable. It stays isolated across agent restarts; you release it from here.</p>
           : <p>Network traffic of the endpoint is allowed again.</p>}
         onConfirm={async reason => { await runAction(endpointId, { action: ask, reason }, toast, reload); }} />}
     </Card>

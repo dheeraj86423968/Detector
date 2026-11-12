@@ -108,9 +108,15 @@ a.upload_baseline()               # as in the run loop: uploads and the spool pu
 a.purge_spool()
 n_before = len(a.reg)
 a._last_compact = 0
+# rule hits of the open window hold registry positions: one per entity, each remembering whose it is
+from pdp_engine.layers import Hit
+a._win_hits = [Hit("rules", "untrusted_exec", a.reg[i].uuid, 0.0, (i,), 0, "") for i in range(n_before)]
 a.maybe_compact(time.time())
 check(len(a.reg) < n_before * 0.6 and os.path.exists(os.path.join(data, "live_entities.npy")),
       f"compaction: {n_before} -> {len(a.reg)} entities, live set saved")
+check(len(a._win_hits) == len(a.reg) and all(a.reg[h.nodes[0]].uuid == h.key for h in a._win_hits),
+      "the open window's rule hits follow their entities through the renumbering (hits on dropped entities go)")
+a._win_hits = []
 check(a.reg.gids is not None and a.reg.gid(0) == a.state.gid_for(a.reg[0].uuid), "kept entities keep their global ids")
 
 # part 2 brings back a dropped entity (an old temp file) and new ones

@@ -204,6 +204,7 @@ class State:
         except BaseException:
             if self.c.in_transaction:          # sqlite has already rolled back after some errors (a full disk)
                 self.c.execute("ROLLBACK")
+            self._day_ids.clear()              # a day row inserted in this transaction is gone with it
             raise
 
     def free_uploaded(self) -> int:

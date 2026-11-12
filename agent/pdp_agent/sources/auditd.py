@@ -172,6 +172,10 @@ class AuditNormaliser:
                 flags = 0
             if name == "creat":
                 flags = O_WRONLY | O_CREAT | O_TRUNC
+            elif name == "openat2":
+                # a2 is a pointer to struct open_how, not the flags (read/write was inferred from pointer bits): a
+                # read, or a write when the call created the file - the audit record carries nothing more
+                flags = O_WRONLY | O_CREAT if any(kv.get("nametype") == "CREATE" for kv in paths) else 0
             f, p = Entity.file(f"file:{path}", path), self.procs.get(pid, exe)
             out.append((f, "OPEN", p, f"{uid}:0"))
             acc = flags & O_ACCMODE

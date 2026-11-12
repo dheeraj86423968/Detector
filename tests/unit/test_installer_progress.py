@@ -28,7 +28,8 @@ root = tempfile.mkdtemp()
 binp = os.path.join(root, "bin"); os.makedirs(binp)
 sent = os.path.join(root, "sent")
 open(os.path.join(binp, "curl"), "w").write(f"""#!/bin/bash
-while [ $# -gt 0 ]; do [ "$1" = -d ] && {{ printf '%s\\n' "$2" >> {sent}; }}; shift; done
+printf '%s\\n' "$*" >> {sent}.argv
+while [ $# -gt 0 ]; do [ "$1" = --data-binary ] && [ "$2" = @- ] && {{ cat >> {sent}; echo >> {sent}; }}; shift; done
 exit 0
 """)
 os.chmod(os.path.join(binp, "curl"), 0o755)
@@ -95,5 +96,7 @@ check(msgs and msgs[0]["detail"] == 'kernel "6.8" \\ ok' and "done_bytes" not in
 r, msgs = bash("report started x; die 'no token here'", token="")
 check(r.returncode == 1 and msgs == [], "without a token (upgrade, uninstall) nothing is reported")
 
+argv = open(sent + ".argv").read() if os.path.exists(sent + ".argv") else ""
+check(argv and "tok-123456789" not in argv and "token" not in argv, "the enrolment token never appears on curl's command line")
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

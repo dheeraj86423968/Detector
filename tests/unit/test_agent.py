@@ -169,6 +169,51 @@ check(r2.startswith("ok") and child.returncode == -9, f"the alerted process is s
 r3 = a.kill_process(child.pid, uuid_now, "subject /usr/bin/sleep sleep 300")
 check(r3.startswith("not stopped"), "an ended process is reported, not retried")
 check(a.health()["isolated"] is False, "health reports isolation state")
+# 8b. (review 2026-11-12) the live sources keep the process table on their normaliser: the pid check must find it there
+child = _sp.Popen(["sleep", "300"])
+a.source = SimpleNamespace(norm=SimpleNamespace(procs=SimpleNamespace(current={child.pid: SimpleNamespace(uuid="proc:boot:%d:3" % child.pid)})))
+r4 = a.kill_process(child.pid, "proc:boot:%d:9" % child.pid, "subject /usr/bin/sleep sleep 300")
+check(r4.startswith("not stopped") and child.poll() is None, f"a reused pid is recognised through source.norm.procs ({r4})")
+import shutil as _sh, tempfile as _tf
+_d = _tf.mkdtemp(prefix="my dir "); _exe = _os.path.join(_d, "sleep"); _sh.copy(_sh.which("sleep"), _exe)
+child.kill(); child.wait()
+child = _sp.Popen([_exe, "300"])
+a.source = SimpleNamespace(norm=SimpleNamespace(procs=SimpleNamespace(current={child.pid: SimpleNamespace(uuid="u-space")})))
+r5 = a.kill_process(child.pid, "u-space", f"subject {_exe} {_exe} 300")
+child.wait(timeout=5)
+check(r5.startswith("ok") and child.returncode == -9, f"a program whose path contains a space is stopped ({r5})")
+# 8c. isolation rules: only the server; no blanket accept of established connections
+rs = Agent._isolation_ruleset("10.0.0.5", "2001:db8::1", "443, 9443")
+check("ct state established,related accept" not in rs and "ip saddr { 10.0.0.5 } tcp sport { 443, 9443 } ct state established accept" in rs
+      and "ip daddr { 10.0.0.5 } tcp dport { 443, 9443 } accept" in rs and "ip6 daddr { 2001:db8::1 }" in rs
+      and "chain forward { type filter hook forward priority -200; policy drop; }" in rs,
+      "isolation accepts established traffic only from the server (open connections to anything else are cut)")
+# 8d. a batch the server keeps refusing is dropped and declared lost; a connection error is retried as before
+from pdp_agent.agent import REFUSED_MAX
+from pdp_agent.transport import TransportError as _TE
+class RefuseTransport(FakeTransport):
+    status = 422
+    def post_ndjson(self, path, rows):
+        if any(r.get("seq") == 901 for r in rows):
+            raise _TE(self.status, "bad row")
+        return super().post_ndjson(path, rows)
+_tr, a.tr = a.tr, RefuseTransport()
+a._online = lambda: True
+a._went_offline = lambda *x: None
+a._unreported = [([], [{"seq": 901}]), ([], [{"seq": 902}])]
+for _ in range(REFUSED_MAX):
+    a.report([])
+check([b[1][0]["seq"] for b in a._unreported] == [902], "the refused batch is dropped after the limit, the one behind it is still queued")
+a.report([])
+check([b[1][0]["seq"] for b in a._unreported] == [] and [901, 901] in (a.state.get("lost_seqs") or {}).get("a", []),
+      f"after {REFUSED_MAX} refusals the batch is declared lost and the next one is delivered")
+RefuseTransport.status = 503
+a._unreported = [([], [{"seq": 901}])]
+for _ in range(REFUSED_MAX + 2):
+    a.report([])
+check(len(a._unreported) == 1, "a server error (503) is not a refusal: the batch is kept")
+a.tr, a._unreported = _tr, []
+del a._online, a._went_offline
 
 # 9. hunting: the activity index records programs run (with command line), addresses contacted and files written,
 #    de-duplicated; a hunt searches it and posts the matches back

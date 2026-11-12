@@ -34,10 +34,11 @@ from .config import Config
 from .state import State, disk_full
 from .transport import Transport, TransportError
 
-VERSION = "0.12.0"
+VERSION = "0.13.0"
 DAY_GRACE_S = 300        # a live day is declared complete this long after midnight (late spool writes settle)
 SCORE_MAX_ATTEMPTS = 2   # a window the detector fails on this many times (exception or crash) is skipped, not retried
 UNREPORTED_MAX = 500     # alert/window batches kept on disk while the server is unreachable
+REFUSED_MAX = 5          # refusals of the same batch (400 / 413 / 422) before it is dropped and declared lost
 
 
 _TZ = {}
@@ -433,6 +434,13 @@ class Agent:
             return
         old2new = self.runtime.compact(keep)
         self.builder.remap(old2new)
+        # the open window's rule hits and unprocessed slice hold registry positions too: left as they were, the hits
+        # were attributed to whatever entity moved into the old position when the window closed (an alert on an
+        # unrelated node, or none). Their nodes are in the open window, which compaction always keeps.
+        import dataclasses
+        self._win_hits = [dataclasses.replace(h, nodes=tuple(int(old2new[n]) for n in h.nodes))
+                          for h in self._win_hits if all(old2new[n] >= 0 for n in h.nodes)]
+        self._slice = [(old2new[e[0]], old2new[e[1]]) + tuple(e[2:]) for e in self._slice if old2new[e[0]] >= 0 and old2new[e[1]] >= 0]
         self._save_live_set()
         import gc
         gc.collect()
@@ -793,7 +801,7 @@ class Agent:
                     self.state.mark_scored(self._open_ids)    # everything pushed so far was in the closed window(s)
                     self._open_ids = []
             last = rows[-1]
-            self._cursor = (last[1], last[0])
+            self._cursor = max(self._cursor or (0, 0), (last[1], last[0]))   # a batch of late events must not move it back
             self._max_id = max(self._max_id, max(r[0] for r in rows))
             self.run_rules(self.builder._start if self.builder._start is not None else (self._slice[0][2] if self._slice else 0))
             self.report(results)
@@ -950,6 +958,26 @@ class Agent:
                 self._unreported.pop(0)
                 self._save_unreported()
         except (TransportError, OSError) as e:
+            # A batch the server refuses as such (400 / 413 / 422: its content, not the connection) will be refused
+            # again: retried for good it blocked every later alert until 500 batches had piled up behind it. After
+            # REFUSED_MAX refusals it is declared lost (reported in the heartbeat) and the next one is sent.
+            if isinstance(e, TransportError) and e.status in (400, 413, 422) and self._unreported:
+                head = self._unreported[0]
+                key = (len(head[0]), len(head[1]), next((r.get("seq") for r in head[1] + head[0] if isinstance(r, dict)), None))
+                n = self._refused[1] + 1 if getattr(self, "_refused", (None, 0))[0] == key else 1
+                self._refused = (key, n)
+                if n >= REFUSED_MAX:
+                    lost = self.state.get("lost_seqs") or {"w": [], "a": []}
+                    for k, rows in (("w", head[0]), ("a", head[1])):
+                        sq = [r["seq"] for r in rows if isinstance(r, dict) and r.get("seq") is not None]
+                        if sq:
+                            lost[k] = (lost[k] + [[min(sq), max(sq)]])[-20:]
+                    self.state.set("lost_seqs", lost)
+                    self._unreported.pop(0)
+                    self._save_unreported()
+                    self._refused = (None, 0)
+                    log(f"report: the server refused a batch {REFUSED_MAX} times ({e}); dropped it ({len(head[1])} alerts, {len(head[0])} windows)")
+                    return
             log(f"report deferred ({len(self._unreported)} batches pending): {e}")
             self._went_offline(time.time(), e)
 
@@ -1005,8 +1033,20 @@ class Agent:
                             if b and b["id"] != self.state.get("bundle_id") and b["id"] != getattr(self, "_bad_bundle", None):
                                 try:
                                     self.fetch_bundle(b["id"], b.get("sha256"))
-                                except (TransportError, OSError):
+                                except TransportError:
                                     raise
+                                except OSError as e:
+                                    # the download failed mid-way (connection) -> offline handling, retried. A file
+                                    # error while unpacking / loading (missing or unreadable file, full disk) is not
+                                    # the network: it used to count as "offline" with the model already released,
+                                    # so nothing was scored and the bundle was downloaded again every interval.
+                                    if self.runtime is not None and not isinstance(e, (FileNotFoundError, PermissionError, IsADirectoryError, NotADirectoryError)) \
+                                            and getattr(e, "errno", None) not in (28, 122):
+                                        raise
+                                    self._bad_bundle = b["id"]
+                                    log(f"bundle {b['id']} could not be loaded ({type(e).__name__}: {e}); keeping the current model")
+                                    if self.runtime is None:
+                                        self.load_local_bundle()
                                 except Exception as e:  # noqa - a model this agent cannot use must not stop it
                                     self._bad_bundle = b["id"]
                                     log(f"bundle {b['id']} could not be loaded ({type(e).__name__}: {e}); keeping the current model")
@@ -1337,7 +1377,11 @@ class Agent:
         import signal
         if pid <= 1 or pid == os.getpid():
             return "refused: protected process"
-        procs = getattr(getattr(self, "source", None), "procs", None)
+        # the collector's process table: the live sources keep it on their normaliser (source.norm.procs); looking only
+        # at source.procs found none, so this check never ran and a reused pid running a program of the same name
+        # could be stopped
+        src = getattr(self, "source", None)
+        procs = getattr(src, "procs", None) or getattr(getattr(src, "norm", None), "procs", None)
         cur = getattr(procs, "current", {}).get(pid) if procs is not None else None
         if procs is not None and (cur is None or cur.uuid != uuid):
             return "not stopped: that process has already ended (its pid is free or used by another program now)"
@@ -1346,7 +1390,9 @@ class Agent:
             real = os.readlink(f"/proc/{pid}/exe")
         except OSError:
             return "not stopped: the process has already ended"
-        if exe and exe not in ("None", real) and os.path.basename(exe) != os.path.basename(real):
+        real_path = real[:-10] if real.endswith(" (deleted)") else real
+        same = label.startswith(f"subject {real_path} ") or label == f"subject {real_path}"    # also a path with spaces
+        if exe and not same and exe not in ("None", real, real_path) and os.path.basename(exe) != os.path.basename(real_path):
             return f"not stopped: pid {pid} now runs {real}, not {exe}"
         try:
             os.kill(pid, signal.SIGKILL)
@@ -1372,9 +1418,10 @@ class Agent:
         return sorted(addrs), sorted(ports | {443})
 
     def isolate(self) -> str:
-        """Network isolation: everything dropped except loopback, established connections, the PDP server on its
-        ports and DNS to the host's own resolvers (the agent must still reach the server to be released). Re-applied
-        when the agent starts while isolated."""
+        """Network isolation: everything dropped except loopback and the PDP server on its ports (the agent must still
+        reach the server to be released). Connections that were open before - an attacker's shell, a transfer in
+        progress, also an administrator's SSH session - stop working: accepting every established connection, as
+        before 0.13, left exactly the traffic isolation is for. Re-applied when the agent starts while isolated."""
         import subprocess
         try:
             addrs, ports = self._server_addrs()
@@ -1383,14 +1430,7 @@ class Agent:
         # no DNS while isolated (a resolver is a way out): the agent connects to the addresses resolved now
         srv4 = ", ".join(a for a in addrs if ":" not in a); srv6 = ", ".join(a for a in addrs if ":" in a)
         pl = ", ".join(str(p) for p in ports)
-        out_rules = []
-        if srv4: out_rules.append(f"ip daddr {{ {srv4} }} tcp dport {{ {pl} }} accept")
-        if srv6: out_rules.append(f"ip6 daddr {{ {srv6} }} tcp dport {{ {pl} }} accept")
-        ruleset = ("table inet pdp_isolate\ndelete table inet pdp_isolate\ntable inet pdp_isolate {\n"
-                   "  chain input { type filter hook input priority -200; policy drop; iif \"lo\" accept; ct state established,related accept; }\n"
-                   "  chain forward { type filter hook forward priority -200; policy drop; ct state established,related accept; }\n"
-                   "  chain output { type filter hook output priority -200; policy drop; oif \"lo\" accept; ct state established,related accept; "
-                   + " ".join(r + ";" for r in out_rules) + " }\n}\n")
+        ruleset = self._isolation_ruleset(srv4, srv6, pl)
         r = subprocess.run(["nft", "-f", "-"], input=ruleset, capture_output=True, text=True)
         if r.returncode != 0:
             return f"not isolated: nft failed: {r.stderr.strip()[:300]}"
@@ -1400,6 +1440,25 @@ class Agent:
             self.tr.pinned = addrs
         log(f"response: endpoint isolated (only the server {addrs} on ports {ports} is reachable)")
         return f"ok: isolated; only the PDP server ({', '.join(addrs)}) is reachable; check: {self._isolation_check(addrs, ports)}"
+
+    @staticmethod
+    def _isolation_ruleset(srv4: str, srv6: str, pl: str) -> str:
+        """nftables rules of the isolation: only loopback and TCP with the server's addresses on its ports, in both
+        directions; ICMP errors about those connections (path MTU) and, with an IPv6 server, neighbour discovery."""
+        inp, out = [], []
+        if srv4:
+            out.append(f"ip daddr {{ {srv4} }} tcp dport {{ {pl} }} accept")
+            inp.append(f"ip saddr {{ {srv4} }} tcp sport {{ {pl} }} ct state established accept")
+        if srv6:
+            out.append(f"ip6 daddr {{ {srv6} }} tcp dport {{ {pl} }} accept")
+            inp.append(f"ip6 saddr {{ {srv6} }} tcp sport {{ {pl} }} ct state established accept")
+            nd = "icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit, nd-router-advert } accept"
+            inp.append(nd); out.append(nd)
+        inp.append("meta l4proto { icmp, ipv6-icmp } ct state related accept")
+        return ("table inet pdp_isolate\ndelete table inet pdp_isolate\ntable inet pdp_isolate {\n"
+                "  chain input { type filter hook input priority -200; policy drop; iif \"lo\" accept; " + " ".join(r + ";" for r in inp) + " }\n"
+                "  chain forward { type filter hook forward priority -200; policy drop; }\n"
+                "  chain output { type filter hook output priority -200; policy drop; oif \"lo\" accept; " + " ".join(r + ";" for r in out) + " }\n}\n")
 
     @staticmethod
     def _isolation_check(addrs, ports) -> str:

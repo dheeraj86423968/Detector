@@ -689,6 +689,7 @@ class EbpfNormaliser:
         self._exec: dict[int, tuple[int, str, list[bytes]]] = {}   # pid -> (ts, filename, argv chunks) awaiting chunks
         self._cwd: dict[int, str] = {}
         self._dirs: dict[tuple[int, int], str] = {}   # (pid, fd) -> path of the file/directory the process opened
+        self._pid_fds: dict[int, set] = {}            # pid -> its fds in _dirs (an exit drops them without a full scan)
         self.host_root = host_root                    # fallback root for symlink resolution after a process exited
         self._recent: dict[int, list[str]] = {}       # pid -> last few opened paths (dirfd fallback)
 
@@ -725,8 +726,9 @@ class EbpfNormaliser:
             # every successful open is recorded (directories are often opened without O_DIRECTORY, e.g. by tar); a later
             # open returning the same fd overwrites it, and a process's entries are dropped when it exits
             if len(self._dirs) > 200_000:
-                self._dirs.clear()
+                self._dirs.clear(); self._pid_fds.clear()
             self._dirs[(pid, fd)] = out
+            self._pid_fds.setdefault(pid, set()).add(fd)
             rec = self._recent.setdefault(pid, [])
             rec.append(out)
             del rec[:-8]
@@ -832,8 +834,8 @@ class EbpfNormaliser:
         elif k == EXIT:
             M.exit(r.pid)
             self._exec.pop(r.pid, None)
-            for k in [k for k in self._dirs if k[0] == r.pid]:
-                del self._dirs[k]
+            for fd in self._pid_fds.pop(r.pid, ()):    # was a scan of the whole table (up to 200 k entries) per exit
+                self._dirs.pop((r.pid, fd), None)
             self._recent.pop(r.pid, None)
             self._cwd.pop(r.pid, None)
         elif k == DUP:                     # new fd (ret) refers to what fd aux referred to
@@ -887,6 +889,30 @@ class EbpfNormaliser:
         yield from self.map.exec(pid, ts, exe, argv)
 
     decode_event = decode   # backwards-compatible name
+
+
+class _WallClock:
+    """Kernel (CLOCK_MONOTONIC) -> wall-clock offset for event timestamps. It was measured once when the tracer
+    started; CLOCK_MONOTONIC stops while the machine is suspended (a laptop lid, a paused VM) and the wall clock can
+    be stepped (NTP at boot), after which every event was stamped that far off until the agent restarted - filed
+    under the wrong day and window. Re-measured every 30 s and adopted only when it moved by more than a second, so
+    ordinary clock slewing never reorders events."""
+    STEP_NS = 1_000_000_000
+
+    def __init__(self):
+        self.offset = time.time_ns() - time.monotonic_ns()
+        self._checked = time.monotonic()
+
+    def get(self) -> int:
+        now = time.monotonic()
+        if now - self._checked >= 30:
+            self._checked = now
+            cur = time.time_ns() - time.monotonic_ns()
+            if abs(cur - self.offset) > self.STEP_NS:
+                print(f"eBPF collector: the wall clock moved {(cur - self.offset) / 1e9:+.1f} s against the kernel's monotonic clock "
+                      "(suspend or clock step); event times follow it", file=sys.stderr, flush=True)
+                self.offset = cur
+        return self.offset
 
 
 def parse_records(buf, mono_to_wall: int = 0) -> tuple[list[Rec], int, tuple[int, int] | None]:
@@ -951,7 +977,7 @@ class CoreTracer:
             raise RuntimeError(f"eBPF loader {self.loader}: unexpected stream header {head!r} (version {version}, "
                                f"record size {size}; expected {STREAM_VERSION} / {REC.size})")
         self.startup_s = time.monotonic() - t0        # spawn -> every program loaded, relocated and attached
-        self._mono_to_wall = time.time_ns() - time.monotonic_ns()   # bpf_ktime_get_ns is CLOCK_MONOTONIC
+        self._clock = _WallClock()                    # bpf_ktime_get_ns is CLOCK_MONOTONIC
 
     def _drain_stderr(self):
         for line in iter(self.p.stderr.readline, b""):
@@ -994,7 +1020,7 @@ class CoreTracer:
             self._buf += chunk
             got += len(chunk)
             r, _, _ = select.select([self._fd], [], [], 0)
-        recs, used, lost = parse_records(self._buf, self._mono_to_wall)
+        recs, used, lost = parse_records(self._buf, self._clock.get())
         del self._buf[:used]
         if lost is not None and lost != (self.stats["lost"], self.stats["behind"]):   # from the loader, at most every 10 s
             self.stats["lost"], self.stats["behind"] = lost
@@ -1042,13 +1068,13 @@ class BccTracer:
             self.b = BPF(text=BCC_COMPAT_PRELUDE + text, cflags=["-w", "-fms-extensions"])
         self.stats = {"lost": 0}                 # not counted by this engine
         self._out: list[Rec] = []
-        self._mono_to_wall = time.time_ns() - time.monotonic_ns()   # bpf_ktime_get_ns is CLOCK_MONOTONIC
+        self._clock = _WallClock()                    # bpf_ktime_get_ns is CLOCK_MONOTONIC
         self.b["events"].open_ring_buffer(self._on_event)
         self.startup_s = time.monotonic() - t0
 
     def _on_event(self, ctx, data, size):
         e = self.b["events"].event(data)
-        self._out.append(Rec(kind=e.kind, pid=e.pid, ts_ns=e.ts + self._mono_to_wall, tid=e.tid, aux=e.aux, ret=e.ret,
+        self._out.append(Rec(kind=e.kind, pid=e.pid, ts_ns=e.ts + self._clock.get(), tid=e.tid, aux=e.aux, ret=e.ret,
                              flags=e.flags, dirfd=e.dirfd, family=e.family, port=socket.ntohs(e.port), addr=bytes(e.addr),
                              s=e.str.decode(errors="replace") if isinstance(e.str, bytes) else str(e.str),
                              raw=self._raw_str(e, int(e.ret)) if e.kind == EXEC_ARGV else b""))

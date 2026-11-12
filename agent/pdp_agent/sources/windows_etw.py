@@ -130,7 +130,11 @@ class EtwLive:
         try:
             while not stop():
                 if len(self._buf) >= self.batch or (self._buf and time.time() - last > 2):
-                    yield self._buf; self._buf = []; last = time.time()
+                    # swap first: the callback thread keeps appending while the consumer works on the batch, and
+                    # resetting the buffer after the yield threw those events away
+                    b, self._buf = self._buf, []
+                    last = time.time()
+                    yield b
                 else:
                     yield []
                     time.sleep(0.2)

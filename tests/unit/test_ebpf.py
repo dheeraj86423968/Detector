@@ -259,5 +259,16 @@ t = program(1, 64, "aarch64", sockio_ms=0, uring=False)
 check("#define SOCKIO_NS 0ULL" in t and "#define REG_NR regs->syscallno" in t and "#define REG_XARG0 regs->orig_x0" in t
       and "io_uring_submit_req" not in t and "__URING" not in t, "bcc program: arm64 exit registers (orig_x0), socket data off, no io_uring")
 
+# wall-clock offset: re-measured, adopted only on a real step (suspend / clock change), never on ordinary slewing
+import time as _t
+from pdp_agent.sources import ebpf as _e
+wc = _e._WallClock()
+o0 = wc.get()
+wc._checked -= 60; wc.offset -= 200_000_000                     # 0.2 s apart: slewing, keep the offset (event order)
+kept = wc.get() == o0 - 200_000_000
+wc._checked -= 60; wc.offset = o0 - 3 * 3600 * 10**9            # as after a 3 h suspend: follow the wall clock
+moved = abs(wc.get() - (_t.time_ns() - _t.monotonic_ns())) < 10**9
+wc.offset = 5
+check(kept and moved and wc.get() == 5, "event clock offset follows a clock step, ignores sub-second drift, re-measures at most every 30 s")
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)
