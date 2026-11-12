@@ -138,13 +138,21 @@ _GUID = re.compile(r"\{?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]
 _HEXID = re.compile(r"(?<![0-9a-z])[0-9a-f]{16,}(?![0-9a-z])")
 _VERSION_DIR = re.compile(r"^v?\d+(?:[._]\d+)+$")
 _EXE_SUFFIX = re.compile(r"\.(exe|com)$")
+# 0.13 (`version_names`): a version number inside a directory or file name - 'microsoft.outlookforwindows_1.2024.501.300_x64__..',
+# 'firefox-54.0.1', '4.18.24030.9-0', 'am_delta_patch_1.409.123.0.exe' - is the same program in another version, as a
+# directory that is only a version already is ({v}). At least three numeric parts, so 'python3.11' or 'office14' stay.
+_VERSION_IN_NAME = re.compile(r"(?<![0-9a-z.])v?\d+(?:[._]\d+){2,}(?:-\d+)?(?![0-9a-z])", re.I)
+
+
+def _versions(name: str) -> str:
+    return _VERSION_IN_NAME.sub("{v}", name)
 
 
 _WIN_LIKE = re.compile(r"(^(?:/device/harddiskvolume\d+|/\?\?/[a-z]:|//\?/[a-z]:|[a-z]:)/|^%systemroot%|^%windir%|"
                        r"\.(exe|com|bat|cmd|dll|scr|ps1|vbs|js|msi|cpl|hta)$)", re.I)
 
 
-def program_key(exe: str, strict: bool = False) -> str:
+def program_key(exe: str, strict: bool = False, versions: bool = False) -> str:
     """Canonical program identity: '/Device/HarddiskVolume1/Windows/System32/PING.EXE' and 'C:\\Windows\\system32\\ping.exe'
     -> '/windows/system32/ping.exe'; GUID / long hex directory names -> '{id}', version directories -> '{v}'.
     strict (0.6): only Windows-style programs are case-folded (POSIX paths are case-sensitive: '/tmp/LS' is not
@@ -160,6 +168,11 @@ def program_key(exe: str, strict: bool = False) -> str:
             return p
         parts = p.split("/")
         dirs = [_HEXID.sub("{id}", _GUID.sub("{id}", x.casefold())) if win else _HEXID.sub("{id}", _GUID.sub("{id}", x)) for x in parts[:-1]]
+        if versions:      # versions inside directory names and the file name ('{v}' for a pure version directory, as before)
+            f = _versions(parts[-1])
+            if f.split(".")[0] == "{v}":     # a file named only like a version keeps its name (as with hex ids, 0.6)
+                f = parts[-1]
+            return "/".join([("{v}" if _VERSION_DIR.match(x) else _versions(x)) for x in dirs] + [f])
         return "/".join([("{v}" if _VERSION_DIR.match(x) else x) for x in dirs] + parts[-1:])
     p = exe.replace("\\", "/").casefold()
     p = p.replace("%systemroot%", "/windows").replace("%windir%", "/windows")
@@ -276,7 +289,11 @@ class NoveltyLayer:
         learned score corroborates it); "drop": no alert; None / "off": ignored (every new program alerts)."""
         progs = dict(programs or {})
         self.fleet_mode = mode if mode in ("evidence", "drop") and progs else None
-        self.fleet = {self.key(str(k)): int(n) for k, n in progs.items() if str(k) not in UNKNOWN_PROGRAM}
+        self.fleet = {}
+        for k, n in progs.items():      # two spellings of one program: the larger count
+            if str(k) not in UNKNOWN_PROGRAM:
+                kk = self.key(str(k))
+                self.fleet[kk] = max(self.fleet.get(kk, 0), int(n))
         self.fleet_names = {}
         for k, n in self.fleet.items():
             nm = program_name(k)
@@ -302,7 +319,14 @@ class NoveltyLayer:
         self._approved_keys = {self.key(k) for k in self._approved}
 
     def key(self, exe: str) -> str:
-        return program_key(exe, getattr(self, "strict", False))
+        return program_key(exe, getattr(self, "strict", False), getattr(self, "version_names", False))
+
+    def rekey(self) -> None:
+        """Recompute the program keys after an option that changes them was set (version_names)."""
+        if self.normalize:
+            self.known_keys = {self.key(k) for k in self.known if k not in UNKNOWN_PROGRAM}
+            self.known_names = {program_name(k) for k in self.known_keys}
+        self._approved_keys = {self.key(k) for k in self._approved}
 
     def reset(self):
         self._checked = set()
@@ -401,7 +425,8 @@ class TagEngine:
                  n_preexisting: int, fit: bool = False, private_services: set[str] | None = None, full_paths: bool = False,
                  image_exec: bool = False, local_multicast: bool = False, strict_addresses: bool = False,
                  script_exec: bool = False, socket_io: bool = False, persistence: bool = False,
-                 connect_receives: bool = False, late_exfil: bool = False):
+                 connect_receives: bool = False, late_exfil: bool = False, key_norm: bool = False, backslash_paths: bool = False,
+                 version_names: bool = False):
         """full_paths: Windows path handling (programs with spaces, canonical directories, Windows credential stores).
         image_exec: a process whose program file was written with untrusted content in the stream counts as executing
         it, for collectors that record no EXECUTE event (Windows). local_multicast: multicast / broadcast addresses
@@ -412,6 +437,12 @@ class TagEngine:
         process like a receive: collectors that trace connect() but not read() on sockets - the live eBPF collector,
         OpenSSL reads with read() - otherwise never see a download), late_exfil (a process holding a connection to
         an untrusted address that then reads sensitive data is exfiltration, not only sensitive-read-then-connect)."""
+        # 0.13: key_norm - the per-key benign thresholds are looked up by program identity (program_key: version / GUID /
+        # hex-id directories collapsed, Windows case and spelling) instead of the raw path, as layer 1 does: a program
+        # that updates itself (a new version or GUID directory every time) otherwise never matches its own baseline.
+        # backslash_paths - programs are parsed like layer 1's option of that name ('c:\program files\x\y.exe').
+        self.key_norm, self.backslash_paths, self.version_names = bool(key_norm), bool(backslash_paths), bool(version_names)
+        self._nk: dict[str, str] = {}
         self.p = params
         self.strict_addresses = bool(strict_addresses)
         self.script_exec = bool(script_exec)
@@ -461,7 +492,7 @@ class TagEngine:
         s = self._lbl.get(n)
         if s is None:
             e = reg.entities[n]
-            s = executable(e.label, self.full_paths) if e.ntype == "subject" else (file_path(e.label) if e.ntype == "file" else remote_ip(e.label))
+            s = executable(e.label, self.full_paths, self.backslash_paths) if e.ntype == "subject" else (file_path(e.label) if e.ntype == "file" else remote_ip(e.label))
             self._lbl[n] = s
         return s
 
@@ -525,16 +556,36 @@ class TagEngine:
             return False
         return any(a in n for n in self.allowed_nets)
 
+    def norm_key(self, key: str) -> str:
+        """Threshold key of an alarm key ('<program>', '<parent> -> <program>', '<program> @ <directory>') by program
+        identity; the alarm itself keeps the raw key (allow list, display)."""
+        if not self.key_norm:
+            return key
+        k = self._nk.get(key)
+        if k is None:
+            if " -> " in key:
+                a, b = key.split(" -> ", 1)
+                k = f"{program_key(a, True, self.version_names)} -> {program_key(b, True, self.version_names)}"
+            elif " @ " in key:
+                a, b = key.rsplit(" @ ", 1)
+                k = f"{program_key(a, True, self.version_names)} @ {program_key(b + '/', True, self.version_names)[:-1] or '/'}"
+            else:
+                k = program_key(key, True, self.version_names)
+            if len(self._nk) > 200_000:
+                self._nk.clear()
+            self._nk[key] = k
+        return k
+
     def _check(self, out: list, rule: str, key: str, value: float, nodes: tuple, ts: int, detail: str):
         if self.fit_mode:
             if value < self.p.untrusted:
-                k = (rule, key)
+                k = (rule, self.norm_key(key))
                 if value < self.benign_min.get(k, 2.0):
                     self.benign_min[k] = value
                 self.benign_days[k].add(self.cur_day)
                 self.benign_count[rule] += 1
             return
-        thr = self.thr.get(rule, {}).get(key, self.p.untrusted)
+        thr = self.thr.get(rule, {}).get(self.norm_key(key), self.p.untrusted)
         if value < thr and (rule, nodes[0]) not in self._fired:
             self._fired.add((rule, nodes[0]))
             out.append(Hit("rules", rule, key, round(float(value), 3), nodes, ts, detail))
@@ -800,6 +851,10 @@ class LayerConfig:
     sigma_fit_levels: tuple = ("medium", "high", "critical")
     sigma_levels: tuple = ()
     backslash_paths: bool = False      # layer 1 parses 'c:\program files\x.exe' (EDR telemetry) as one path
+    # 0.13 (artifacts/lab_v14), off until a lab accepts them; a layers.json without the keys keeps its behaviour:
+    rule_key_norm: bool = False        # layer 2 thresholds by program identity (program_key), not by raw path
+    rule_backslash_paths: bool = False # layer 2 parses backslash paths with spaces like layer 1's backslash_paths
+    version_names: bool = False        # program identity collapses versions inside directory and file names
 
 
 class DeterministicLayers:
@@ -816,13 +871,17 @@ class DeterministicLayers:
                         if cfg.get("novelty", True) else None)
         if self.novelty is not None:   # 0.12 (lab_v12 ZK): Windows paths with spaces written with backslashes
             self.novelty.backslash_paths = bool(cfg.get("backslash_paths", False))
+            if cfg.get("version_names"):
+                self.novelty.version_names = True
+                self.novelty.rekey()
         self.tags = (TagEngine(TagParams(**cfg.get("tags", {})), set(spec.get("trusted_ips", [])), spec.get("thresholds", {}),
                                n_preexisting, private_services=set(spec.get("private_services", [])),
                                full_paths=cfg.get("full_paths", False), image_exec=cfg.get("image_exec", False),
                                local_multicast=cfg.get("local_multicast", False), strict_addresses=cfg.get("strict_addresses", False),
                                script_exec=cfg.get("script_exec", False), socket_io=cfg.get("socket_io", False),
                                persistence=cfg.get("persistence", False), connect_receives=cfg.get("connect_receives", False),
-                               late_exfil=cfg.get("late_exfil", False))
+                               late_exfil=cfg.get("late_exfil", False), key_norm=cfg.get("rule_key_norm", False),
+                               backslash_paths=cfg.get("rule_backslash_paths", False), version_names=cfg.get("version_names", False))
                      if cfg.get("rules", True) else None)
         self.sigma = None
         sg = cfg.get("sigma")          # 0.12: {"levels": [...], "known": [...]} in a fitted layers.json
@@ -970,7 +1029,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
             for s_, d_ in zip(w.src[m].tolist(), w.dst[m].tolist()):
                 e = reg.entities[d_]
                 if e.ntype == "netflow" and is_private(remote_ip(e.label)) and reg.entities[s_].ntype == "subject":
-                    svc_days[f"{executable(reg.entities[s_].label, cfg.full_paths)}|{remote_port(e.label)}"].add(k)
+                    svc_days[f"{executable(reg.entities[s_].label, cfg.full_paths, cfg.rule_backslash_paths)}|{remote_port(e.label)}"].add(k)
     private_services = sorted(k for k, ds in svc_days.items() if len(ds) >= 2 or len(days) == 1)
     ex = exclude or {}
     ex_ips = {str(x) for x in ex.get("addresses") or ()}
@@ -981,7 +1040,8 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
     eng = TagEngine(cfg.tags, recurring, None, n_preexisting, fit=True, private_services=set(private_services), full_paths=cfg.full_paths,
                     image_exec=cfg.image_exec, local_multicast=cfg.local_multicast, strict_addresses=cfg.strict_addresses,
                     script_exec=cfg.script_exec, socket_io=cfg.socket_io, persistence=cfg.persistence,
-                    connect_receives=cfg.connect_receives, late_exfil=cfg.late_exfil)
+                    connect_receives=cfg.connect_receives, late_exfil=cfg.late_exfil, key_norm=cfg.rule_key_norm,
+                    backslash_paths=cfg.rule_backslash_paths, version_names=cfg.version_names)
     eng.first_day = first_day
     for k, d in enumerate(days):
         eng.cur_day = k
@@ -989,7 +1049,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
             eng.process(w, reg)
     if prior is not None and int(cfg.relax_min_days) > 1:
         thr = eng.thresholds(1)
-        old_keys = {(r, k) for r, kv in (prior.get("thresholds") or {}).items() for k in kv}
+        old_keys = {(r, eng.norm_key(k)) for r, kv in (prior.get("thresholds") or {}).items() for k in kv}
         strict = eng.thresholds(int(cfg.relax_min_days))
         thr = {r: {k: v for k, v in kv.items() if (r, k) in old_keys or k in strict.get(r, {})} for r, kv in thr.items()}
         thr = {r: kv for r, kv in thr.items() if kv}
@@ -997,9 +1057,9 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
         thr = eng.thresholds(1)
     excluded = {"programs": 0, "addresses": 0, "rule_keys": 0}
     if ex_progs:
-        pk = {program_key(x, cfg.strict_program_key) for x in ex_progs}
+        pk = {program_key(x, cfg.strict_program_key, cfg.version_names) for x in ex_progs}
         before = len(known)
-        known = {x for x in known if x not in ex_progs and program_key(x, cfg.strict_program_key) not in pk}
+        known = {x for x in known if x not in ex_progs and program_key(x, cfg.strict_program_key, cfg.version_names) not in pk}
         excluded["programs"] = before - len(known)
     if cfg.recurring_trust and prior is not None:
         runtime_ips = recurring | (ips & set(prior.get("trusted_ips") or ()))
@@ -1010,7 +1070,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
         runtime_ips = runtime_ips - ex_ips
         ips = ips - ex_ips
     if ex_keys:
-        for r, k in ex_keys:
+        for r, k in {(r, eng.norm_key(k)) for r, k in ex_keys}:
             if k in thr.get(r, {}):
                 del thr[r][k]; excluded["rule_keys"] += 1
     if ex_progs:   # private services of an excluded program are not a known service either
@@ -1025,7 +1085,8 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
                                      "socket_io": cfg.socket_io, "persistence": cfg.persistence,
                                      "connect_receives": cfg.connect_receives, "late_exfil": cfg.late_exfil,
                                      "recurring_trust": cfg.recurring_trust, "relax_min_days": cfg.relax_min_days,
-                                     "backslash_paths": cfg.backslash_paths,
+                                     "backslash_paths": cfg.backslash_paths, "rule_key_norm": cfg.rule_key_norm,
+                                     "rule_backslash_paths": cfg.rule_backslash_paths, "version_names": cfg.version_names,
                                      **({"sigma": {"levels": list(cfg.sigma_levels)}} if cfg.sigma_levels else {})},
             **({"sigma_known": sigma_known} if cfg.sigma_fit_levels else {}),
             "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(runtime_ips), "thresholds": thr,
