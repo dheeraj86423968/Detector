@@ -1,0 +1,209 @@
+{
+ "set": "TRACE_E3-trace",
+ "bundle": "/data/lab08/heldout/TRACE_E3/trace/v07rel",
+ "fleet": [
+  "CADETS_E3",
+  "THEIA_E3",
+  "CLEARSCOPE_E3",
+  "FIVEDIRECTIONS_E3",
+  "TRACE_E3-trace"
+ ],
+ "n_attacks": 3,
+ "gt_nodes": 35,
+ "days": 4,
+ "transform": {
+  "transform": "lotl",
+  "lotl": {
+   "targets": [
+    {
+     "key": "//cache",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/home/admin/firefox",
+     "replacement": "/home/admin/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 1023472,
+     "renamed_nodes": 38
+    },
+    {
+     "key": "/etc/firefox/native-messaging-hosts/gtcache",
+     "kind": "process",
+     "gt_nodes": 5,
+     "replacement_key": "/home/admin/firefox",
+     "replacement": "/home/admin/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 1023472,
+     "renamed_nodes": 29
+    },
+    {
+     "key": "/home/admin/man",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/home/admin/firefox",
+     "replacement": "/home/admin/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 1023472,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/home/admin/pine/pine4.64/pine/pine",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/home/admin/firefox",
+     "replacement": "/home/admin/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 1023472,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/home/admin/pine/pine4.64/pine/sh",
+     "kind": "shell",
+     "gt_nodes": 1,
+     "replacement_key": "/home/admin/bash",
+     "replacement": "/home/admin/bash",
+     "fallback_to_process": false,
+     "baseline_runs": 14234,
+     "renamed_nodes": 1
+    },
+    {
+     "key": "/home/admin/pine/pine4.64/pine/tcexec",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/home/admin/firefox",
+     "replacement": "/home/admin/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 1023472,
+     "renamed_nodes": 4
+    },
+    {
+     "key": "/home/admin/pine/pine4.64/pine/uname",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/home/admin/firefox",
+     "replacement": "/home/admin/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 1023472,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/tmp/uname",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/home/admin/firefox",
+     "replacement": "/home/admin/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 1023472,
+     "renamed_nodes": 2
+    },
+    {
+     "key": "/tmp/ztmp",
+     "kind": "process",
+     "gt_nodes": 3,
+     "replacement_key": "/home/admin/firefox",
+     "replacement": "/home/admin/firefox",
+     "fallback_to_process": false,
+     "baseline_runs": 1023472,
+     "renamed_nodes": 3
+    }
+   ],
+   "renamed_nodes": 82,
+   "renamed_gt": 22,
+   "still_unknown": 0,
+   "baseline_programs": 290,
+   "baseline_processes": 1233779,
+   "top_shell": "/home/admin/bash",
+   "top_process": "/home/admin/firefox",
+   "examples": [
+    {
+     "before": "subject //cache None",
+     "after": "subject /home/admin/firefox None",
+     "gt": true
+    },
+    {
+     "before": "subject //cache None",
+     "after": "subject /home/admin/firefox None",
+     "gt": false
+    },
+    {
+     "before": "subject //cache None",
+     "after": "subject /home/admin/firefox None",
+     "gt": true
+    }
+   ]
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "node_trace_e3_firefox_0410",
+  "node_trace_e3_phishing_executable_0413",
+  "node_trace_e3_pine_0413"
+ ],
+ "P2": {
+  "TP": 0,
+  "FP": 70,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 17.5,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 69,
+   "corroborated": 1
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 69,
+   "corroborated/learned_near_alert": 1
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 70,
+  "precision": 0.0
+ },
+ "F3": {
+  "TP": 0,
+  "FP": 70,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 17.5,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 69,
+   "corroborated": 1
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 69,
+   "corroborated/learned_near_alert": 1
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 70,
+  "precision": 0.0
+ },
+ "L12": {
+  "TP": 0,
+  "FP": 69,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 17.25,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 69
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 69
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 69,
+  "precision": 0.0
+ }
+}

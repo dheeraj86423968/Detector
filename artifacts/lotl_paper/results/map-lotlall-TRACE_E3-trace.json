@@ -1,0 +1,791 @@
+{
+ "transform": "lotlall",
+ "lotl": {
+  "targets": [
+   {
+    "key": "//cache",
+    "kind": "process",
+    "gt_nodes": 38,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 38
+   },
+   {
+    "key": "//dconf-service",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "//gvfsd-http",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "//ls",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "//systemd-hostnam",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/etc/firefox/native-messaging-hosts/gtcache",
+    "kind": "process",
+    "gt_nodes": 29,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 29
+   },
+   {
+    "key": "/etc/firefox/native-messaging-hosts/pass_mgr",
+    "kind": "process",
+    "gt_nodes": 14,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 14
+   },
+   {
+    "key": "/etc/firefox/native-messaging-hosts/sh",
+    "kind": "shell",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/bash",
+    "replacement": "/home/admin/bash",
+    "fallback_to_process": false,
+    "baseline_runs": 14234,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/home/admin/Assets/contacts/cp",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/Assets/contacts/ls",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/admin/Assets/cpp/ls",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/Assets/cpp/source/ls",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/Collector",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/DOM",
+    "kind": "process",
+    "gt_nodes": 13,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 13
+   },
+   {
+    "key": "/home/admin/Desktop/Cache2",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/Desktop/Gecko_IOThread",
+    "kind": "process",
+    "gt_nodes": 6,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 6
+   },
+   {
+    "key": "/home/admin/Desktop/IPDL",
+    "kind": "process",
+    "gt_nodes": 12,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 12
+   },
+   {
+    "key": "/home/admin/Desktop/Socket",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/home/admin/Desktop/Web",
+    "kind": "process",
+    "gt_nodes": 102,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 102
+   },
+   {
+    "key": "/home/admin/Desktop/chmod",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/Desktop/command-not-fou",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/home/admin/Desktop/cp",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/Desktop/dir",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/Desktop/firefox",
+    "kind": "process",
+    "gt_nodes": 2420,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2420
+   },
+   {
+    "key": "/home/admin/Desktop/lsb_release",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/home/admin/Desktop/tcexec",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/Desktop/thunderbird",
+    "kind": "process",
+    "gt_nodes": 76,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 76
+   },
+   {
+    "key": "/home/admin/Desktop/which",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/apport",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/gzip",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/ifconfig",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/less",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/admin/logrotate",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/home/admin/man",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/mv",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/pine/ls",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/bin/dir",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/bin/pine",
+    "kind": "process",
+    "gt_nodes": 31,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 31
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/bin/rsh",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/bin/which",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/ls",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/pine/ls",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/pine/pine",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/pine/rsh",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/pine/sh",
+    "kind": "shell",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/bash",
+    "replacement": "/home/admin/bash",
+    "fallback_to_process": false,
+    "baseline_runs": 14234,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/pine/tcexec",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/home/admin/pine/pine4.64/pine/uname",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/admin/qt-opensource-l",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/admin/recoverable_pro",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/admin/rsync",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/home/admin/scp",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/home/admin/tar",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/darpa/SPADE/cp",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/darpa/SPADE/sudo",
+    "kind": "process",
+    "gt_nodes": 4,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 4
+   },
+   {
+    "key": "/home/ls",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/basename",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/bash",
+    "kind": "shell",
+    "gt_nodes": 24,
+    "replacement_key": "/home/admin/bash",
+    "replacement": "/home/admin/bash",
+    "fallback_to_process": false,
+    "baseline_runs": 14234,
+    "renamed_nodes": 24
+   },
+   {
+    "key": "/home/ta3/cargo",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/ta3/cat",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/clear_console",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/dircolors",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/dirname",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/free",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/groups",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/lesspipe",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/home/ta3/ls",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/home/ta3/rm",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/tail",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/home/ta3/top",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/home/ta3/whoami",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/tmp/ls",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/tmp/uname",
+    "kind": "process",
+    "gt_nodes": 2,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 2
+   },
+   {
+    "key": "/tmp/ztmp",
+    "kind": "process",
+    "gt_nodes": 3,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 3
+   },
+   {
+    "key": "/var/lib/lightdm/dpkg",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/var/log/clear_console",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   },
+   {
+    "key": "/var/log/ls",
+    "kind": "process",
+    "gt_nodes": 1,
+    "replacement_key": "/home/admin/firefox",
+    "replacement": "/home/admin/firefox",
+    "fallback_to_process": false,
+    "baseline_runs": 1023472,
+    "renamed_nodes": 1
+   }
+  ],
+  "renamed_nodes": 2876,
+  "renamed_gt": 22,
+  "still_unknown": 0,
+  "baseline_programs": 290,
+  "baseline_processes": 1233779,
+  "top_shell": "/home/admin/bash",
+  "top_process": "/home/admin/firefox",
+  "examples": [
+   {
+    "before": "subject //cache None",
+    "after": "subject /home/admin/firefox None",
+    "gt": true
+   },
+   {
+    "before": "subject //cache None",
+    "after": "subject /home/admin/firefox None",
+    "gt": false
+   },
+   {
+    "before": "subject //cache None",
+    "after": "subject /home/admin/firefox None",
+    "gt": true
+   }
+  ]
+ }
+}

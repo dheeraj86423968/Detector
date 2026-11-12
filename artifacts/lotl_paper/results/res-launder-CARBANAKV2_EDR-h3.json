@@ -1,0 +1,190 @@
+{
+ "set": "CARBANAKV2_EDR-h3",
+ "bundle": "/data/lab08/heldout/CARBANAKV2_EDR/h3/b07rel",
+ "fleet": [
+  "CARBANAKV2_EDR-h1",
+  "CARBANAKV2_EDR-h2",
+  "CARBANAKV2_EDR-h3",
+  "CARBANAKV2_EDR-h4",
+  "CARBANAKV2_EDR-h5"
+ ],
+ "n_attacks": 1,
+ "gt_nodes": 26,
+ "days": 7,
+ "transform": {
+  "transform": "launder",
+  "lotl": {
+   "targets": [
+    {
+     "key": "/windows/system32/openssh/ssh.exe",
+     "kind": "process",
+     "gt_nodes": 1,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 5
+    },
+    {
+     "key": "/windows/system32/openssh/sshd.exe",
+     "kind": "process",
+     "gt_nodes": 2,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 11
+    },
+    {
+     "key": "/windows/system32/rdpclip.exe",
+     "kind": "process",
+     "gt_nodes": 4,
+     "replacement_key": "/windows/system32/conhost.exe",
+     "replacement": "c:\\windows\\system32\\conhost.exe",
+     "fallback_to_process": false,
+     "baseline_runs": 3771,
+     "renamed_nodes": 4
+    }
+   ],
+   "renamed_nodes": 20,
+   "renamed_gt": 7,
+   "still_unknown": 0,
+   "baseline_programs": 225,
+   "baseline_processes": 26182,
+   "top_shell": "/program files/windowsapps/pythonsoftwarefoundation.python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0/python3.11.exe",
+   "top_process": "/windows/system32/conhost.exe",
+   "examples": [
+    {
+     "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+     "after": "subject c:\\windows\\system32\\conhost.exe None",
+     "gt": true
+    },
+    {
+     "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+     "after": "subject c:\\windows\\system32\\conhost.exe None",
+     "gt": true
+    },
+    {
+     "before": "subject c:\\windows\\system32\\rdpclip.exe None",
+     "after": "subject c:\\windows\\system32\\conhost.exe None",
+     "gt": true
+    }
+   ]
+  },
+  "launder": {
+   "payloads": 0,
+   "copier_label": "subject c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe None",
+   "items": [],
+   "candidates_not_written": 0,
+   "edges_added": 0
+  }
+ },
+ "variants": [
+  "P2",
+  "F3",
+  "L12"
+ ],
+ "attacks_all": [
+  "carbanakv2_edr"
+ ],
+ "P2": {
+  "TP": 1,
+  "FP": 72,
+  "recall": 0.038,
+  "attacks": 1,
+  "FP/day": 10.29,
+  "TP/day": 0.14,
+  "by_layer": {
+   "novelty": 43,
+   "corroborated": 16,
+   "rules": 14
+  },
+  "by_layer_tp": {
+   "corroborated": 1
+  },
+  "by_rule": {
+   "novelty/novel_executable": 43,
+   "corroborated/learned_near_alert": 10,
+   "rules/exfiltration": 5,
+   "corroborated/novel_executable_repeat": 6,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 1
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "corroborated/learned_near_alert": 1
+   }
+  },
+  "rows": 73,
+  "precision": 0.014
+ },
+ "F3": {
+  "TP": 1,
+  "FP": 95,
+  "recall": 0.038,
+  "attacks": 1,
+  "FP/day": 13.57,
+  "TP/day": 0.14,
+  "by_layer": {
+   "novelty": 43,
+   "corroborated": 16,
+   "rules": 14,
+   "learned": 23
+  },
+  "by_layer_tp": {
+   "corroborated": 1
+  },
+  "by_rule": {
+   "novelty/novel_executable": 43,
+   "corroborated/learned_near_alert": 10,
+   "rules/exfiltration": 5,
+   "corroborated/novel_executable_repeat": 6,
+   "rules/untrusted_exec": 8,
+   "learned/learned_score": 23,
+   "rules/untrusted_code_network": 1
+  },
+  "by_rule_tp": {
+   "corroborated/learned_near_alert": 1
+  },
+  "attacks_found": [
+   "carbanakv2_edr"
+  ],
+  "per_attack_gt_rules": {
+   "carbanakv2_edr": {
+    "corroborated/learned_near_alert": 1
+   }
+  },
+  "rows": 119,
+  "precision": 0.01
+ },
+ "L12": {
+  "TP": 0,
+  "FP": 57,
+  "recall": 0.0,
+  "attacks": 0,
+  "FP/day": 8.14,
+  "TP/day": 0.0,
+  "by_layer": {
+   "novelty": 43,
+   "rules": 14
+  },
+  "by_layer_tp": {},
+  "by_rule": {
+   "novelty/novel_executable": 43,
+   "rules/exfiltration": 5,
+   "rules/untrusted_exec": 8,
+   "rules/untrusted_code_network": 1
+  },
+  "by_rule_tp": {},
+  "attacks_found": [],
+  "per_attack_gt_rules": {},
+  "rows": 57,
+  "precision": 0.0
+ }
+}
