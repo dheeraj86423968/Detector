@@ -54,7 +54,7 @@ while true; do
     if [ ! -f out/res5-$s-r1.json ] && [ ! -f out/fail-$s-r1 ]; then score $s 1 $(run1 $s); did=1; break; fi
   done; fi
   if [ $did = 0 ]; then
-    if [ ! -s queue.txt ] && [ -z "$(docker ps -q --filter name=p5-train)" ] && ! pgrep -f "lane.sh" > /dev/null; then echo "$(date +%T) scorer all done"; break; fi
+    if [ ! -s queue.txt ] && [ -z "$(docker ps -q --filter name=p5-train)" ] && ! ps -eo args | grep -qE "lane[0-9]?\.sh [0-9]"; then echo "$(date +%T) scorer all done"; break; fi
     sleep 300
   fi
 done

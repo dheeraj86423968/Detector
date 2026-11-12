@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-11 22:46 UTC",
+ "generated": "2026-11-12 03:11 UTC",
  "hosts": {
   "CADETS_E3": {
    "runs_completed": [
@@ -4935,7 +4935,11 @@
   },
   "CLEARSCOPE_E5-clearscope": {
    "runs_completed": [
-    1
+    1,
+    2,
+    3,
+    4,
+    5
    ],
    "runs": {
     "1": {
@@ -5006,417 +5010,849 @@
      "attacks_3att": 2,
      "d1_ADP_3att": 0.611,
      "d2_ADP_3att": 0.04
+    },
+    "2": {
+     "attacks": 2,
+     "n_attacks": 2,
+     "TP": 4,
+     "FP": 15,
+     "precision": 0.211,
+     "ADP": 1.0,
+     "ADP_learned": 0.111,
+     "days": 3,
+     "incidents": 8,
+     "false_incidents": 6,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "ADP_rand": 1.0,
+     "ADP_worst": 1.0,
+     "ADP_learned_rand": 0.106,
+     "ADP_learned_worst": 0.096,
+     "d1_ADP_rand": 0.635,
+     "d2_ADP_rand": 0.074,
+     "ADP_rand_3att": 0.668,
+     "ADP_worst_3att": 0.668,
+     "ADP_learned_rand_3att": 0.072,
+     "ADP_learned_worst_3att": 0.065,
+     "d1_ADP_rand_3att": 0.423,
+     "d2_ADP_rand_3att": 0.049,
+     "ADP_time": 0.236,
+     "L12_attacks": 2,
+     "L12_TP": 2,
+     "L12_FP": 13,
+     "L12_ADP_time": 0.143,
+     "L12_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d1_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d2_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d1_attacks": 2,
+     "d1_TP": 8,
+     "d1_FP": 13,
+     "d1_ADP": 0.725,
+     "d1_r1_attacks": 2,
+     "d1_r1_TP": 8,
+     "d1_r1_FP": 13,
+     "d2_attacks": 2,
+     "d2_TP": 5,
+     "d2_FP": 6433,
+     "d2_ADP": 0.074,
+     "d2_r1_attacks": 1,
+     "d2_r1_TP": 1,
+     "d2_r1_FP": 148,
+     "ADP_3att": 0.668,
+     "ADP_learned_3att": 0.075,
+     "ADP_time_3att": 0.158,
+     "L12_ADP_time_3att": 0.095,
+     "attacks_3att": 2,
+     "d1_ADP_3att": 0.483,
+     "d2_ADP_3att": 0.049
+    },
+    "3": {
+     "attacks": 2,
+     "n_attacks": 2,
+     "TP": 4,
+     "FP": 13,
+     "precision": 0.235,
+     "ADP": 1.0,
+     "ADP_learned": 0.917,
+     "days": 3,
+     "incidents": 8,
+     "false_incidents": 6,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "ADP_rand": 1.0,
+     "ADP_worst": 1.0,
+     "ADP_learned_rand": 0.744,
+     "ADP_learned_worst": 0.47,
+     "d1_ADP_rand": 0.744,
+     "d2_ADP_rand": 0.114,
+     "ADP_rand_3att": 0.695,
+     "ADP_worst_3att": 0.694,
+     "ADP_learned_rand_3att": 0.524,
+     "ADP_learned_worst_3att": 0.341,
+     "d1_ADP_rand_3att": 0.496,
+     "d2_ADP_rand_3att": 0.076,
+     "ADP_time": 0.25,
+     "L12_attacks": 2,
+     "L12_TP": 2,
+     "L12_FP": 13,
+     "L12_ADP_time": 0.143,
+     "L12_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d1_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d2_attacks_found": [],
+     "d1_attacks": 2,
+     "d1_TP": 8,
+     "d1_FP": 20,
+     "d1_ADP": 0.917,
+     "d1_r1_attacks": 2,
+     "d1_r1_TP": 8,
+     "d1_r1_FP": 13,
+     "d2_attacks": 0,
+     "d2_TP": 0,
+     "d2_FP": 7,
+     "d2_ADP": 0.114,
+     "d2_r1_attacks": 0,
+     "d2_r1_TP": 0,
+     "d2_r1_FP": 6,
+     "ADP_3att": 0.695,
+     "ADP_learned_3att": 0.639,
+     "ADP_time_3att": 0.167,
+     "L12_ADP_time_3att": 0.095,
+     "attacks_3att": 2,
+     "d1_ADP_3att": 0.611,
+     "d2_ADP_3att": 0.076
+    },
+    "4": {
+     "attacks": 2,
+     "n_attacks": 2,
+     "TP": 4,
+     "FP": 13,
+     "precision": 0.235,
+     "ADP": 1.0,
+     "ADP_learned": 0.06,
+     "days": 3,
+     "incidents": 8,
+     "false_incidents": 6,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "ADP_rand": 1.0,
+     "ADP_worst": 1.0,
+     "ADP_learned_rand": 0.06,
+     "ADP_learned_worst": 0.06,
+     "d1_ADP_rand": 0.785,
+     "d2_ADP_rand": 0.028,
+     "ADP_rand_3att": 0.673,
+     "ADP_worst_3att": 0.673,
+     "ADP_learned_rand_3att": 0.046,
+     "ADP_learned_worst_3att": 0.046,
+     "d1_ADP_rand_3att": 0.524,
+     "d2_ADP_rand_3att": 0.019,
+     "ADP_time": 0.25,
+     "L12_attacks": 2,
+     "L12_TP": 2,
+     "L12_FP": 13,
+     "L12_ADP_time": 0.143,
+     "L12_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d1_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d2_attacks_found": [
+      "node_clearscope_e5_appstarter_0515"
+     ],
+     "d1_attacks": 2,
+     "d1_TP": 9,
+     "d1_FP": 17,
+     "d1_ADP": 0.917,
+     "d1_r1_attacks": 2,
+     "d1_r1_TP": 8,
+     "d1_r1_FP": 13,
+     "d2_attacks": 1,
+     "d2_TP": 1,
+     "d2_FP": 114,
+     "d2_ADP": 0.028,
+     "d2_r1_attacks": 1,
+     "d2_r1_TP": 1,
+     "d2_r1_FP": 112,
+     "ADP_3att": 0.673,
+     "ADP_learned_3att": 0.046,
+     "ADP_time_3att": 0.167,
+     "L12_ADP_time_3att": 0.095,
+     "attacks_3att": 2,
+     "d1_ADP_3att": 0.612,
+     "d2_ADP_3att": 0.019
+    },
+    "5": {
+     "attacks": 2,
+     "n_attacks": 2,
+     "TP": 4,
+     "FP": 13,
+     "precision": 0.235,
+     "ADP": 1.0,
+     "ADP_learned": 0.917,
+     "days": 3,
+     "incidents": 8,
+     "false_incidents": 6,
+     "buried": 0,
+     "incident_source": "paper5",
+     "attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "ADP_rand": 1.0,
+     "ADP_worst": 1.0,
+     "ADP_learned_rand": 0.743,
+     "ADP_learned_worst": 0.466,
+     "d1_ADP_rand": 0.744,
+     "d2_ADP_rand": 0.523,
+     "ADP_rand_3att": 0.669,
+     "ADP_worst_3att": 0.669,
+     "ADP_learned_rand_3att": 0.498,
+     "ADP_learned_worst_3att": 0.313,
+     "d1_ADP_rand_3att": 0.497,
+     "d2_ADP_rand_3att": 0.349,
+     "ADP_time": 0.25,
+     "L12_attacks": 2,
+     "L12_TP": 2,
+     "L12_FP": 13,
+     "L12_ADP_time": 0.143,
+     "L12_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d1_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d2_attacks_found": [
+      "node_clearscope_e5_appstarter_0515",
+      "node_clearscope_e5_tester_0517"
+     ],
+     "d1_attacks": 2,
+     "d1_TP": 8,
+     "d1_FP": 13,
+     "d1_ADP": 0.917,
+     "d1_r1_attacks": 2,
+     "d1_r1_TP": 8,
+     "d1_r1_FP": 13,
+     "d2_attacks": 2,
+     "d2_TP": 8,
+     "d2_FP": 2125,
+     "d2_ADP": 0.712,
+     "d2_r1_attacks": 2,
+     "d2_r1_TP": 8,
+     "d2_r1_FP": 18,
+     "ADP_3att": 0.669,
+     "ADP_learned_3att": 0.614,
+     "ADP_time_3att": 0.167,
+     "L12_ADP_time_3att": 0.095,
+     "attacks_3att": 2,
+     "d1_ADP_3att": 0.612,
+     "d2_ADP_3att": 0.475
     }
    },
    "summary": {
     "ADP_rand": {
-     "n": 1,
+     "n": 5,
      "mean": 1.0,
-     "sd": null,
+     "sd": 0.0,
      "min": 1.0,
      "max": 1.0,
      "values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
       1.0
      ]
     },
     "ADP_worst": {
-     "n": 1,
+     "n": 5,
      "mean": 1.0,
-     "sd": null,
+     "sd": 0.0,
      "min": 1.0,
      "max": 1.0,
      "values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
       1.0
      ]
     },
     "ADP_learned_rand": {
-     "n": 1,
-     "mean": 0.197,
-     "sd": null,
-     "min": 0.197,
-     "max": 0.197,
+     "n": 5,
+     "mean": 0.37,
+     "sd": 0.345,
+     "min": 0.06,
+     "max": 0.744,
      "values": [
-      0.197
+      0.197,
+      0.106,
+      0.744,
+      0.06,
+      0.743
      ]
     },
     "ADP_learned_worst": {
-     "n": 1,
-     "mean": 0.195,
-     "sd": null,
-     "min": 0.195,
-     "max": 0.195,
+     "n": 5,
+     "mean": 0.257,
+     "sd": 0.199,
+     "min": 0.06,
+     "max": 0.47,
      "values": [
-      0.195
+      0.195,
+      0.096,
+      0.47,
+      0.06,
+      0.466
      ]
     },
     "d1_ADP_rand": {
-     "n": 1,
-     "mean": 0.744,
-     "sd": null,
-     "min": 0.744,
-     "max": 0.744,
+     "n": 5,
+     "mean": 0.73,
+     "sd": 0.056,
+     "min": 0.635,
+     "max": 0.785,
      "values": [
+      0.744,
+      0.635,
+      0.744,
+      0.785,
       0.744
      ]
     },
     "d2_ADP_rand": {
-     "n": 1,
-     "mean": 0.059,
-     "sd": null,
-     "min": 0.059,
-     "max": 0.059,
+     "n": 5,
+     "mean": 0.16,
+     "sd": 0.205,
+     "min": 0.028,
+     "max": 0.523,
      "values": [
-      0.059
+      0.059,
+      0.074,
+      0.114,
+      0.028,
+      0.523
      ]
     },
     "ADP_rand_3att": {
-     "n": 1,
-     "mean": 0.668,
-     "sd": null,
+     "n": 5,
+     "mean": 0.675,
+     "sd": 0.012,
      "min": 0.668,
-     "max": 0.668,
+     "max": 0.695,
      "values": [
-      0.668
+      0.668,
+      0.668,
+      0.695,
+      0.673,
+      0.669
      ]
     },
     "ADP_worst_3att": {
-     "n": 1,
-     "mean": 0.668,
-     "sd": null,
+     "n": 5,
+     "mean": 0.674,
+     "sd": 0.011,
      "min": 0.668,
-     "max": 0.668,
+     "max": 0.694,
      "values": [
-      0.668
+      0.668,
+      0.668,
+      0.694,
+      0.673,
+      0.669
      ]
     },
     "ADP_learned_rand_3att": {
-     "n": 1,
-     "mean": 0.133,
-     "sd": null,
-     "min": 0.133,
-     "max": 0.133,
+     "n": 5,
+     "mean": 0.255,
+     "sd": 0.236,
+     "min": 0.046,
+     "max": 0.524,
      "values": [
-      0.133
+      0.133,
+      0.072,
+      0.524,
+      0.046,
+      0.498
      ]
     },
     "ADP_learned_worst_3att": {
-     "n": 1,
-     "mean": 0.131,
-     "sd": null,
-     "min": 0.131,
-     "max": 0.131,
+     "n": 5,
+     "mean": 0.179,
+     "sd": 0.139,
+     "min": 0.046,
+     "max": 0.341,
      "values": [
-      0.131
+      0.131,
+      0.065,
+      0.341,
+      0.046,
+      0.313
      ]
     },
     "d1_ADP_rand_3att": {
-     "n": 1,
-     "mean": 0.497,
-     "sd": null,
-     "min": 0.497,
-     "max": 0.497,
+     "n": 5,
+     "mean": 0.487,
+     "sd": 0.038,
+     "min": 0.423,
+     "max": 0.524,
      "values": [
+      0.497,
+      0.423,
+      0.496,
+      0.524,
       0.497
      ]
     },
     "d2_ADP_rand_3att": {
-     "n": 1,
-     "mean": 0.039,
-     "sd": null,
-     "min": 0.039,
-     "max": 0.039,
+     "n": 5,
+     "mean": 0.106,
+     "sd": 0.137,
+     "min": 0.019,
+     "max": 0.349,
      "values": [
-      0.039
+      0.039,
+      0.049,
+      0.076,
+      0.019,
+      0.349
      ]
     },
     "ADP": {
-     "n": 1,
+     "n": 5,
      "mean": 1.0,
-     "sd": null,
+     "sd": 0.0,
      "min": 1.0,
      "max": 1.0,
      "values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
       1.0
      ]
     },
     "ADP_time": {
-     "n": 1,
-     "mean": 0.236,
-     "sd": null,
+     "n": 5,
+     "mean": 0.244,
+     "sd": 0.008,
      "min": 0.236,
-     "max": 0.236,
+     "max": 0.25,
      "values": [
-      0.236
+      0.236,
+      0.236,
+      0.25,
+      0.25,
+      0.25
      ]
     },
     "L12_attacks": {
-     "n": 1,
+     "n": 5,
      "mean": 2,
-     "sd": null,
+     "sd": 0.0,
      "min": 2,
      "max": 2,
      "values": [
+      2,
+      2,
+      2,
+      2,
       2
      ]
     },
     "L12_TP": {
-     "n": 1,
+     "n": 5,
      "mean": 2,
-     "sd": null,
+     "sd": 0.0,
      "min": 2,
      "max": 2,
      "values": [
+      2,
+      2,
+      2,
+      2,
       2
      ]
     },
     "L12_FP": {
-     "n": 1,
+     "n": 5,
      "mean": 13,
-     "sd": null,
+     "sd": 0.0,
      "min": 13,
      "max": 13,
      "values": [
+      13,
+      13,
+      13,
+      13,
       13
      ]
     },
     "L12_ADP_time": {
-     "n": 1,
+     "n": 5,
      "mean": 0.143,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.143,
      "max": 0.143,
      "values": [
+      0.143,
+      0.143,
+      0.143,
+      0.143,
       0.143
      ]
     },
     "ADP_time_3att": {
-     "n": 1,
-     "mean": 0.158,
-     "sd": null,
+     "n": 5,
+     "mean": 0.163,
+     "sd": 0.005,
      "min": 0.158,
-     "max": 0.158,
+     "max": 0.167,
      "values": [
-      0.158
+      0.158,
+      0.158,
+      0.167,
+      0.167,
+      0.167
      ]
     },
     "L12_ADP_time_3att": {
-     "n": 1,
+     "n": 5,
      "mean": 0.095,
-     "sd": null,
+     "sd": 0.0,
      "min": 0.095,
      "max": 0.095,
      "values": [
+      0.095,
+      0.095,
+      0.095,
+      0.095,
       0.095
      ]
     },
     "ADP_learned": {
-     "n": 1,
-     "mean": 0.199,
-     "sd": null,
-     "min": 0.199,
-     "max": 0.199,
+     "n": 5,
+     "mean": 0.441,
+     "sd": 0.438,
+     "min": 0.06,
+     "max": 0.917,
      "values": [
-      0.199
+      0.199,
+      0.111,
+      0.917,
+      0.06,
+      0.917
      ]
     },
     "attacks": {
-     "n": 1,
+     "n": 5,
      "mean": 2,
-     "sd": null,
+     "sd": 0.0,
      "min": 2,
      "max": 2,
      "values": [
+      2,
+      2,
+      2,
+      2,
       2
      ]
     },
     "TP": {
-     "n": 1,
+     "n": 5,
      "mean": 4,
-     "sd": null,
+     "sd": 0.0,
      "min": 4,
      "max": 4,
      "values": [
+      4,
+      4,
+      4,
+      4,
       4
      ]
     },
     "FP": {
-     "n": 1,
-     "mean": 15,
-     "sd": null,
-     "min": 15,
+     "n": 5,
+     "mean": 13.8,
+     "sd": 1.095,
+     "min": 13,
      "max": 15,
      "values": [
-      15
+      15,
+      15,
+      13,
+      13,
+      13
      ]
     },
     "precision": {
-     "n": 1,
-     "mean": 0.211,
-     "sd": null,
+     "n": 5,
+     "mean": 0.225,
+     "sd": 0.013,
      "min": 0.211,
-     "max": 0.211,
+     "max": 0.235,
      "values": [
-      0.211
+      0.211,
+      0.211,
+      0.235,
+      0.235,
+      0.235
      ]
     },
     "incidents": {
-     "n": 1,
+     "n": 5,
      "mean": 8,
-     "sd": null,
+     "sd": 0.0,
      "min": 8,
      "max": 8,
      "values": [
+      8,
+      8,
+      8,
+      8,
       8
      ]
     },
     "false_incidents": {
-     "n": 1,
+     "n": 5,
      "mean": 6,
-     "sd": null,
+     "sd": 0.0,
      "min": 6,
      "max": 6,
      "values": [
+      6,
+      6,
+      6,
+      6,
       6
      ]
     },
     "buried": {
-     "n": 1,
+     "n": 5,
      "mean": 0,
-     "sd": null,
+     "sd": 0.0,
      "min": 0,
      "max": 0,
      "values": [
+      0,
+      0,
+      0,
+      0,
       0
      ]
     },
     "d1_attacks": {
-     "n": 1,
+     "n": 5,
      "mean": 2,
-     "sd": null,
+     "sd": 0.0,
      "min": 2,
      "max": 2,
      "values": [
+      2,
+      2,
+      2,
+      2,
       2
      ]
     },
     "d1_TP": {
-     "n": 1,
-     "mean": 8,
-     "sd": null,
+     "n": 5,
+     "mean": 8.2,
+     "sd": 0.447,
      "min": 8,
-     "max": 8,
+     "max": 9,
      "values": [
+      8,
+      8,
+      8,
+      9,
       8
      ]
     },
     "d1_FP": {
-     "n": 1,
-     "mean": 17,
-     "sd": null,
-     "min": 17,
-     "max": 17,
+     "n": 5,
+     "mean": 16,
+     "sd": 3.0,
+     "min": 13,
+     "max": 20,
      "values": [
-      17
+      17,
+      13,
+      20,
+      17,
+      13
      ]
     },
     "d1_ADP": {
-     "n": 1,
-     "mean": 0.917,
-     "sd": null,
-     "min": 0.917,
+     "n": 5,
+     "mean": 0.879,
+     "sd": 0.086,
+     "min": 0.725,
      "max": 0.917,
      "values": [
+      0.917,
+      0.725,
+      0.917,
+      0.917,
       0.917
      ]
     },
     "d2_attacks": {
-     "n": 1,
-     "mean": 2,
-     "sd": null,
-     "min": 2,
+     "n": 5,
+     "mean": 1.4,
+     "sd": 0.894,
+     "min": 0,
      "max": 2,
      "values": [
+      2,
+      2,
+      0,
+      1,
       2
      ]
     },
     "d2_TP": {
-     "n": 1,
-     "mean": 3,
-     "sd": null,
-     "min": 3,
-     "max": 3,
+     "n": 5,
+     "mean": 3.4,
+     "sd": 3.209,
+     "min": 0,
+     "max": 8,
      "values": [
-      3
+      3,
+      5,
+      0,
+      1,
+      8
      ]
     },
     "d2_FP": {
-     "n": 1,
-     "mean": 1728,
-     "sd": null,
-     "min": 1728,
-     "max": 1728,
+     "n": 5,
+     "mean": 2081.4,
+     "sd": 2609.455,
+     "min": 7,
+     "max": 6433,
      "values": [
-      1728
+      1728,
+      6433,
+      7,
+      114,
+      2125
      ]
     },
     "d2_ADP": {
-     "n": 1,
-     "mean": 0.06,
-     "sd": null,
-     "min": 0.06,
-     "max": 0.06,
+     "n": 5,
+     "mean": 0.198,
+     "sd": 0.289,
+     "min": 0.028,
+     "max": 0.712,
      "values": [
-      0.06
+      0.06,
+      0.074,
+      0.114,
+      0.028,
+      0.712
      ]
     },
     "ADP_3att": {
-     "n": 1,
-     "mean": 0.668,
-     "sd": null,
+     "n": 5,
+     "mean": 0.675,
+     "sd": 0.012,
      "min": 0.668,
-     "max": 0.668,
+     "max": 0.695,
      "values": [
-      0.668
+      0.668,
+      0.668,
+      0.695,
+      0.673,
+      0.669
      ]
     },
     "ADP_learned_3att": {
-     "n": 1,
-     "mean": 0.134,
-     "sd": null,
-     "min": 0.134,
-     "max": 0.134,
+     "n": 5,
+     "mean": 0.302,
+     "sd": 0.298,
+     "min": 0.046,
+     "max": 0.639,
      "values": [
-      0.134
+      0.134,
+      0.075,
+      0.639,
+      0.046,
+      0.614
      ]
     },
     "attacks_3att": {
-     "n": 1,
+     "n": 5,
      "mean": 2,
-     "sd": null,
+     "sd": 0.0,
      "min": 2,
      "max": 2,
      "values": [
+      2,
+      2,
+      2,
+      2,
       2
      ]
     },
     "d1_ADP_3att": {
-     "n": 1,
-     "mean": 0.611,
-     "sd": null,
-     "min": 0.611,
-     "max": 0.611,
+     "n": 5,
+     "mean": 0.586,
+     "sd": 0.057,
+     "min": 0.483,
+     "max": 0.612,
      "values": [
-      0.611
+      0.611,
+      0.483,
+      0.611,
+      0.612,
+      0.612
      ]
     },
     "d2_ADP_3att": {
-     "n": 1,
-     "mean": 0.04,
-     "sd": null,
-     "min": 0.04,
-     "max": 0.04,
+     "n": 5,
+     "mean": 0.132,
+     "sd": 0.193,
+     "min": 0.019,
+     "max": 0.475,
      "values": [
-      0.04
+      0.04,
+      0.049,
+      0.076,
+      0.019,
+      0.475
      ]
     }
    },
@@ -5424,6 +5860,22 @@
     "attacks_found": {
      "per_run": {
       "1": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "2": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "3": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "4": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "5": [
        "node_clearscope_e5_appstarter_0515",
        "node_clearscope_e5_tester_0517"
       ]
@@ -5435,6 +5887,22 @@
       "1": [
        "node_clearscope_e5_appstarter_0515",
        "node_clearscope_e5_tester_0517"
+      ],
+      "2": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "3": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "4": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "5": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
       ]
      },
      "same_in_all_runs": true
@@ -5442,6 +5910,22 @@
     "d1_attacks_found": {
      "per_run": {
       "1": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "2": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "3": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "4": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "5": [
        "node_clearscope_e5_appstarter_0515",
        "node_clearscope_e5_tester_0517"
       ]
@@ -5453,9 +5937,21 @@
       "1": [
        "node_clearscope_e5_appstarter_0515",
        "node_clearscope_e5_tester_0517"
+      ],
+      "2": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
+      ],
+      "3": [],
+      "4": [
+       "node_clearscope_e5_appstarter_0515"
+      ],
+      "5": [
+       "node_clearscope_e5_appstarter_0515",
+       "node_clearscope_e5_tester_0517"
       ]
      },
-     "same_in_all_runs": true
+     "same_in_all_runs": false
     }
    }
   },

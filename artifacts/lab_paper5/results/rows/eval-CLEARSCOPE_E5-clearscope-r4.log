@@ -1,0 +1,14 @@
+03:00:28 validation replay 56s: ensemble thresholds {'detector-1': 0.8478304743766785, 'detector-2': 0.8783143758773804} (36095 nodes)
+03:00:44 fleet ['CLEARSCOPE_E5-clearscope']: 0 program keys from 0 other endpoints
+03:04:16 scored 285s
+03:04:16 P0: attacks 2 TP 4 FP 13 rows 17 ADP 1.0 (learned only 0.06)
+03:04:17 P1: attacks 2 TP 4 FP 13 rows 17 ADP 1.0 (learned only 0.06)
+03:04:17 P1e: attacks 2 TP 4 FP 13 rows 17 ADP 1.0 (learned only 0.06)
+03:04:17 P2: attacks 2 TP 4 FP 13 rows 17 ADP 1.0 (learned only 0.06)
+03:04:17 P2e: attacks 2 TP 4 FP 13 rows 17 ADP 1.0 (learned only 0.06)
+03:04:33 amendment 2: P2 triage ADP ties {'random_mean': 1.0, 'random_sd': 0.0, 'random_min': 1.0, 'random_max': 1.0, 'worst': 1.0}; learned {'random_mean': 0.06, 'random_sd': 0.0, 'random_min': 0.06, 'random_max': 0.06, 'worst': 0.06}
+03:04:33 amendment 1: triage ADP time tie-break {'mean': 0.25, 'min': 0.25, 'max': 0.25, 'seeds': 20}; layers 1-2 only {'TP': 2, 'FP': 13, 'recall': 0.059, 'attacks': 2, 'precision': 0.133, 'attacks_found': ['node_clearscope_e5_appstarter_0515', 'node_clearscope_e5_tester_0517'], 'ADP_time_tiebreak': {'mean': 0.143, 'min': 0.143, 'max': 0.143, 'seeds': 20}}
+03:04:36 detector-1 alone: attacks 2 TP 9 FP 17 ADP 0.917
+03:04:38 detector-2 alone: attacks 1 TP 1 FP 114 ADP 0.028
+03:04:59 with extra gt: P2 {'TP': 4, 'FP': 13, 'recall': 0.078, 'attacks': 2, 'ADP': 0.673, 'ADP_learned_only': 0.046, 'ADP_ties': {'random_mean': 0.673, 'random_sd': 0.0, 'random_min': 0.673, 'random_max': 0.673, 'worst': 0.673}, 'ADP_learned_only_ties': {'random_mean': 0.046, 'random_sd': 0.0, 'random_min': 0.046, 'random_max': 0.046, 'worst': 0.046}, 'ADP_triage_time_tiebreak': {'mean': 0.167, 'min': 0.167, 'max': 0.169, 'seeds': 20}, 'layers12_only': {'TP': 2, 'FP': 13, 'recall': 0.039, 'attacks': 2, 'precision': 0.133, 'attacks_found': ['node_clearscope_e5_appstarter_0515', 'node_clearscope_e5_tester_0517'], 'ADP_time_tiebreak': {'mean': 0.095, 'min': 0.095, 'max': 0.097, 'seeds': 20}}}
+CLEARSCOPE_E5-clearscope P2/G2: alerts    17 incidents    8 (FP    6, 2.0/day) attacks 2 buried 0
