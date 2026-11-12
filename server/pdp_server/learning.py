@@ -70,6 +70,8 @@ def exclusions(c, eid: str, until_ns: int | None = None) -> dict:
             rule, key = x.get("rule"), x.get("key")
             if not rule or key is None:
                 continue
+            if rule == "untrusted_exec_repeat":      # 0.13: a repeat start is the same alarm (same thresholds, same exclusion)
+                rule = "untrusted_exec"
             if rule in ("novel_executable", "novel_executable_repeat", "fleet_known_executable", "untrusted_exec"):
                 progs.add(str(key))
             if x.get("layer") in ("rules", "corroborated") or rule in ("untrusted_exec", "exfiltration", "untrusted_code_network",

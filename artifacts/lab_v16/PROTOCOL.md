@@ -54,3 +54,41 @@ models (a fitted `layers.json` keeps its behaviour). If none is accepted, nothin
 - An untrusted file that alerted and is not rewritten stays quiet on later runs, on later days too: the first alert
   is the finding and must be handled. If the file node is dropped by registry compaction and comes back, it is
   treated as before this option (a fresh node).
+
+## Decision record (2026-11-12; results/, lab_v14 scripts/summ17.py with tag res19)
+
+| variant | attacks | deterministic alone | attack-days (lost) | TP | FP | alert rows | rule |
+|---|---|---|---|---|---|---|---|
+| Z0 (released) | 26 | 21 | 39 | 333 | 1,051 | 1,483 | ref |
+| **E0** `exec_once` | 26 | 21 | 39 (0) | 331 | 1,035 | 1,442 | **accepted, chosen** |
+| E1 + `rule_key_norm` | 26 | 21 | 39 (0) | 329 | 1,027 | 1,432 | accepted |
+| E2 + `rule_backslash_paths` | **27** (+ATLASv2 m1) | **26** | 40 (0) | 334 | 1,216 (+15.7 %) | 1,630 | rejected: FP > 1,156; CARBANAKv2 399 -> 550 |
+| E3 + `version_names` | 27 | 26 | 40 (0) | 334 | 1,199 (+14.1 %) | 1,613 | rejected: FP > 1,156; CARBANAKv2 399 -> 533 |
+| E4 + `backslash_paths` | 27 | 26 | 40 (0) | 336 | 1,368 (+30 %) | 1,789 | rejected |
+
+E0 and E1 are accepted and tie on attacks and on attacks found by the deterministic layers alone; E1's FP is within
+1 % of E0's, so the variant with fewer options is chosen: **E0. `exec_once` is on for newly fitted models**
+(`LayerConfig.exec_once`); a fitted `layers.json` keeps the behaviour it was fitted with. Its effect on these sets is
+small by itself (FP -16, alert rows -41, TP -2: repeat starts of the same untrusted file); what it changes is that
+executing an unchanged untrusted file can no longer flood an endpoint.
+
+**E3 is not adopted, and the bar is not moved.** It misses the limit set in advance by 43 nodes (1,199 against
+1,156) and exceeds the family limit on CARBANAKv2. It is nevertheless the variant that detects more: one attack
+nothing found before (ATLASv2 m1), 26 instead of 21 of the detected attacks found by the deterministic layers alone,
+one more attack-day; `exec_once` took its cost from lab_v14's +1,770 false-positive nodes to +148. What remains is
+correct parsing showing what programs under `Program Files` do: `exfiltration` by `msedgewebview2.exe`, `perl.exe`
+(Git), `python3.11.exe`, `winword.exe`, and `untrusted_exec` of TightVNC's `tvnserver.exe` (5 ground-truth nodes, 27
+others on CARBANAKv2). The options stay in the engine, off (`rule_key_norm`, `rule_backslash_paths`,
+`version_names`); whether +14 % false-positive nodes is worth one more attack and deterministic detection of five
+is the product owner's decision, and on Windows endpoints the released default means layer 2 cannot attribute
+anything to a program under a directory with a space in its name.
+
+All of this is a development result on seen sets (see Limits).
+
+## Exploration recorded here (scripts/explore_net.py; CPU, deterministic layers only, no decision rests on it)
+
+Alarm `unusual_network` (engine option `net_profile`, off): a process connects to an untrusted address although its
+program contacted none on any baseline day. On the recorded test data: 146 ground-truth / 324 other process nodes
+over 14 sets. On the LotL counterfactual (lotl_paper: the attacker's new programs relabelled as baseline programs):
+83 / 302, and it reaches attacks the released detector loses there (ATLASv2 m5, m6, s3 through `cmd.exe`,
+`winword.exe`, `plugin-container.exe`; CARBANAKv2 h1 through `cmd.exe` / `powershell.exe`).

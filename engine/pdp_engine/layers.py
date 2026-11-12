@@ -59,6 +59,7 @@ RULES = {
     "exfiltration": "a process that read sensitive data sends to an untrusted address",
     "untrusted_code_network": "a program loaded from an untrusted file communicates with an untrusted address",
     "untrusted_persistence": "a process with untrusted code or data writes to an autostart location",
+    "unusual_network": "a program that contacted no unknown address during the baseline connects to one",
     "untrusted_exec_repeat": "another start of an untrusted file that already alerted and has not changed since (evidence)",
 }
 # 0.13 (`exec_once`): an untrusted file that is executed alerts once per version of its content. Starting the same,
@@ -452,6 +453,11 @@ class TagEngine:
         self.key_norm, self.backslash_paths, self.version_names = bool(key_norm), bool(backslash_paths), bool(version_names)
         self._nk: dict[str, str] = {}
         self.exec_once = False              # untrusted_exec once per version of the executed file (REPEAT_RULES)
+        # 0.13 (`net_profile`): alarm 'unusual_network' - a process sends or connects to an untrusted address although
+        # its program did not do so on any baseline day (benign-calibrated per program like every alarm: a browser,
+        # an updater, a mail client did, and stay quiet). What a program normally talks to is one of the few things
+        # an attacker living off the land - running only programs the host already runs - still changes.
+        self.net_profile = False
         self.p = params
         self.strict_addresses = bool(strict_addresses)
         self.script_exec = bool(script_exec)
@@ -808,6 +814,9 @@ class TagEngine:
                     if self.late_exfil:
                         self._peer[s] = d
                     prog = self._label(reg, s)
+                    if self.net_profile and ents[s].ntype == "subject" and ents[d].ntype == "netflow" and prog not in UNKNOWN_PROGRAM:
+                        self._check(out, "unusual_network", prog, n.data, (s, d), now,
+                                    f"{prog}, which contacted no unknown address during the baseline, connects to {self._label(reg, d)}")
                     if q.conf >= p.sensitive:
                         self._check(out, "exfiltration", prog, max(1.0 - q.conf, n.data), (s, d), now,
                                     f"{prog}, which read sensitive data, sends to untrusted {self._label(reg, d)}")
@@ -878,7 +887,8 @@ class LayerConfig:
     rule_key_norm: bool = False        # layer 2 thresholds by program identity (program_key), not by raw path
     rule_backslash_paths: bool = False # layer 2 parses backslash paths with spaces like layer 1's backslash_paths
     version_names: bool = False        # program identity collapses versions inside directory and file names
-    exec_once: bool = False            # untrusted_exec alerts once per version of the executed file
+    exec_once: bool = True             # untrusted_exec alerts once per version of the executed file (lab_v16: accepted)
+    net_profile: bool = False          # alarm unusual_network: a program without unknown contacts in the baseline makes one
 
 
 class DeterministicLayers:
@@ -909,6 +919,7 @@ class DeterministicLayers:
                      if cfg.get("rules", True) else None)
         if self.tags is not None:
             self.tags.exec_once = bool(cfg.get("exec_once", False))
+            self.tags.net_profile = bool(cfg.get("net_profile", False))
         self.sigma = None
         sg = cfg.get("sigma")          # 0.12: {"levels": [...], "known": [...]} in a fitted layers.json
         if sg:
@@ -1069,6 +1080,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
                     script_exec=cfg.script_exec, socket_io=cfg.socket_io, persistence=cfg.persistence,
                     connect_receives=cfg.connect_receives, late_exfil=cfg.late_exfil, key_norm=cfg.rule_key_norm,
                     backslash_paths=cfg.rule_backslash_paths, version_names=cfg.version_names)
+    eng.net_profile = bool(cfg.net_profile)
     eng.first_day = first_day
     for k, d in enumerate(days):
         eng.cur_day = k
@@ -1114,7 +1126,7 @@ def fit_layers(store, days: list[str], reg: Registry, n_preexisting: int, cfg: L
                                      "recurring_trust": cfg.recurring_trust, "relax_min_days": cfg.relax_min_days,
                                      "backslash_paths": cfg.backslash_paths, "rule_key_norm": cfg.rule_key_norm,
                                      "rule_backslash_paths": cfg.rule_backslash_paths, "version_names": cfg.version_names,
-                                     "exec_once": cfg.exec_once,
+                                     "exec_once": cfg.exec_once, "net_profile": cfg.net_profile,
                                      **({"sigma": {"levels": list(cfg.sigma_levels)}} if cfg.sigma_levels else {})},
             **({"sigma_known": sigma_known} if cfg.sigma_fit_levels else {}),
             "fit_days": list(days), "known_executables": sorted(known), "trusted_ips": sorted(runtime_ips), "thresholds": thr,

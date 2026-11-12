@@ -598,7 +598,8 @@ def vrules(**kw):
 check("untrusted_exec" in vrules(thr_key=V1) and "untrusted_exec" not in vrules(thr_key=_pk(V1, True), key_norm=True),
       "rule_key_norm: the baseline's benign alarm of version 2.0.1 covers version 2.0.2 (by raw path it does not)")
 from pdp_engine.layers import LayerConfig as _LC
-check(not any((_LC().rule_key_norm, _LC().rule_backslash_paths, _LC().version_names, _LC().exec_once)), "the 0.13 options are off by default")
+check(not any((_LC().rule_key_norm, _LC().rule_backslash_paths, _LC().version_names, _LC().net_profile)) and _LC().exec_once,
+      "new fits: exec_once on (lab_v16), the identity options and net_profile off")
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)
